@@ -1,0 +1,47 @@
+{
+  "name": "Notification",
+  "type": "object",
+  "properties": {
+    "recipient_id": {
+      "type": "string"
+    },
+    "recipient_role": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "message": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "campaign_submitted",
+        "payment_confirmed",
+        "payment_rejected",
+        "campaign_approved",
+        "campaign_rejected",
+        "changes_requested",
+        "campaign_completed",
+        "page_connected",
+        "page_rejected"
+      ]
+    },
+    "campaign_id": {
+      "type": "string"
+    },
+    "is_read": {
+      "type": "boolean",
+      "default": false
+    },
+    "link": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "title",
+    "message",
+    "type"
+  ]
+}

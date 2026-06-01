@@ -1,0 +1,47 @@
+{
+  "name": "FacebookPage",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string",
+      "description": "Owner user ID"
+    },
+    "page_name": {
+      "type": "string"
+    },
+    "page_url": {
+      "type": "string"
+    },
+    "page_id": {
+      "type": "string"
+    },
+    "connection_status": {
+      "type": "string",
+      "enum": [
+        "pending_verification",
+        "connected",
+        "rejected"
+      ],
+      "default": "pending_verification"
+    },
+    "whatsapp_verified": {
+      "type": "boolean",
+      "default": false
+    },
+    "business_email_verified": {
+      "type": "boolean",
+      "default": false
+    },
+    "campaign_ready": {
+      "type": "boolean",
+      "default": false
+    },
+    "admin_notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "page_name",
+    "page_url"
+  ]
+}

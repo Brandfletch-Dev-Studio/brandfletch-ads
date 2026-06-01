@@ -1,0 +1,55 @@
+{
+  "name": "SavedAudience",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string",
+      "description": "Audience name for reuse"
+    },
+    "countries": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "regions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "cities": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "worldwide": {
+      "type": "boolean",
+      "default": false
+    },
+    "age_min": {
+      "type": "number",
+      "default": 18
+    },
+    "age_max": {
+      "type": "number",
+      "default": 65
+    },
+    "gender": {
+      "type": "string",
+      "enum": [
+        "all",
+        "male",
+        "female"
+      ],
+      "default": "all"
+    }
+  },
+  "required": [
+    "name"
+  ]
+}

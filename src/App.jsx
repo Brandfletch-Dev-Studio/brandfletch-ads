@@ -1,53 +1,97 @@
 import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
-import ScrollToTop from './components/ScrollToTop';
-// Add page imports here
+
+// Layout
+import AppLayout from '@/components/layout/AppLayout';
+
+// Client pages
+import Dashboard from '@/pages/Dashboard';
+import FacebookPages from '@/pages/FacebookPages';
+import CampaignsList from '@/pages/campaigns/CampaignsList';
+import CampaignWizard from '@/pages/campaigns/CampaignWizard';
+import CampaignDetail from '@/pages/campaigns/CampaignDetail';
+import CampaignPayment from '@/pages/campaigns/CampaignPayment';
+import SavedAudiences from '@/pages/SavedAudiences';
+import Wallet from '@/pages/Wallet';
+import ProfileSettings from '@/pages/ProfileSettings';
+
+// Admin pages
+import AdminOverview from '@/pages/admin/AdminOverview';
+import AdminCampaigns from '@/pages/admin/AdminCampaigns';
+import AdminCampaignDetail from '@/pages/admin/AdminCampaignDetail';
+import AdminPayments from '@/pages/admin/AdminPayments';
+import AdminSettings from '@/pages/admin/AdminSettings';
+import AdminUsers from '@/pages/admin/AdminUsers';
+import AdminPageRequests from '@/pages/admin/AdminPageRequests';
+import AdminReports from '@/pages/admin/AdminReports';
 
 const AuthenticatedApp = () => {
-  const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
+  const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin, currentUser } = useAuth();
 
-  // Show loading spinner while checking app public settings or auth
   if (isLoadingPublicSettings || isLoadingAuth) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin"></div>
+      <div className="fixed inset-0 flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-10 h-10 border-4 border-[hsl(var(--primary))]/20 border-t-[hsl(var(--primary))] rounded-full animate-spin" />
+          <p className="text-sm text-muted-foreground font-medium">Loading Brandfletch Ads...</p>
+        </div>
       </div>
     );
   }
 
-  // Handle authentication errors
   if (authError) {
     if (authError.type === 'user_not_registered') {
       return <UserNotRegisteredError />;
     } else if (authError.type === 'auth_required') {
-      // Redirect to login automatically
       navigateToLogin();
       return null;
     }
   }
 
-  // Render the main app
+  const isStaff = currentUser && ['admin', 'campaign_manager', 'finance'].includes(currentUser.role);
+  const isAdmin = currentUser?.role === 'admin';
+
   return (
     <Routes>
-      {/* Add your page Route elements here */}
+      <Route element={<AppLayout />}>
+        {/* Client routes */}
+        <Route path="/" element={<Navigate to={isStaff ? "/admin" : "/dashboard"} replace />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/pages" element={<FacebookPages />} />
+        <Route path="/campaigns" element={<CampaignsList />} />
+        <Route path="/campaigns/new" element={<CampaignWizard />} />
+        <Route path="/campaigns/:id" element={<CampaignDetail />} />
+        <Route path="/campaigns/:id/payment" element={<CampaignPayment />} />
+        <Route path="/audiences" element={<SavedAudiences />} />
+        <Route path="/wallet" element={<Wallet />} />
+        <Route path="/settings" element={<ProfileSettings />} />
+
+        {/* Admin/Staff routes */}
+        <Route path="/admin" element={<AdminOverview />} />
+        <Route path="/admin/campaigns" element={<AdminCampaigns />} />
+        <Route path="/admin/campaigns/:id" element={<AdminCampaignDetail />} />
+        <Route path="/admin/payments" element={<AdminPayments />} />
+        <Route path="/admin/pages" element={<AdminPageRequests />} />
+        <Route path="/admin/users" element={<AdminUsers />} />
+        <Route path="/admin/reports" element={<AdminReports />} />
+        <Route path="/admin/settings" element={<AdminSettings />} />
+      </Route>
+
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
 };
 
-
 function App() {
-
   return (
     <AuthProvider>
       <QueryClientProvider client={queryClientInstance}>
         <Router>
-          <ScrollToTop />
           <AuthenticatedApp />
         </Router>
         <Toaster />

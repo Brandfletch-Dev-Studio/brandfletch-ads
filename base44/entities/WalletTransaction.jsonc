@@ -1,0 +1,59 @@
+{
+  "name": "WalletTransaction",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "top_up",
+        "payment",
+        "refund"
+      ],
+      "default": "top_up"
+    },
+    "amount": {
+      "type": "number"
+    },
+    "currency": {
+      "type": "string",
+      "default": "USD"
+    },
+    "payment_method": {
+      "type": "string"
+    },
+    "payment_reference": {
+      "type": "string"
+    },
+    "payment_proof_url": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "confirmed",
+        "rejected"
+      ],
+      "default": "pending"
+    },
+    "campaign_id": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "verified_by": {
+      "type": "string"
+    },
+    "finance_notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "amount",
+    "type"
+  ]
+}

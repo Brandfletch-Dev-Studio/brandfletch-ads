@@ -1,0 +1,200 @@
+{
+  "name": "Campaign",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "page_id": {
+      "type": "string",
+      "description": "Facebook Page entity ID"
+    },
+    "page_name": {
+      "type": "string"
+    },
+    "promote_type": {
+      "type": "string",
+      "enum": [
+        "boost_post",
+        "product",
+        "service",
+        "whatsapp_messages",
+        "messenger_messages",
+        "website_traffic"
+      ]
+    },
+    "post_url": {
+      "type": "string"
+    },
+    "creative_assets": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "description": {
+      "type": "string"
+    },
+    "objective": {
+      "type": "string",
+      "enum": [
+        "whatsapp_messages",
+        "messenger_conversations",
+        "website_traffic",
+        "brand_awareness"
+      ]
+    },
+    "whatsapp_number": {
+      "type": "string"
+    },
+    "audience_id": {
+      "type": "string",
+      "description": "SavedAudience ID if saved"
+    },
+    "audience_countries": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "audience_regions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "audience_cities": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "audience_worldwide": {
+      "type": "boolean",
+      "default": false
+    },
+    "audience_age_min": {
+      "type": "number",
+      "default": 18
+    },
+    "audience_age_max": {
+      "type": "number",
+      "default": 65
+    },
+    "audience_gender": {
+      "type": "string",
+      "enum": [
+        "all",
+        "male",
+        "female"
+      ],
+      "default": "all"
+    },
+    "package": {
+      "type": "string",
+      "enum": [
+        "starter",
+        "growth",
+        "business",
+        "premium",
+        "enterprise"
+      ]
+    },
+    "duration": {
+      "type": "string",
+      "enum": [
+        "daily",
+        "weekly",
+        "monthly"
+      ]
+    },
+    "currency": {
+      "type": "string",
+      "default": "USD"
+    },
+    "total_cost": {
+      "type": "number"
+    },
+    "country": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "awaiting_payment",
+        "pending_review",
+        "approved",
+        "active",
+        "paused",
+        "completed",
+        "rejected",
+        "changes_requested"
+      ],
+      "default": "draft"
+    },
+    "payment_method": {
+      "type": "string"
+    },
+    "payment_reference": {
+      "type": "string"
+    },
+    "payment_proof_url": {
+      "type": "string"
+    },
+    "payment_verified_by": {
+      "type": "string"
+    },
+    "payment_notes": {
+      "type": "string"
+    },
+    "assigned_manager": {
+      "type": "string"
+    },
+    "manager_notes": {
+      "type": "string"
+    },
+    "impressions": {
+      "type": "number",
+      "default": 0
+    },
+    "reach": {
+      "type": "number",
+      "default": 0
+    },
+    "clicks": {
+      "type": "number",
+      "default": 0
+    },
+    "messages": {
+      "type": "number",
+      "default": 0
+    },
+    "leads": {
+      "type": "number",
+      "default": 0
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "end_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "completed_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "estimated_impressions": {
+      "type": "number"
+    },
+    "estimated_reach": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "package",
+    "duration"
+  ]
+}
