@@ -32,7 +32,7 @@ import AdminReports from '@/pages/admin/AdminReports';
 import Onboarding from '@/pages/Onboarding';
 
 const AuthenticatedApp = () => {
-  const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin, currentUser } = useAuth();
+  const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin, user: currentUser } = useAuth();
 
   if (isLoadingPublicSettings || isLoadingAuth) {
     return (

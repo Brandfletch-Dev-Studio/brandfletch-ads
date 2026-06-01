@@ -26,7 +26,11 @@ export default function TopBar({ onMenuToggle, currentUser, isStaff }) {
           <Menu className="w-5 h-5" />
         </button>
         <div className="lg:hidden">
-          <BrandLogo size="sm" />
+          <img
+            src="https://media.base44.com/images/public/6a1df082a0de66cf554f8fdd/eeb543716_file_0000000024d0722fa20034e2dedcbc9e.png"
+            alt="Brandfletch Ads"
+            className="w-7 h-7 rounded-xl object-contain"
+          />
         </div>
       </div>
 
