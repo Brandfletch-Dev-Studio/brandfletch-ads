@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { Megaphone, Facebook, Wallet, TrendingUp, Plus, ArrowRight, Activity } from 'lucide-react';
+import { Megaphone, Facebook, Wallet, Plus, ArrowRight, Activity } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import StatusBadge from '@/components/ui/StatusBadge';
-import { formatDistanceToNow } from 'date-fns';
+import OnboardingChecklist from '@/components/dashboard/OnboardingChecklist';
 
 export default function Dashboard() {
   const [user, setUser] = useState(null);
@@ -84,6 +84,11 @@ export default function Dashboard() {
           </Card>
         ))}
       </div>
+
+      {/* Onboarding checklist */}
+      {!loading && (
+        <OnboardingChecklist user={user} pages={pages} campaigns={campaigns} wallet={wallet} />
+      )}
 
       {/* No page warning */}
       {!loading && pages.length === 0 && (

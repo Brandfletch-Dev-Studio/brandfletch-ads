@@ -3,13 +3,11 @@ import { Link, useLocation, Outlet } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import {
   LayoutDashboard, Megaphone, Facebook, Users, Wallet,
-  Settings, Bell, Menu, X, ChevronRight, BarChart3, Shield
+  Settings, X, ChevronRight, BarChart3, Shield
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/lib/AuthContext';
-import NotificationDropdown from '@/components/notifications/NotificationDropdown';
 import BrandLogo from '@/components/BrandLogo';
+import TopBar from '@/components/layout/TopBar';
 
 const clientNav = [
   { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -40,6 +38,7 @@ export default function AppLayout() {
   const isFinance = currentUser?.role === 'finance';
   const isStaff = isAdmin || isCampaignManager || isFinance;
 
+  const isAdminView = location.pathname.startsWith('/admin');
   const navItems = isStaff ? adminNav : clientNav;
 
   return (
@@ -100,14 +99,12 @@ export default function AppLayout() {
           {isAdmin && (
             <div className="pt-3 mt-3 border-t border-[hsl(var(--sidebar-border))]">
               <Link
-                to={isStaff && location.pathname.startsWith('/admin') ? '/dashboard' : '/admin'}
+                to={isAdminView ? '/dashboard' : '/admin'}
                 onClick={() => setSidebarOpen(false)}
                 className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all text-[hsl(var(--sidebar-foreground))] hover:bg-[hsl(var(--sidebar-accent))] hover:text-white"
               >
                 <Shield className="w-4 h-4 flex-shrink-0" />
-                <span className="flex-1">
-                  {location.pathname.startsWith('/admin') ? 'Switch to Client View' : 'Switch to Admin View'}
-                </span>
+                <span className="flex-1">{isAdminView ? 'Switch to Client View' : 'Switch to Admin View'}</span>
               </Link>
             </div>
           )}
@@ -138,25 +135,11 @@ export default function AppLayout() {
       {/* Main */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Topbar */}
-        <header className="h-16 flex items-center justify-between px-4 lg:px-6 border-b border-border bg-card flex-shrink-0">
-          <button
-            onClick={() => setSidebarOpen(true)}
-            className="lg:hidden p-2 rounded-md hover:bg-secondary"
-          >
-            <Menu className="w-5 h-5" />
-          </button>
-          <div className="hidden lg:block" />
-          <div className="flex items-center gap-3">
-            <NotificationDropdown />
-            {!isStaff && (
-              <Link to="/campaigns/new">
-                <Button size="sm" className="bg-[hsl(var(--accent))] hover:bg-[hsl(217,91%,48%)] text-white font-semibold">
-                  + New Campaign
-                </Button>
-              </Link>
-            )}
-          </div>
-        </header>
+        <TopBar
+          onMenuToggle={() => setSidebarOpen(true)}
+          currentUser={currentUser}
+          isStaff={isStaff}
+        />
 
         {/* Page content */}
         <main className="flex-1 overflow-y-auto">
