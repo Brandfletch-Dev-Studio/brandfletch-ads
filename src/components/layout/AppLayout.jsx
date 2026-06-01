@@ -31,7 +31,7 @@ const adminNav = [
 export default function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
-  const { currentUser } = useAuth();
+  const { user: currentUser } = useAuth();
 
   const isAdmin = currentUser?.role === 'admin';
   const isCampaignManager = currentUser?.role === 'campaign_manager';

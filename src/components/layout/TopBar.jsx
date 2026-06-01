@@ -15,9 +15,9 @@ export default function TopBar({ onMenuToggle, currentUser, isStaff }) {
     : (currentUser?.email?.[0] || 'U').toUpperCase();
 
   return (
-    <header className="h-14 flex items-center justify-between px-4 lg:px-6 border-b border-border bg-card flex-shrink-0 z-30">
-      {/* Left: hamburger + logo (mobile) */}
-      <div className="flex items-center gap-3">
+    <header className="h-14 relative flex items-center justify-between px-4 lg:px-6 border-b border-border bg-card flex-shrink-0 z-30">
+      {/* Left: hamburger (mobile) */}
+      <div className="flex items-center w-10">
         <button
           onClick={onMenuToggle}
           className="lg:hidden p-1.5 rounded-lg hover:bg-secondary transition-colors"
@@ -25,13 +25,15 @@ export default function TopBar({ onMenuToggle, currentUser, isStaff }) {
         >
           <Menu className="w-5 h-5" />
         </button>
-        <div className="lg:hidden">
-          <img
-            src="https://media.base44.com/images/public/6a1df082a0de66cf554f8fdd/eeb543716_file_0000000024d0722fa20034e2dedcbc9e.png"
-            alt="Brandfletch Ads"
-            className="w-7 h-7 rounded-xl object-contain"
-          />
-        </div>
+      </div>
+
+      {/* Center: logo */}
+      <div className="absolute left-1/2 -translate-x-1/2 lg:hidden">
+        <img
+          src="https://media.base44.com/images/public/6a1df082a0de66cf554f8fdd/eeb543716_file_0000000024d0722fa20034e2dedcbc9e.png"
+          alt="Brandfletch Ads"
+          className="w-8 h-8 rounded-xl object-contain"
+        />
       </div>
 
       {/* Right: actions */}

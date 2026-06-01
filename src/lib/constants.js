@@ -1,12 +1,20 @@
+// Supported countries — 5 focus markets
 export const COUNTRIES = [
-  'Malawi', 'Kenya', 'Zambia', 'Zimbabwe', 'Tanzania', 'Uganda', 'Rwanda',
-  'Ghana', 'Nigeria', 'South Africa', 'Mozambique', 'Botswana', 'Namibia',
-  'Ethiopia', 'Senegal', 'Ivory Coast', 'Cameroon', 'Angola', 'Egypt',
-  'Morocco', 'Tunisia', 'Algeria', 'Sudan', 'Somalia', 'DRC',
-  'United States', 'United Kingdom', 'Canada', 'Australia', 'Germany',
-  'France', 'Netherlands', 'Sweden', 'Norway', 'Denmark', 'Finland',
-  'Other'
+  'Malawi',
+  'Zambia',
+  'South Africa',
+  'Kenya',
+  'Tanzania',
 ];
+
+// Currency config per country
+export const COUNTRY_CURRENCY = {
+  Malawi:       { code: 'MWK', symbol: 'MK',  name: 'Malawian Kwacha' },
+  Zambia:       { code: 'ZMW', symbol: 'ZK',  name: 'Zambian Kwacha' },
+  'South Africa': { code: 'ZAR', symbol: 'R',  name: 'South African Rand' },
+  Kenya:        { code: 'KES', symbol: 'KSh', name: 'Kenyan Shilling' },
+  Tanzania:     { code: 'TZS', symbol: 'TSh', name: 'Tanzanian Shilling' },
+};
 
 export const CAMPAIGN_STATUS_CONFIG = {
   draft: { label: 'Draft', color: 'bg-gray-100 text-gray-600', dot: 'bg-gray-400' },
