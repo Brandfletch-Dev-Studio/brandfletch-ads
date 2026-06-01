@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
-import { User, Search, Shield } from 'lucide-react';
+import { Search, Shield, UserPlus, X, Mail } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
@@ -12,10 +15,26 @@ export default function AdminUsers() {
   const [users, setUsers] = useState([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
+  const [showInvite, setShowInvite] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteRole, setInviteRole] = useState('campaign_manager');
+  const [inviting, setInviting] = useState(false);
 
   useEffect(() => {
     base44.entities.User.list().then(u => { setUsers(u); setLoading(false); });
   }, []);
+
+  async function handleInvite(e) {
+    e.preventDefault();
+    if (!inviteEmail.trim()) return;
+    setInviting(true);
+    await base44.users.inviteUser(inviteEmail.trim(), inviteRole);
+    toast.success(`Invite sent to ${inviteEmail}`);
+    setShowInvite(false);
+    setInviteEmail('');
+    setInviteRole('campaign_manager');
+    setInviting(false);
+  }
 
   async function updateRole(id, role) {
     await base44.entities.User.update(id, { role });
@@ -38,10 +57,59 @@ export default function AdminUsers() {
 
   return (
     <div className="p-4 lg:p-8 max-w-4xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold font-heading">Users</h1>
-        <p className="text-muted-foreground text-sm mt-1">{users.length} registered users</p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold font-heading">Users</h1>
+          <p className="text-muted-foreground text-sm mt-1">{users.length} registered users</p>
+        </div>
+        <Button onClick={() => setShowInvite(true)} size="sm" className="flex-shrink-0">
+          <UserPlus className="w-4 h-4 mr-2" /> Invite Team Member
+        </Button>
       </div>
+
+      {/* Invite dialog */}
+      <Dialog open={showInvite} onOpenChange={setShowInvite}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><UserPlus className="w-5 h-5" /> Invite Team Member</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleInvite} className="space-y-4 mt-2">
+            <div className="space-y-1">
+              <Label>Email address</Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  type="email"
+                  required
+                  placeholder="colleague@example.com"
+                  value={inviteEmail}
+                  onChange={e => setInviteEmail(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label>Role</Label>
+              <Select value={inviteRole} onValueChange={setInviteRole}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="campaign_manager">Campaign Manager</SelectItem>
+                  <SelectItem value="finance">Finance</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex gap-2 pt-1">
+              <Button type="button" variant="outline" className="flex-1" onClick={() => setShowInvite(false)}>Cancel</Button>
+              <Button type="submit" disabled={inviting} className="flex-1">
+                {inviting ? 'Sending...' : 'Send Invite'}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />

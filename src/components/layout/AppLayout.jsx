@@ -95,6 +95,22 @@ export default function AppLayout() {
               </Link>
             );
           })}
+
+          {/* Admin ↔ Client view switcher (admin only) */}
+          {isAdmin && (
+            <div className="pt-3 mt-3 border-t border-[hsl(var(--sidebar-border))]">
+              <Link
+                to={isStaff && location.pathname.startsWith('/admin') ? '/dashboard' : '/admin'}
+                onClick={() => setSidebarOpen(false)}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all text-[hsl(var(--sidebar-foreground))] hover:bg-[hsl(var(--sidebar-accent))] hover:text-white"
+              >
+                <Shield className="w-4 h-4 flex-shrink-0" />
+                <span className="flex-1">
+                  {location.pathname.startsWith('/admin') ? 'Switch to Client View' : 'Switch to Admin View'}
+                </span>
+              </Link>
+            </div>
+          )}
         </nav>
 
         {/* User */}
