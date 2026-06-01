@@ -29,6 +29,7 @@ import AdminSettings from '@/pages/admin/AdminSettings';
 import AdminUsers from '@/pages/admin/AdminUsers';
 import AdminPageRequests from '@/pages/admin/AdminPageRequests';
 import AdminReports from '@/pages/admin/AdminReports';
+import Onboarding from '@/pages/Onboarding';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin, currentUser } = useAuth();
@@ -58,6 +59,7 @@ const AuthenticatedApp = () => {
 
   return (
     <Routes>
+      <Route path="/onboarding" element={<Onboarding />} />
       <Route element={<AppLayout />}>
         {/* Client routes */}
         <Route path="/" element={<Navigate to={isStaff ? "/admin" : "/dashboard"} replace />} />

@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/lib/AuthContext';
 import NotificationDropdown from '@/components/notifications/NotificationDropdown';
+import BrandLogo from '@/components/BrandLogo';
 
 const clientNav = [
   { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -50,13 +51,8 @@ export default function AppLayout() {
         sidebarOpen ? "translate-x-0" : "-translate-x-full"
       )}>
         {/* Logo */}
-        <div className="flex items-center justify-between h-16 px-6 border-b border-[hsl(var(--sidebar-border))]">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-[hsl(var(--accent))] flex items-center justify-center">
-              <Megaphone className="w-4 h-4 text-white" />
-            </div>
-            <span className="font-display font-bold text-white text-sm">Brandfletch Ads</span>
-          </div>
+        <div className="flex items-center justify-between h-16 px-4 border-b border-[hsl(var(--sidebar-border))]">
+          <BrandLogo size="sidebar" />
           <button
             onClick={() => setSidebarOpen(false)}
             className="lg:hidden text-[hsl(var(--sidebar-foreground))] hover:text-white"
