@@ -7,13 +7,23 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
+
+function isFacebookUrl(url) {
+  return /^https?:\/\/(www\.)?(facebook\.com|fb\.com)\//i.test(url.trim());
+}
 
 export default function FacebookPages() {
   const [pages, setPages] = useState([]);
   const [user, setUser] = useState(null);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [form, setForm] = useState({ page_name: '', page_url: '' });
+  const [urlTouched, setUrlTouched] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  const urlValid = isFacebookUrl(form.page_url);
+  const showUrlError = urlTouched && form.page_url && !urlValid;
+  const showUrlSuccess = form.page_url && urlValid;
 
   useEffect(() => {
     init();
@@ -33,6 +43,7 @@ export default function FacebookPages() {
   async function handleSubmit(e) {
     e.preventDefault();
     if (!form.page_name.trim() || !form.page_url.trim()) return;
+    if (!urlValid) { toast.error('Please enter a valid Facebook page URL'); return; }
     setSubmitting(true);
     await base44.entities.FacebookPage.create({
       ...form,
@@ -42,6 +53,7 @@ export default function FacebookPages() {
     toast.success('Page submitted for verification!');
     setShowAddDialog(false);
     setForm({ page_name: '', page_url: '' });
+    setUrlTouched(false);
     loadPages(user.id);
     setSubmitting(false);
   }
@@ -179,20 +191,27 @@ export default function FacebookPages() {
               />
             </div>
             <div>
-              <Label>Page URL *</Label>
-              <Input
-                value={form.page_url}
-                onChange={e => setForm(f => ({ ...f, page_url: e.target.value }))}
-                placeholder="https://facebook.com/yourpage"
-                className="mt-1"
-                required
-              />
+              <Label>Page URL * <span className="text-xs font-normal text-muted-foreground">(must be a Facebook page link)</span></Label>
+              <div className="relative mt-1">
+                <Input
+                  value={form.page_url}
+                  onChange={e => setForm(f => ({ ...f, page_url: e.target.value }))}
+                  onBlur={() => setUrlTouched(true)}
+                  placeholder="https://facebook.com/yourpage"
+                  className={cn("pr-9", showUrlError && "border-destructive focus-visible:ring-destructive", showUrlSuccess && "border-green-500 focus-visible:ring-green-500")}
+                  required
+                />
+                {showUrlSuccess && <CheckCircle2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-green-500" />}
+                {showUrlError && <AlertCircle className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-destructive" />}
+              </div>
+              {showUrlError && <p className="text-xs text-destructive mt-1 flex items-center gap-1"><AlertCircle className="w-3 h-3" /> Must be a valid facebook.com URL</p>}
+              {showUrlSuccess && <p className="text-xs text-green-600 mt-1 flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Valid Facebook URL</p>}
             </div>
             <div className="flex gap-3 pt-2">
               <Button type="button" variant="outline" onClick={() => setShowAddDialog(false)} className="flex-1">
                 Cancel
               </Button>
-              <Button type="submit" disabled={submitting} className="flex-1 bg-[hsl(var(--primary))] text-primary-foreground">
+              <Button type="submit" disabled={submitting || !urlValid || !form.page_name.trim()} className="flex-1 bg-[hsl(var(--primary))] text-primary-foreground">
                 {submitting ? 'Submitting...' : 'Submit for Verification'}
               </Button>
             </div>
