@@ -27,13 +27,14 @@ export default function TopBar({ onMenuToggle, currentUser, isStaff }) {
         </button>
       </div>
 
-      {/* Center: logo */}
-      <div className="absolute left-1/2 -translate-x-1/2 lg:hidden">
+      {/* Center: logo + name */}
+      <div className="absolute left-1/2 -translate-x-1/2 lg:hidden flex items-center gap-2">
         <img
           src="https://media.base44.com/images/public/6a1df082a0de66cf554f8fdd/eeb543716_file_0000000024d0722fa20034e2dedcbc9e.png"
           alt="Brandfletch Ads"
-          className="w-8 h-8 rounded-xl object-contain"
+          className="w-7 h-7 rounded-xl object-contain"
         />
+        <span className="font-display font-bold text-sm text-foreground leading-none">Brandfletch</span>
       </div>
 
       {/* Right: actions */}

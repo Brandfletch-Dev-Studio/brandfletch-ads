@@ -28,12 +28,17 @@ export default function AdminUsers() {
     e.preventDefault();
     if (!inviteEmail.trim()) return;
     setInviting(true);
-    await base44.users.inviteUser(inviteEmail.trim(), inviteRole);
-    toast.success(`Invite sent to ${inviteEmail}`);
-    setShowInvite(false);
-    setInviteEmail('');
-    setInviteRole('campaign_manager');
-    setInviting(false);
+    try {
+      await base44.users.inviteUser(inviteEmail.trim(), inviteRole);
+      toast.success(`Invite sent to ${inviteEmail}`);
+      setShowInvite(false);
+      setInviteEmail('');
+      setInviteRole('campaign_manager');
+    } catch (err) {
+      toast.error(err?.message || 'Failed to send invite. Please try again.');
+    } finally {
+      setInviting(false);
+    }
   }
 
   async function updateRole(id, role) {
