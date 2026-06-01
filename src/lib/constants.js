@@ -28,10 +28,10 @@ export const OBJECTIVES = [
 ];
 
 export const PROMOTE_TYPES = [
-  { value: 'boost_post', label: 'Boost an existing Facebook post', icon: '🚀' },
-  { value: 'product', label: 'Promote a product', icon: '🛍️' },
-  { value: 'service', label: 'Promote a service', icon: '⚡' },
-  { value: 'whatsapp_messages', label: 'Get WhatsApp messages', icon: '💬' },
-  { value: 'messenger_messages', label: 'Get Messenger messages', icon: '📨' },
-  { value: 'website_traffic', label: 'Drive website traffic', icon: '🌐' },
+  { value: 'boost_post', label: 'Boost a Facebook post', icon: '🚀', desc: 'Amplify a post already on your Page — needs a Facebook URL' },
+  { value: 'product', label: 'Promote a product', icon: '🛍️', desc: 'Showcase a specific item you sell' },
+  { value: 'service', label: 'Promote a service', icon: '⚡', desc: 'Advertise a service your business offers' },
+  { value: 'whatsapp_messages', label: 'Get WhatsApp messages', icon: '💬', desc: 'Drive people to chat with you on WhatsApp' },
+  { value: 'messenger_messages', label: 'Get Messenger messages', icon: '📨', desc: 'Drive people to message you on Messenger' },
+  { value: 'website_traffic', label: 'Drive website traffic', icon: '🌐', desc: 'Send people to your website or landing page' },
 ];
