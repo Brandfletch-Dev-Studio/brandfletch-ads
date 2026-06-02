@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { COUNTRIES } from '@/lib/constants';
+import { COUNTRIES, COUNTRY_CURRENCY, formatLocalCurrency } from '@/lib/constants';
 import { ChevronRight, Check, Loader2, CheckCircle2, Facebook, Briefcase, Wrench, Copy, CheckCheck, ChevronDown } from 'lucide-react';
 import BrandLogo from '@/components/BrandLogo';
 import { useQuery } from '@tanstack/react-query';
@@ -135,25 +135,28 @@ export default function Onboarding() {
 
   async function submitHireRequest() {
     setSaving(true);
-    await saveProfile();
-    const selectedMethod = paymentMethods.find(m => m.id === setupForm.payment_method_id);
-    await base44.entities.PageSetupRequest.create({
-      user_id: user?.id,
-      country: form.country,
-      business_name: setupForm.business_name,
-      products_services: setupForm.products_services,
-      business_location: setupForm.business_location,
-      whatsapp_number: setupForm.whatsapp_number,
-      email: setupForm.email,
-      logo_urls: setupForm.logo_urls,
-      additional_notes: setupForm.additional_notes,
-      payment_method: selectedMethod?.method_name || '',
-      payment_reference: setupForm.payment_reference,
-      payment_proof_url: setupForm.payment_proof_url,
-      status: setupForm.payment_proof_url ? 'paid' : 'pending_payment',
-    });
-    navigate('/dashboard');
-    setSaving(false);
+    try {
+      await saveProfile();
+      const selectedMethod = paymentMethods.find(m => m.id === setupForm.payment_method_id);
+      await base44.entities.PageSetupRequest.create({
+        user_id: user?.id,
+        country: form.country,
+        business_name: setupForm.business_name,
+        products_services: setupForm.products_services,
+        business_location: setupForm.business_location,
+        whatsapp_number: setupForm.whatsapp_number,
+        email: setupForm.email,
+        logo_urls: setupForm.logo_urls,
+        additional_notes: setupForm.additional_notes,
+        payment_method: selectedMethod?.method_name || '',
+        payment_reference: setupForm.payment_reference,
+        payment_proof_url: setupForm.payment_proof_url,
+        status: setupForm.payment_proof_url ? 'paid' : 'pending_payment',
+      });
+      navigate('/dashboard');
+    } finally {
+      setSaving(false);
+    }
   }
 
   const isHireFlow = setupChoice === 'hire';
@@ -171,15 +174,22 @@ export default function Onboarding() {
   const steps = isHireFlow ? hireSteps : baseSteps;
   const selectedPaymentMethod = paymentMethods.find(m => m.id === setupForm.payment_method_id);
   const servicePrice = pageSetupService?.price_usd ?? 25;
-  const LOCAL_CURRENCIES = { Malawi: { code: 'MWK', symbol: 'MK' }, Zambia: { code: 'ZMW', symbol: 'ZK' }, 'South Africa': { code: 'ZAR', symbol: 'R' }, Kenya: { code: 'KES', symbol: 'KSh' }, Tanzania: { code: 'TZS', symbol: 'TSh' } };
 
   function localPrice(usdAmount) {
-    const cc = LOCAL_CURRENCIES[form.country];
-    const rate = exchangeRates.find(r => r.country === form.country);
-    if (!cc || !rate) return { display: `$${usdAmount.toFixed(2)}`, local: null };
-    const local = usdAmount * rate.rate_to_usd;
-    const fmt = local >= 1000 ? local.toLocaleString('en', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) : local.toFixed(2);
-    return { display: `${cc.symbol} ${fmt}`, local: `${cc.symbol} ${fmt}`, usd: `$${usdAmount}`, code: cc.code };
+    const cc = COUNTRY_CURRENCY[form.country];
+    if (!cc) return { display: `$${usdAmount.toFixed(2)}`, local: null };
+    const liveRate = exchangeRates.find(r => r.country === form.country);
+    if (liveRate?.rate_to_usd) {
+      const local = usdAmount * liveRate.rate_to_usd;
+      const fmt = local >= 1000
+        ? local.toLocaleString('en', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
+        : local.toFixed(2);
+      const str = `${cc.symbol} ${fmt}`;
+      return { display: str, local: str, usd: `$${usdAmount}`, code: cc.code };
+    }
+    // fallback to hardcoded rates in constants
+    const str = formatLocalCurrency(usdAmount, form.country);
+    return { display: str, local: str, usd: `$${usdAmount}`, code: cc.code };
   }
 
   function copyText(text, field) {
