@@ -27,7 +27,7 @@ const adminNav = [
   { path: '/admin/users', label: 'Users', icon: Users },
   { path: '/admin/payments', label: 'Payments', icon: Wallet },
   { path: '/admin/notifications', label: 'Notifications', icon: Bell },
-  { path: '/messages', label: 'Messages', icon: MessageCircle },
+  { path: '/admin/messages', label: 'Messages', icon: MessageCircle },
   { path: '/admin/reports', label: 'Reports', icon: BarChart3 },
   { path: '/admin/settings', label: 'Settings', icon: Settings },
 ];

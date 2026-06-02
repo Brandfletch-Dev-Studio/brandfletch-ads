@@ -19,10 +19,9 @@ export default function Messages() {
   useEffect(() => {
     base44.auth.me().then(u => {
       setUser(u);
-      base44.entities.Message.list('-created_date', 100).then(msgs => {
+      base44.entities.Message.filter({ conversation_user_id: u.id }, '-created_date', 100).then(msgs => {
         setMessages(msgs.reverse());
-        // Mark unread messages (from admin) as read
-        msgs.filter(m => m.sender_id !== u.id && !m.is_read).forEach(m => {
+        msgs.filter(m => m.sender_role === 'admin' && !m.is_read).forEach(m => {
           base44.entities.Message.update(m.id, { is_read: true }).catch(() => {});
         });
       });
@@ -62,6 +61,7 @@ export default function Messages() {
       content: input.trim(),
       attachment_url: attachment || '',
       is_read: false,
+      conversation_user_id: user.id,
     });
     setInput('');
     setAttachment(null);

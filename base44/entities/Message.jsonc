@@ -20,10 +20,14 @@
     },
     "attachment_url": {
       "type": "string"
+    },
+    "conversation_user_id": {
+      "type": "string"
     }
   },
   "required": [
     "content",
-    "sender_id"
+    "sender_id",
+    "conversation_user_id"
   ]
 }

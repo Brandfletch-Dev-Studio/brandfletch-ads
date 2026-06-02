@@ -22,8 +22,21 @@
       "type": "string"
     },
     "admin_notification_email": {
-      "type": "string",
-      "description": "Email address to receive admin notification emails"
+      "type": "string"
+    },
+    "profile_photo": {
+      "type": "string"
+    },
+    "cover_photo": {
+      "type": "string"
     }
-  }
+  },
+  "required": [
+    "country",
+    "phone",
+    "business_name",
+    "admin_notification_email",
+    "profile_photo",
+    "cover_photo"
+  ]
 }
