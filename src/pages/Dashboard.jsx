@@ -1,18 +1,15 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { Megaphone, Facebook, Wallet, Plus, ArrowRight, Activity } from 'lucide-react';
+import { Megaphone, Facebook, Plus, ArrowRight, Activity } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import StatusBadge from '@/components/ui/StatusBadge';
-import OnboardingChecklist from '@/components/dashboard/OnboardingChecklist';
-import { formatLocalCurrency } from '@/lib/constants';
 
 export default function Dashboard() {
   const [user, setUser] = useState(null);
   const [campaigns, setCampaigns] = useState([]);
   const [pages, setPages] = useState([]);
-  const [wallet, setWallet] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -22,20 +19,12 @@ export default function Dashboard() {
   async function init() {
     const u = await base44.auth.me();
     setUser(u);
-    const [camps, pgs, txns] = await Promise.all([
+    const [camps, pgs] = await Promise.all([
       base44.entities.Campaign.filter({ user_id: u.id }, '-created_date', 10),
       base44.entities.FacebookPage.filter({ user_id: u.id }, '-created_date'),
-      base44.entities.WalletTransaction.filter({ user_id: u.id, status: 'confirmed' }),
     ]);
     setCampaigns(camps);
     setPages(pgs);
-    const bal = txns.reduce((sum, t) => {
-      if (t.type === 'top_up') return sum + (t.amount || 0);
-      if (t.type === 'payment') return sum - (t.amount || 0);
-      if (t.type === 'refund') return sum + (t.amount || 0);
-      return sum;
-    }, 0);
-    setWallet(bal);
     setLoading(false);
   }
 
@@ -47,7 +36,6 @@ export default function Dashboard() {
     { label: 'Active Campaigns', value: activeCampaigns, icon: Activity, color: 'text-green-600', bg: 'bg-green-50' },
     { label: 'Pending Review', value: pendingCampaigns, icon: Megaphone, color: 'text-amber-600', bg: 'bg-amber-50' },
     { label: 'Connected Pages', value: connectedPages, icon: Facebook, color: 'text-blue-600', bg: 'bg-blue-50' },
-    { label: 'Wallet Balance', value: formatLocalCurrency(wallet, user?.country), icon: Wallet, color: 'text-purple-600', bg: 'bg-purple-50' },
   ];
 
   return (
@@ -85,11 +73,6 @@ export default function Dashboard() {
           </Card>
         ))}
       </div>
-
-      {/* Onboarding checklist */}
-      {!loading && (
-        <OnboardingChecklist user={user} pages={pages} campaigns={campaigns} wallet={wallet} />
-      )}
 
       {/* No page warning */}
       {!loading && pages.length === 0 && (
