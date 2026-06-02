@@ -33,7 +33,7 @@ export default function AuthLayout({ title, subtitle, footer, children, hideBran
       {/* Right panel – form */}
       <div className="flex-1 flex flex-col items-center justify-center px-4 overflow-y-auto">
         {!hideBrand && (
-          <div className="lg:hidden mb-6 w-full max-w-md">
+          <div className="lg:hidden mb-6 w-full max-w-md flex justify-center">
             <BrandLogo size="md" dark />
           </div>
         )}

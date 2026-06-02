@@ -99,10 +99,6 @@ export default function Register() {
           onClick={() => base44.auth.loginWithProvider("google", "/onboarding")}>
           <GoogleIcon className="w-4 h-4" /> Continue with Google
         </Button>
-        <Button variant="outline" className="w-full h-11 text-sm font-medium gap-2.5 border-[#1877F2]/30 hover:bg-[#1877F2]/5"
-          onClick={() => base44.auth.loginWithProvider("facebook", "/onboarding")}>
-          <FacebookIcon /> Continue with Facebook
-        </Button>
       </div>
 
       <div className="relative mb-6">
