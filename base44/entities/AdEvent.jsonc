@@ -1,0 +1,26 @@
+{
+  "name": "AdEvent",
+  "type": "object",
+  "properties": {
+    "ad_id": {
+      "type": "string"
+    },
+    "user_id": {
+      "type": "string"
+    },
+    "event_type": {
+      "type": "string",
+      "enum": [
+        "impression",
+        "click",
+        "dismiss"
+      ],
+      "default": "impression"
+    }
+  },
+  "required": [
+    "ad_id",
+    "user_id",
+    "event_type"
+  ]
+}

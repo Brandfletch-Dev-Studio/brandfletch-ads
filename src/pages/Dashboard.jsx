@@ -5,6 +5,7 @@ import { Megaphone, Facebook, Plus, ArrowRight, Activity } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import StatusBadge from '@/components/ui/StatusBadge';
+import AdPlacement from '@/components/ads/AdPlacement';
 
 export default function Dashboard() {
   const [user, setUser] = useState(null);
@@ -55,6 +56,8 @@ export default function Dashboard() {
         </Link>
       </div>
 
+      <AdPlacement placement="dashboard_top" userId={user?.id} hasCampaigns={campaigns.length > 0} hasPages={pages.length > 0} />
+
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
         {stats.map(({ label, value, icon: Icon, color, bg, to }) => (
@@ -95,6 +98,8 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       )}
+
+      <AdPlacement placement="dashboard_bottom" userId={user?.id} hasCampaigns={campaigns.length > 0} hasPages={pages.length > 0} />
 
       <div className="grid lg:grid-cols-2 gap-6">
         {/* Recent Campaigns */}

@@ -1,0 +1,83 @@
+{
+  "name": "AppAd",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "body": {
+      "type": "string"
+    },
+    "image_url": {
+      "type": "string"
+    },
+    "cta_label": {
+      "type": "string"
+    },
+    "cta_url": {
+      "type": "string",
+      "description": "Internal route or external URL"
+    },
+    "cta_external": {
+      "type": "boolean",
+      "default": false
+    },
+    "placement": {
+      "type": "string",
+      "enum": [
+        "dashboard_top",
+        "dashboard_bottom",
+        "campaigns_top",
+        "pages_top"
+      ],
+      "default": "dashboard_top"
+    },
+    "target_audience": {
+      "type": "string",
+      "enum": [
+        "all",
+        "no_campaigns",
+        "no_pages",
+        "has_campaigns"
+      ],
+      "default": "all",
+      "description": "Who should see this ad"
+    },
+    "background_color": {
+      "type": "string",
+      "enum": [
+        "blue",
+        "green",
+        "purple",
+        "amber",
+        "red",
+        "dark"
+      ],
+      "default": "blue"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    },
+    "is_dismissable": {
+      "type": "boolean",
+      "default": true
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "end_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "sort_order": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "title",
+    "placement"
+  ]
+}

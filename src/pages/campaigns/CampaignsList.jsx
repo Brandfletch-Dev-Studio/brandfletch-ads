@@ -7,12 +7,14 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import StatusBadge from '@/components/ui/StatusBadge';
 import { format } from 'date-fns';
+import AdPlacement from '@/components/ads/AdPlacement';
 
 export default function CampaignsList() {
   const [campaigns, setCampaigns] = useState([]);
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('all');
   const [loading, setLoading] = useState(true);
+  const [userId, setUserId] = useState(null);
 
   useEffect(() => {
     init();
@@ -20,6 +22,7 @@ export default function CampaignsList() {
 
   async function init() {
     const user = await base44.auth.me();
+    setUserId(user.id);
     const data = await base44.entities.Campaign.filter({ user_id: user.id }, '-created_date');
     setCampaigns(data);
     setLoading(false);
@@ -40,6 +43,7 @@ export default function CampaignsList() {
 
   return (
     <div className="p-4 lg:p-8 max-w-4xl mx-auto space-y-6">
+      <AdPlacement placement="campaigns_top" userId={userId} hasCampaigns={campaigns.length > 0} />
       <div className="flex items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold font-heading">My Campaigns</h1>
