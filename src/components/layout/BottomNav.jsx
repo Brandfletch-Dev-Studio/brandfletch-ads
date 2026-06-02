@@ -6,7 +6,6 @@ const clientItems = [
   { path: '/dashboard', label: 'Home', icon: LayoutDashboard },
   { path: '/campaigns', label: 'Campaigns', icon: Megaphone },
   { path: '/pages', label: 'Pages', icon: Facebook },
-  { path: '/wallet', label: 'Wallet', icon: Wallet },
   { path: '/messages', label: 'Messages', icon: MessageCircle },
 ];
 

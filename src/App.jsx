@@ -17,7 +17,6 @@ import CampaignWizard from '@/pages/campaigns/CampaignWizard';
 import CampaignDetail from '@/pages/campaigns/CampaignDetail';
 import CampaignPayment from '@/pages/campaigns/CampaignPayment';
 import SavedAudiences from '@/pages/SavedAudiences';
-import Wallet from '@/pages/Wallet';
 import ProfileSettings from '@/pages/ProfileSettings';
 import Messages from '@/pages/Messages';
 import Marketplace from '@/pages/Marketplace';
@@ -103,7 +102,6 @@ const AuthenticatedApp = () => {
         <Route path="/campaigns/:id" element={<CampaignDetail />} />
         <Route path="/campaigns/:id/payment" element={<CampaignPayment />} />
         <Route path="/audiences" element={<SavedAudiences />} />
-        <Route path="/wallet" element={<Wallet />} />
         <Route path="/settings" element={<ProfileSettings />} />
         <Route path="/messages" element={<Messages />} />
         <Route path="/marketplace" element={<Marketplace />} />
