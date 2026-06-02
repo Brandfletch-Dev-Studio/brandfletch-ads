@@ -18,7 +18,7 @@ const adminItems = [
   { path: '/admin/messages', label: 'Messages', icon: MessageCircle },
 ];
 
-export default function BottomNav({ isStaff }) {
+export default function BottomNav({ isStaff, unreadCount = 0 }) {
   const location = useLocation();
   const isAdminView = location.pathname.startsWith('/admin');
   const items = (isStaff && isAdminView) ? adminItems : clientItems;
@@ -33,13 +33,20 @@ export default function BottomNav({ isStaff }) {
               key={path}
               to={path}
               className={cn(
-                'flex-1 flex flex-col items-center justify-center py-2 gap-0.5 min-h-[56px] transition-colors',
+                'flex-1 flex flex-col items-center justify-center py-2 gap-0.5 min-h-[56px] transition-colors relative',
                 active
                   ? 'text-[hsl(var(--primary))]'
                   : 'text-muted-foreground'
               )}
             >
-              <Icon className={cn('w-5 h-5', active && 'stroke-[2.5]')} />
+              <div className="relative">
+                <Icon className={cn('w-5 h-5', active && 'stroke-[2.5]')} />
+                {(path === '/messages' || path === '/admin/messages') && unreadCount > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 min-w-[14px] h-3.5 px-0.5 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center">
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </span>
+                )}
+              </div>
               <span className={cn('text-[10px] font-medium', active ? 'text-[hsl(var(--primary))]' : 'text-muted-foreground')}>
                 {label}
               </span>

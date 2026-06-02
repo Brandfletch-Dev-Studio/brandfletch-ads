@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { base44 } from '@/api/base44Client';
 import { Link, useLocation, Outlet } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import {
@@ -6,6 +8,7 @@ import {
   Settings, X, ChevronRight, BarChart3, Shield, Bell, MessageCircle
 } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
+
 import BrandLogo from '@/components/BrandLogo';
 import TopBar from '@/components/layout/TopBar';
 import BottomNav from '@/components/layout/BottomNav';
@@ -41,6 +44,16 @@ export default function AppLayout() {
   const isCampaignManager = currentUser?.role === 'campaign_manager';
   const isFinance = currentUser?.role === 'finance';
   const isStaff = isAdmin || isCampaignManager || isFinance;
+
+  const { data: unreadMessages = [] } = useQuery({
+    queryKey: ['unread-messages', currentUser?.id, isStaff],
+    queryFn: () => isStaff
+      ? base44.entities.Message.filter({ is_read: false, sender_role: 'user' })
+      : base44.entities.Message.filter({ conversation_user_id: currentUser?.id, is_read: false, sender_role: 'admin' }),
+    enabled: !!currentUser?.id,
+    refetchInterval: 15000,
+  });
+  const unreadCount = unreadMessages.length;
 
   const isAdminView = location.pathname.startsWith('/admin');
   // Admin can switch to client view; use clientNav when in client view even if user is staff
@@ -81,6 +94,7 @@ export default function AppLayout() {
         <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
           {navItems.map(({ path, label, icon: Icon }) => {
             const active = location.pathname === path || location.pathname.startsWith(path + '/');
+            const isMessages = path === '/messages' || path === '/admin/messages';
             return (
               <Link
                 key={path}
@@ -93,7 +107,14 @@ export default function AppLayout() {
                     : "text-[hsl(var(--sidebar-foreground))] hover:bg-[hsl(var(--sidebar-accent))] hover:text-white"
                 )}
               >
-                <Icon className="w-4 h-4 flex-shrink-0" />
+                <div className="relative flex-shrink-0">
+                  <Icon className="w-4 h-4" />
+                  {isMessages && unreadCount > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 min-w-[14px] h-3.5 px-0.5 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center">
+                      {unreadCount > 99 ? '99+' : unreadCount}
+                    </span>
+                  )}
+                </div>
                 <span className="flex-1">{label}</span>
                 {active && <ChevronRight className="w-3 h-3 opacity-70" />}
               </Link>
@@ -152,7 +173,7 @@ export default function AppLayout() {
         </main>
 
         {/* Mobile bottom nav */}
-        <BottomNav isStaff={isStaff} />
+        <BottomNav isStaff={isStaff} unreadCount={unreadCount} />
       </div>
     </div>
   );
