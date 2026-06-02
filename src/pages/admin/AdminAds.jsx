@@ -10,6 +10,8 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Plus, Pencil, Trash2, Eye, MousePointer, X, BarChart2 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
+import { useRoleGuard } from '@/hooks/useRoleGuard';
+import { useAuditLog } from '@/hooks/useAuditLog';
 
 const PLACEMENTS = [
   { value: 'dashboard_top', label: 'Dashboard — Top' },
@@ -44,6 +46,8 @@ const EMPTY_FORM = {
 };
 
 export default function AdminAds() {
+  useRoleGuard(['admin']);
+  const auditLog = useAuditLog();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
@@ -63,12 +67,19 @@ export default function AdminAds() {
     mutationFn: ({ id, data }) => id
       ? base44.entities.AppAd.update(id, data)
       : base44.entities.AppAd.create(data),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['app-ads'] }); setOpen(false); },
+    onSuccess: (result, vars) => {
+      auditLog(vars.id ? 'ad_updated' : 'ad_created', 'AppAd', vars.id || 'new', `Ad "${vars.data.title}" ${vars.id ? 'updated' : 'created'}`);
+      qc.invalidateQueries({ queryKey: ['app-ads'] });
+      setOpen(false);
+    },
   });
 
   const remove = useMutation({
     mutationFn: (id) => base44.entities.AppAd.delete(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['app-ads'] }),
+    onSuccess: (_, id) => {
+      auditLog('ad_deleted', 'AppAd', id, `Ad deleted`);
+      qc.invalidateQueries({ queryKey: ['app-ads'] });
+    },
   });
 
   const toggle = useMutation({

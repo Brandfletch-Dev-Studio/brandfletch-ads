@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Check, X, ExternalLink, Search, Mail } from 'lucide-react';
+import { useRoleGuard } from '@/hooks/useRoleGuard';
+import { useAuditLog } from '@/hooks/useAuditLog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,6 +12,8 @@ import { toast } from 'sonner';
 import { format } from 'date-fns';
 
 export default function AdminPayments() {
+  useRoleGuard(['admin', 'finance']);
+  const auditLog = useAuditLog();
   const [transactions, setTransactions] = useState([]);
   const [filter, setFilter] = useState('pending');
   const [search, setSearch] = useState('');
@@ -39,6 +43,11 @@ export default function AdminPayments() {
   }
 
   async function verify(id, status, txn) {
+    // Guard: only act on pending transactions
+    if (txn.status !== 'pending') {
+      toast.error('This transaction has already been processed.');
+      return;
+    }
     setProcessing(p => ({ ...p, [id]: true }));
     const user = await staffUser();
     await base44.entities.WalletTransaction.update(id, {
@@ -46,6 +55,11 @@ export default function AdminPayments() {
       verified_by: user.id,
       finance_notes: notes[id] || '',
     });
+    auditLog(
+      status === 'confirmed' ? 'payment_confirmed' : 'payment_rejected',
+      'WalletTransaction', id,
+      `Payment of ${txn.currency || 'USD'} ${txn.amount} ${status}. Ref: ${txn.payment_reference || '—'}. Notes: ${notes[id] || 'none'}`
+    );
 
     // If confirming a campaign payment, update campaign status
     if (status === 'confirmed' && txn.campaign_id) {

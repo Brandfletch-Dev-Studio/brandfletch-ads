@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Facebook, Check, X, ExternalLink, Clock } from 'lucide-react';
+import { useRoleGuard } from '@/hooks/useRoleGuard';
+import { useAuditLog } from '@/hooks/useAuditLog';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -8,6 +10,8 @@ import { toast } from 'sonner';
 import { format } from 'date-fns';
 
 export default function AdminPageRequests() {
+  useRoleGuard(['admin', 'campaign_manager']);
+  const auditLog = useAuditLog();
   const [pages, setPages] = useState([]);
   const [notes, setNotes] = useState({});
   const [processing, setProcessing] = useState({});
@@ -21,11 +25,20 @@ export default function AdminPageRequests() {
   }
 
   async function updatePage(id, status, page) {
+    if (page.connection_status !== 'pending_verification') {
+      toast.error('This page request has already been processed.');
+      return;
+    }
     setProcessing(p => ({ ...p, [id]: true }));
     await base44.entities.FacebookPage.update(id, {
       connection_status: status,
       admin_notes: notes[id] || '',
     });
+    auditLog(
+      status === 'connected' ? 'page_approved' : 'page_rejected',
+      'FacebookPage', id,
+      `Page "${page.page_name}" ${status === 'connected' ? 'approved' : 'rejected'}. Notes: ${notes[id] || 'none'}`
+    );
 
     if (page.user_id) {
       const notif = status === 'connected'

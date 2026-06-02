@@ -1,0 +1,58 @@
+{
+  "name": "AuditLog",
+  "type": "object",
+  "properties": {
+    "actor_id": {
+      "type": "string",
+      "description": "User who performed the action"
+    },
+    "actor_name": {
+      "type": "string"
+    },
+    "actor_role": {
+      "type": "string"
+    },
+    "action": {
+      "type": "string",
+      "enum": [
+        "campaign_approved",
+        "campaign_rejected",
+        "campaign_changes_requested",
+        "campaign_set_active",
+        "campaign_paused",
+        "campaign_completed",
+        "campaign_metrics_updated",
+        "payment_confirmed",
+        "payment_rejected",
+        "page_approved",
+        "page_rejected",
+        "user_role_changed",
+        "user_invited",
+        "ad_created",
+        "ad_updated",
+        "ad_deleted",
+        "notification_sent"
+      ]
+    },
+    "entity_type": {
+      "type": "string"
+    },
+    "entity_id": {
+      "type": "string"
+    },
+    "details": {
+      "type": "string",
+      "description": "Human-readable summary of what changed"
+    },
+    "meta": {
+      "type": "object",
+      "description": "Extra structured data"
+    }
+  },
+  "required": [
+    "actor_id",
+    "action",
+    "entity_type",
+    "entity_id"
+  ]
+}

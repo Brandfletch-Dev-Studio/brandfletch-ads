@@ -10,8 +10,12 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import { useRoleGuard } from '@/hooks/useRoleGuard';
+import { useAuditLog } from '@/hooks/useAuditLog';
 
 export default function AdminUsers() {
+  useRoleGuard(['admin']);
+  const auditLog = useAuditLog();
   const [users, setUsers] = useState([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
@@ -41,10 +45,13 @@ export default function AdminUsers() {
     }
   }
 
-  async function updateRole(userId, role) {
+  async function updateRole(userId, newRole) {
+    const target = users.find(u => u.id === userId);
     try {
-      await base44.entities.User.update(userId, { role });
-      setUsers(us => us.map(u => u.id === userId ? { ...u, role } : u));
+      await base44.entities.User.update(userId, { role: newRole });
+      auditLog('user_role_changed', 'User', userId,
+        `${target?.full_name || target?.email} role changed to "${newRole}"`);
+      setUsers(us => us.map(u => u.id === userId ? { ...u, role: newRole } : u));
       toast.success('Role updated');
     } catch (err) {
       toast.error(err?.message || 'Failed to update role');

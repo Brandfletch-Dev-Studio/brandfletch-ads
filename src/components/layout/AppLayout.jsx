@@ -5,7 +5,7 @@ import { Link, useLocation, Outlet } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import {
   LayoutDashboard, Megaphone, Facebook, Users, Wallet,
-  Settings, X, ChevronRight, BarChart3, Shield, Bell, MessageCircle, ShoppingBag, Tv2
+  Settings, X, ChevronRight, BarChart3, Shield, Bell, MessageCircle, ShoppingBag, Tv2, ClipboardList
 } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
 
@@ -33,6 +33,7 @@ const adminNav = [
   { path: '/admin/messages', label: 'Messages', icon: MessageCircle },
   { path: '/admin/ads', label: 'In-App Ads', icon: Tv2 },
   { path: '/admin/reports', label: 'Reports', icon: BarChart3 },
+  { path: '/admin/audit-log', label: 'Audit Log', icon: ClipboardList },
   { path: '/admin/settings', label: 'Settings', icon: Settings },
 ];
 

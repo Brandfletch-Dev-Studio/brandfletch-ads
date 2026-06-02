@@ -10,8 +10,12 @@ import { Textarea } from '@/components/ui/textarea';
 import StatusBadge from '@/components/ui/StatusBadge';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import { useRoleGuard } from '@/hooks/useRoleGuard';
+import { useAuditLog } from '@/hooks/useAuditLog';
 
 export default function AdminCampaignDetail() {
+  useRoleGuard(['admin', 'campaign_manager']);
+  const auditLog = useAuditLog();
   const { id } = useParams();
   const [campaign, setCampaign] = useState(null);
   const [user, setUser] = useState(null);
@@ -40,9 +44,25 @@ export default function AdminCampaignDetail() {
     }
   }
 
+  // Valid status transitions
+  const VALID_TRANSITIONS = {
+    pending_review: ['approved', 'rejected', 'changes_requested'],
+    approved: ['active', 'rejected'],
+    active: ['paused', 'completed'],
+    paused: ['active', 'completed'],
+    changes_requested: ['pending_review', 'rejected'],
+  };
+
   async function updateStatus(status) {
+    const allowed = VALID_TRANSITIONS[campaign.status] || [];
+    if (!allowed.includes(status)) {
+      toast.error(`Cannot transition from "${campaign.status}" to "${status}"`);
+      return;
+    }
     setSaving(true);
     await base44.entities.Campaign.update(id, { status, manager_notes: notes, assigned_manager: user?.id });
+    auditLog(`campaign_${status.replace('_', '_')}`, 'Campaign', id,
+      `Campaign "${campaign.page_name}" → ${status}. Notes: ${notes || 'none'}`);
 
     // Notify client
     const notifMap = {
@@ -72,6 +92,8 @@ export default function AdminCampaignDetail() {
   async function saveMetrics() {
     setSaving(true);
     await base44.entities.Campaign.update(id, metrics);
+    auditLog('campaign_metrics_updated', 'Campaign', id,
+      `Metrics updated: ${JSON.stringify(metrics)}`);
     toast.success('Metrics updated!');
     setSaving(false);
   }

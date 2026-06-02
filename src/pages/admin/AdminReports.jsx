@@ -3,8 +3,10 @@ import { base44 } from '@/api/base44Client';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Eye, Users, MousePointer, MessageSquare, TrendingUp } from 'lucide-react';
+import { useRoleGuard } from '@/hooks/useRoleGuard';
 
 export default function AdminReports() {
+  useRoleGuard(['admin', 'campaign_manager', 'finance']);
   const [campaigns, setCampaigns] = useState([]);
   const [loading, setLoading] = useState(true);
 
