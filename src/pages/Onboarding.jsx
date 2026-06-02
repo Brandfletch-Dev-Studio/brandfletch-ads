@@ -48,6 +48,17 @@ export default function Onboarding() {
     payment_method_id: '', payment_reference: '', payment_proof_url: '',
   });
 
+  const { data: pageSetupService } = useQuery({
+    queryKey: ['service-page-setup'],
+    queryFn: () => base44.entities.Service.filter({ category: 'page_setup', is_active: true }),
+    select: data => data[0],
+  });
+
+  const { data: exchangeRates = [] } = useQuery({
+    queryKey: ['exchange-rates-onboarding'],
+    queryFn: () => base44.entities.ExchangeRate.filter({ is_active: true }),
+  });
+
   const { data: paymentMethods = [] } = useQuery({
     queryKey: ['payment-methods', form.country],
     queryFn: () => base44.entities.PaymentMethod.filter({ country: form.country, is_active: true }),
@@ -157,6 +168,17 @@ export default function Onboarding() {
   ];
   const steps = isHireFlow ? hireSteps : baseSteps;
   const selectedPaymentMethod = paymentMethods.find(m => m.id === setupForm.payment_method_id);
+  const servicePrice = pageSetupService?.price_usd ?? 25;
+  const LOCAL_CURRENCIES = { Malawi: { code: 'MWK', symbol: 'MK' }, Zambia: { code: 'ZMW', symbol: 'ZK' }, 'South Africa': { code: 'ZAR', symbol: 'R' }, Kenya: { code: 'KES', symbol: 'KSh' }, Tanzania: { code: 'TZS', symbol: 'TSh' } };
+
+  function localPrice(usdAmount) {
+    const cc = LOCAL_CURRENCIES[form.country];
+    const rate = exchangeRates.find(r => r.country === form.country);
+    if (!cc || !rate) return `$${usdAmount.toFixed(2)}`;
+    const local = usdAmount * rate.rate_to_usd;
+    const fmt = local >= 1000 ? local.toLocaleString('en', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) : local.toFixed(2);
+    return `${cc.symbol} ${fmt} (~$${usdAmount})`;
+  }
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -327,6 +349,7 @@ export default function Onboarding() {
                       <div>
                         <p className="font-semibold text-sm">Hire Brandfletch</p>
                         <p className="text-xs text-muted-foreground mt-0.5">We'll professionally create and set up your Facebook Page for you</p>
+                        <p className="text-xs font-semibold text-[hsl(var(--primary))] mt-1">{localPrice(servicePrice)}</p>
                       </div>
                     </button>
                     <button onClick={() => { setSetupChoice('diy'); finish(); }}

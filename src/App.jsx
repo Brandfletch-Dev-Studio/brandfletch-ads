@@ -20,6 +20,7 @@ import SavedAudiences from '@/pages/SavedAudiences';
 import Wallet from '@/pages/Wallet';
 import ProfileSettings from '@/pages/ProfileSettings';
 import Messages from '@/pages/Messages';
+import Marketplace from '@/pages/Marketplace';
 
 // Admin pages
 import AdminOverview from '@/pages/admin/AdminOverview';
@@ -105,6 +106,7 @@ const AuthenticatedApp = () => {
         <Route path="/wallet" element={<Wallet />} />
         <Route path="/settings" element={<ProfileSettings />} />
         <Route path="/messages" element={<Messages />} />
+        <Route path="/marketplace" element={<Marketplace />} />
 
         {/* Admin/Staff routes */}
         <Route path="/admin" element={<AdminOverview />} />
