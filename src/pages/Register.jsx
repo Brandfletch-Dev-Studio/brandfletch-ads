@@ -80,6 +80,7 @@ export default function Register() {
     <AuthLayout
       title="Start advertising your business"
       subtitle="Reach more customers with professionally managed Facebook & Instagram campaigns"
+      hideBrand={true}
       footer={
         <>
           Already have an account?{" "}
