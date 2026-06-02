@@ -9,7 +9,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Separator } from '@/components/ui/separator';
 import { COUNTRIES } from '@/lib/constants';
 import { toast } from 'sonner';
-import { base44 as b44Client } from '@/api/base44Client';
 
 export default function ProfileSettings() {
   const [user, setUser] = useState(null);
