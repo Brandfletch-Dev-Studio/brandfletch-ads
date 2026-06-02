@@ -1,13 +1,13 @@
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { LayoutDashboard, Megaphone, Facebook, Wallet, Settings, BarChart3, Users, Bell } from 'lucide-react';
+import { LayoutDashboard, Megaphone, Facebook, Wallet, MessageCircle, BarChart3, Users, Bell } from 'lucide-react';
 
 const clientItems = [
   { path: '/dashboard', label: 'Home', icon: LayoutDashboard },
   { path: '/campaigns', label: 'Campaigns', icon: Megaphone },
   { path: '/pages', label: 'Pages', icon: Facebook },
   { path: '/wallet', label: 'Wallet', icon: Wallet },
-  { path: '/settings', label: 'Settings', icon: Settings },
+  { path: '/messages', label: 'Messages', icon: MessageCircle },
 ];
 
 const adminItems = [
@@ -15,7 +15,7 @@ const adminItems = [
   { path: '/admin/campaigns', label: 'Campaigns', icon: Megaphone },
   { path: '/admin/payments', label: 'Payments', icon: Wallet },
   { path: '/admin/notifications', label: 'Notifs', icon: Bell },
-  { path: '/admin/settings', label: 'Settings', icon: Settings },
+  { path: '/admin/messages', label: 'Messages', icon: MessageCircle },
 ];
 
 export default function BottomNav({ isStaff }) {
