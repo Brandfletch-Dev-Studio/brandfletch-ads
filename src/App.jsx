@@ -48,10 +48,17 @@ const AuthenticatedApp = () => {
   if (authError) {
     if (authError.type === 'user_not_registered') {
       return <UserNotRegisteredError />;
-    } else if (authError.type === 'auth_required') {
+    } else {
+      // auth_required or any other error → force login
       navigateToLogin();
       return null;
     }
+  }
+
+  // If auth finished loading and there's still no user, force login
+  if (!isLoadingAuth && !currentUser) {
+    navigateToLogin();
+    return null;
   }
 
   const isStaff = currentUser && ['admin', 'campaign_manager', 'finance'].includes(currentUser.role);
