@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { COUNTRIES } from '@/lib/constants';
-import { ChevronRight, Check, Loader2, CheckCircle2, Facebook, Briefcase, Wrench } from 'lucide-react';
+import { ChevronRight, Check, Loader2, CheckCircle2, Facebook, Briefcase, Wrench, Copy, CheckCheck, ChevronDown } from 'lucide-react';
 import BrandLogo from '@/components/BrandLogo';
 import { useQuery } from '@tanstack/react-query';
 
@@ -35,6 +35,8 @@ export default function Onboarding() {
   const [uploadingFile, setUploadingFile] = useState(false);
   const [fbPageChoice, setFbPageChoice] = useState(null); // 'yes' | 'no'
   const [setupChoice, setSetupChoice] = useState(null);   // 'hire' | 'diy'
+  const [expandedMethod, setExpandedMethod] = useState(null);
+  const [copiedField, setCopiedField] = useState(null);
 
   const [form, setForm] = useState({
     full_name: '', business_name: '', business_type: '',
@@ -174,10 +176,16 @@ export default function Onboarding() {
   function localPrice(usdAmount) {
     const cc = LOCAL_CURRENCIES[form.country];
     const rate = exchangeRates.find(r => r.country === form.country);
-    if (!cc || !rate) return `$${usdAmount.toFixed(2)}`;
+    if (!cc || !rate) return { display: `$${usdAmount.toFixed(2)}`, local: null };
     const local = usdAmount * rate.rate_to_usd;
     const fmt = local >= 1000 ? local.toLocaleString('en', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) : local.toFixed(2);
-    return `${cc.symbol} ${fmt} (~$${usdAmount})`;
+    return { display: `${cc.symbol} ${fmt}`, local: `${cc.symbol} ${fmt}`, usd: `$${usdAmount}`, code: cc.code };
+  }
+
+  function copyText(text, field) {
+    navigator.clipboard.writeText(text);
+    setCopiedField(field);
+    setTimeout(() => setCopiedField(null), 2000);
   }
 
   return (
@@ -349,7 +357,7 @@ export default function Onboarding() {
                       <div>
                         <p className="font-semibold text-sm">Hire Brandfletch</p>
                         <p className="text-xs text-muted-foreground mt-0.5">We'll professionally create and set up your Facebook Page for you</p>
-                        <p className="text-xs font-semibold text-[hsl(var(--primary))] mt-1">{localPrice(servicePrice)}</p>
+                        <p className="text-xs font-semibold text-[hsl(var(--primary))] mt-1">{localPrice(servicePrice).display}</p>
                       </div>
                     </button>
                     <button onClick={() => { setSetupChoice('diy'); finish(); }}
@@ -434,7 +442,16 @@ export default function Onboarding() {
             {step === 6 && (
               <>
                 <h2 className="text-xl font-bold font-heading mb-1">Payment</h2>
-                <p className="text-sm text-muted-foreground mb-6">Pay for your Facebook Page setup service</p>
+                <p className="text-sm text-muted-foreground mb-4">Pay for your Facebook Page setup service</p>
+
+                {/* Amount box */}
+                <div className="bg-[hsl(var(--primary))]/5 border-2 border-[hsl(var(--primary))]/20 rounded-xl p-4 mb-5">
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium mb-1">Amount to Deposit</p>
+                  <p className="text-3xl font-bold text-[hsl(var(--primary))] font-heading">{localPrice(servicePrice).local || localPrice(servicePrice).display}</p>
+                  {localPrice(servicePrice).local && (
+                    <p className="text-xs text-muted-foreground mt-1">{localPrice(servicePrice).usd} USD · {localPrice(servicePrice).code}</p>
+                  )}
+                </div>
 
                 {paymentMethods.length === 0 ? (
                   <div className="text-center py-6 text-muted-foreground text-sm">
@@ -446,27 +463,69 @@ export default function Onboarding() {
                     <div>
                       <Label className="mb-2 block">Select Payment Method *</Label>
                       <div className="space-y-2">
-                        {paymentMethods.map(m => (
-                          <button key={m.id} onClick={() => updateSetup('payment_method_id', m.id)}
-                            className={`w-full text-left p-4 rounded-xl border-2 transition-all ${
-                              setupForm.payment_method_id === m.id
-                                ? 'border-[hsl(var(--primary))] bg-[hsl(var(--primary))]/5'
-                                : 'border-border hover:border-[hsl(var(--primary))]/30'
+                        {paymentMethods.map(m => {
+                          const isSelected = setupForm.payment_method_id === m.id;
+                          const isExpanded = expandedMethod === m.id;
+                          return (
+                            <div key={m.id} className={`rounded-xl border-2 transition-all overflow-hidden ${
+                              isSelected ? 'border-[hsl(var(--primary))] bg-[hsl(var(--primary))]/5' : 'border-border'
                             }`}>
-                            <p className="font-semibold text-sm">{m.method_name}</p>
-                            {m.account_number && <p className="text-xs text-muted-foreground mt-0.5">Account: {m.account_number}</p>}
-                            {m.account_name && <p className="text-xs text-muted-foreground">Name: {m.account_name}</p>}
-                          </button>
-                        ))}
+                              <button
+                                onClick={() => {
+                                  updateSetup('payment_method_id', m.id);
+                                  setExpandedMethod(isExpanded ? null : m.id);
+                                }}
+                                className="w-full text-left p-4 flex items-center justify-between gap-3"
+                              >
+                                <div className="flex items-center gap-3">
+                                  {isSelected && <Check className="w-4 h-4 text-[hsl(var(--primary))] flex-shrink-0" />}
+                                  <div>
+                                    <p className="font-semibold text-sm">{m.method_name}</p>
+                                    {!isExpanded && m.account_number && (
+                                      <p className="text-xs text-muted-foreground mt-0.5">{m.account_number}</p>
+                                    )}
+                                  </div>
+                                </div>
+                                <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform flex-shrink-0 ${isExpanded ? 'rotate-180' : ''}`} />
+                              </button>
+
+                              {isExpanded && (
+                                <div className="px-4 pb-4 space-y-2 border-t border-border/50 pt-3">
+                                  {m.account_name && (
+                                    <div className="flex items-center justify-between gap-2 bg-background rounded-lg px-3 py-2">
+                                      <div>
+                                        <p className="text-xs text-muted-foreground">Account Name</p>
+                                        <p className="text-sm font-semibold">{m.account_name}</p>
+                                      </div>
+                                      <button onClick={() => copyText(m.account_name, `name-${m.id}`)} className="p-1.5 rounded-lg hover:bg-secondary transition-colors flex-shrink-0">
+                                        {copiedField === `name-${m.id}` ? <CheckCheck className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4 text-muted-foreground" />}
+                                      </button>
+                                    </div>
+                                  )}
+                                  {m.account_number && (
+                                    <div className="flex items-center justify-between gap-2 bg-background rounded-lg px-3 py-2">
+                                      <div>
+                                        <p className="text-xs text-muted-foreground">Account Number</p>
+                                        <p className="text-sm font-semibold font-mono">{m.account_number}</p>
+                                      </div>
+                                      <button onClick={() => copyText(m.account_number, `num-${m.id}`)} className="p-1.5 rounded-lg hover:bg-secondary transition-colors flex-shrink-0">
+                                        {copiedField === `num-${m.id}` ? <CheckCheck className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4 text-muted-foreground" />}
+                                      </button>
+                                    </div>
+                                  )}
+                                  {m.instructions && (
+                                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                                      <p className="text-xs font-medium text-amber-800 mb-1">Instructions</p>
+                                      <p className="text-xs text-amber-700 whitespace-pre-wrap">{m.instructions}</p>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
-
-                    {selectedPaymentMethod?.instructions && (
-                      <div className="bg-secondary/60 rounded-xl p-4 text-sm border border-border">
-                        <p className="font-medium mb-1 text-xs uppercase tracking-wide text-muted-foreground">Payment Instructions</p>
-                        <p className="whitespace-pre-wrap">{selectedPaymentMethod.instructions}</p>
-                      </div>
-                    )}
 
                     <div>
                       <Label className="mb-1.5 block">Payment Reference / Transaction ID</Label>
@@ -475,12 +534,17 @@ export default function Onboarding() {
                     </div>
 
                     <div>
-                      <Label className="mb-1.5 block">Upload Payment Proof</Label>
+                      <Label className="mb-1.5 block">Upload Payment Proof *</Label>
                       <input type="file" accept="image/*,application/pdf" onChange={handleProofUpload}
                         className="block w-full text-sm text-muted-foreground file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-secondary file:text-foreground hover:file:bg-secondary/80 cursor-pointer" />
                       {uploadingFile && <p className="text-xs text-muted-foreground mt-1 animate-pulse">Uploading...</p>}
-                      {setupForm.payment_proof_url && (
-                        <p className="text-xs text-green-600 mt-1.5">Proof uploaded successfully</p>
+                      {setupForm.payment_proof_url ? (
+                        <div className="flex items-center gap-2 mt-2 text-green-600">
+                          <CheckCircle2 className="w-4 h-4" />
+                          <p className="text-xs font-medium">Proof uploaded — you're ready to submit!</p>
+                        </div>
+                      ) : (
+                        <p className="text-xs text-muted-foreground mt-1">Required before submitting</p>
                       )}
                     </div>
                   </div>
@@ -542,7 +606,7 @@ export default function Onboarding() {
               )}
 
               {step === 6 && (
-                <Button onClick={submitHireRequest} disabled={saving || uploadingFile || !setupForm.payment_method_id}
+                <Button onClick={submitHireRequest} disabled={saving || uploadingFile || !setupForm.payment_method_id || !setupForm.payment_proof_url}
                   className="gap-2 bg-[hsl(var(--accent))] hover:bg-[hsl(217,91%,48%)] text-white font-semibold">
                   {saving
                     ? <><Loader2 className="w-4 h-4 animate-spin" /> Submitting...</>
