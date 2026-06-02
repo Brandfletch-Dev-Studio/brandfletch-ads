@@ -24,11 +24,54 @@
     "business_type": {
       "type": "string"
     },
+    "business_website": {
+      "type": "string"
+    },
+    "business_industry": {
+      "type": "string",
+      "enum": [
+        "retail",
+        "food_beverage",
+        "health_beauty",
+        "technology",
+        "real_estate",
+        "education",
+        "finance",
+        "hospitality",
+        "media_entertainment",
+        "ngo",
+        "professional_services",
+        "other"
+      ]
+    },
+    "business_description": {
+      "type": "string"
+    },
     "primary_goal": {
       "type": "string"
     },
     "admin_notification_email": {
       "type": "string"
+    },
+    "notify_campaign_approved": {
+      "type": "boolean",
+      "default": true
+    },
+    "notify_campaign_rejected": {
+      "type": "boolean",
+      "default": true
+    },
+    "notify_payment_confirmed": {
+      "type": "boolean",
+      "default": true
+    },
+    "notify_campaign_completed": {
+      "type": "boolean",
+      "default": true
+    },
+    "notify_messages": {
+      "type": "boolean",
+      "default": true
     },
     "profile_photo": {
       "type": "string"
