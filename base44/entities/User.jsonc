@@ -21,6 +21,12 @@
     "business_name": {
       "type": "string"
     },
+    "business_type": {
+      "type": "string"
+    },
+    "primary_goal": {
+      "type": "string"
+    },
     "admin_notification_email": {
       "type": "string"
     },
@@ -29,14 +35,10 @@
     },
     "cover_photo": {
       "type": "string"
+    },
+    "onboarded": {
+      "type": "boolean",
+      "default": false
     }
-  },
-  "required": [
-    "country",
-    "phone",
-    "business_name",
-    "admin_notification_email",
-    "profile_photo",
-    "cover_photo"
-  ]
+  }
 }
