@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+import { COUNTRY_CURRENCY, formatLocalCurrency } from '@/lib/constants';
 
 export default function Wallet() {
   const [user, setUser] = useState(null);
@@ -89,12 +90,15 @@ export default function Wallet() {
     refund: { icon: RefreshCw, color: 'text-blue-600', bg: 'bg-blue-50', prefix: '+' },
   };
 
+  const currencyCfg = COUNTRY_CURRENCY[user?.country];
+  const currencyLabel = currencyCfg ? `${currencyCfg.name} (${currencyCfg.code})` : 'USD';
+
   return (
     <div className="p-4 lg:p-8 max-w-3xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold font-heading">Wallet</h1>
-          <p className="text-muted-foreground text-sm mt-1">Manage your advertising balance</p>
+          <p className="text-muted-foreground text-sm mt-1">Manage your advertising balance · {currencyLabel}</p>
         </div>
         <Button onClick={() => setShowAddFunds(true)} className="gap-2 bg-[hsl(var(--primary))] text-primary-foreground">
           <Plus className="w-4 h-4" /> Add Funds
@@ -109,7 +113,7 @@ export default function Wallet() {
               <WalletIcon className="w-4 h-4 opacity-70" />
               <span className="text-xs opacity-70 font-medium uppercase tracking-wide">Available Balance</span>
             </div>
-            <p className="text-3xl font-bold font-heading">${balance.toFixed(2)}</p>
+            <p className="text-3xl font-bold font-heading">{formatLocalCurrency(balance, user?.country)}</p>
             <p className="text-xs opacity-50 mt-1">Ready to spend</p>
           </CardContent>
         </Card>
@@ -121,7 +125,7 @@ export default function Wallet() {
                 <Clock className="w-4 h-4 text-amber-600" />
                 <span className="text-xs text-amber-700 font-medium uppercase tracking-wide">Pending Verification</span>
               </div>
-              <p className="text-3xl font-bold font-heading text-amber-800">${pendingAmount.toFixed(2)}</p>
+              <p className="text-3xl font-bold font-heading text-amber-800">{formatLocalCurrency(pendingAmount, user?.country)}</p>
               <p className="text-xs text-amber-600 mt-1">Awaiting confirmation</p>
             </CardContent>
           </Card>
@@ -168,7 +172,7 @@ export default function Wallet() {
                     </div>
                     <div className="flex items-center gap-2.5 flex-shrink-0 ml-3">
                       <span className={`text-sm font-bold tabular-nums ${t.type === 'payment' ? 'text-red-600' : 'text-green-600'}`}>
-                        {tc.prefix}${(t.amount || 0).toFixed(2)}
+                        {tc.prefix}{formatLocalCurrency(t.amount || 0, user?.country)}
                       </span>
                       <Badge className={`text-xs px-2 py-0.5 ${sc.className}`}>{sc.label}</Badge>
                     </div>
@@ -194,9 +198,13 @@ export default function Wallet() {
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Amount (USD) *</Label>
+              <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Amount ({currencyCfg ? currencyCfg.code : 'USD'}) *
+              </Label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-medium text-sm">$</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-medium text-sm">
+                  {currencyCfg ? currencyCfg.symbol : '$'}
+                </span>
                 <Input
                   type="number"
                   min="1"

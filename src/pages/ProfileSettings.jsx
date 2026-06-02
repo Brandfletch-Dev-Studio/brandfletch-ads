@@ -5,9 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { COUNTRIES } from '@/lib/constants';
 import { toast } from 'sonner';
 
 export default function ProfileSettings() {
@@ -149,29 +147,27 @@ export default function ProfileSettings() {
             <div className="relative">
               <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
-                value={form.business_name || 'Not set'}
-                disabled
-                className="pl-9 h-10 bg-secondary text-muted-foreground"
+                value={form.business_name || ''}
+                onChange={e => setForm(f => ({ ...f, business_name: e.target.value }))}
+                placeholder="Your Business Name"
+                className="pl-9 h-10"
               />
             </div>
-            <p className="text-xs text-muted-foreground">
-              To update your business name, <a href="mailto:support@brandfletch.com" className="text-[hsl(var(--accent))] hover:underline">contact support</a>.
-            </p>
           </div>
 
           <div className="space-y-1.5">
             <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Country</Label>
             <div className="relative">
-              <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground z-10 pointer-events-none" />
-              <Select value={form.country} onValueChange={v => setForm(f => ({ ...f, country: v }))}>
-                <SelectTrigger className="pl-9 h-10">
-                  <SelectValue placeholder="Select your country" />
-                </SelectTrigger>
-                <SelectContent>
-                  {COUNTRIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                value={form.country || 'Not set'}
+                disabled
+                className="pl-9 h-10 bg-secondary text-muted-foreground"
+              />
             </div>
+            <p className="text-xs text-muted-foreground">
+              To change your country, <a href="mailto:support@brandfletch.com" className="text-[hsl(var(--accent))] hover:underline">contact support</a>.
+            </p>
           </div>
 
           <Separator />

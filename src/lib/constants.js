@@ -37,6 +37,31 @@ export const GOALS = [
   { value: 'boost_post', label: 'Boost a Post', icon: '🚀', desc: 'Amplify an existing post on your Facebook Page' },
 ];
 
+// Format a USD amount into the user's local currency
+export function formatLocalCurrency(usdAmount, country) {
+  const cfg = COUNTRY_CURRENCY[country];
+  if (!cfg) return `$${usdAmount.toFixed(2)}`;
+
+  // Approximate exchange rates (local units per 1 USD)
+  const rates = {
+    MWK: 1730,
+    ZMW: 27,
+    ZAR: 18.5,
+    KES: 130,
+    TZS: 2550,
+  };
+
+  const rate = rates[cfg.code] || 1;
+  const localAmount = usdAmount * rate;
+
+  // Format with thousands separator
+  const formatted = localAmount >= 1000
+    ? localAmount.toLocaleString('en', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
+    : localAmount.toFixed(2);
+
+  return `${cfg.symbol} ${formatted}`;
+}
+
 // Legacy — kept for backward compatibility
 export const OBJECTIVES = [
   { value: 'whatsapp_messages', label: 'WhatsApp Messages', icon: '💬', desc: 'Drive conversations on WhatsApp' },

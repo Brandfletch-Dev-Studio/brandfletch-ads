@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import StatusBadge from '@/components/ui/StatusBadge';
 import OnboardingChecklist from '@/components/dashboard/OnboardingChecklist';
+import { formatLocalCurrency } from '@/lib/constants';
 
 export default function Dashboard() {
   const [user, setUser] = useState(null);
@@ -46,7 +47,7 @@ export default function Dashboard() {
     { label: 'Active Campaigns', value: activeCampaigns, icon: Activity, color: 'text-green-600', bg: 'bg-green-50' },
     { label: 'Pending Review', value: pendingCampaigns, icon: Megaphone, color: 'text-amber-600', bg: 'bg-amber-50' },
     { label: 'Connected Pages', value: connectedPages, icon: Facebook, color: 'text-blue-600', bg: 'bg-blue-50' },
-    { label: 'Wallet Balance', value: `$${wallet.toFixed(2)}`, icon: Wallet, color: 'text-purple-600', bg: 'bg-purple-50' },
+    { label: 'Wallet Balance', value: formatLocalCurrency(wallet, user?.country), icon: Wallet, color: 'text-purple-600', bg: 'bg-purple-50' },
   ];
 
   return (
