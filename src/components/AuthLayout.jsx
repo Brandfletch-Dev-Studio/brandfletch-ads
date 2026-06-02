@@ -39,7 +39,7 @@ export default function AuthLayout({ title, subtitle, footer, children, hideBran
         )}
 
         <div className="w-full max-w-md py-8">
-          <div className="mb-8">
+          <div className="mb-8 text-center">
             <h1 className="text-2xl font-bold font-heading text-foreground">{title}</h1>
             {subtitle && <p className="text-muted-foreground mt-1 text-sm">{subtitle}</p>}
           </div>

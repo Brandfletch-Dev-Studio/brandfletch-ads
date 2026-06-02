@@ -33,7 +33,7 @@ export default function Login() {
   return (
     <AuthLayout hideBrand
       title="Welcome back"
-      subtitle="Log in to your Brandfletch Ads account"
+      subtitle="Log in to continue growing your business with Brandfletch Ads"
       footer={
         <>
           Don't have an account?{" "}

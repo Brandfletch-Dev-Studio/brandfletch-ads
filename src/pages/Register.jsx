@@ -84,8 +84,8 @@ export default function Register() {
 
   return (
     <AuthLayout
-      title="Create your account"
-      subtitle="Start advertising your business today — it's free to join"
+      title="Start advertising your business"
+      subtitle="Reach more customers with professionally managed Facebook & Instagram campaigns"
       footer={
         <>
           Already have an account?{" "}
