@@ -37,13 +37,13 @@ export default function AdminSettings() {
   async function saveAdminEmail() {
     setSavingEmail(true);
     await base44.auth.updateMe({ admin_notification_email: adminEmail });
-    toast.success('Admin notification email saved');
+    toast.success('Saved!', { duration: 1500 });
     setSavingEmail(false);
   }
 
   async function saveRate(rate) {
     await base44.entities.ExchangeRate.update(rate.id, rate);
-    toast.success('Rate saved');
+    toast.success('Saved!', { duration: 1500 });
   }
 
   async function addRate() {
@@ -91,7 +91,7 @@ export default function AdminSettings() {
     await base44.entities.PaymentMethod.update(editingMethod, editMethodData);
     setMethods(ms => ms.map(m => m.id === editingMethod ? { ...m, ...editMethodData } : m));
     setEditingMethod(null);
-    toast.success('Payment method updated');
+    toast.success('Saved!', { duration: 1500 });
   }
 
   return (

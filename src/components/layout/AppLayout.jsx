@@ -3,7 +3,7 @@ import { Link, useLocation, Outlet } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import {
   LayoutDashboard, Megaphone, Facebook, Users, Wallet,
-  Settings, X, ChevronRight, BarChart3, Shield, Bell
+  Settings, X, ChevronRight, BarChart3, Shield, Bell, MessageCircle
 } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
 import BrandLogo from '@/components/BrandLogo';
@@ -16,6 +16,7 @@ const clientNav = [
   { path: '/pages', label: 'Facebook Pages', icon: Facebook },
   { path: '/audiences', label: 'Audiences', icon: Users },
   { path: '/wallet', label: 'Wallet', icon: Wallet },
+  { path: '/messages', label: 'Messages', icon: MessageCircle },
   { path: '/settings', label: 'Settings', icon: Settings },
 ];
 
@@ -26,6 +27,7 @@ const adminNav = [
   { path: '/admin/users', label: 'Users', icon: Users },
   { path: '/admin/payments', label: 'Payments', icon: Wallet },
   { path: '/admin/notifications', label: 'Notifications', icon: Bell },
+  { path: '/messages', label: 'Messages', icon: MessageCircle },
   { path: '/admin/reports', label: 'Reports', icon: BarChart3 },
   { path: '/admin/settings', label: 'Settings', icon: Settings },
 ];

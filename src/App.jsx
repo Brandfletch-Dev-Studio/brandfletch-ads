@@ -19,6 +19,7 @@ import CampaignPayment from '@/pages/campaigns/CampaignPayment';
 import SavedAudiences from '@/pages/SavedAudiences';
 import Wallet from '@/pages/Wallet';
 import ProfileSettings from '@/pages/ProfileSettings';
+import Messages from '@/pages/Messages';
 
 // Admin pages
 import AdminOverview from '@/pages/admin/AdminOverview';
@@ -93,6 +94,7 @@ const AuthenticatedApp = () => {
         <Route path="/audiences" element={<SavedAudiences />} />
         <Route path="/wallet" element={<Wallet />} />
         <Route path="/settings" element={<ProfileSettings />} />
+        <Route path="/messages" element={<Messages />} />
 
         {/* Admin/Staff routes */}
         <Route path="/admin" element={<AdminOverview />} />

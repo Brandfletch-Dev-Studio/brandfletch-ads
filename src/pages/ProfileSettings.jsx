@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
-import { User, Lock, LogOut, Save, Camera, Mail, Phone, Building2, Globe, Shield } from 'lucide-react';
+import { User, Lock, LogOut, Save, Camera, Mail, Phone, Building2, Globe, Shield, Upload } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,11 +9,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Separator } from '@/components/ui/separator';
 import { COUNTRIES } from '@/lib/constants';
 import { toast } from 'sonner';
+import { base44 as b44Client } from '@/api/base44Client';
 
 export default function ProfileSettings() {
   const [user, setUser] = useState(null);
-  const [form, setForm] = useState({ full_name: '', country: '', phone: '', business_name: '' });
+  const [form, setForm] = useState({ full_name: '', country: '', phone: '', business_name: '', profile_photo: '', cover_photo: '' });
   const [saving, setSaving] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [uploadingCover, setUploadingCover] = useState(false);
 
   useEffect(() => {
     base44.auth.me().then(u => {
@@ -23,6 +26,8 @@ export default function ProfileSettings() {
         country: u.country || '',
         phone: u.phone || '',
         business_name: u.business_name || '',
+        profile_photo: u.profile_photo || '',
+        cover_photo: u.cover_photo || '',
       });
     });
   }, []);
@@ -30,8 +35,30 @@ export default function ProfileSettings() {
   async function handleSave() {
     setSaving(true);
     await base44.auth.updateMe(form);
-    toast.success('Profile updated!');
+    toast.success('Saved!', { duration: 1500 });
     setSaving(false);
+  }
+
+  async function handlePhotoUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    setUploadingPhoto(true);
+    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    setForm(f => ({ ...f, profile_photo: file_url }));
+    await base44.auth.updateMe({ profile_photo: file_url });
+    toast.success('Profile photo updated!', { duration: 1500 });
+    setUploadingPhoto(false);
+  }
+
+  async function handleCoverUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    setUploadingCover(true);
+    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    setForm(f => ({ ...f, cover_photo: file_url }));
+    await base44.auth.updateMe({ cover_photo: file_url });
+    toast.success('Cover photo updated!', { duration: 1500 });
+    setUploadingCover(false);
   }
 
   const initials = form.full_name
@@ -48,11 +75,29 @@ export default function ProfileSettings() {
 
       {/* Avatar + name hero */}
       <Card className="shadow-sm overflow-hidden">
-        <div className="h-20 bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--accent))]" />
+        {/* Cover photo */}
+        <div className="relative h-28 bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--accent))] overflow-hidden">
+          {form.cover_photo && <img src={form.cover_photo} alt="Cover" className="w-full h-full object-cover" />}
+          <label className="absolute bottom-2 right-2 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/40 hover:bg-black/60 text-white text-xs font-medium cursor-pointer transition-colors">
+            <Camera className="w-3.5 h-3.5" />
+            {uploadingCover ? 'Uploading...' : 'Change Cover'}
+            <input type="file" accept="image/*" className="hidden" onChange={handleCoverUpload} disabled={uploadingCover} />
+          </label>
+        </div>
         <CardContent className="px-6 pb-6">
-          <div className="flex flex-col sm:flex-row sm:items-end gap-4 -mt-10">
-            <div className="relative w-20 h-20 rounded-2xl bg-[hsl(var(--primary))] border-4 border-card flex items-center justify-center flex-shrink-0 shadow-lg">
-              <span className="text-2xl font-bold text-primary-foreground">{initials}</span>
+          <div className="flex flex-col sm:flex-row sm:items-end gap-4 -mt-12">
+            {/* Profile photo */}
+            <div className="relative flex-shrink-0">
+              <div className="w-20 h-20 rounded-2xl bg-[hsl(var(--primary))] border-4 border-card flex items-center justify-center shadow-lg overflow-hidden">
+                {form.profile_photo
+                  ? <img src={form.profile_photo} alt="Profile" className="w-full h-full object-cover" />
+                  : <span className="text-2xl font-bold text-primary-foreground">{initials}</span>
+                }
+              </div>
+              <label className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-[hsl(var(--accent))] text-white flex items-center justify-center cursor-pointer hover:bg-[hsl(217,91%,48%)] shadow-md">
+                {uploadingPhoto ? <Upload className="w-3 h-3 animate-pulse" /> : <Camera className="w-3 h-3" />}
+                <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} disabled={uploadingPhoto} />
+              </label>
             </div>
             <div className="sm:pb-1 flex-1 min-w-0">
               <h2 className="text-xl font-bold font-heading truncate">{form.full_name || 'Your Name'}</h2>
