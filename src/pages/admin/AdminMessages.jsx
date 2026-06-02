@@ -72,6 +72,11 @@ export default function AdminMessages() {
       return new Date(bLast) - new Date(aLast);
     });
     setConversations(list);
+    // Auto-select most recent conversation if none selected
+    if (list.length > 0 && !selectedUserId) {
+      setSelectedUserId(list[0].userId);
+      setMobileView('chat');
+    }
   }, [allMessages]);
 
   useEffect(() => {
