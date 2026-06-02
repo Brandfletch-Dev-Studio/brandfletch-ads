@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { Upload, CheckCircle2, ArrowLeft } from 'lucide-react';
+import { Upload, CheckCircle2, ArrowLeft, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -82,6 +82,24 @@ export default function CampaignPayment() {
     return `$${(campaign.total_cost || 0).toFixed(2)}`;
   };
 
+  function CopyRow({ label, value }) {
+    return (
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <p className="text-xs text-muted-foreground">{label}</p>
+          <p className="text-sm font-semibold">{value}</p>
+        </div>
+        <button
+          onClick={() => { navigator.clipboard.writeText(value); toast.success(`${label} copied!`); }}
+          className="p-2 rounded-lg hover:bg-border transition-colors flex-shrink-0"
+          title="Copy"
+        >
+          <Copy className="w-4 h-4 text-muted-foreground" />
+        </button>
+      </div>
+    );
+  }
+
   if (!campaign) return <div className="p-8 text-center text-muted-foreground">Loading...</div>;
 
   return (
@@ -142,12 +160,22 @@ export default function CampaignPayment() {
 
       {selectedMethod && (
         <>
-          {selectedMethod.instructions && (
-            <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl text-sm text-blue-800">
-              <p className="font-semibold mb-1">Instructions:</p>
-              <p>{selectedMethod.instructions}</p>
-            </div>
-          )}
+          {/* Copyable payment details card */}
+          <div className="p-4 bg-secondary/60 border border-border rounded-xl space-y-3">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Payment Details</p>
+            {selectedMethod.account_name && (
+              <CopyRow label="Account Name" value={selectedMethod.account_name} />
+            )}
+            {selectedMethod.account_number && (
+              <CopyRow label="Account Number / Phone" value={selectedMethod.account_number} />
+            )}
+            {selectedMethod.instructions && (
+              <div className="pt-2 border-t border-border">
+                <p className="text-xs text-muted-foreground font-medium mb-1">Instructions</p>
+                <p className="text-sm text-foreground">{selectedMethod.instructions}</p>
+              </div>
+            )}
+          </div>
 
           <div>
             <Label className="mb-1.5 block">Transaction Reference Number *</Label>

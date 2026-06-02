@@ -8,6 +8,7 @@ import {
 import { useAuth } from '@/lib/AuthContext';
 import BrandLogo from '@/components/BrandLogo';
 import TopBar from '@/components/layout/TopBar';
+import BottomNav from '@/components/layout/BottomNav';
 
 const clientNav = [
   { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -142,9 +143,12 @@ export default function AppLayout() {
         />
 
         {/* Page content */}
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto pb-16 lg:pb-0">
           <Outlet />
         </main>
+
+        {/* Mobile bottom nav */}
+        <BottomNav isStaff={isStaff} />
       </div>
     </div>
   );

@@ -33,9 +33,9 @@ export default function AuthLayout({ title, subtitle, footer, children }) {
 
       {/* Right panel – form */}
       <div className="flex-1 flex flex-col items-center justify-center px-4 py-12">
-        {/* Mobile logo */}
-        <div className="lg:hidden mb-8">
-          <BrandLogo size="md" />
+        {/* Mobile logo – left aligned, dark text */}
+        <div className="lg:hidden mb-8 w-full max-w-md">
+          <BrandLogo size="md" dark />
         </div>
 
         <div className="w-full max-w-md">

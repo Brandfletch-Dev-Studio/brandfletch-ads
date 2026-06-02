@@ -105,12 +105,14 @@ export default function ProfileSettings() {
             <div className="relative">
               <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
-                value={form.business_name}
-                onChange={e => setForm(f => ({ ...f, business_name: e.target.value }))}
-                placeholder="Your business or brand name"
-                className="pl-9 h-10"
+                value={form.business_name || 'Not set'}
+                disabled
+                className="pl-9 h-10 bg-secondary text-muted-foreground"
               />
             </div>
+            <p className="text-xs text-muted-foreground">
+              To update your business name, <a href="mailto:support@brandfletch.com" className="text-[hsl(var(--accent))] hover:underline">contact support</a>.
+            </p>
           </div>
 
           <div className="space-y-1.5">

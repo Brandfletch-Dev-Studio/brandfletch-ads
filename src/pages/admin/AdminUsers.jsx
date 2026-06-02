@@ -41,10 +41,14 @@ export default function AdminUsers() {
     }
   }
 
-  async function updateRole(id, role) {
-    await base44.entities.User.update(id, { role });
-    setUsers(us => us.map(u => u.id === id ? { ...u, role } : u));
-    toast.success('Role updated');
+  async function updateRole(userId, role) {
+    try {
+      await base44.entities.User.update(userId, { role });
+      setUsers(us => us.map(u => u.id === userId ? { ...u, role } : u));
+      toast.success('Role updated');
+    } catch (err) {
+      toast.error(err?.message || 'Failed to update role');
+    }
   }
 
   const roleColors = {

@@ -8,21 +8,22 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 
 export default function StepPackage({ data, update }) {
-  const [exchangeRates, setExchangeRates] = useState([]);
   const [selectedCountry, setSelectedCountry] = useState(data.country || '');
 
   useEffect(() => {
-    base44.entities.ExchangeRate.filter({ is_active: true }).then(setExchangeRates);
+    // Pre-fill country from user profile if not already set
+    if (!selectedCountry) {
+      base44.auth.me().then(u => {
+        if (u?.country) {
+          setSelectedCountry(u.country);
+          update({ country: u.country });
+        }
+      });
+    }
   }, []);
 
-  function getRate() {
-    const rate = exchangeRates.find(r => r.country === selectedCountry);
-    return rate;
-  }
-
   function handlePackageSelect(pkg) {
-    const rate = getRate();
-    const price = calculatePrice(pkg, data.duration, selectedCountry, rate?.rate_to_usd);
+    const price = calculatePrice(pkg, data.duration, selectedCountry);
     const estimated = calculateEstimatedResults(pkg, data.duration);
     update({
       package: pkg,
@@ -35,10 +36,8 @@ export default function StepPackage({ data, update }) {
   }
 
   function handleDurationChange(dur) {
-    update({ duration: dur });
     if (data.package) {
-      const rate = getRate();
-      const price = calculatePrice(data.package, dur, selectedCountry, rate?.rate_to_usd);
+      const price = calculatePrice(data.package, dur, selectedCountry);
       const estimated = calculateEstimatedResults(data.package, dur);
       update({
         duration: dur,
@@ -48,14 +47,15 @@ export default function StepPackage({ data, update }) {
         estimated_impressions: estimated?.impressions || 0,
         estimated_reach: estimated?.reach || 0,
       });
+    } else {
+      update({ duration: dur });
     }
   }
 
   function handleCountryChange(country) {
     setSelectedCountry(country);
     if (data.package) {
-      const rate = exchangeRates.find(r => r.country === country);
-      const price = calculatePrice(data.package, data.duration, country, rate?.rate_to_usd);
+      const price = calculatePrice(data.package, data.duration, country);
       const estimated = calculateEstimatedResults(data.package, data.duration);
       update({
         country,
@@ -123,8 +123,7 @@ export default function StepPackage({ data, update }) {
       {/* Packages */}
       <div className="space-y-3">
         {Object.entries(PACKAGES).map(([key, pkg]) => {
-          const rate = getRate();
-          const price = calculatePrice(key, data.duration, selectedCountry, rate?.rate_to_usd);
+          const price = calculatePrice(key, data.duration, selectedCountry);
           const estimated = calculateEstimatedResults(key, data.duration);
 
           if (key === 'enterprise') {

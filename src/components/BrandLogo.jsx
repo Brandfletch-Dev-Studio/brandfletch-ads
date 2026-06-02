@@ -9,8 +9,8 @@ export default function BrandLogo({ size = 'md', dark = false }) {
   };
   const s = sizes[size] || sizes.md;
 
-  const textColor = size === 'lg' ? 'text-white' : dark ? 'text-foreground' : 'text-white';
-  const accentColor = size === 'lg' ? 'text-white/70' : dark ? 'text-[hsl(var(--accent))]' : 'text-[hsl(var(--accent))]';
+  const textColor = size === 'lg' ? 'text-white' : dark ? 'text-gray-900' : 'text-white';
+  const accentColor = size === 'lg' ? 'text-white/70' : dark ? 'text-[hsl(var(--primary))]' : 'text-[hsl(var(--accent))]';
 
   return (
     <div className={`flex items-center gap-2.5 ${size === 'lg' ? 'flex-col' : ''}`}>

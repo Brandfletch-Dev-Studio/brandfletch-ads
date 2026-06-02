@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
-import { Plus, Trash2, Save, DollarSign, CreditCard } from 'lucide-react';
+import { Plus, Trash2, Save, DollarSign, CreditCard, Pencil, X, Check } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,7 +15,8 @@ export default function AdminSettings() {
   const [methods, setMethods] = useState([]);
   const [newRate, setNewRate] = useState({ currency_code: '', currency_name: '', country: '', rate_to_usd: '', use_fixed_pricing: false });
   const [newMethod, setNewMethod] = useState({ country: '', method_name: '', method_type: 'mobile_money', account_number: '', account_name: '', instructions: '' });
-  const [saving, setSaving] = useState(false);
+  const [editingMethod, setEditingMethod] = useState(null); // id of method being edited
+  const [editMethodData, setEditMethodData] = useState({});
 
   useEffect(() => {
     Promise.all([
@@ -63,6 +64,18 @@ export default function AdminSettings() {
     await base44.entities.PaymentMethod.delete(id);
     setMethods(ms => ms.filter(m => m.id !== id));
     toast.success('Method deleted');
+  }
+
+  function startEdit(m) {
+    setEditingMethod(m.id);
+    setEditMethodData({ ...m });
+  }
+
+  async function saveEditMethod() {
+    await base44.entities.PaymentMethod.update(editingMethod, editMethodData);
+    setMethods(ms => ms.map(m => m.id === editingMethod ? { ...m, ...editMethodData } : m));
+    setEditingMethod(null);
+    toast.success('Payment method updated');
   }
 
   return (
@@ -156,19 +169,44 @@ export default function AdminSettings() {
               <h4 className="font-semibold text-sm text-muted-foreground mb-2 uppercase tracking-wide">{country}</h4>
               <div className="space-y-2">
                 {methods.filter(m => m.country === country).map(m => (
-                  <div key={m.id} className="flex items-center justify-between p-3 bg-secondary/50 rounded-xl">
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-sm">{m.method_name}</p>
-                      {m.account_number && <p className="text-xs text-muted-foreground">{m.account_name} · {m.account_number}</p>}
-                    </div>
-                    <div className="flex items-center gap-3 flex-shrink-0">
-                      <Switch checked={m.is_active} onCheckedChange={v => toggleMethod(m.id, v)} />
-                      <Button variant="ghost" size="icon" onClick={() => deleteMethod(m.id)}>
-                        <Trash2 className="w-4 h-4 text-destructive" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
+                   <div key={m.id} className="p-3 bg-secondary/50 rounded-xl">
+                     {editingMethod === m.id ? (
+                       <div className="space-y-2">
+                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                           <Input value={editMethodData.method_name || ''} onChange={e => setEditMethodData(d => ({ ...d, method_name: e.target.value }))} placeholder="Method name" className="h-8 text-sm" />
+                           <Input value={editMethodData.account_name || ''} onChange={e => setEditMethodData(d => ({ ...d, account_name: e.target.value }))} placeholder="Account name" className="h-8 text-sm" />
+                           <Input value={editMethodData.account_number || ''} onChange={e => setEditMethodData(d => ({ ...d, account_number: e.target.value }))} placeholder="Account number" className="h-8 text-sm" />
+                         </div>
+                         <Input value={editMethodData.instructions || ''} onChange={e => setEditMethodData(d => ({ ...d, instructions: e.target.value }))} placeholder="Instructions" className="h-8 text-sm" />
+                         <div className="flex items-center gap-2">
+                           <Button size="sm" onClick={saveEditMethod} className="gap-1 h-7">
+                             <Check className="w-3 h-3" /> Save
+                           </Button>
+                           <Button size="sm" variant="outline" onClick={() => setEditingMethod(null)} className="h-7">
+                             <X className="w-3 h-3" /> Cancel
+                           </Button>
+                         </div>
+                       </div>
+                     ) : (
+                       <div className="flex items-center justify-between">
+                         <div className="flex-1 min-w-0">
+                           <p className="font-semibold text-sm">{m.method_name}</p>
+                           {m.account_number && <p className="text-xs text-muted-foreground">{m.account_name} · {m.account_number}</p>}
+                           {m.instructions && <p className="text-xs text-muted-foreground italic mt-0.5">{m.instructions}</p>}
+                         </div>
+                         <div className="flex items-center gap-2 flex-shrink-0">
+                           <Switch checked={m.is_active} onCheckedChange={v => toggleMethod(m.id, v)} />
+                           <Button variant="ghost" size="icon" onClick={() => startEdit(m)}>
+                             <Pencil className="w-4 h-4" />
+                           </Button>
+                           <Button variant="ghost" size="icon" onClick={() => deleteMethod(m.id)}>
+                             <Trash2 className="w-4 h-4 text-destructive" />
+                           </Button>
+                         </div>
+                       </div>
+                     )}
+                   </div>
+                 ))}
               </div>
             </div>
           ))}

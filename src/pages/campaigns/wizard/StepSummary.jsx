@@ -1,6 +1,6 @@
-import { PACKAGES, DURATIONS, calculateEstimatedResults } from '@/lib/pricing';
+import { PACKAGES, DURATIONS, calculateEstimatedResults, LOCAL_PRICES } from '@/lib/pricing';
 import { OBJECTIVES, PROMOTE_TYPES } from '@/lib/constants';
-import { Facebook, Globe, Users, Package, Clock, DollarSign, TrendingUp } from 'lucide-react';
+import { Facebook, Globe, Users, Package, Clock, DollarSign, TrendingUp, Link as LinkIcon } from 'lucide-react';
 
 function SummaryRow({ icon: Icon, label, value }) {
   return (
@@ -30,7 +30,8 @@ export default function StepSummary({ data }) {
     : 'Not specified';
 
   const formatCost = () => {
-    if (data.currency === 'MWK') return `MK${(data.total_cost || 0).toLocaleString()}`;
+    const local = LOCAL_PRICES[data.country];
+    if (local) return `${local.symbol}${(data.total_cost || 0).toLocaleString()}`;
     return `$${(data.total_cost || 0).toFixed(2)}`;
   };
 
@@ -42,6 +43,20 @@ export default function StepSummary({ data }) {
       <div className="bg-secondary/40 rounded-xl p-4 mb-5">
         <SummaryRow icon={Facebook} label="Facebook Page" value={data.page_name || '—'} />
         <SummaryRow icon={Package} label="Promotion Type" value={promote?.label || '—'} />
+        {data.post_url && (
+          <div className="flex items-start gap-3 py-3 border-b border-border last:border-0">
+            <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center flex-shrink-0">
+              <LinkIcon className="w-4 h-4 text-muted-foreground" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs text-muted-foreground font-medium">Post to Boost</p>
+              <a href={data.post_url} target="_blank" rel="noopener noreferrer"
+                className="text-sm font-semibold text-[hsl(var(--accent))] hover:underline break-all mt-0.5 block">
+                {data.post_url}
+              </a>
+            </div>
+          </div>
+        )}
         <SummaryRow icon={TrendingUp} label="Campaign Objective" value={objective ? `${objective.icon} ${objective.label}` : '—'} />
         <SummaryRow icon={Globe} label="Audience Location" value={audienceDesc} />
         <SummaryRow icon={Users} label="Demographics" value={`Age ${data.audience_age_min}–${data.audience_age_max} · ${data.audience_gender === 'all' ? 'All genders' : data.audience_gender}`} />
@@ -51,12 +66,9 @@ export default function StepSummary({ data }) {
 
       {/* Cost highlight */}
       <div className="bg-[hsl(var(--primary))] rounded-xl p-5 text-primary-foreground mb-4">
-        <div className="flex items-center justify-between mb-3">
-          <div>
-            <p className="text-sm opacity-80">Total Cost</p>
-            <p className="text-3xl font-bold font-heading">{formatCost()}</p>
-          </div>
-          <DollarSign className="w-10 h-10 opacity-30" />
+        <div className="mb-3">
+          <p className="text-sm opacity-80">Total Cost</p>
+          <p className="text-3xl font-bold font-heading">{formatCost()}</p>
         </div>
         {estimated && (
           <div className="flex gap-4 pt-3 border-t border-white/20">

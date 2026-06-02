@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
-import { Facebook, Plus, CheckCircle2, XCircle, Clock, ExternalLink, AlertCircle, MessageSquare, Mail, Zap } from 'lucide-react';
+import { Facebook, Plus, CheckCircle2, XCircle, Clock, ExternalLink, AlertCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -133,18 +133,15 @@ export default function FacebookPages() {
                 </div>
 
                 {/* Checklist */}
-                <div className="mt-4 border-t border-border pt-4 space-y-0 divide-y divide-border/50">
-                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide pb-2">Page Checklist</h4>
-                  <ChecklistItem label="Page Connection" status={page.connection_status === 'connected'} icon={Facebook} />
-                  <ChecklistItem label="WhatsApp Business" status={page.whatsapp_verified} icon={MessageSquare} />
-                  <ChecklistItem label="Business Email" status={page.business_email_verified} icon={Mail} />
-                  <ChecklistItem label="Campaign Ready" status={page.campaign_ready} icon={Zap} />
+                <div className="mt-4 border-t border-border pt-4">
+                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide pb-2">Page Status</h4>
+                  <ChecklistItem label="Page Access Granted" status={page.connection_status === 'connected'} icon={Facebook} />
                 </div>
 
-                {!page.campaign_ready && (
+                {page.connection_status !== 'connected' && (
                   <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
                     <p className="text-xs text-amber-700">
-                      <strong>Action Required:</strong> Complete all checklist items to unlock full campaign capabilities.
+                      <strong>Pending:</strong> Our team is reviewing your page access request.
                     </p>
                   </div>
                 )}
