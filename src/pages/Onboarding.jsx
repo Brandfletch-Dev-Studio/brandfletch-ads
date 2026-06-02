@@ -134,28 +134,24 @@ export default function Onboarding() {
 
   async function submitHireRequest() {
     setSaving(true);
-    try {
-      await saveProfile();
-      const selectedMethod = paymentMethods.find(m => m.id === setupForm.payment_method_id);
-      await base44.entities.PageSetupRequest.create({
-        user_id: user?.id,
-        country: form.country,
-        business_name: setupForm.business_name,
-        products_services: setupForm.products_services,
-        business_location: setupForm.business_location,
-        whatsapp_number: setupForm.whatsapp_number,
-        email: setupForm.email,
-        logo_urls: setupForm.logo_urls,
-        additional_notes: setupForm.additional_notes,
-        payment_method: selectedMethod?.method_name || '',
-        payment_reference: setupForm.payment_reference,
-        payment_proof_url: setupForm.payment_proof_url,
-        status: setupForm.payment_proof_url ? 'paid' : 'pending_payment',
-      });
-      window.location.href = '/dashboard';
-    } finally {
-      setSaving(false);
-    }
+    await saveProfile();
+    const selectedMethod = paymentMethods.find(m => m.id === setupForm.payment_method_id);
+    await base44.entities.PageSetupRequest.create({
+      user_id: user?.id,
+      country: form.country,
+      business_name: setupForm.business_name,
+      products_services: setupForm.products_services,
+      business_location: setupForm.business_location,
+      whatsapp_number: setupForm.whatsapp_number,
+      email: setupForm.email,
+      logo_urls: setupForm.logo_urls,
+      additional_notes: setupForm.additional_notes,
+      payment_method: selectedMethod?.method_name || '',
+      payment_reference: setupForm.payment_reference,
+      payment_proof_url: setupForm.payment_proof_url,
+      status: setupForm.payment_proof_url ? 'paid' : 'pending_payment',
+    });
+    window.location.href = '/dashboard';
   }
 
   const isHireFlow = setupChoice === 'hire';
