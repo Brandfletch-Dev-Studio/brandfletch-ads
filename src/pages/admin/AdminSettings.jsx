@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
-import { Plus, Trash2, Save, DollarSign, CreditCard, Pencil, X, Check } from 'lucide-react';
+import { Plus, Trash2, Save, DollarSign, CreditCard, Pencil, X, Check, Mail } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,15 +15,31 @@ export default function AdminSettings() {
   const [methods, setMethods] = useState([]);
   const [newRate, setNewRate] = useState({ currency_code: '', currency_name: '', country: '', rate_to_usd: '', use_fixed_pricing: false });
   const [newMethod, setNewMethod] = useState({ country: '', method_name: '', method_type: 'mobile_money', account_number: '', account_name: '', instructions: '' });
-  const [editingMethod, setEditingMethod] = useState(null); // id of method being edited
+  const [editingMethod, setEditingMethod] = useState(null);
   const [editMethodData, setEditMethodData] = useState({});
+  const [adminEmail, setAdminEmail] = useState('');
+  const [savingEmail, setSavingEmail] = useState(false);
 
   useEffect(() => {
     Promise.all([
       base44.entities.ExchangeRate.list(),
       base44.entities.PaymentMethod.list(),
-    ]).then(([r, m]) => { setRates(r); setMethods(m); });
+      base44.auth.me(),
+    ]).then(([r, m, u]) => {
+      setRates(r);
+      setMethods(m);
+      // Load admin email from user profile custom field
+      if (u?.admin_notification_email) setAdminEmail(u.admin_notification_email);
+      else if (u?.email) setAdminEmail(u.email);
+    });
   }, []);
+
+  async function saveAdminEmail() {
+    setSavingEmail(true);
+    await base44.auth.updateMe({ admin_notification_email: adminEmail });
+    toast.success('Admin notification email saved');
+    setSavingEmail(false);
+  }
 
   async function saveRate(rate) {
     await base44.entities.ExchangeRate.update(rate.id, rate);
@@ -82,8 +98,32 @@ export default function AdminSettings() {
     <div className="p-4 lg:p-8 max-w-4xl mx-auto space-y-8">
       <div>
         <h1 className="text-2xl font-bold font-heading">Platform Settings</h1>
-        <p className="text-muted-foreground text-sm mt-1">Manage exchange rates and payment methods</p>
+        <p className="text-muted-foreground text-sm mt-1">Manage exchange rates, payment methods, and notifications</p>
       </div>
+
+      {/* Admin Email Notifications */}
+      <Card className="shadow-sm">
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Mail className="w-4 h-4" /> Admin Email Notifications
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-sm text-muted-foreground">Receive email alerts for new payments, campaign submissions, and page requests.</p>
+          <div className="flex gap-3">
+            <Input
+              type="email"
+              value={adminEmail}
+              onChange={e => setAdminEmail(e.target.value)}
+              placeholder="admin@brandfletch.com"
+              className="flex-1"
+            />
+            <Button onClick={saveAdminEmail} disabled={savingEmail} className="gap-2 flex-shrink-0">
+              <Save className="w-4 h-4" /> {savingEmail ? 'Saving...' : 'Save'}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Exchange Rates */}
       <Card className="shadow-sm">

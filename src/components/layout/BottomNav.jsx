@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { LayoutDashboard, Megaphone, Facebook, Wallet, Settings, BarChart3, Users } from 'lucide-react';
+import { LayoutDashboard, Megaphone, Facebook, Wallet, Settings, BarChart3, Users, Bell } from 'lucide-react';
 
 const clientItems = [
   { path: '/dashboard', label: 'Home', icon: LayoutDashboard },
@@ -13,14 +13,15 @@ const clientItems = [
 const adminItems = [
   { path: '/admin', label: 'Overview', icon: LayoutDashboard },
   { path: '/admin/campaigns', label: 'Campaigns', icon: Megaphone },
-  { path: '/admin/users', label: 'Users', icon: Users },
   { path: '/admin/payments', label: 'Payments', icon: Wallet },
-  { path: '/admin/reports', label: 'Reports', icon: BarChart3 },
+  { path: '/admin/notifications', label: 'Notifs', icon: Bell },
+  { path: '/admin/settings', label: 'Settings', icon: Settings },
 ];
 
 export default function BottomNav({ isStaff }) {
   const location = useLocation();
-  const items = isStaff ? adminItems : clientItems;
+  const isAdminView = location.pathname.startsWith('/admin');
+  const items = (isStaff && isAdminView) ? adminItems : clientItems;
 
   return (
     <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-card border-t border-border safe-bottom">

@@ -50,7 +50,7 @@ export default function CampaignPayment() {
     }
     setSubmitting(true);
     await base44.entities.Campaign.update(id, {
-      status: 'awaiting_payment',
+      status: 'pending_review',
       payment_method: selectedMethod.method_name,
       payment_reference: reference,
       payment_proof_url: proofFile,

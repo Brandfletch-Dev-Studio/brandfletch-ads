@@ -48,14 +48,21 @@ export default function CampaignDetail() {
       </div>
 
       {/* Status message */}
+      {campaign.status === 'pending_review' && (
+        <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl">
+          <p className="font-semibold text-amber-800">Pending Review</p>
+          <p className="text-sm text-amber-700 mt-0.5">Our finance team is verifying your payment. This usually takes 1–2 business hours.</p>
+        </div>
+      )}
+
       {campaign.status === 'awaiting_payment' && (
-        <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-start justify-between gap-4">
+        <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-xl flex items-start justify-between gap-4">
           <div>
-            <p className="font-semibold text-amber-800">Payment Under Review</p>
-            <p className="text-sm text-amber-700 mt-0.5">Our finance team is verifying your payment. This usually takes 1–2 business hours.</p>
+            <p className="font-semibold text-yellow-800">Payment Required</p>
+            <p className="text-sm text-yellow-700 mt-0.5">Please complete your payment to activate this campaign.</p>
           </div>
           <Link to={`/campaigns/${id}/payment`}>
-            <Button size="sm" variant="outline" className="border-amber-400 text-amber-700 flex-shrink-0">Resubmit</Button>
+            <Button size="sm" variant="outline" className="border-yellow-400 text-yellow-700 flex-shrink-0">Pay Now</Button>
           </Link>
         </div>
       )}

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
-import { Check, X, ExternalLink, Search } from 'lucide-react';
+import { Check, X, ExternalLink, Search, Mail } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -26,6 +26,17 @@ export default function AdminPayments() {
   }
 
   const staffUser = async () => base44.auth.me();
+
+  async function sendAdminEmail(subject, body) {
+    const admin = await staffUser();
+    const emailTo = admin?.admin_notification_email || admin?.email;
+    if (!emailTo) return;
+    await base44.integrations.Core.SendEmail({
+      to: emailTo,
+      subject,
+      body,
+    });
+  }
 
   async function verify(id, status, txn) {
     setProcessing(p => ({ ...p, [id]: true }));
@@ -62,6 +73,12 @@ export default function AdminPayments() {
         is_read: false,
       });
     }
+
+    // Send admin email notification
+    await sendAdminEmail(
+      `Payment ${status === 'confirmed' ? 'Confirmed' : 'Rejected'} — Brandfletch Ads`,
+      `A payment of ${txn.currency || 'USD'} ${txn.amount} has been ${status}.\nReference: ${txn.payment_reference || '—'}\nCampaign: ${txn.campaign_id || '—'}\nNotes: ${notes[id] || 'None'}`
+    ).catch(() => {});
 
     toast.success(`Payment ${status}`);
     load();

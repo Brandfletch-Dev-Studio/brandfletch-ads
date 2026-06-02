@@ -3,7 +3,7 @@ import { Link, useLocation, Outlet } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import {
   LayoutDashboard, Megaphone, Facebook, Users, Wallet,
-  Settings, X, ChevronRight, BarChart3, Shield
+  Settings, X, ChevronRight, BarChart3, Shield, Bell
 } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
 import BrandLogo from '@/components/BrandLogo';
@@ -25,6 +25,7 @@ const adminNav = [
   { path: '/admin/pages', label: 'Page Requests', icon: Facebook },
   { path: '/admin/users', label: 'Users', icon: Users },
   { path: '/admin/payments', label: 'Payments', icon: Wallet },
+  { path: '/admin/notifications', label: 'Notifications', icon: Bell },
   { path: '/admin/reports', label: 'Reports', icon: BarChart3 },
   { path: '/admin/settings', label: 'Settings', icon: Settings },
 ];
@@ -40,7 +41,8 @@ export default function AppLayout() {
   const isStaff = isAdmin || isCampaignManager || isFinance;
 
   const isAdminView = location.pathname.startsWith('/admin');
-  const navItems = isStaff ? adminNav : clientNav;
+  // Admin can switch to client view; use clientNav when in client view even if user is staff
+  const navItems = (isStaff && isAdminView) ? adminNav : clientNav;
 
   return (
     <div className="flex h-screen bg-background overflow-hidden">
