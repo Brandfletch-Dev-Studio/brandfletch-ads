@@ -24,12 +24,15 @@ export default function AdPlacement({ placement, userId, hasCampaigns = false, h
   const [dismissed, setDismissed] = useState(() => {
     try { return JSON.parse(localStorage.getItem('dismissed_ads') || '[]'); } catch { return []; }
   });
+  // Track whether data has loaded so we don't show stale empty state
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     if (!userId) return;
-    base44.entities.AppAd.filter({ placement, is_active: true })
-      .then(setAds)
-      .catch(() => {});
+    setLoaded(false);
+    base44.entities.AppAd.filter({ placement })
+      .then(data => { setAds(data); setLoaded(true); })
+      .catch(() => setLoaded(true));
   }, [placement, userId]);
 
   function handleDismiss(adId) {
@@ -42,7 +45,7 @@ export default function AdPlacement({ placement, userId, hasCampaigns = false, h
     .filter(a => isActive(a) && !dismissed.includes(a.id) && matchesAudience(a, { hasCampaigns, hasPages }))
     .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
 
-  if (!visible.length) return null;
+  if (!loaded || !visible.length) return null;
 
   return (
     <div className="space-y-3">

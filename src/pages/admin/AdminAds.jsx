@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Plus, Pencil, Trash2, Eye, MousePointer, X, BarChart2, ToggleLeft, ToggleRight } from 'lucide-react';
+import { Plus, Pencil, Trash2, Eye, MousePointer, X, BarChart2 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 
 const PLACEMENTS = [
@@ -60,20 +60,20 @@ export default function AdminAds() {
   });
 
   const save = useMutation({
-    mutationFn: () => editId
-      ? base44.entities.AppAd.update(editId, form)
-      : base44.entities.AppAd.create(form),
-    onSuccess: () => { qc.invalidateQueries(['app-ads']); setOpen(false); },
+    mutationFn: ({ id, data }) => id
+      ? base44.entities.AppAd.update(id, data)
+      : base44.entities.AppAd.create(data),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['app-ads'] }); setOpen(false); },
   });
 
   const remove = useMutation({
     mutationFn: (id) => base44.entities.AppAd.delete(id),
-    onSuccess: () => qc.invalidateQueries(['app-ads']),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['app-ads'] }),
   });
 
   const toggle = useMutation({
     mutationFn: ({ id, is_active }) => base44.entities.AppAd.update(id, { is_active }),
-    onSuccess: () => qc.invalidateQueries(['app-ads']),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['app-ads'] }),
   });
 
   function openNew() { setForm(EMPTY_FORM); setEditId(null); setOpen(true); }
@@ -265,7 +265,7 @@ export default function AdminAds() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-            <Button onClick={() => save.mutate()} disabled={!form.title || save.isPending}>
+            <Button onClick={() => save.mutate({ id: editId, data: form })} disabled={!form.title || save.isPending}>
               {save.isPending ? 'Saving...' : editId ? 'Save Changes' : 'Create Ad'}
             </Button>
           </DialogFooter>

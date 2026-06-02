@@ -19,21 +19,21 @@ export default function AdBanner({ ad, userId, onDismiss }) {
   useEffect(() => {
     if (!tracked.current && ad?.id && userId) {
       tracked.current = true;
-      base44.entities.AdEvent.create({ ad_id: ad.id, user_id: userId, event_type: 'impression' });
+      base44.entities.AdEvent.create({ ad_id: ad.id, user_id: String(userId), event_type: 'impression' }).catch(() => {});
     }
   }, [ad?.id, userId]);
 
   function handleClick() {
     if (ad?.id && userId) {
-      base44.entities.AdEvent.create({ ad_id: ad.id, user_id: userId, event_type: 'click' });
+      base44.entities.AdEvent.create({ ad_id: ad.id, user_id: String(userId), event_type: 'click' }).catch(() => {});
     }
   }
 
   function handleDismiss() {
     if (ad?.id && userId) {
-      base44.entities.AdEvent.create({ ad_id: ad.id, user_id: userId, event_type: 'dismiss' });
+      base44.entities.AdEvent.create({ ad_id: ad.id, user_id: String(userId), event_type: 'dismiss' }).catch(() => {});
     }
-    onDismiss(ad.id);
+    if (onDismiss) onDismiss(ad.id);
   }
 
   if (!ad) return null;
