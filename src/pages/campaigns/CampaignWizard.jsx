@@ -7,14 +7,14 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
 import StepSelectPage from './wizard/StepSelectPage';
-import StepPromoteObjective from './wizard/StepPromoteObjective';
+import StepGoalCreative from './wizard/StepGoalCreative';
 import StepAudience from './wizard/StepAudience';
 import StepPackage from './wizard/StepPackage';
 import StepSummary from './wizard/StepSummary';
 
 const STEPS = [
   { id: 1, label: 'Page' },
-  { id: 2, label: 'Promote' },
+  { id: 2, label: 'Goal' },
   { id: 3, label: 'Audience' },
   { id: 4, label: 'Package' },
   { id: 5, label: 'Summary' },
@@ -26,8 +26,9 @@ export default function CampaignWizard() {
   const [user, setUser] = useState(null);
   const [data, setData] = useState({
     page_id: '', page_name: '',
-    promote_type: '', post_url: '', creative_assets: [], description: '',
-    objective: '', whatsapp_number: '',
+    goal: '', promote_type: '', post_url: '', website_url: '', phone_number: '',
+    creative_assets: [], creative_link: '', creative_type: 'upload', description: '',
+    objective: '', whatsapp_number: '', messaging_platforms: [],
     audience_countries: [], audience_regions: [], audience_cities: [],
     audience_worldwide: false, audience_age_min: 18, audience_age_max: 65,
     audience_gender: 'all', save_audience: false, audience_name: '',
@@ -114,7 +115,7 @@ export default function CampaignWizard() {
         {/* Step content */}
         <div className="bg-card rounded-2xl border border-border shadow-sm p-6 lg:p-8">
           {step === 1 && <StepSelectPage data={data} update={update} userId={user?.id} />}
-          {step === 2 && <StepPromoteObjective data={data} update={update} />}
+          {step === 2 && <StepGoalCreative data={data} update={update} />}
           {step === 3 && <StepAudience data={data} update={update} userId={user?.id} />}
           {step === 4 && <StepPackage data={data} update={update} />}
           {step === 5 && <StepSummary data={data} update={update} />}
@@ -134,7 +135,13 @@ export default function CampaignWizard() {
               onClick={() => setStep(s => s + 1)}
               disabled={
                 (step === 1 && !data.page_id) ||
-                (step === 2 && !data.promote_type) ||
+                (step === 2 && (
+                  !data.goal ||
+                  (data.goal === 'messages' && data.messaging_platforms?.length === 0) ||
+                  (data.goal === 'website_traffic' && !data.website_url) ||
+                  (data.goal === 'phone_calls' && !data.phone_number) ||
+                  (data.goal === 'boost_post' && !data.post_url)
+                )) ||
                 (step === 4 && !data.package)
               }
               className="gap-2 bg-[hsl(var(--primary))] text-primary-foreground font-semibold"

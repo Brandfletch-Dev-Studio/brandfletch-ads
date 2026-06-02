@@ -12,6 +12,59 @@
     "page_name": {
       "type": "string"
     },
+    "goal": {
+      "type": "string",
+      "enum": [
+        "messages",
+        "website_traffic",
+        "phone_calls",
+        "brand_awareness",
+        "page_followers",
+        "boost_post"
+      ]
+    },
+    "messaging_platforms": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "whatsapp",
+          "messenger"
+        ]
+      },
+      "description": "For messages goal: which platforms"
+    },
+    "whatsapp_number": {
+      "type": "string"
+    },
+    "phone_number": {
+      "type": "string"
+    },
+    "post_url": {
+      "type": "string"
+    },
+    "website_url": {
+      "type": "string"
+    },
+    "creative_type": {
+      "type": "string",
+      "enum": [
+        "upload",
+        "link"
+      ]
+    },
+    "creative_assets": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "creative_link": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
     "promote_type": {
       "type": "string",
       "enum": [
@@ -23,29 +76,16 @@
         "website_traffic"
       ]
     },
-    "post_url": {
-      "type": "string"
-    },
-    "creative_assets": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
-    },
-    "description": {
-      "type": "string"
-    },
     "objective": {
       "type": "string",
       "enum": [
         "whatsapp_messages",
         "messenger_conversations",
         "website_traffic",
-        "brand_awareness"
+        "brand_awareness",
+        "phone_calls",
+        "page_followers"
       ]
-    },
-    "whatsapp_number": {
-      "type": "string"
     },
     "audience_id": {
       "type": "string",

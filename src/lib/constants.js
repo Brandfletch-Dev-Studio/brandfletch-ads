@@ -28,6 +28,16 @@ export const CAMPAIGN_STATUS_CONFIG = {
   changes_requested: { label: 'Changes Requested', color: 'bg-purple-100 text-purple-700', dot: 'bg-purple-500' },
 };
 
+export const GOALS = [
+  { value: 'messages', label: 'Get Messages', icon: '💬', desc: 'Drive people to chat with you on WhatsApp, Messenger, or both' },
+  { value: 'website_traffic', label: 'Website Traffic', icon: '🌐', desc: 'Send people to your website or landing page' },
+  { value: 'phone_calls', label: 'Phone Calls', icon: '📞', desc: 'Get people to call your business directly' },
+  { value: 'brand_awareness', label: 'Brand Awareness', icon: '📣', desc: 'Reach a broad audience and grow recognition' },
+  { value: 'page_followers', label: 'Page Followers', icon: '👥', desc: 'Grow your Facebook Page audience' },
+  { value: 'boost_post', label: 'Boost a Post', icon: '🚀', desc: 'Amplify an existing post on your Facebook Page' },
+];
+
+// Legacy — kept for backward compatibility
 export const OBJECTIVES = [
   { value: 'whatsapp_messages', label: 'WhatsApp Messages', icon: '💬', desc: 'Drive conversations on WhatsApp' },
   { value: 'messenger_conversations', label: 'Messenger Conversations', icon: '📨', desc: 'Drive conversations on Messenger' },
