@@ -39,6 +39,7 @@ import ForgotPassword from '@/pages/ForgotPassword';
 import ResetPassword from '@/pages/ResetPassword';
 
 const AUTH_ROUTES = ['/login', '/register', '/forgot-password', '/reset-password'];
+const SKIP_ONBOARDING_ROUTES = [...AUTH_ROUTES, '/onboarding'];
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin, user: currentUser } = useAuth();
@@ -55,6 +56,8 @@ const AuthenticatedApp = () => {
     );
   }
 
+  const isOnSkipRoute = SKIP_ONBOARDING_ROUTES.some(r => window.location.pathname.startsWith(r));
+
   if (!isOnAuthRoute) {
     if (authError) {
       if (authError.type === 'user_not_registered') {
@@ -67,6 +70,12 @@ const AuthenticatedApp = () => {
 
     if (!isLoadingAuth && !currentUser) {
       navigateToLogin();
+      return null;
+    }
+
+    // Redirect to onboarding if user hasn't completed it
+    if (!isLoadingAuth && currentUser && !currentUser.onboarded && !isOnSkipRoute) {
+      window.location.href = '/onboarding';
       return null;
     }
   }
