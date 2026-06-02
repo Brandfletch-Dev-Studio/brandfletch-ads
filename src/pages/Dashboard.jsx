@@ -33,9 +33,9 @@ export default function Dashboard() {
   const connectedPages = pages.filter(p => p.connection_status === 'connected').length;
 
   const stats = [
-    { label: 'Active Campaigns', value: activeCampaigns, icon: Activity, color: 'text-green-600', bg: 'bg-green-50' },
-    { label: 'Pending Review', value: pendingCampaigns, icon: Megaphone, color: 'text-amber-600', bg: 'bg-amber-50' },
-    { label: 'Connected Pages', value: connectedPages, icon: Facebook, color: 'text-blue-600', bg: 'bg-blue-50' },
+    { label: 'Active Campaigns', value: activeCampaigns, icon: Activity, color: 'text-green-600', bg: 'bg-green-50', to: '/campaigns' },
+    { label: 'Pending Review', value: pendingCampaigns, icon: Megaphone, color: 'text-amber-600', bg: 'bg-amber-50', to: '/campaigns' },
+    { label: 'Connected Pages', value: connectedPages, icon: Facebook, color: 'text-blue-600', bg: 'bg-blue-50', to: '/pages' },
   ];
 
   return (
@@ -56,21 +56,23 @@ export default function Dashboard() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map(({ label, value, icon: Icon, color, bg }) => (
-          <Card key={label} className="shadow-sm border-border/50">
-            <CardContent className="p-5">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{label}</p>
-                  <p className="text-2xl font-bold font-heading mt-1">{value}</p>
+      <div className="grid grid-cols-3 gap-4">
+        {stats.map(({ label, value, icon: Icon, color, bg, to }) => (
+          <Link key={label} to={to}>
+            <Card className="shadow-sm border-border/50 hover:shadow-md transition-shadow cursor-pointer">
+              <CardContent className="p-5">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{label}</p>
+                    <p className="text-2xl font-bold font-heading mt-1">{value}</p>
+                  </div>
+                  <div className={`w-10 h-10 rounded-xl ${bg} flex items-center justify-center flex-shrink-0`}>
+                    <Icon className={`w-5 h-5 ${color}`} />
+                  </div>
                 </div>
-                <div className={`w-10 h-10 rounded-xl ${bg} flex items-center justify-center flex-shrink-0`}>
-                  <Icon className={`w-5 h-5 ${color}`} />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </Link>
         ))}
       </div>
 
@@ -96,21 +98,13 @@ export default function Dashboard() {
 
       <div className="grid lg:grid-cols-2 gap-6">
         {/* Recent Campaigns */}
-        <Card className="shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between pb-3">
-            <CardTitle className="text-base font-semibold">Recent Campaigns</CardTitle>
-            <Link to="/campaigns" className="text-xs text-[hsl(var(--accent))] hover:underline font-medium">View all</Link>
-          </CardHeader>
-          <CardContent className="p-0">
-            {campaigns.length === 0 ? (
-              <div className="px-6 py-8 text-center">
-                <Megaphone className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-                <p className="text-sm text-muted-foreground">No campaigns yet</p>
-                <Link to="/campaigns/new">
-                  <Button size="sm" variant="outline" className="mt-3">Create your first campaign</Button>
-                </Link>
-              </div>
-            ) : (
+        {campaigns.length > 0 && (
+          <Card className="shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between pb-3">
+              <CardTitle className="text-base font-semibold">Recent Campaigns</CardTitle>
+              <Link to="/campaigns" className="text-xs text-[hsl(var(--accent))] hover:underline font-medium">View all</Link>
+            </CardHeader>
+            <CardContent className="p-0">
               <div className="divide-y divide-border">
                 {campaigns.slice(0, 5).map(c => (
                   <Link key={c.id} to={`/campaigns/${c.id}`} className="flex items-center justify-between px-6 py-3 hover:bg-secondary/50 transition-colors group">
@@ -124,26 +118,18 @@ export default function Dashboard() {
                   </Link>
                 ))}
               </div>
-            )}
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Pages Summary */}
-        <Card className="shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between pb-3">
-            <CardTitle className="text-base font-semibold">Facebook Pages</CardTitle>
-            <Link to="/pages" className="text-xs text-[hsl(var(--accent))] hover:underline font-medium">Manage</Link>
-          </CardHeader>
-          <CardContent className="p-0">
-            {pages.length === 0 ? (
-              <div className="px-6 py-8 text-center">
-                <Facebook className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-                <p className="text-sm text-muted-foreground">No pages connected yet</p>
-                <Link to="/pages">
-                  <Button size="sm" variant="outline" className="mt-3">Add a Page</Button>
-                </Link>
-              </div>
-            ) : (
+        {pages.length > 0 && (
+          <Card className="shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between pb-3">
+              <CardTitle className="text-base font-semibold">Facebook Pages</CardTitle>
+              <Link to="/pages" className="text-xs text-[hsl(var(--accent))] hover:underline font-medium">Manage</Link>
+            </CardHeader>
+            <CardContent className="p-0">
               <div className="divide-y divide-border">
                 {pages.slice(0, 5).map(p => (
                   <div key={p.id} className="flex items-center justify-between px-6 py-3">
@@ -167,9 +153,9 @@ export default function Dashboard() {
                   </div>
                 ))}
               </div>
-            )}
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );
