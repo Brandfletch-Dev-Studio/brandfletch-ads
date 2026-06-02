@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import {
-  Wallet as WalletIcon, Plus, TrendingUp, TrendingDown,
-  RefreshCw, Upload, CheckCircle2, Clock, ArrowUpRight, ArrowDownLeft
+  Wallet as WalletIcon, Plus,
+  RefreshCw, Upload, CheckCircle2, Clock, ArrowUpRight, ArrowDownLeft,
+  ChevronDown, Copy, CheckCheck
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,8 +19,11 @@ import { COUNTRY_CURRENCY, formatLocalCurrency } from '@/lib/constants';
 export default function Wallet() {
   const [user, setUser] = useState(null);
   const [transactions, setTransactions] = useState([]);
+  const [paymentMethods, setPaymentMethods] = useState([]);
   const [showAddFunds, setShowAddFunds] = useState(false);
-  const [form, setForm] = useState({ amount: '', reference: '', proof: '' });
+  const [form, setForm] = useState({ amount: '', payment_method_id: '', reference: '', proof: '' });
+  const [expandedMethod, setExpandedMethod] = useState(null);
+  const [copiedField, setCopiedField] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
@@ -28,8 +32,18 @@ export default function Wallet() {
   async function init() {
     const u = await base44.auth.me();
     setUser(u);
-    const txns = await base44.entities.WalletTransaction.filter({ user_id: u.id }, '-created_date');
+    const [txns, methods] = await Promise.all([
+      base44.entities.WalletTransaction.filter({ user_id: u.id }, '-created_date'),
+      u.country ? base44.entities.PaymentMethod.filter({ country: u.country, is_active: true }) : Promise.resolve([]),
+    ]);
     setTransactions(txns);
+    setPaymentMethods(methods);
+  }
+
+  function copyText(text, field) {
+    navigator.clipboard.writeText(text);
+    setCopiedField(field);
+    setTimeout(() => setCopiedField(null), 2000);
   }
 
   const confirmed = transactions.filter(t => t.status === 'confirmed');
@@ -56,15 +70,18 @@ export default function Wallet() {
   }
 
   async function handleSubmit() {
-    if (!form.amount || !form.reference || !form.proof) {
-      toast.error('Please fill in all fields and upload proof.');
+    if (!form.amount || !form.proof) {
+      toast.error('Please enter an amount and upload proof of payment.');
       return;
     }
     setSubmitting(true);
+    const selectedMethod = paymentMethods.find(m => m.id === form.payment_method_id);
     await base44.entities.WalletTransaction.create({
       user_id: user.id,
       type: 'top_up',
       amount: parseFloat(form.amount),
+      currency: COUNTRY_CURRENCY[user?.country]?.code || 'USD',
+      payment_method: selectedMethod?.method_name || '',
       payment_reference: form.reference,
       payment_proof_url: form.proof,
       status: 'pending',
@@ -72,7 +89,8 @@ export default function Wallet() {
     });
     toast.success('Top-up submitted! Our team will verify shortly.');
     setShowAddFunds(false);
-    setForm({ amount: '', reference: '', proof: '' });
+    setForm({ amount: '', payment_method_id: '', reference: '', proof: '' });
+    setExpandedMethod(null);
     const txns = await base44.entities.WalletTransaction.filter({ user_id: user.id }, '-created_date');
     setTransactions(txns);
     setSubmitting(false);
@@ -185,8 +203,8 @@ export default function Wallet() {
       </Card>
 
       {/* Add Funds Dialog */}
-      <Dialog open={showAddFunds} onOpenChange={setShowAddFunds}>
-        <DialogContent className="sm:max-w-md">
+      <Dialog open={showAddFunds} onOpenChange={open => { setShowAddFunds(open); if (!open) { setForm({ amount: '', payment_method_id: '', reference: '', proof: '' }); setExpandedMethod(null); } }}>
+        <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="font-heading flex items-center gap-2">
               <WalletIcon className="w-5 h-5" /> Add Funds to Wallet
@@ -194,13 +212,12 @@ export default function Wallet() {
           </DialogHeader>
           <div className="space-y-4 mt-1">
             <div className="p-3 rounded-xl bg-secondary/60 text-xs text-muted-foreground">
-              Transfer funds to our account, then submit your reference and proof of payment below. Our team will verify and credit your wallet.
+              Transfer funds to one of the payment methods below, then submit your proof. Our team will verify and credit your wallet.
             </div>
 
+            {/* Amount */}
             <div className="space-y-1.5">
-              <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Amount ({currencyCfg ? currencyCfg.code : 'USD'}) *
-              </Label>
+              <Label>Amount ({currencyCfg ? currencyCfg.code : 'USD'}) *</Label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-medium text-sm">
                   {currencyCfg ? currencyCfg.symbol : '$'}
@@ -216,8 +233,76 @@ export default function Wallet() {
               </div>
             </div>
 
+            {/* Payment Methods */}
+            {paymentMethods.length === 0 ? (
+              <div className="text-center py-4 text-muted-foreground text-sm border border-border rounded-xl">
+                <p>No payment methods available for {user?.country}.</p>
+                <p className="mt-1 text-xs">Contact support@brandfletch.com</p>
+              </div>
+            ) : (
+              <div className="space-y-1.5">
+                <Label>Select Payment Method *</Label>
+                <div className="space-y-2">
+                  {paymentMethods.map(m => {
+                    const isSelected = form.payment_method_id === m.id;
+                    const isExpanded = expandedMethod === m.id;
+                    return (
+                      <div key={m.id} className={`rounded-xl border-2 transition-all overflow-hidden ${isSelected ? 'border-[hsl(var(--primary))] bg-[hsl(var(--primary))]/5' : 'border-border'}`}>
+                        <button
+                          onClick={() => { setForm(f => ({ ...f, payment_method_id: m.id })); setExpandedMethod(isExpanded ? null : m.id); }}
+                          className="w-full text-left p-3.5 flex items-center justify-between gap-3"
+                        >
+                          <div className="flex items-center gap-2">
+                            {isSelected && <CheckCircle2 className="w-4 h-4 text-[hsl(var(--primary))] flex-shrink-0" />}
+                            <div>
+                              <p className="font-semibold text-sm">{m.method_name}</p>
+                              {!isExpanded && m.account_number && <p className="text-xs text-muted-foreground mt-0.5">{m.account_number}</p>}
+                            </div>
+                          </div>
+                          <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform flex-shrink-0 ${isExpanded ? 'rotate-180' : ''}`} />
+                        </button>
+                        {isExpanded && (
+                          <div className="px-4 pb-4 space-y-2 border-t border-border/50 pt-3">
+                            {m.account_name && (
+                              <div className="flex items-center justify-between gap-2 bg-background rounded-lg px-3 py-2">
+                                <div>
+                                  <p className="text-xs text-muted-foreground">Account Name</p>
+                                  <p className="text-sm font-semibold">{m.account_name}</p>
+                                </div>
+                                <button onClick={() => copyText(m.account_name, `name-${m.id}`)} className="p-1.5 rounded-lg hover:bg-secondary transition-colors flex-shrink-0">
+                                  {copiedField === `name-${m.id}` ? <CheckCheck className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4 text-muted-foreground" />}
+                                </button>
+                              </div>
+                            )}
+                            {m.account_number && (
+                              <div className="flex items-center justify-between gap-2 bg-background rounded-lg px-3 py-2">
+                                <div>
+                                  <p className="text-xs text-muted-foreground">Account Number</p>
+                                  <p className="text-sm font-semibold font-mono">{m.account_number}</p>
+                                </div>
+                                <button onClick={() => copyText(m.account_number, `num-${m.id}`)} className="p-1.5 rounded-lg hover:bg-secondary transition-colors flex-shrink-0">
+                                  {copiedField === `num-${m.id}` ? <CheckCheck className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4 text-muted-foreground" />}
+                                </button>
+                              </div>
+                            )}
+                            {m.instructions && (
+                              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                                <p className="text-xs font-medium text-amber-800 mb-1">Instructions</p>
+                                <p className="text-xs text-amber-700 whitespace-pre-wrap">{m.instructions}</p>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Reference */}
             <div className="space-y-1.5">
-              <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Transaction Reference *</Label>
+              <Label>Payment Reference / Transaction ID</Label>
               <Input
                 value={form.reference}
                 onChange={e => setForm(f => ({ ...f, reference: e.target.value }))}
@@ -226,22 +311,23 @@ export default function Wallet() {
               />
             </div>
 
+            {/* Proof Upload */}
             <div className="space-y-1.5">
-              <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Proof of Payment *</Label>
-              <label className={`flex flex-col items-center justify-center w-full h-28 border-2 border-dashed rounded-xl cursor-pointer transition-all ${
+              <Label>Upload Payment Proof *</Label>
+              <label className={`flex flex-col items-center justify-center w-full h-24 border-2 border-dashed rounded-xl cursor-pointer transition-all ${
                 form.proof ? 'border-green-400 bg-green-50' : 'border-border hover:bg-secondary/40 hover:border-[hsl(var(--accent))]/50'
               }`}>
                 {form.proof ? (
                   <div className="text-center">
-                    <CheckCircle2 className="w-7 h-7 text-green-600 mx-auto mb-1" />
+                    <CheckCircle2 className="w-6 h-6 text-green-600 mx-auto mb-1" />
                     <p className="text-sm text-green-700 font-medium">Proof uploaded</p>
                     <p className="text-xs text-green-600">Click to replace</p>
                   </div>
                 ) : (
                   <div className="text-center">
-                    <Upload className="w-6 h-6 text-muted-foreground mx-auto mb-1.5" />
+                    <Upload className="w-5 h-5 text-muted-foreground mx-auto mb-1" />
                     <p className="text-sm font-medium text-muted-foreground">{uploading ? 'Uploading...' : 'Click to upload'}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">Image or PDF accepted</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Image or PDF</p>
                   </div>
                 )}
                 <input type="file" accept="image/*,.pdf" className="hidden" onChange={handleUpload} disabled={uploading} />
@@ -254,7 +340,7 @@ export default function Wallet() {
               <Button variant="outline" onClick={() => setShowAddFunds(false)} className="flex-1">Cancel</Button>
               <Button
                 onClick={handleSubmit}
-                disabled={submitting || !form.amount || !form.reference || !form.proof}
+                disabled={submitting || uploading || !form.amount || !form.proof}
                 className="flex-1 bg-[hsl(var(--primary))] text-primary-foreground"
               >
                 {submitting ? 'Submitting...' : 'Submit Top-Up'}
