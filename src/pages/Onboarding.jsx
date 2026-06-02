@@ -129,8 +129,7 @@ export default function Onboarding() {
   async function finish() {
     setSaving(true);
     await saveProfile();
-    navigate('/dashboard');
-    setSaving(false);
+    window.location.href = '/dashboard';
   }
 
   async function submitHireRequest() {
@@ -153,7 +152,7 @@ export default function Onboarding() {
         payment_proof_url: setupForm.payment_proof_url,
         status: setupForm.payment_proof_url ? 'paid' : 'pending_payment',
       });
-      navigate('/dashboard');
+      window.location.href = '/dashboard';
     } finally {
       setSaving(false);
     }
