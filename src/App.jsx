@@ -30,11 +30,18 @@ import AdminUsers from '@/pages/admin/AdminUsers';
 import AdminPageRequests from '@/pages/admin/AdminPageRequests';
 import AdminReports from '@/pages/admin/AdminReports';
 import Onboarding from '@/pages/Onboarding';
+import Login from '@/pages/Login';
+import Register from '@/pages/Register';
+import ForgotPassword from '@/pages/ForgotPassword';
+import ResetPassword from '@/pages/ResetPassword';
+
+const AUTH_ROUTES = ['/login', '/register', '/forgot-password', '/reset-password'];
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin, user: currentUser } = useAuth();
+  const isOnAuthRoute = AUTH_ROUTES.some(r => window.location.pathname.startsWith(r));
 
-  if (isLoadingPublicSettings || isLoadingAuth) {
+  if ((isLoadingPublicSettings || isLoadingAuth) && !isOnAuthRoute) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-3">
@@ -45,20 +52,20 @@ const AuthenticatedApp = () => {
     );
   }
 
-  if (authError) {
-    if (authError.type === 'user_not_registered') {
-      return <UserNotRegisteredError />;
-    } else {
-      // auth_required or any other error → force login
+  if (!isOnAuthRoute) {
+    if (authError) {
+      if (authError.type === 'user_not_registered') {
+        return <UserNotRegisteredError />;
+      } else {
+        navigateToLogin();
+        return null;
+      }
+    }
+
+    if (!isLoadingAuth && !currentUser) {
       navigateToLogin();
       return null;
     }
-  }
-
-  // If auth finished loading and there's still no user, force login
-  if (!isLoadingAuth && !currentUser) {
-    navigateToLogin();
-    return null;
   }
 
   const isStaff = currentUser && ['admin', 'campaign_manager', 'finance'].includes(currentUser.role);
@@ -66,6 +73,12 @@ const AuthenticatedApp = () => {
 
   return (
     <Routes>
+      {/* Auth routes - always accessible */}
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
+
       <Route path="/onboarding" element={<Onboarding />} />
       <Route element={<AppLayout />}>
         {/* Client routes */}
