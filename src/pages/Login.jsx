@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
@@ -14,11 +14,6 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    const hasVisited = localStorage.getItem('bf_visited');
-    if (!hasVisited) window.location.href = '/register';
-  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -36,7 +31,7 @@ export default function Login() {
   };
 
   return (
-    <AuthLayout
+    <AuthLayout hideBrand
       title="Welcome back"
       subtitle="Log in to your Brandfletch Ads account"
       footer={

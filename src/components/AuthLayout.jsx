@@ -1,7 +1,7 @@
 import React from "react";
 import BrandLogo from "@/components/BrandLogo";
 
-export default function AuthLayout({ title, subtitle, footer, children }) {
+export default function AuthLayout({ title, subtitle, footer, children, hideBrand }) {
   return (
     <div className="h-screen flex bg-background overflow-hidden">
       {/* Left panel – decorative (desktop only) */}
@@ -11,10 +11,12 @@ export default function AuthLayout({ title, subtitle, footer, children }) {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-white/[0.03]" />
 
         <div className="relative z-10 text-center">
-          <BrandLogo size="lg" />
-          <h2 className="text-white text-3xl font-bold font-heading mt-8 leading-tight">
-            Grow your business<br />with smart advertising
-          </h2>
+          {!hideBrand && <BrandLogo size="lg" />}
+          {!hideBrand && (
+            <h2 className="text-white text-3xl font-bold font-heading mt-8 leading-tight">
+              Grow your business<br />with smart advertising
+            </h2>
+          )}
           <p className="text-white/60 mt-4 text-base max-w-xs mx-auto">
             Launch professionally managed Facebook &amp; Instagram campaigns — no expertise needed.
           </p>
@@ -30,9 +32,11 @@ export default function AuthLayout({ title, subtitle, footer, children }) {
 
       {/* Right panel – form */}
       <div className="flex-1 flex flex-col items-center justify-center px-4 overflow-y-auto">
-        <div className="lg:hidden mb-6 w-full max-w-md">
-          <BrandLogo size="md" dark />
-        </div>
+        {!hideBrand && (
+          <div className="lg:hidden mb-6 w-full max-w-md">
+            <BrandLogo size="md" dark />
+          </div>
+        )}
 
         <div className="w-full max-w-md py-8">
           <div className="mb-8">
