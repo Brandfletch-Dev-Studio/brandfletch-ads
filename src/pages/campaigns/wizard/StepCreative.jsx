@@ -3,12 +3,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
-import { Upload, Link2, X } from 'lucide-react';
+import { Upload, X, FileImage } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
 
 export default function StepCreative({ data, update }) {
   const [uploading, setUploading] = useState(false);
+
+  // creative_type: 'existing_post' | 'new_creative'
+  const creativeType = data.creative_type || 'existing_post';
 
   async function handleUpload(e) {
     const file = e.target.files[0];
@@ -30,87 +33,119 @@ export default function StepCreative({ data, update }) {
     <div>
       <h2 className="text-xl font-bold font-heading mb-1">Ad Creative</h2>
       <p className="text-muted-foreground text-sm mb-5">
-        Upload images/videos for your ad, share a link to existing creative, or just describe what you want.
+        Choose how you'd like to provide your ad creative.
       </p>
 
-      {/* Creative type toggle */}
-      <div className="flex gap-2 mb-5">
+      {/* Option selector */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
         <button
-          onClick={() => update({ creative_type: 'upload', creative_link: '' })}
+          onClick={() => update({ creative_type: 'existing_post', creative_assets: [], description: '' })}
           className={cn(
-            "flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg border-2 text-sm font-medium transition-all",
-            data.creative_type !== 'link'
-              ? "border-[hsl(var(--primary))] bg-[hsl(var(--primary))]/5 text-[hsl(var(--primary))]"
+            "flex flex-col items-start gap-2 p-4 rounded-xl border-2 text-left transition-all",
+            creativeType === 'existing_post'
+              ? "border-[hsl(var(--primary))] bg-[hsl(var(--primary))]/5"
               : "border-border hover:bg-secondary/50"
           )}
         >
-          <Upload className="w-4 h-4" /> Upload Images / Video
+          <div className={cn(
+            "w-9 h-9 rounded-lg flex items-center justify-center",
+            creativeType === 'existing_post' ? "bg-[hsl(var(--primary))] text-white" : "bg-secondary"
+          )}>
+            <FileImage className="w-4 h-4" />
+          </div>
+          <div>
+            <p className={cn("font-semibold text-sm", creativeType === 'existing_post' && "text-[hsl(var(--primary))]")}>
+              Use Existing Post
+            </p>
+            <p className="text-xs text-muted-foreground mt-0.5">Boost a post already on your Facebook page</p>
+          </div>
         </button>
+
         <button
-          onClick={() => update({ creative_type: 'link', creative_assets: [] })}
+          onClick={() => update({ creative_type: 'new_creative', creative_link: '' })}
           className={cn(
-            "flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg border-2 text-sm font-medium transition-all",
-            data.creative_type === 'link'
-              ? "border-[hsl(var(--primary))] bg-[hsl(var(--primary))]/5 text-[hsl(var(--primary))]"
+            "flex flex-col items-start gap-2 p-4 rounded-xl border-2 text-left transition-all",
+            creativeType === 'new_creative'
+              ? "border-[hsl(var(--primary))] bg-[hsl(var(--primary))]/5"
               : "border-border hover:bg-secondary/50"
           )}
         >
-          <Link2 className="w-4 h-4" /> Share a Link
+          <div className={cn(
+            "w-9 h-9 rounded-lg flex items-center justify-center",
+            creativeType === 'new_creative' ? "bg-[hsl(var(--primary))] text-white" : "bg-secondary"
+          )}>
+            <Upload className="w-4 h-4" />
+          </div>
+          <div>
+            <p className={cn("font-semibold text-sm", creativeType === 'new_creative' && "text-[hsl(var(--primary))]")}>
+              Create New Ad
+            </p>
+            <p className="text-xs text-muted-foreground mt-0.5">Write a description and upload images or video</p>
+          </div>
         </button>
       </div>
 
-      {/* Upload */}
-      {data.creative_type !== 'link' && (
-        <div className="mb-5">
-          <label className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-border rounded-xl cursor-pointer hover:bg-secondary/40 transition-colors">
-            <Upload className="w-5 h-5 text-muted-foreground mb-1" />
-            <span className="text-sm text-muted-foreground">{uploading ? 'Uploading...' : 'Click to upload image or video'}</span>
-            <input type="file" accept="image/*,video/*" className="hidden" onChange={handleUpload} disabled={uploading} />
-          </label>
-          {data.creative_assets?.length > 0 && (
-            <div className="mt-3 flex flex-wrap gap-2">
-              {data.creative_assets.map((url, i) => (
-                <div key={i} className="relative group">
-                  <img src={url} alt="" className="w-16 h-16 object-cover rounded-lg border" />
-                  <button onClick={() => removeAsset(i)} className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-destructive text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <X className="w-3 h-3" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-          <p className="text-xs text-muted-foreground mt-2">No assets? No problem — our team can create your ad from your description below.</p>
+      {/* Existing post URL */}
+      {creativeType === 'existing_post' && (
+        <div className="space-y-4">
+          <div>
+            <Label className="font-semibold mb-1.5 block">Post URL</Label>
+            <Input
+              value={data.post_url || ''}
+              onChange={e => update({ post_url: e.target.value })}
+              placeholder="https://www.facebook.com/yourpage/posts/..."
+              className="h-11"
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              Paste the link to the Facebook post you want to boost.
+            </p>
+          </div>
         </div>
       )}
 
-      {/* Link */}
-      {data.creative_type === 'link' && (
-        <div className="mb-5">
-          <Label className="font-semibold mb-1 block">Link to existing creative</Label>
-          <Input
-            value={data.creative_link || ''}
-            onChange={e => update({ creative_link: e.target.value })}
-            placeholder="https://drive.google.com/... or Canva link, Dropbox, etc."
-            className="h-11"
-          />
-          <p className="text-xs text-muted-foreground mt-1">Share a Google Drive, Dropbox, or Canva link with your image/video.</p>
+      {/* New creative: description + uploads */}
+      {creativeType === 'new_creative' && (
+        <div className="space-y-5">
+          {/* Description */}
+          <div>
+            <Label className="font-semibold mb-1.5 block">
+              Ad Description / Brief <span className="text-muted-foreground font-normal text-xs">(required)</span>
+            </Label>
+            <Textarea
+              value={data.description || ''}
+              onChange={e => update({ description: e.target.value })}
+              placeholder="Describe what you want to advertise. Our team will write the ad copy based on this."
+              rows={4}
+              className="resize-none"
+            />
+            <p className="text-xs text-muted-foreground mt-1">{(data.description || '').length} characters</p>
+          </div>
+
+          {/* Upload */}
+          <div>
+            <Label className="font-semibold mb-1.5 block">
+              Images / Video <span className="text-muted-foreground font-normal text-xs">(optional — our team can create if needed)</span>
+            </Label>
+            <label className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-border rounded-xl cursor-pointer hover:bg-secondary/40 transition-colors">
+              <Upload className="w-5 h-5 text-muted-foreground mb-1" />
+              <span className="text-sm text-muted-foreground">{uploading ? 'Uploading...' : 'Click to upload image or video'}</span>
+              <input type="file" accept="image/*,video/*" className="hidden" onChange={handleUpload} disabled={uploading} />
+            </label>
+            {data.creative_assets?.length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {data.creative_assets.map((url, i) => (
+                  <div key={i} className="relative group">
+                    <img src={url} alt="" className="w-16 h-16 object-cover rounded-lg border" />
+                    <button onClick={() => removeAsset(i)} className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-destructive text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       )}
-
-      {/* Description / brief */}
-      <div>
-        <Label className="font-semibold mb-1 block">
-          Ad Description / Brief <span className="text-muted-foreground font-normal text-xs">(recommended)</span>
-        </Label>
-        <Textarea
-          value={data.description || ''}
-          onChange={e => update({ description: e.target.value })}
-          placeholder="Describe what you want to advertise. Our team will write the ad copy based on this."
-          rows={4}
-          className="resize-none"
-        />
-        <p className="text-xs text-muted-foreground mt-1">{(data.description || '').length} characters</p>
-      </div>
     </div>
   );
 }
