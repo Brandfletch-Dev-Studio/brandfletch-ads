@@ -15,12 +15,12 @@ export default function TopBar({ onMenuToggle, currentUser, isStaff }) {
     : (currentUser?.email?.[0] || 'U').toUpperCase();
 
   return (
-    <header className="h-14 relative flex items-center justify-between px-4 lg:px-6 border-b border-border bg-card flex-shrink-0 z-30">
+    <header className="h-16 relative flex items-center justify-between px-4 lg:px-8 border-b border-border bg-card flex-shrink-0 z-30">
       {/* Left: hamburger (mobile) */}
-      <div className="flex items-center w-10">
+      <div className="flex items-center w-12">
         <button
           onClick={onMenuToggle}
-          className="lg:hidden p-1.5 rounded-lg hover:bg-secondary transition-colors"
+          className="lg:hidden p-2.5 rounded-lg hover:bg-secondary transition-colors"
           aria-label="Toggle menu"
         >
           <Menu className="w-5 h-5" />
@@ -38,7 +38,7 @@ export default function TopBar({ onMenuToggle, currentUser, isStaff }) {
       </div>
 
       {/* Right: actions */}
-      <div className="flex items-center gap-1 ml-auto">
+      <div className="flex items-center gap-2 ml-auto">
         {/* New campaign CTA for clients */}
         {!isStaff && (
           <Link to="/campaigns/new" className="hidden sm:block mr-2">
@@ -54,7 +54,7 @@ export default function TopBar({ onMenuToggle, currentUser, isStaff }) {
         {/* Profile menu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-2 pl-2 pr-1 py-1 rounded-lg hover:bg-secondary transition-colors ml-1">
+            <button className="flex items-center gap-2 pl-2.5 pr-2 py-2 rounded-lg hover:bg-secondary transition-colors ml-1">
               <div className="w-7 h-7 rounded-full bg-[hsl(var(--primary))] flex items-center justify-center text-primary-foreground text-xs font-bold flex-shrink-0">
                 {initials}
               </div>
