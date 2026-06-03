@@ -1,11 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { ChevronRight, ChevronLeft, Check, FlaskConical } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-import { isTestMode } from '@/lib/testMode';
 
 import StepSelectPage from './wizard/StepSelectPage';
 import StepCreative from './wizard/StepCreative';
@@ -57,12 +56,10 @@ export default function CampaignWizard() {
 
   async function handleSubmit() {
     setSubmitting(true);
-    const testMode = isTestMode();
     const campaign = await base44.entities.Campaign.create({
       ...data,
       user_id: user.id,
-      is_test: testMode,
-      status: testMode ? 'draft' : 'awaiting_payment',
+      status: 'awaiting_payment',
     });
 
     if (data.save_audience && data.audience_name) {
@@ -89,14 +86,7 @@ export default function CampaignWizard() {
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center gap-3 flex-wrap">
-            <h1 className="text-2xl font-bold font-heading">Create Campaign</h1>
-            {isTestMode() && (
-              <span className="flex items-center gap-1.5 text-xs bg-amber-100 text-amber-700 border border-amber-300 px-3 py-1 rounded-full font-semibold">
-                <FlaskConical className="w-3.5 h-3.5" /> Test Mode — campaign won't require payment
-              </span>
-            )}
-          </div>
+          <h1 className="text-2xl font-bold font-heading">Create Campaign</h1>
           <p className="text-muted-foreground text-sm mt-1">Follow the steps to launch your campaign.</p>
         </div>
 

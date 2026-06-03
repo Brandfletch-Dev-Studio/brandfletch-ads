@@ -12,11 +12,6 @@
     "page_name": {
       "type": "string"
     },
-    "is_test": {
-      "type": "boolean",
-      "default": false,
-      "description": "Whether this is a test/sandbox campaign"
-    },
     "goal": {
       "type": "string",
       "enum": [
