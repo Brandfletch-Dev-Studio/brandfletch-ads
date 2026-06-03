@@ -49,12 +49,12 @@ export default function StepSummary({ data }) {
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-xs text-muted-foreground font-medium">Ad Creative</p>
-            {data.creative_type === 'existing_post' && data.post_url ? (
+            {(data.creative_type === 'existing_post' || !data.creative_type) && data.post_url ? (
               <a href={data.post_url} target="_blank" rel="noopener noreferrer"
                 className="text-sm font-semibold text-[hsl(var(--accent))] hover:underline break-all mt-0.5 block">
                 {data.post_url}
               </a>
-            ) : data.creative_type === 'existing_post' ? (
+            ) : (data.creative_type === 'existing_post' || !data.creative_type) ? (
               <p className="text-sm font-semibold mt-0.5">Existing post (no URL provided)</p>
             ) : (
               <p className="text-sm font-semibold mt-0.5">Custom ad creative</p>

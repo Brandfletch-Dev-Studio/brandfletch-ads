@@ -29,7 +29,7 @@ export default function CampaignWizard() {
   const [data, setData] = useState({
     page_id: '', page_name: '',
     goal: '', promote_type: '', post_url: '', website_url: '', phone_number: '',
-    creative_assets: [], creative_link: '', creative_tab: 'post', description: '',
+    creative_assets: [], creative_link: '', creative_type: 'existing_post', description: '',
     objective: '', whatsapp_number: '', messaging_platforms: [],
     audience_countries: [], audience_regions: [], audience_cities: [],
     audience_worldwide: false, audience_age_min: 18, audience_age_max: 65,
