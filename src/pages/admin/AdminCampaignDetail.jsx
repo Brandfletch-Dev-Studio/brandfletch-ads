@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { ArrowLeft, Check, X, MessageSquare, Play, Pause, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Check, X, MessageSquare, Play, Pause, CheckCircle, LinkIcon, ImageIcon, MapPin, Users } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -198,6 +198,101 @@ export default function AdminCampaignDetail() {
         </Card>
       )}
 
+      {/* Ad Creative */}
+      <Card className="shadow-sm">
+        <CardHeader><CardTitle className="text-base">Ad Creative</CardTitle></CardHeader>
+        <CardContent className="space-y-3">
+          {campaign.creative_type === 'link' || campaign.post_url || campaign.creative_link ? (
+            <div className="flex items-start gap-3">
+              <LinkIcon className="w-4 h-4 mt-0.5 text-muted-foreground shrink-0" />
+              <div className="min-w-0">
+                <p className="text-xs text-muted-foreground mb-0.5">Post / Link to Boost</p>
+                <a href={campaign.creative_link || campaign.post_url} target="_blank" rel="noopener noreferrer"
+                  className="text-sm font-medium text-[hsl(var(--accent))] hover:underline break-all">
+                  {campaign.creative_link || campaign.post_url}
+                </a>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-start gap-3">
+              <ImageIcon className="w-4 h-4 mt-0.5 text-muted-foreground shrink-0" />
+              <div>
+                <p className="text-xs text-muted-foreground mb-0.5">Creative Type</p>
+                <p className="text-sm font-medium">Custom ad creative</p>
+              </div>
+            </div>
+          )}
+          {campaign.description && (
+            <div>
+              <p className="text-xs text-muted-foreground mb-1">Ad Description</p>
+              <p className="text-sm bg-secondary/40 rounded-lg p-3">{campaign.description}</p>
+            </div>
+          )}
+          {campaign.creative_assets?.length > 0 && (
+            <div>
+              <p className="text-xs text-muted-foreground mb-2">Uploaded Assets ({campaign.creative_assets.length})</p>
+              <div className="flex flex-wrap gap-2">
+                {campaign.creative_assets.map((url, i) => (
+                  <a key={i} href={url} target="_blank" rel="noopener noreferrer"
+                    className="text-xs text-[hsl(var(--accent))] hover:underline bg-secondary px-3 py-1.5 rounded-lg">
+                    Asset {i + 1}
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Audience */}
+      <Card className="shadow-sm">
+        <CardHeader><CardTitle className="text-base">Audience Targeting</CardTitle></CardHeader>
+        <CardContent className="space-y-2">
+          <div className="flex items-start gap-2 text-sm">
+            <MapPin className="w-4 h-4 mt-0.5 text-muted-foreground shrink-0" />
+            <div>
+              <span className="text-muted-foreground">Location: </span>
+              <span className="font-medium">
+                {campaign.audience_worldwide
+                  ? 'Worldwide'
+                  : [
+                      ...(campaign.audience_countries || []),
+                      ...(campaign.audience_regions || []),
+                      ...(campaign.audience_cities || []),
+                    ].join(', ') || '—'}
+              </span>
+            </div>
+          </div>
+          <div className="flex items-start gap-2 text-sm">
+            <Users className="w-4 h-4 mt-0.5 text-muted-foreground shrink-0" />
+            <div>
+              <span className="text-muted-foreground">Demographics: </span>
+              <span className="font-medium">
+                Age {campaign.audience_age_min || 18}–{campaign.audience_age_max || 65} · {campaign.audience_gender === 'all' || !campaign.audience_gender ? 'All genders' : campaign.audience_gender}
+              </span>
+            </div>
+          </div>
+          {campaign.whatsapp_number && (
+            <div className="text-sm">
+              <span className="text-muted-foreground">WhatsApp: </span>
+              <span className="font-medium">{campaign.whatsapp_number}</span>
+            </div>
+          )}
+          {campaign.phone_number && (
+            <div className="text-sm">
+              <span className="text-muted-foreground">Phone: </span>
+              <span className="font-medium">{campaign.phone_number}</span>
+            </div>
+          )}
+          {campaign.website_url && (
+            <div className="text-sm">
+              <span className="text-muted-foreground">Website: </span>
+              <a href={campaign.website_url} target="_blank" rel="noopener noreferrer" className="font-medium text-[hsl(var(--accent))] hover:underline">{campaign.website_url}</a>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Campaign Info */}
       <Card className="shadow-sm">
         <CardHeader><CardTitle className="text-base">Campaign Details</CardTitle></CardHeader>
@@ -205,14 +300,13 @@ export default function AdminCampaignDetail() {
           {[
             { label: 'User ID', value: campaign.user_id },
             { label: 'Page', value: campaign.page_name },
-            { label: 'Objective', value: campaign.objective },
+            { label: 'Objective', value: campaign.objective?.replace(/_/g, ' ') },
             { label: 'Package', value: campaign.package },
             { label: 'Duration', value: campaign.duration },
             { label: 'Country', value: campaign.country },
             { label: 'Cost', value: formatCost() },
             { label: 'Payment Method', value: campaign.payment_method },
             { label: 'Payment Reference', value: campaign.payment_reference },
-            { label: 'WhatsApp Number', value: campaign.whatsapp_number },
             { label: 'Created', value: campaign.created_date ? format(new Date(campaign.created_date), 'MMM d, yyyy HH:mm') : '—' },
           ].filter(r => r.value).map(({ label, value }) => (
             <div key={label} className="flex justify-between text-sm py-1 border-b border-border last:border-0">
