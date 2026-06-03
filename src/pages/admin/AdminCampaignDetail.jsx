@@ -100,8 +100,15 @@ export default function AdminCampaignDetail() {
   if (!campaign) return <div className="p-8 text-center text-muted-foreground">Loading...</div>;
 
   const formatCost = () => {
-    if (campaign.currency === 'MWK') return `MK${(campaign.total_cost || 0).toLocaleString()}`;
-    return `$${(campaign.total_cost || 0).toFixed(2)}`;
+    const localAmt = campaign.total_cost || 0;
+    const currency = campaign.currency || 'USD';
+    if (currency === 'USD') return `$${localAmt.toFixed(2)}`;
+    return `${currency} ${localAmt.toLocaleString()}`;
+  };
+
+  const formatUSD = () => {
+    if (campaign.total_cost_usd) return `≈ $${campaign.total_cost_usd.toFixed(2)} USD`;
+    return null;
   };
 
   const goalConfig = GOALS.find(g => g.value === campaign.goal);
@@ -126,7 +133,10 @@ export default function AdminCampaignDetail() {
             <h1 className="text-xl font-bold font-heading">{campaign.page_name || 'Campaign'}</h1>
             <StatusBadge status={campaign.status} />
           </div>
-          <p className="text-sm text-muted-foreground capitalize">{campaign.package} · {campaign.duration} · {formatCost()}</p>
+          <p className="text-sm text-muted-foreground capitalize">
+            {campaign.package} · {campaign.duration} · {formatCost()}
+            {formatUSD() && <span className="ml-1 text-xs opacity-70">{formatUSD()}</span>}
+          </p>
         </div>
       </div>
 
@@ -372,7 +382,8 @@ export default function AdminCampaignDetail() {
             { label: 'Duration', value: campaign.duration ? campaign.duration.charAt(0).toUpperCase() + campaign.duration.slice(1) : null },
             { label: 'Country', value: campaign.country },
             { label: 'Currency', value: campaign.currency },
-            { label: 'Total Cost', value: formatCost() },
+            { label: 'Total Cost (Local)', value: formatCost() },
+            { label: 'Total Cost (USD)', value: formatUSD() },
             { label: 'Submitted', value: campaign.created_date ? format(new Date(campaign.created_date), 'MMM d, yyyy HH:mm') : null },
           ].filter(r => r.value).map(({ label, value }) => (
             <div key={label} className="flex justify-between text-sm py-1.5 border-b border-border last:border-0">

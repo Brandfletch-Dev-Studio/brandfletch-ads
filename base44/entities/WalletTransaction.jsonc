@@ -15,7 +15,12 @@
       "default": "top_up"
     },
     "amount": {
-      "type": "number"
+      "type": "number",
+      "description": "Amount in local currency"
+    },
+    "amount_usd": {
+      "type": "number",
+      "description": "USD equivalent for admin reference"
     },
     "currency": {
       "type": "string",

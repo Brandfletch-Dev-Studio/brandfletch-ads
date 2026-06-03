@@ -44,8 +44,8 @@ export default function CampaignPayment() {
   }
 
   async function handleSubmit() {
-    if (!selectedMethod || !reference || !proofFile) {
-      toast.error('Please complete all payment fields.');
+    if (!selectedMethod || !proofFile) {
+      toast.error('Please select a payment method and upload your proof.');
       return;
     }
     setSubmitting(true);
@@ -62,6 +62,7 @@ export default function CampaignPayment() {
       user_id: user.id,
       type: 'payment',
       amount: campaign.total_cost,
+      amount_usd: campaign.total_cost_usd || (campaign.currency === 'USD' ? campaign.total_cost : null),
       currency: campaign.currency,
       payment_method: selectedMethod.method_name,
       payment_reference: reference,
@@ -78,8 +79,15 @@ export default function CampaignPayment() {
 
   const formatCost = () => {
     if (!campaign) return '';
-    if (campaign.currency === 'MWK') return `MK${(campaign.total_cost || 0).toLocaleString()}`;
-    return `$${(campaign.total_cost || 0).toFixed(2)}`;
+    const amt = campaign.total_cost || 0;
+    const cur = campaign.currency || 'USD';
+    if (cur === 'USD') return `$${amt.toFixed(2)}`;
+    return `${cur} ${amt.toLocaleString()}`;
+  };
+
+  const formatUSD = () => {
+    if (!campaign?.total_cost_usd || campaign.currency === 'USD') return null;
+    return `≈ $${campaign.total_cost_usd.toFixed(2)} USD`;
   };
 
   function CopyRow({ label, value }) {
@@ -118,6 +126,7 @@ export default function CampaignPayment() {
         <CardContent className="p-5">
           <p className="text-sm opacity-80">Total Due</p>
           <p className="text-3xl font-bold font-heading">{formatCost()}</p>
+          {formatUSD() && <p className="text-sm opacity-70 mt-0.5">{formatUSD()}</p>}
           <p className="text-sm opacity-70 mt-1 capitalize">{campaign.package} · {campaign.duration}</p>
         </CardContent>
       </Card>
@@ -209,7 +218,7 @@ export default function CampaignPayment() {
 
           <Button
             onClick={handleSubmit}
-            disabled={submitting || !reference || !proofFile}
+            disabled={submitting || !proofFile}
             className="w-full bg-[hsl(var(--accent))] hover:bg-[hsl(217,91%,48%)] text-white font-semibold py-3"
           >
             {submitting ? 'Submitting...' : 'Submit Payment'}

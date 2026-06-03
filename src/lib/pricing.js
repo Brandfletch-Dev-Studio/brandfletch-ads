@@ -72,11 +72,14 @@ export function calculatePrice(pkg, duration, country) {
   if (local && local[pkg]) {
     const amount = local[pkg][duration];
     if (!amount) return null;
+    // USD equivalent from USD_PRICES for admin reference
+    const usdAmount = USD_PRICES[pkg]?.[duration] || null;
     return {
       amount,
       currency: local.currency,
       symbol: local.symbol,
       display: `${local.symbol}${amount.toLocaleString()}`,
+      usd: usdAmount,
     };
   }
 
@@ -90,6 +93,7 @@ export function calculatePrice(pkg, duration, country) {
     currency: 'USD',
     symbol: '$',
     display: `$${amount.toFixed(2)}`,
+    usd: amount,
   };
 }
 

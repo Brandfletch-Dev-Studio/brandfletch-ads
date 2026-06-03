@@ -30,6 +30,7 @@ export default function StepPackage({ data, update }) {
       country: selectedCountry,
       currency: price?.currency || 'USD',
       total_cost: price?.amount || 0,
+      total_cost_usd: price?.usd || 0,
       estimated_impressions: estimated?.impressions || 0,
       estimated_reach: estimated?.reach || 0,
     });
@@ -44,6 +45,7 @@ export default function StepPackage({ data, update }) {
         country: selectedCountry,
         currency: price?.currency || 'USD',
         total_cost: price?.amount || 0,
+        total_cost_usd: price?.usd || 0,
         estimated_impressions: estimated?.impressions || 0,
         estimated_reach: estimated?.reach || 0,
       });
@@ -61,6 +63,7 @@ export default function StepPackage({ data, update }) {
         country,
         currency: price?.currency || 'USD',
         total_cost: price?.amount || 0,
+        total_cost_usd: price?.usd || 0,
         estimated_impressions: estimated?.impressions || 0,
         estimated_reach: estimated?.reach || 0,
       });

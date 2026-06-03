@@ -150,10 +150,16 @@
     },
     "currency": {
       "type": "string",
-      "default": "USD"
+      "default": "USD",
+      "description": "Local currency code (e.g. MWK, KES, USD)"
     },
     "total_cost": {
-      "type": "number"
+      "type": "number",
+      "description": "Amount in local currency that the client pays"
+    },
+    "total_cost_usd": {
+      "type": "number",
+      "description": "USD equivalent for internal/admin reference"
     },
     "country": {
       "type": "string"

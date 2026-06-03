@@ -149,8 +149,13 @@ export default function AdminPayments() {
                   </div>
                   <div className="flex items-center gap-3 mt-1.5 flex-wrap">
                     <span className="text-xl font-bold text-[hsl(var(--primary))]">
-                      ${(t.amount || 0).toFixed(2)}
+                      {t.currency && t.currency !== 'USD'
+                        ? `${t.currency} ${(t.amount || 0).toLocaleString()}`
+                        : `$${(t.amount || 0).toFixed(2)}`}
                     </span>
+                    {t.currency && t.currency !== 'USD' && t.amount_usd && (
+                      <span className="text-sm text-muted-foreground">≈ ${t.amount_usd.toFixed(2)} USD</span>
+                    )}
                     <span className="text-sm text-muted-foreground">{t.payment_method || '—'}</span>
                     <span className="text-sm text-muted-foreground font-mono text-xs">{t.payment_reference}</span>
                   </div>
