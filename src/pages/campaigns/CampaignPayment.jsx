@@ -85,11 +85,6 @@ export default function CampaignPayment() {
     return `${cur} ${amt.toLocaleString()}`;
   };
 
-  const formatUSD = () => {
-    if (!campaign?.total_cost_usd || campaign.currency === 'USD') return null;
-    return `≈ $${campaign.total_cost_usd.toFixed(2)} USD`;
-  };
-
   function CopyRow({ label, value }) {
     return (
       <div className="flex items-center justify-between gap-3">
@@ -126,7 +121,6 @@ export default function CampaignPayment() {
         <CardContent className="p-5">
           <p className="text-sm opacity-80">Total Due</p>
           <p className="text-3xl font-bold font-heading">{formatCost()}</p>
-          {formatUSD() && <p className="text-sm opacity-70 mt-0.5">{formatUSD()}</p>}
           <p className="text-sm opacity-70 mt-1 capitalize">{campaign.package} · {campaign.duration}</p>
         </CardContent>
       </Card>

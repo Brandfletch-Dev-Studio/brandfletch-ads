@@ -143,9 +143,7 @@ export default function CampaignDetail() {
             { label: 'Package', value: campaign.package },
             { label: 'Duration', value: campaign.duration },
             { label: 'Total Cost', value: formatCost() },
-            ...(campaign.total_cost_usd && campaign.currency !== 'USD'
-              ? [{ label: 'USD Equivalent', value: `≈ $${campaign.total_cost_usd.toFixed(2)}` }]
-              : []),
+
             { label: 'Country', value: campaign.country },
             { label: 'Payment Method', value: campaign.payment_method },
             campaign.payment_reference ? { label: 'Reference', value: campaign.payment_reference } : null,
