@@ -1,6 +1,6 @@
 import { PACKAGES, DURATIONS, calculateEstimatedResults, LOCAL_PRICES } from '@/lib/pricing';
-import { OBJECTIVES, PROMOTE_TYPES } from '@/lib/constants';
-import { Facebook, Globe, Users, Package, Clock, DollarSign, TrendingUp, Link as LinkIcon } from 'lucide-react';
+import { OBJECTIVES } from '@/lib/constants';
+import { Facebook, Globe, Users, Package, Clock, TrendingUp, Link as LinkIcon, ImageIcon } from 'lucide-react';
 
 function SummaryRow({ icon: Icon, label, value }) {
   return (
@@ -18,7 +18,6 @@ function SummaryRow({ icon: Icon, label, value }) {
 
 export default function StepSummary({ data }) {
   const objective = OBJECTIVES.find(o => o.value === data.objective);
-  const promote = PROMOTE_TYPES.find(p => p.value === data.promote_type);
   const pkg = PACKAGES[data.package];
   const dur = DURATIONS[data.duration];
   const estimated = calculateEstimatedResults(data.package, data.duration);
@@ -42,22 +41,28 @@ export default function StepSummary({ data }) {
 
       <div className="bg-secondary/40 rounded-xl p-4 mb-5">
         <SummaryRow icon={Facebook} label="Facebook Page" value={data.page_name || '—'} />
-        <SummaryRow icon={Package} label="Promotion Type" value={promote?.label || '—'} />
-        {data.post_url && (
+        <SummaryRow icon={TrendingUp} label="Campaign Objective" value={objective ? `${objective.icon} ${objective.label}` : '—'} />
+        {/* Ad Creative */}
+        {data.creative_type === 'existing_post' ? (
           <div className="flex items-start gap-3 py-3 border-b border-border last:border-0">
             <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center flex-shrink-0">
               <LinkIcon className="w-4 h-4 text-muted-foreground" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs text-muted-foreground font-medium">Post to Boost</p>
-              <a href={data.post_url} target="_blank" rel="noopener noreferrer"
-                className="text-sm font-semibold text-[hsl(var(--accent))] hover:underline break-all mt-0.5 block">
-                {data.post_url}
-              </a>
+              <p className="text-xs text-muted-foreground font-medium">Ad Creative — Existing Post</p>
+              {data.post_url ? (
+                <a href={data.post_url} target="_blank" rel="noopener noreferrer"
+                  className="text-sm font-semibold text-[hsl(var(--accent))] hover:underline break-all mt-0.5 block">
+                  {data.post_url}
+                </a>
+              ) : (
+                <p className="text-sm font-semibold mt-0.5">No URL provided</p>
+              )}
             </div>
           </div>
+        ) : (
+          <SummaryRow icon={ImageIcon} label="Ad Creative" value="Custom ad creative (description + uploads)" />
         )}
-        <SummaryRow icon={TrendingUp} label="Campaign Objective" value={objective ? `${objective.icon} ${objective.label}` : '—'} />
         <SummaryRow icon={Globe} label="Audience Location" value={audienceDesc} />
         <SummaryRow icon={Users} label="Demographics" value={`Age ${data.audience_age_min}–${data.audience_age_max} · ${data.audience_gender === 'all' ? 'All genders' : data.audience_gender}`} />
         <SummaryRow icon={Package} label="Package" value={pkg?.label || '—'} />
