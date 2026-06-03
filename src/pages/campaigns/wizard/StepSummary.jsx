@@ -43,26 +43,22 @@ export default function StepSummary({ data }) {
         <SummaryRow icon={Facebook} label="Facebook Page" value={data.page_name || '—'} />
         <SummaryRow icon={TrendingUp} label="Campaign Objective" value={objective ? `${objective.icon} ${objective.label}` : '—'} />
         {/* Ad Creative */}
-        {data.creative_type === 'existing_post' ? (
-          <div className="flex items-start gap-3 py-3 border-b border-border last:border-0">
-            <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center flex-shrink-0">
-              <LinkIcon className="w-4 h-4 text-muted-foreground" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs text-muted-foreground font-medium">Ad Creative — Existing Post</p>
-              {data.post_url ? (
-                <a href={data.post_url} target="_blank" rel="noopener noreferrer"
-                  className="text-sm font-semibold text-[hsl(var(--accent))] hover:underline break-all mt-0.5 block">
-                  {data.post_url}
-                </a>
-              ) : (
-                <p className="text-sm font-semibold mt-0.5">No URL provided</p>
-              )}
-            </div>
+        <div className="flex items-start gap-3 py-3 border-b border-border last:border-0">
+          <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center flex-shrink-0">
+            {data.creative_type === 'link' ? <LinkIcon className="w-4 h-4 text-muted-foreground" /> : <ImageIcon className="w-4 h-4 text-muted-foreground" />}
           </div>
-        ) : (
-          <SummaryRow icon={ImageIcon} label="Ad Creative" value="Custom ad creative (description + uploads)" />
-        )}
+          <div className="flex-1 min-w-0">
+            <p className="text-xs text-muted-foreground font-medium">Ad Creative</p>
+            {data.creative_type === 'link' && data.creative_link ? (
+              <a href={data.creative_link} target="_blank" rel="noopener noreferrer"
+                className="text-sm font-semibold text-[hsl(var(--accent))] hover:underline break-all mt-0.5 block">
+                {data.creative_link}
+              </a>
+            ) : (
+              <p className="text-sm font-semibold mt-0.5">Custom ad creative</p>
+            )}
+          </div>
+        </div>
         <SummaryRow icon={Globe} label="Audience Location" value={audienceDesc} />
         <SummaryRow icon={Users} label="Demographics" value={`Age ${data.audience_age_min}–${data.audience_age_max} · ${data.audience_gender === 'all' ? 'All genders' : data.audience_gender}`} />
         <SummaryRow icon={Package} label="Package" value={pkg?.label || '—'} />
