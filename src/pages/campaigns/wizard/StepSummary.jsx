@@ -1,5 +1,5 @@
 import { PACKAGES, DURATIONS, calculateEstimatedResults, LOCAL_PRICES } from '@/lib/pricing';
-import { OBJECTIVES } from '@/lib/constants';
+import { GOALS } from '@/lib/constants';
 import { Facebook, Globe, Users, Package, Clock, TrendingUp, Link as LinkIcon, ImageIcon } from 'lucide-react';
 
 function SummaryRow({ icon: Icon, label, value }) {
@@ -17,7 +17,7 @@ function SummaryRow({ icon: Icon, label, value }) {
 }
 
 export default function StepSummary({ data }) {
-  const objective = OBJECTIVES.find(o => o.value === data.objective);
+  const objective = GOALS.find(g => g.value === data.goal);
   const pkg = PACKAGES[data.package];
   const dur = DURATIONS[data.duration];
   const estimated = calculateEstimatedResults(data.package, data.duration);
@@ -41,19 +41,21 @@ export default function StepSummary({ data }) {
 
       <div className="bg-secondary/40 rounded-xl p-4 mb-5">
         <SummaryRow icon={Facebook} label="Facebook Page" value={data.page_name || '—'} />
-        <SummaryRow icon={TrendingUp} label="Campaign Objective" value={objective ? `${objective.icon} ${objective.label}` : '—'} />
+        <SummaryRow icon={TrendingUp} label="Campaign Goal" value={objective ? `${objective.icon} ${objective.label}` : '—'} />
         {/* Ad Creative */}
         <div className="flex items-start gap-3 py-3 border-b border-border last:border-0">
           <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center flex-shrink-0">
-            {data.creative_type === 'link' ? <LinkIcon className="w-4 h-4 text-muted-foreground" /> : <ImageIcon className="w-4 h-4 text-muted-foreground" />}
+            {data.creative_type === 'existing_post' ? <LinkIcon className="w-4 h-4 text-muted-foreground" /> : <ImageIcon className="w-4 h-4 text-muted-foreground" />}
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-xs text-muted-foreground font-medium">Ad Creative</p>
-            {data.creative_type === 'link' && data.creative_link ? (
-              <a href={data.creative_link} target="_blank" rel="noopener noreferrer"
+            {data.creative_type === 'existing_post' && data.post_url ? (
+              <a href={data.post_url} target="_blank" rel="noopener noreferrer"
                 className="text-sm font-semibold text-[hsl(var(--accent))] hover:underline break-all mt-0.5 block">
-                {data.creative_link}
+                {data.post_url}
               </a>
+            ) : data.creative_type === 'existing_post' ? (
+              <p className="text-sm font-semibold mt-0.5">Existing post (no URL provided)</p>
             ) : (
               <p className="text-sm font-semibold mt-0.5">Custom ad creative</p>
             )}
