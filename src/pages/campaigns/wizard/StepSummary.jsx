@@ -1,38 +1,64 @@
 import { PACKAGES, DURATIONS, calculateEstimatedResults, LOCAL_PRICES } from '@/lib/pricing';
 import { GOALS } from '@/lib/constants';
-import { Facebook, Globe, Users, Package, Clock, TrendingUp, Link as LinkIcon, ImageIcon } from 'lucide-react';
+import { Facebook, Globe, Users, Package, Clock, TrendingUp, Link as LinkIcon, ImageIcon, Phone, MessageCircle } from 'lucide-react';
 
-function SummaryRow({ icon: Icon, label, value }) {
+function SummaryRow({ icon: Icon, label, children }) {
   return (
     <div className="flex items-start gap-3 py-3 border-b border-border last:border-0">
-      <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center flex-shrink-0">
+      <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center flex-shrink-0 mt-0.5">
         <Icon className="w-4 h-4 text-muted-foreground" />
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-xs text-muted-foreground font-medium">{label}</p>
-        <p className="text-sm font-semibold mt-0.5 break-words">{value}</p>
+        <div className="text-sm font-semibold mt-0.5 break-words">{children}</div>
       </div>
     </div>
   );
 }
 
 export default function StepSummary({ data }) {
-  const objective = GOALS.find(g => g.value === data.goal);
+  const goalConfig = GOALS.find(g => g.value === data.goal);
   const pkg = PACKAGES[data.package];
   const dur = DURATIONS[data.duration];
   const estimated = calculateEstimatedResults(data.package, data.duration);
 
+  // Audience location
   const audienceDesc = data.audience_worldwide
     ? 'Worldwide'
     : data.audience_countries?.length > 0
     ? data.audience_countries.join(', ')
     : 'Not specified';
 
+  // Cost formatting
   const formatCost = () => {
     const local = LOCAL_PRICES[data.country];
     if (local) return `${local.symbol}${(data.total_cost || 0).toLocaleString()}`;
     return `$${(data.total_cost || 0).toFixed(2)}`;
   };
+
+  // Creative summary
+  const isExistingPost = data.creative_type === 'existing_post' || !data.creative_type;
+  const isBoostGoal = data.goal === 'boost_post';
+  // post_url can come from StepCreative (existing_post) or StepGoal (boost_post)
+  const postUrl = data.post_url;
+
+  // Goal detail line
+  const renderGoalDetail = () => {
+    if (!data.goal) return null;
+    const platforms = data.messaging_platforms || [];
+    if (data.goal === 'messages') {
+      const parts = [];
+      if (platforms.includes('whatsapp')) parts.push(`💬 WhatsApp${data.whatsapp_number ? ` (${data.whatsapp_number})` : ''}`);
+      if (platforms.includes('messenger')) parts.push('📨 Messenger');
+      return parts.length > 0 ? parts.join(' · ') : null;
+    }
+    if (data.goal === 'website_traffic' && data.website_url) return data.website_url;
+    if (data.goal === 'phone_calls' && data.phone_number) return data.phone_number;
+    if (data.goal === 'boost_post' && postUrl) return postUrl;
+    return null;
+  };
+
+  const goalDetail = renderGoalDetail();
 
   return (
     <div>
@@ -40,31 +66,76 @@ export default function StepSummary({ data }) {
       <p className="text-muted-foreground text-sm mb-6">Review your campaign details before proceeding to payment.</p>
 
       <div className="bg-secondary/40 rounded-xl p-4 mb-5">
-        <SummaryRow icon={Facebook} label="Facebook Page" value={data.page_name || '—'} />
-        <SummaryRow icon={TrendingUp} label="Campaign Goal" value={objective ? `${objective.icon} ${objective.label}` : '—'} />
+
+        {/* Facebook Page */}
+        <SummaryRow icon={Facebook} label="Facebook Page">
+          {data.page_name || '—'}
+        </SummaryRow>
+
+        {/* Campaign Goal */}
+        <SummaryRow icon={TrendingUp} label="Campaign Goal">
+          {goalConfig ? (
+            <span>{goalConfig.icon} {goalConfig.label}</span>
+          ) : '—'}
+          {goalDetail && (
+            <p className="text-xs font-normal text-muted-foreground mt-0.5 break-all">{goalDetail}</p>
+          )}
+        </SummaryRow>
+
         {/* Ad Creative */}
-        <div className="flex items-start gap-3 py-3 border-b border-border last:border-0">
-          <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center flex-shrink-0">
-            {data.creative_type === 'existing_post' ? <LinkIcon className="w-4 h-4 text-muted-foreground" /> : <ImageIcon className="w-4 h-4 text-muted-foreground" />}
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-xs text-muted-foreground font-medium">Ad Creative</p>
-            {(data.creative_type === 'existing_post' || !data.creative_type) && data.post_url ? (
-              <a href={data.post_url} target="_blank" rel="noopener noreferrer"
-                className="text-sm font-semibold text-[hsl(var(--accent))] hover:underline break-all mt-0.5 block">
-                {data.post_url}
-              </a>
-            ) : (data.creative_type === 'existing_post' || !data.creative_type) ? (
-              <p className="text-sm font-semibold mt-0.5">Existing post (no URL provided)</p>
-            ) : (
-              <p className="text-sm font-semibold mt-0.5">Custom ad creative</p>
-            )}
-          </div>
-        </div>
-        <SummaryRow icon={Globe} label="Audience Location" value={audienceDesc} />
-        <SummaryRow icon={Users} label="Demographics" value={`Age ${data.audience_age_min}–${data.audience_age_max} · ${data.audience_gender === 'all' ? 'All genders' : data.audience_gender}`} />
-        <SummaryRow icon={Package} label="Package" value={pkg?.label || '—'} />
-        <SummaryRow icon={Clock} label="Duration" value={dur?.label || '—'} />
+        <SummaryRow
+          icon={isExistingPost && !isBoostGoal ? LinkIcon : ImageIcon}
+          label="Ad Creative"
+        >
+          {isBoostGoal ? (
+            // boost_post uses post_url from StepGoal — show it here
+            postUrl
+              ? <a href={postUrl} target="_blank" rel="noopener noreferrer" className="text-[hsl(var(--accent))] hover:underline break-all">{postUrl}</a>
+              : <span className="text-muted-foreground font-normal">No post URL provided</span>
+          ) : isExistingPost ? (
+            postUrl
+              ? <a href={postUrl} target="_blank" rel="noopener noreferrer" className="text-[hsl(var(--accent))] hover:underline break-all">{postUrl}</a>
+              : <span className="text-muted-foreground font-normal">No post URL provided</span>
+          ) : (
+            // new_creative
+            <>
+              <span>New ad creative</span>
+              {data.description && (
+                <p className="text-xs font-normal text-muted-foreground mt-0.5 line-clamp-2">{data.description}</p>
+              )}
+              {data.creative_assets?.length > 0 && (
+                <p className="text-xs font-normal text-muted-foreground">{data.creative_assets.length} file{data.creative_assets.length > 1 ? 's' : ''} uploaded</p>
+              )}
+            </>
+          )}
+        </SummaryRow>
+
+        {/* Audience Location */}
+        <SummaryRow icon={Globe} label="Audience Location">
+          {audienceDesc}
+          {(data.audience_regions?.length > 0 || data.audience_cities?.length > 0) && (
+            <p className="text-xs font-normal text-muted-foreground mt-0.5">
+              {[...(data.audience_regions || []), ...(data.audience_cities || [])].join(', ')}
+            </p>
+          )}
+        </SummaryRow>
+
+        {/* Demographics */}
+        <SummaryRow icon={Users} label="Demographics">
+          Age {data.audience_age_min}–{data.audience_age_max} · {data.audience_gender === 'all' ? 'All genders' : data.audience_gender === 'male' ? 'Male only' : 'Female only'}
+        </SummaryRow>
+
+        {/* Package */}
+        <SummaryRow icon={Package} label="Package">
+          {pkg?.label || '—'}
+          {pkg?.desc && <p className="text-xs font-normal text-muted-foreground mt-0.5">{pkg.desc}</p>}
+        </SummaryRow>
+
+        {/* Duration */}
+        <SummaryRow icon={Clock} label="Duration">
+          {dur?.label || '—'}
+        </SummaryRow>
+
       </div>
 
       {/* Cost highlight */}
