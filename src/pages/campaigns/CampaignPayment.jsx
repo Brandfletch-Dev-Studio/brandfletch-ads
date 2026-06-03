@@ -14,7 +14,6 @@ export default function CampaignPayment() {
   const [campaign, setCampaign] = useState(null);
   const [paymentMethods, setPaymentMethods] = useState([]);
   const [selectedMethod, setSelectedMethod] = useState(null);
-  const [reference, setReference] = useState('');
   const [proofFile, setProofFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -44,15 +43,14 @@ export default function CampaignPayment() {
   }
 
   async function handleSubmit() {
-    if (!selectedMethod || !reference || !proofFile) {
-      toast.error('Please complete all payment fields.');
+    if (!selectedMethod || !proofFile) {
+      toast.error('Please select a payment method and upload proof of payment.');
       return;
     }
     setSubmitting(true);
     await base44.entities.Campaign.update(id, {
       status: 'pending_review',
       payment_method: selectedMethod.method_name,
-      payment_reference: reference,
       payment_proof_url: proofFile,
     });
 
@@ -64,7 +62,6 @@ export default function CampaignPayment() {
       amount: campaign.total_cost,
       currency: campaign.currency,
       payment_method: selectedMethod.method_name,
-      payment_reference: reference,
       payment_proof_url: proofFile,
       campaign_id: id,
       status: 'pending',
@@ -178,15 +175,6 @@ export default function CampaignPayment() {
           </div>
 
           <div>
-            <Label className="mb-1.5 block">Transaction Reference Number *</Label>
-            <Input
-              value={reference}
-              onChange={e => setReference(e.target.value)}
-              placeholder="Enter your transaction reference"
-            />
-          </div>
-
-          <div>
             <Label className="mb-1.5 block">Upload Proof of Payment *</Label>
             <label className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-xl cursor-pointer transition-colors ${
               proofFile ? 'border-green-400 bg-green-50' : 'border-border hover:bg-secondary/40'
@@ -209,7 +197,7 @@ export default function CampaignPayment() {
 
           <Button
             onClick={handleSubmit}
-            disabled={submitting || !reference || !proofFile}
+            disabled={submitting || !proofFile}
             className="w-full bg-[hsl(var(--accent))] hover:bg-[hsl(217,91%,48%)] text-white font-semibold py-3"
           >
             {submitting ? 'Submitting...' : 'Submit Payment'}

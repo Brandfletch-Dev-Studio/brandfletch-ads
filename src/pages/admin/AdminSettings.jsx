@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
-import { Plus, Trash2, Save, DollarSign, CreditCard, Pencil, X, Check, Mail, Store } from 'lucide-react';
+import { Plus, Trash2, Save, DollarSign, CreditCard, Pencil, X, Check, Mail } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,10 +17,6 @@ export default function AdminSettings() {
   const [newMethod, setNewMethod] = useState({ country: '', method_name: '', method_type: 'mobile_money', account_number: '', account_name: '', instructions: '' });
   const [editingMethod, setEditingMethod] = useState(null);
   const [editMethodData, setEditMethodData] = useState({});
-  const [services, setServices] = useState([]);
-  const [newService, setNewService] = useState({ name: '', description: '', category: 'page_setup', price_usd: 25 });
-  const [editingService, setEditingService] = useState(null);
-  const [editServiceData, setEditServiceData] = useState({});
   const [adminEmail, setAdminEmail] = useState('');
   const [savingEmail, setSavingEmail] = useState(false);
 
@@ -29,11 +25,9 @@ export default function AdminSettings() {
       base44.entities.ExchangeRate.list(),
       base44.entities.PaymentMethod.list(),
       base44.auth.me(),
-      base44.entities.Service.list('sort_order'),
-    ]).then(([r, m, u, s]) => {
+    ]).then(([r, m, u]) => {
       setRates(r);
       setMethods(m);
-      setServices(s);
       if (u?.admin_notification_email) setAdminEmail(u.admin_notification_email);
       else if (u?.email) setAdminEmail(u.email);
     });
@@ -44,33 +38,6 @@ export default function AdminSettings() {
     await base44.auth.updateMe({ admin_notification_email: adminEmail });
     toast.success('Saved!', { duration: 1500 });
     setSavingEmail(false);
-  }
-
-  async function addService() {
-    if (!newService.name || !newService.price_usd) return;
-    await base44.entities.Service.create({ ...newService, is_active: true });
-    toast.success('Service added');
-    setNewService({ name: '', description: '', category: 'page_setup', price_usd: 25 });
-    const s = await base44.entities.Service.list('sort_order');
-    setServices(s);
-  }
-
-  async function toggleService(id, is_active) {
-    await base44.entities.Service.update(id, { is_active });
-    setServices(ss => ss.map(s => s.id === id ? { ...s, is_active } : s));
-  }
-
-  async function deleteService(id) {
-    await base44.entities.Service.delete(id);
-    setServices(ss => ss.filter(s => s.id !== id));
-    toast.success('Service deleted');
-  }
-
-  async function saveEditService() {
-    await base44.entities.Service.update(editingService, editServiceData);
-    setServices(ss => ss.map(s => s.id === editingService ? { ...s, ...editServiceData } : s));
-    setEditingService(null);
-    toast.success('Saved!', { duration: 1500 });
   }
 
   async function saveRate(rate) {
@@ -132,68 +99,6 @@ export default function AdminSettings() {
         <h1 className="text-2xl font-bold font-heading">Platform Settings</h1>
         <p className="text-muted-foreground text-sm mt-1">Manage exchange rates, payment methods, and notifications</p>
       </div>
-
-      {/* Marketplace Services */}
-      <Card className="shadow-sm">
-        <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
-            <Store className="w-4 h-4" /> Marketplace Services
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-3">
-            {services.map(s => (
-              <div key={s.id} className="p-3 bg-secondary/50 rounded-xl">
-                {editingService === s.id ? (
-                  <div className="space-y-2">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      <Input value={editServiceData.name || ''} onChange={e => setEditServiceData(d => ({ ...d, name: e.target.value }))} placeholder="Service name" className="h-8 text-sm" />
-                      <Input type="number" value={editServiceData.price_usd || ''} onChange={e => setEditServiceData(d => ({ ...d, price_usd: parseFloat(e.target.value) }))} placeholder="Price (USD)" className="h-8 text-sm" />
-                    </div>
-                    <Input value={editServiceData.description || ''} onChange={e => setEditServiceData(d => ({ ...d, description: e.target.value }))} placeholder="Description" className="h-8 text-sm" />
-                    <div className="flex items-center gap-2">
-                      <Button size="sm" onClick={saveEditService} className="gap-1 h-7"><Check className="w-3 h-3" /> Save</Button>
-                      <Button size="sm" variant="outline" onClick={() => setEditingService(null)} className="h-7"><X className="w-3 h-3" /> Cancel</Button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-sm">{s.name}</p>
-                      <p className="text-xs text-muted-foreground">${s.price_usd} USD · {s.category?.replace('_', ' ')}</p>
-                      {s.description && <p className="text-xs text-muted-foreground mt-0.5 truncate">{s.description}</p>}
-                    </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <Switch checked={s.is_active} onCheckedChange={v => toggleService(s.id, v)} />
-                      <Button variant="ghost" size="icon" onClick={() => { setEditingService(s.id); setEditServiceData({ ...s }); }}><Pencil className="w-4 h-4" /></Button>
-                      <Button variant="ghost" size="icon" onClick={() => deleteService(s.id)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-          <div className="p-4 border-2 border-dashed border-border rounded-xl space-y-3">
-            <h4 className="text-sm font-semibold">Add Service</h4>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Input value={newService.name} onChange={e => setNewService(s => ({ ...s, name: e.target.value }))} placeholder="Service name" />
-              <Input type="number" value={newService.price_usd} onChange={e => setNewService(s => ({ ...s, price_usd: parseFloat(e.target.value) }))} placeholder="Price in USD" />
-              <Select value={newService.category} onValueChange={v => setNewService(s => ({ ...s, category: v }))}>
-                <SelectTrigger><SelectValue placeholder="Category" /></SelectTrigger>
-                <SelectContent>
-                  {['page_setup','ads_management','content_creation','consulting','other'].map(c => (
-                    <SelectItem key={c} value={c}>{c.replace('_',' ')}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Input value={newService.description} onChange={e => setNewService(s => ({ ...s, description: e.target.value }))} placeholder="Short description" />
-            </div>
-            <Button onClick={addService} className="gap-2 bg-[hsl(var(--primary))] text-primary-foreground">
-              <Plus className="w-4 h-4" /> Add Service
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Admin Email Notifications */}
       <Card className="shadow-sm">

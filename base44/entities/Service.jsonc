@@ -22,6 +22,16 @@
       "type": "number",
       "default": 25
     },
+    "features": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Key features / selling points shown as bullet points"
+    },
+    "image_url": {
+      "type": "string"
+    },
     "is_active": {
       "type": "boolean",
       "default": true
