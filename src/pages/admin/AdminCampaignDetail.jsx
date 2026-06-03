@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { ArrowLeft, Check, X, MessageSquare, Play, Pause, CheckCircle, LinkIcon, ImageIcon, MapPin, Users, Target, Package, CreditCard, FileImage, ExternalLink, Phone, Globe, Share2 } from 'lucide-react';
+import { ArrowLeft, Check, X, MessageSquare, Play, Pause, CheckCircle, MapPin, Users, Target, Package, CreditCard, FileImage, ExternalLink, Phone, Globe, Share2, RefreshCw } from 'lucide-react';
+import CampaignStageTracker from '@/components/campaigns/CampaignStageTracker';
+import CampaignMetricsPanel from '@/components/campaigns/CampaignMetricsPanel';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -49,9 +51,11 @@ export default function AdminCampaignDetail() {
   const VALID_TRANSITIONS = {
     pending_review: ['approved', 'rejected', 'changes_requested'],
     approved: ['active', 'rejected'],
-    active: ['paused', 'completed'],
-    paused: ['active', 'completed'],
+    active: ['paused', 'completed', 'refunded'],
+    paused: ['active', 'completed', 'refunded'],
+    completed: ['refunded'],
     changes_requested: ['pending_review', 'rejected'],
+    rejected: ['refunded'],
   };
 
   async function updateStatus(status) {
@@ -71,6 +75,7 @@ export default function AdminCampaignDetail() {
       rejected: { type: 'campaign_rejected', title: '❌ Campaign Rejected', msg: `Your campaign for ${campaign.page_name} was rejected. Reason: ${notes}` },
       changes_requested: { type: 'changes_requested', title: '⚠️ Changes Requested', msg: `Your campaign for ${campaign.page_name} needs changes: ${notes}` },
       completed: { type: 'campaign_completed', title: '✅ Campaign Completed', msg: `Your campaign for ${campaign.page_name} has been completed. View your final report.` },
+      refunded: { type: 'payment_rejected', title: '↩ Campaign Refunded', msg: `Your campaign for ${campaign.page_name} has been refunded. ${notes || ''}` },
     };
     const notif = notifMap[status];
     if (notif && campaign.user_id) {
@@ -140,6 +145,15 @@ export default function AdminCampaignDetail() {
         </div>
       </div>
 
+      {/* Stage tracker */}
+      {!['draft','awaiting_payment'].includes(campaign.status) && (
+        <Card className="shadow-sm">
+          <CardContent className="p-5">
+            <CampaignStageTracker status={campaign.status} />
+          </CardContent>
+        </Card>
+      )}
+
       {/* Action buttons */}
       {campaign.status === 'pending_review' && (
         <Card className="shadow-sm border-amber-200 bg-amber-50">
@@ -169,19 +183,36 @@ export default function AdminCampaignDetail() {
       )}
 
       {campaign.status === 'active' && (
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <Button onClick={() => updateStatus('paused')} disabled={saving} variant="outline" className="gap-2">
             <Pause className="w-4 h-4" /> Pause
           </Button>
           <Button onClick={() => updateStatus('completed')} disabled={saving} className="gap-2 bg-[hsl(var(--primary))] text-primary-foreground">
             <CheckCircle className="w-4 h-4" /> Mark Completed
           </Button>
+          <Button onClick={() => updateStatus('refunded')} disabled={saving} variant="outline" className="gap-2 border-orange-400 text-orange-700">
+            <RefreshCw className="w-4 h-4" /> Refund
+          </Button>
         </div>
       )}
 
       {campaign.status === 'paused' && (
-        <Button onClick={() => updateStatus('active')} disabled={saving} className="gap-2 bg-green-600 hover:bg-green-700 text-white">
-          <Play className="w-4 h-4" /> Resume
+        <div className="flex gap-2 flex-wrap">
+          <Button onClick={() => updateStatus('active')} disabled={saving} className="gap-2 bg-green-600 hover:bg-green-700 text-white">
+            <Play className="w-4 h-4" /> Resume
+          </Button>
+          <Button onClick={() => updateStatus('completed')} disabled={saving} className="gap-2 bg-[hsl(var(--primary))] text-primary-foreground">
+            <CheckCircle className="w-4 h-4" /> Mark Completed
+          </Button>
+          <Button onClick={() => updateStatus('refunded')} disabled={saving} variant="outline" className="gap-2 border-orange-400 text-orange-700">
+            <RefreshCw className="w-4 h-4" /> Refund
+          </Button>
+        </div>
+      )}
+
+      {['active','completed','rejected'].includes(campaign.status) && (campaign.status !== 'active') && (
+        <Button onClick={() => updateStatus('refunded')} disabled={saving} variant="outline" className="gap-2 border-orange-400 text-orange-700">
+          <RefreshCw className="w-4 h-4" /> Issue Refund
         </Button>
       )}
 
@@ -193,15 +224,18 @@ export default function AdminCampaignDetail() {
         </CardContent>
       </Card>
 
-      {/* Live Metrics Update */}
-      {['active', 'paused', 'completed'].includes(campaign.status) && (
+      {/* Metrics preview */}
+      <CampaignMetricsPanel campaign={{ ...campaign, ...metrics }} />
+
+      {/* Update Campaign Metrics */}
+      {!['draft', 'awaiting_payment', 'rejected', 'refunded'].includes(campaign.status) && (
         <Card className="shadow-sm">
           <CardHeader><CardTitle className="text-base">Update Campaign Metrics</CardTitle></CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-4">
               {Object.entries(metrics).map(([key, val]) => (
                 <div key={key}>
-                  <Label className="mb-1.5 block capitalize text-xs">{key}</Label>
+                  <Label className="mb-1.5 block capitalize text-xs">{key.replace('_', ' ')}</Label>
                   <Input
                     type="number"
                     min="0"

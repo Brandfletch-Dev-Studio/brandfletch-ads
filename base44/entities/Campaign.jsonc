@@ -175,7 +175,8 @@
         "paused",
         "completed",
         "rejected",
-        "changes_requested"
+        "changes_requested",
+        "refunded"
       ],
       "default": "draft"
     },

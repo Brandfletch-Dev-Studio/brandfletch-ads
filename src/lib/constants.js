@@ -26,6 +26,7 @@ export const CAMPAIGN_STATUS_CONFIG = {
   completed: { label: 'Completed', color: 'bg-slate-100 text-slate-600', dot: 'bg-slate-400' },
   rejected: { label: 'Rejected', color: 'bg-red-100 text-red-700', dot: 'bg-red-500' },
   changes_requested: { label: 'Changes Requested', color: 'bg-purple-100 text-purple-700', dot: 'bg-purple-500' },
+  refunded: { label: 'Refunded', color: 'bg-orange-100 text-orange-700', dot: 'bg-orange-400' },
 };
 
 export const GOALS = [
