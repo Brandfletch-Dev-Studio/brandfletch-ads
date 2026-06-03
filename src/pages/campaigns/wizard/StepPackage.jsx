@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
-import { PACKAGES, DURATIONS, calculatePrice, calculateEstimatedResults } from '@/lib/pricing';
+import { PACKAGES, DURATIONS, calculatePriceFromList, calculateEstimatedResults } from '@/lib/pricing';
 import { cn } from '@/lib/utils';
 import { CheckCircle2, TrendingUp, MessageSquare } from 'lucide-react';
 import { COUNTRIES } from '@/lib/constants';
@@ -9,8 +9,11 @@ import { Label } from '@/components/ui/label';
 
 export default function StepPackage({ data, update }) {
   const [selectedCountry, setSelectedCountry] = useState(data.country || '');
+  const [dbPricing, setDbPricing] = useState([]);
 
   useEffect(() => {
+    // Load live DB pricing
+    base44.entities.PackagePricing.list().then(list => setDbPricing(list || [])).catch(() => {});
     // Pre-fill country from user profile if not already set
     if (!selectedCountry) {
       base44.auth.me().then(u => {
@@ -22,8 +25,12 @@ export default function StepPackage({ data, update }) {
     }
   }, []);
 
+  function calcPrice(pkg, duration, country) {
+    return calculatePriceFromList(pkg, duration, country, dbPricing);
+  }
+
   function handlePackageSelect(pkg) {
-    const price = calculatePrice(pkg, data.duration, selectedCountry);
+    const price = calcPrice(pkg, data.duration, selectedCountry);
     const estimated = calculateEstimatedResults(pkg, data.duration);
     update({
       package: pkg,
@@ -38,7 +45,7 @@ export default function StepPackage({ data, update }) {
 
   function handleDurationChange(dur) {
     if (data.package) {
-      const price = calculatePrice(data.package, dur, selectedCountry);
+      const price = calcPrice(data.package, dur, selectedCountry);
       const estimated = calculateEstimatedResults(data.package, dur);
       update({
         duration: dur,
@@ -57,7 +64,7 @@ export default function StepPackage({ data, update }) {
   function handleCountryChange(country) {
     setSelectedCountry(country);
     if (data.package) {
-      const price = calculatePrice(data.package, data.duration, country);
+      const price = calcPrice(data.package, data.duration, country);
       const estimated = calculateEstimatedResults(data.package, data.duration);
       update({
         country,
@@ -126,7 +133,7 @@ export default function StepPackage({ data, update }) {
       {/* Packages */}
       <div className="space-y-3">
         {Object.entries(PACKAGES).map(([key, pkg]) => {
-          const price = calculatePrice(key, data.duration, selectedCountry);
+          const price = calcPrice(key, data.duration, selectedCountry);
           const estimated = calculateEstimatedResults(key, data.duration);
 
           if (key === 'enterprise') {

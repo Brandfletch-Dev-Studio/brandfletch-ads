@@ -1,0 +1,33 @@
+{
+  "name": "PackagePricing",
+  "type": "object",
+  "properties": {
+    "country": {
+      "type": "string",
+      "description": "Country name e.g. Malawi, Kenya"
+    },
+    "currency": {
+      "type": "string",
+      "description": "Currency code e.g. MWK, KES, USD"
+    },
+    "symbol": {
+      "type": "string",
+      "description": "Currency symbol e.g. MK, KSh, $"
+    },
+    "package": {
+      "type": "string",
+      "enum": ["starter", "growth", "business", "premium"],
+      "description": "Package tier"
+    },
+    "daily": {
+      "type": "number"
+    },
+    "weekly": {
+      "type": "number"
+    },
+    "monthly": {
+      "type": "number"
+    }
+  },
+  "required": ["country", "currency", "symbol", "package", "daily", "weekly", "monthly"]
+}

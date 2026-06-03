@@ -34,6 +34,7 @@ import AdminNotifications from '@/pages/admin/AdminNotifications';
 import AdminMessages from '@/pages/admin/AdminMessages';
 import AdminAds from '@/pages/admin/AdminAds';
 import AdminAuditLog from '@/pages/admin/AdminAuditLog';
+import AdminPricing from '@/pages/admin/AdminPricing';
 import Onboarding from '@/pages/Onboarding';
 import Login from '@/pages/Login';
 import Register from '@/pages/Register';
@@ -121,6 +122,7 @@ const AuthenticatedApp = () => {
         <Route path="/admin/messages" element={<AdminMessages />} />
         <Route path="/admin/ads" element={<AdminAds />} />
         <Route path="/admin/audit-log" element={<AdminAuditLog />} />
+        <Route path="/admin/pricing" element={<AdminPricing />} />
       </Route>
 
       <Route path="*" element={<PageNotFound />} />

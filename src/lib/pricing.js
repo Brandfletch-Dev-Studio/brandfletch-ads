@@ -63,6 +63,29 @@ export const DURATIONS = {
 };
 
 /**
+ * Calculate price from a preloaded DB pricing list (array of PackagePricing records).
+ * Falls back to hardcoded LOCAL_PRICES / USD_PRICES if no DB record found.
+ */
+export function calculatePriceFromList(pkg, duration, country, dbPricingList = []) {
+  if (pkg === 'enterprise') return null;
+
+  const dbRow = dbPricingList.find(r => r.country === country && r.package === pkg);
+  if (dbRow && dbRow[duration] != null) {
+    const usdAmount = USD_PRICES[pkg]?.[duration] || null;
+    return {
+      amount: dbRow[duration],
+      currency: dbRow.currency,
+      symbol: dbRow.symbol,
+      display: `${dbRow.symbol}${dbRow[duration].toLocaleString()}`,
+      usd: usdAmount,
+    };
+  }
+
+  // Fallback to hardcoded
+  return calculatePrice(pkg, duration, country);
+}
+
+/**
  * Returns { amount, currency, symbol, display, usdEquivalent? }
  */
 export function calculatePrice(pkg, duration, country) {
