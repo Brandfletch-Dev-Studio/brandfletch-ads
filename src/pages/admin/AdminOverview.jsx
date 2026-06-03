@@ -103,7 +103,11 @@ export default function AdminOverview() {
                       <p className="text-sm font-medium">{t.description || 'Payment'}</p>
                       <p className="text-xs text-muted-foreground">{t.payment_reference} · {t.type.replace('_', ' ')}</p>
                     </div>
-                    <span className="text-sm font-bold text-amber-600">${(t.amount || 0).toFixed(2)}</span>
+                    <span className="text-sm font-bold text-amber-600">
+                      {t.currency && t.currency !== 'USD'
+                        ? `${t.currency} ${(t.amount || 0).toLocaleString()}`
+                        : `$${(t.amount || 0).toFixed(2)}`}
+                    </span>
                   </div>
                 ))}
               </div>

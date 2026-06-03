@@ -29,8 +29,10 @@ export default function AdminCampaigns() {
   });
 
   const formatCost = (c) => {
-    if (c.currency === 'MWK') return `MK${(c.total_cost || 0).toLocaleString()}`;
-    return `$${(c.total_cost || 0).toFixed(2)}`;
+    const amt = c.total_cost || 0;
+    const currency = c.currency || 'USD';
+    if (currency === 'USD') return `$${amt.toFixed(2)}`;
+    return `${currency} ${amt.toLocaleString()}`;
   };
 
   return (
