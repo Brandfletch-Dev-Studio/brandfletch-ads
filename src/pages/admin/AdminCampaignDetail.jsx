@@ -1,17 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { ArrowLeft, Check, X, MessageSquare, Play, Pause, CheckCircle, LinkIcon, ImageIcon, MapPin, Users } from 'lucide-react';
+import { ArrowLeft, Check, X, MessageSquare, Play, Pause, CheckCircle, LinkIcon, ImageIcon, MapPin, Users, Target, Package, CreditCard, FileImage, ExternalLink, Phone, Globe, Share2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
 import StatusBadge from '@/components/ui/StatusBadge';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { useRoleGuard } from '@/hooks/useRoleGuard';
 import { useAuditLog } from '@/hooks/useAuditLog';
+import { GOALS } from '@/lib/constants';
 
 export default function AdminCampaignDetail() {
   useRoleGuard(['admin', 'campaign_manager']);
@@ -44,7 +46,6 @@ export default function AdminCampaignDetail() {
     }
   }
 
-  // Valid status transitions
   const VALID_TRANSITIONS = {
     pending_review: ['approved', 'rejected', 'changes_requested'],
     approved: ['active', 'rejected'],
@@ -64,7 +65,6 @@ export default function AdminCampaignDetail() {
     auditLog(`campaign_${status.replace('_', '_')}`, 'Campaign', id,
       `Campaign "${campaign.page_name}" → ${status}. Notes: ${notes || 'none'}`);
 
-    // Notify client
     const notifMap = {
       approved: { type: 'campaign_approved', title: '🎉 Campaign Approved!', msg: `Your campaign for ${campaign.page_name} has been approved and will be launched shortly.` },
       active: { type: 'campaign_approved', title: '🚀 Campaign is Live!', msg: `Your campaign for ${campaign.page_name} is now active.` },
@@ -92,8 +92,7 @@ export default function AdminCampaignDetail() {
   async function saveMetrics() {
     setSaving(true);
     await base44.entities.Campaign.update(id, metrics);
-    auditLog('campaign_metrics_updated', 'Campaign', id,
-      `Metrics updated: ${JSON.stringify(metrics)}`);
+    auditLog('campaign_metrics_updated', 'Campaign', id, `Metrics updated: ${JSON.stringify(metrics)}`);
     toast.success('Metrics updated!');
     setSaving(false);
   }
@@ -105,8 +104,19 @@ export default function AdminCampaignDetail() {
     return `$${(campaign.total_cost || 0).toFixed(2)}`;
   };
 
+  const goalConfig = GOALS.find(g => g.value === campaign.goal);
+  const allLocations = [
+    ...(campaign.audience_countries || []),
+    ...(campaign.audience_regions || []),
+    ...(campaign.audience_cities || []),
+  ];
+
+  // Check if an uploaded asset is an image
+  const isImage = (url) => /\.(jpg|jpeg|png|gif|webp|svg)(\?|$)/i.test(url);
+
   return (
     <div className="p-4 lg:p-8 max-w-4xl mx-auto space-y-6">
+      {/* Header */}
       <div className="flex items-center gap-3">
         <Link to="/admin/campaigns" className="p-2 rounded-lg hover:bg-secondary">
           <ArrowLeft className="w-5 h-5" />
@@ -198,130 +208,228 @@ export default function AdminCampaignDetail() {
         </Card>
       )}
 
-      {/* Ad Creative */}
+      {/* Campaign Goal */}
       <Card className="shadow-sm">
-        <CardHeader><CardTitle className="text-base">Ad Creative</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Target className="w-4 h-4" /> Campaign Goal
+          </CardTitle>
+        </CardHeader>
         <CardContent className="space-y-3">
-          {campaign.creative_type === 'link' || campaign.post_url || campaign.creative_link ? (
-            <div className="flex items-start gap-3">
-              <LinkIcon className="w-4 h-4 mt-0.5 text-muted-foreground shrink-0" />
-              <div className="min-w-0">
-                <p className="text-xs text-muted-foreground mb-0.5">Post / Link to Boost</p>
-                <a href={campaign.creative_link || campaign.post_url} target="_blank" rel="noopener noreferrer"
-                  className="text-sm font-medium text-[hsl(var(--accent))] hover:underline break-all">
-                  {campaign.creative_link || campaign.post_url}
-                </a>
-              </div>
-            </div>
-          ) : (
-            <div className="flex items-start gap-3">
-              <ImageIcon className="w-4 h-4 mt-0.5 text-muted-foreground shrink-0" />
-              <div>
-                <p className="text-xs text-muted-foreground mb-0.5">Creative Type</p>
-                <p className="text-sm font-medium">Custom ad creative</p>
-              </div>
-            </div>
-          )}
-          {campaign.description && (
+          <div className="flex items-center gap-2">
+            <span className="text-lg">{goalConfig?.icon}</span>
+            <span className="font-semibold text-sm">{goalConfig?.label || campaign.goal?.replace(/_/g, ' ') || '—'}</span>
+          </div>
+
+          {/* Messaging platforms */}
+          {campaign.goal === 'messages' && campaign.messaging_platforms?.length > 0 && (
             <div>
-              <p className="text-xs text-muted-foreground mb-1">Ad Description</p>
-              <p className="text-sm bg-secondary/40 rounded-lg p-3">{campaign.description}</p>
-            </div>
-          )}
-          {campaign.creative_assets?.length > 0 && (
-            <div>
-              <p className="text-xs text-muted-foreground mb-2">Uploaded Assets ({campaign.creative_assets.length})</p>
-              <div className="flex flex-wrap gap-2">
-                {campaign.creative_assets.map((url, i) => (
-                  <a key={i} href={url} target="_blank" rel="noopener noreferrer"
-                    className="text-xs text-[hsl(var(--accent))] hover:underline bg-secondary px-3 py-1.5 rounded-lg">
-                    Asset {i + 1}
-                  </a>
+              <p className="text-xs text-muted-foreground mb-1">Messaging Platforms</p>
+              <div className="flex gap-2 flex-wrap">
+                {campaign.messaging_platforms.map(p => (
+                  <Badge key={p} variant="secondary" className="capitalize">{p}</Badge>
                 ))}
               </div>
             </div>
           )}
-        </CardContent>
-      </Card>
 
-      {/* Audience */}
-      <Card className="shadow-sm">
-        <CardHeader><CardTitle className="text-base">Audience Targeting</CardTitle></CardHeader>
-        <CardContent className="space-y-2">
-          <div className="flex items-start gap-2 text-sm">
-            <MapPin className="w-4 h-4 mt-0.5 text-muted-foreground shrink-0" />
-            <div>
-              <span className="text-muted-foreground">Location: </span>
-              <span className="font-medium">
-                {campaign.audience_worldwide
-                  ? 'Worldwide'
-                  : [
-                      ...(campaign.audience_countries || []),
-                      ...(campaign.audience_regions || []),
-                      ...(campaign.audience_cities || []),
-                    ].join(', ') || '—'}
-              </span>
-            </div>
-          </div>
-          <div className="flex items-start gap-2 text-sm">
-            <Users className="w-4 h-4 mt-0.5 text-muted-foreground shrink-0" />
-            <div>
-              <span className="text-muted-foreground">Demographics: </span>
-              <span className="font-medium">
-                Age {campaign.audience_age_min || 18}–{campaign.audience_age_max || 65} · {campaign.audience_gender === 'all' || !campaign.audience_gender ? 'All genders' : campaign.audience_gender}
-              </span>
-            </div>
-          </div>
           {campaign.whatsapp_number && (
-            <div className="text-sm">
-              <span className="text-muted-foreground">WhatsApp: </span>
-              <span className="font-medium">{campaign.whatsapp_number}</span>
-            </div>
+            <Row icon={<MessageSquare className="w-4 h-4 text-green-600" />} label="WhatsApp Number" value={campaign.whatsapp_number} />
           )}
           {campaign.phone_number && (
-            <div className="text-sm">
-              <span className="text-muted-foreground">Phone: </span>
-              <span className="font-medium">{campaign.phone_number}</span>
-            </div>
+            <Row icon={<Phone className="w-4 h-4" />} label="Phone Number" value={campaign.phone_number} />
           )}
           {campaign.website_url && (
-            <div className="text-sm">
-              <span className="text-muted-foreground">Website: </span>
-              <a href={campaign.website_url} target="_blank" rel="noopener noreferrer" className="font-medium text-[hsl(var(--accent))] hover:underline">{campaign.website_url}</a>
-            </div>
+            <Row icon={<Globe className="w-4 h-4" />} label="Website URL">
+              <a href={campaign.website_url} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-[hsl(var(--accent))] hover:underline flex items-center gap-1 break-all">
+                {campaign.website_url} <ExternalLink className="w-3 h-3 shrink-0" />
+              </a>
+            </Row>
+          )}
+          {campaign.post_url && (
+            <Row icon={<Share2 className="w-4 h-4" />} label="Facebook Post URL">
+              <a href={campaign.post_url} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-[hsl(var(--accent))] hover:underline flex items-center gap-1 break-all">
+                {campaign.post_url} <ExternalLink className="w-3 h-3 shrink-0" />
+              </a>
+            </Row>
           )}
         </CardContent>
       </Card>
 
-      {/* Campaign Info */}
+      {/* Ad Creative — full detail */}
       <Card className="shadow-sm">
-        <CardHeader><CardTitle className="text-base">Campaign Details</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <FileImage className="w-4 h-4" /> Ad Creative
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Creative type */}
+          <div className="flex items-center gap-2 text-sm">
+            <span className="text-muted-foreground">Type:</span>
+            <Badge variant="outline" className="capitalize">
+              {campaign.creative_type === 'upload' || campaign.creative_assets?.length > 0
+                ? 'Upload (new ad)'
+                : campaign.creative_type === 'link' || campaign.creative_link || campaign.post_url
+                ? 'Existing post / link'
+                : 'Custom creative'}
+            </Badge>
+          </div>
+
+          {/* Link / Post URL in creative context */}
+          {(campaign.creative_link) && (
+            <div>
+              <p className="text-xs text-muted-foreground mb-1">Creative Link</p>
+              <a href={campaign.creative_link} target="_blank" rel="noopener noreferrer"
+                className="text-sm font-medium text-[hsl(var(--accent))] hover:underline flex items-center gap-1 break-all">
+                {campaign.creative_link} <ExternalLink className="w-3 h-3 shrink-0" />
+              </a>
+            </div>
+          )}
+
+          {/* Ad description */}
+          {campaign.description && (
+            <div>
+              <p className="text-xs text-muted-foreground mb-1">Ad Description / Copy</p>
+              <div className="bg-secondary/40 rounded-lg p-3 text-sm whitespace-pre-wrap leading-relaxed">
+                {campaign.description}
+              </div>
+            </div>
+          )}
+
+          {/* Uploaded assets with previews */}
+          {campaign.creative_assets?.length > 0 && (
+            <div>
+              <p className="text-xs text-muted-foreground mb-2">
+                Uploaded Creative Files ({campaign.creative_assets.length})
+              </p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {campaign.creative_assets.map((url, i) => (
+                  <div key={i} className="rounded-xl overflow-hidden border border-border bg-secondary/30">
+                    {isImage(url) ? (
+                      <a href={url} target="_blank" rel="noopener noreferrer">
+                        <img src={url} alt={`Asset ${i + 1}`} className="w-full aspect-video object-cover hover:opacity-90 transition-opacity" />
+                        <p className="text-xs text-center text-muted-foreground py-1.5">Asset {i + 1}</p>
+                      </a>
+                    ) : (
+                      <a href={url} target="_blank" rel="noopener noreferrer"
+                        className="flex flex-col items-center justify-center gap-2 p-4 hover:bg-secondary transition-colors">
+                        <FileImage className="w-6 h-6 text-muted-foreground" />
+                        <span className="text-xs text-[hsl(var(--accent))] hover:underline">Asset {i + 1} — View file</span>
+                      </a>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {!campaign.description && !campaign.creative_assets?.length && !campaign.creative_link && !campaign.post_url && (
+            <p className="text-sm text-muted-foreground italic">No creative details provided — our team will create this.</p>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Audience Targeting */}
+      <Card className="shadow-sm">
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Users className="w-4 h-4" /> Audience Targeting
+          </CardTitle>
+        </CardHeader>
         <CardContent className="space-y-3">
+          <Row icon={<MapPin className="w-4 h-4" />} label="Location">
+            {allLocations.length > 0 ? (
+              <div className="flex flex-wrap gap-1.5 mt-1">
+                {allLocations.map(loc => (
+                  <Badge key={loc} variant="secondary" className="text-xs">{loc}</Badge>
+                ))}
+              </div>
+            ) : (
+              <span className="text-sm text-muted-foreground">Not specified</span>
+            )}
+          </Row>
+          <Row icon={<Users className="w-4 h-4" />} label="Age Range" value={`${campaign.audience_age_min || 18} – ${campaign.audience_age_max || 65} years`} />
+          <Row icon={null} label="Gender" value={
+            campaign.audience_gender === 'male' ? 'Men only'
+            : campaign.audience_gender === 'female' ? 'Women only'
+            : 'All genders'
+          } />
+        </CardContent>
+      </Card>
+
+      {/* Package & Budget */}
+      <Card className="shadow-sm">
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Package className="w-4 h-4" /> Package & Budget
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
           {[
-            { label: 'User ID', value: campaign.user_id },
-            { label: 'Page', value: campaign.page_name },
-            { label: 'Objective', value: campaign.objective?.replace(/_/g, ' ') },
-            { label: 'Package', value: campaign.package },
-            { label: 'Duration', value: campaign.duration },
+            { label: 'Facebook Page', value: campaign.page_name },
+            { label: 'Package', value: campaign.package ? campaign.package.charAt(0).toUpperCase() + campaign.package.slice(1) : null },
+            { label: 'Duration', value: campaign.duration ? campaign.duration.charAt(0).toUpperCase() + campaign.duration.slice(1) : null },
             { label: 'Country', value: campaign.country },
-            { label: 'Cost', value: formatCost() },
-            { label: 'Payment Method', value: campaign.payment_method },
-            { label: 'Payment Reference', value: campaign.payment_reference },
-            { label: 'Created', value: campaign.created_date ? format(new Date(campaign.created_date), 'MMM d, yyyy HH:mm') : '—' },
+            { label: 'Currency', value: campaign.currency },
+            { label: 'Total Cost', value: formatCost() },
+            { label: 'Submitted', value: campaign.created_date ? format(new Date(campaign.created_date), 'MMM d, yyyy HH:mm') : null },
           ].filter(r => r.value).map(({ label, value }) => (
-            <div key={label} className="flex justify-between text-sm py-1 border-b border-border last:border-0">
+            <div key={label} className="flex justify-between text-sm py-1.5 border-b border-border last:border-0">
               <span className="text-muted-foreground">{label}</span>
-              <span className="font-medium text-right ml-4 capitalize truncate max-w-[60%]">{value}</span>
+              <span className="font-medium text-right ml-4">{value}</span>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+
+      {/* Payment */}
+      <Card className="shadow-sm">
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <CreditCard className="w-4 h-4" /> Payment
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          {[
+            { label: 'Method', value: campaign.payment_method },
+            { label: 'Reference', value: campaign.payment_reference },
+            { label: 'Notes', value: campaign.payment_notes },
+            { label: 'Verified By', value: campaign.payment_verified_by },
+          ].filter(r => r.value).map(({ label, value }) => (
+            <div key={label} className="flex justify-between text-sm py-1.5 border-b border-border last:border-0">
+              <span className="text-muted-foreground">{label}</span>
+              <span className="font-medium text-right ml-4">{value}</span>
             </div>
           ))}
           {campaign.payment_proof_url && (
-            <div className="flex justify-between text-sm py-1">
+            <div className="flex justify-between text-sm py-1.5">
               <span className="text-muted-foreground">Payment Proof</span>
-              <a href={campaign.payment_proof_url} target="_blank" rel="noopener noreferrer" className="text-[hsl(var(--accent))] hover:underline font-medium">View File</a>
+              <a href={campaign.payment_proof_url} target="_blank" rel="noopener noreferrer"
+                className="text-[hsl(var(--accent))] hover:underline font-medium flex items-center gap-1">
+                View File <ExternalLink className="w-3 h-3" />
+              </a>
             </div>
+          )}
+          {!campaign.payment_method && !campaign.payment_reference && !campaign.payment_proof_url && (
+            <p className="text-sm text-muted-foreground italic">No payment details yet.</p>
           )}
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+// Small helper row component
+function Row({ icon, label, value, children }) {
+  return (
+    <div className="flex items-start gap-2 text-sm">
+      {icon && <span className="mt-0.5 text-muted-foreground shrink-0">{icon}</span>}
+      <div className="flex-1">
+        <span className="text-muted-foreground">{label}: </span>
+        {value && <span className="font-medium">{value}</span>}
+        {children}
+      </div>
     </div>
   );
 }
