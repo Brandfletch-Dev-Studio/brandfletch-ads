@@ -87,6 +87,17 @@ export default function AdminCampaignDetail() {
         campaign_id: id,
         is_read: false,
       });
+      // Email the client
+      const clientUsers = await base44.entities.User.list();
+      const clientUser = clientUsers.find(u => u.id === campaign.user_id);
+      if (clientUser?.email) {
+        base44.integrations.Core.SendEmail({
+          to: clientUser.email,
+          from_name: 'Brandfletch Ads',
+          subject: notif.title.replace(/[^\w\s\-!]/g, '').trim(),
+          body: `Hi ${clientUser.full_name || 'there'},\n\n${notif.msg}\n\nLog in to your dashboard to view your campaign details.\n\nhttps://brandfletchads.base44.app/campaigns/${id}\n\n— Brandfletch Ads Team`,
+        }).catch(() => {});
+      }
     }
 
     toast.success(`Campaign ${status.replace('_', ' ')}`);
@@ -111,10 +122,7 @@ export default function AdminCampaignDetail() {
     return `${currency} ${localAmt.toLocaleString()}`;
   };
 
-  const formatUSD = () => {
-    if (campaign.total_cost_usd) return `≈ $${campaign.total_cost_usd.toFixed(2)} USD`;
-    return null;
-  };
+
 
   const goalConfig = GOALS.find(g => g.value === campaign.goal);
   const allLocations = [
@@ -140,7 +148,6 @@ export default function AdminCampaignDetail() {
           </div>
           <p className="text-sm text-muted-foreground capitalize">
             {campaign.package} · {campaign.duration} · {formatCost()}
-            {formatUSD() && <span className="ml-1 text-xs opacity-70">{formatUSD()}</span>}
           </p>
         </div>
       </div>
@@ -416,8 +423,7 @@ export default function AdminCampaignDetail() {
             { label: 'Duration', value: campaign.duration ? campaign.duration.charAt(0).toUpperCase() + campaign.duration.slice(1) : null },
             { label: 'Country', value: campaign.country },
             { label: 'Currency', value: campaign.currency },
-            { label: 'Total Cost (Local)', value: formatCost() },
-            { label: 'Total Cost (USD)', value: formatUSD() },
+            { label: 'Total Cost', value: formatCost() },
             { label: 'Submitted', value: campaign.created_date ? format(new Date(campaign.created_date), 'MMM d, yyyy HH:mm') : null },
           ].filter(r => r.value).map(({ label, value }) => (
             <div key={label} className="flex justify-between text-sm py-1.5 border-b border-border last:border-0">

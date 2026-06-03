@@ -33,7 +33,7 @@ export default function AdminOverview() {
     { label: 'Active Campaigns', value: active, icon: Activity, color: 'text-green-600', bg: 'bg-green-50' },
     { label: 'Total Users', value: users.length, icon: Users, color: 'text-purple-600', bg: 'bg-purple-50' },
     { label: 'Pending Payments', value: pendingPayments, icon: AlertTriangle, color: 'text-orange-600', bg: 'bg-orange-50' },
-    { label: 'Total Revenue', value: `$${totalRevenue.toFixed(0)}`, icon: DollarSign, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+    { label: 'Total Revenue (confirmed)', value: totalRevenue.toLocaleString(), icon: DollarSign, color: 'text-indigo-600', bg: 'bg-indigo-50' },
   ];
 
   return (

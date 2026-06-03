@@ -88,6 +88,25 @@ export default function AdminPayments() {
       });
     }
 
+    // Email the client
+    if (txn.user_id) {
+      const allUsers = await base44.entities.User.list();
+      const clientUser = allUsers.find(u => u.id === txn.user_id);
+      if (clientUser?.email) {
+        const amountStr = `${txn.currency || 'USD'} ${(txn.amount || 0).toLocaleString()}`;
+        const emailData = status === 'confirmed'
+          ? {
+              subject: 'Payment Confirmed — Brandfletch Ads',
+              body: `Hi ${clientUser.full_name || 'there'},\n\nGreat news! Your payment of ${amountStr} has been confirmed. Your campaign is now under review and will be launched shortly.\n\nReference: ${txn.payment_reference || '—'}\n\nLog in to track your campaign: https://brandfletchads.base44.app/dashboard\n\n— Brandfletch Ads Team`,
+            }
+          : {
+              subject: 'Payment Could Not Be Verified — Brandfletch Ads',
+              body: `Hi ${clientUser.full_name || 'there'},\n\nUnfortunately we could not verify your payment of ${amountStr}.\n\nReason: ${notes[id] || 'Please contact our support team for assistance.'}\n\nReference: ${txn.payment_reference || '—'}\n\nPlease contact us or resubmit your payment proof.\n\n— Brandfletch Ads Team`,
+            };
+        base44.integrations.Core.SendEmail({ to: clientUser.email, from_name: 'Brandfletch Ads', ...emailData }).catch(() => {});
+      }
+    }
+
     // Send admin email notification
     await sendAdminEmail(
       `Payment ${status === 'confirmed' ? 'Confirmed' : 'Rejected'} — Brandfletch Ads`,
@@ -153,9 +172,7 @@ export default function AdminPayments() {
                         ? `${t.currency} ${(t.amount || 0).toLocaleString()}`
                         : `$${(t.amount || 0).toFixed(2)}`}
                     </span>
-                    {t.currency && t.currency !== 'USD' && t.amount_usd && (
-                      <span className="text-sm text-muted-foreground">≈ ${t.amount_usd.toFixed(2)} USD</span>
-                    )}
+
                     <span className="text-sm text-muted-foreground">{t.payment_method || '—'}</span>
                     <span className="text-sm text-muted-foreground font-mono text-xs">{t.payment_reference}</span>
                   </div>
