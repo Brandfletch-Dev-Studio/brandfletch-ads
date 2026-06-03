@@ -12,37 +12,23 @@ export default function StepSummary({ data }) {
     ...(data.audience_cities || []),
     ...(data.audience_countries || []),
   ];
-  const locationDesc = allLocations.length > 0 ? allLocations.join(', ') : 'all locations';
-  const genderDesc = data.audience_gender === 'all' ? 'all genders' : data.audience_gender === 'male' ? 'men' : 'women';
+  const locationDesc = allLocations.length > 0 ? allLocations.join(', ') : 'not specified';
 
-  // Goal detail
-  const getGoalDetail = () => {
+  // Goal detail text
+  const getGoalText = () => {
     const platforms = data.messaging_platforms || [];
     if (data.goal === 'messages') {
       const parts = [];
       if (platforms.includes('whatsapp')) parts.push(`WhatsApp${data.whatsapp_number ? ` (${data.whatsapp_number})` : ''}`);
       if (platforms.includes('messenger')) parts.push('Messenger');
-      return parts.length > 0 ? `via ${parts.join(' and ')}` : '';
+      return `getting messages via ${parts.join(' and ')}`;
     }
-    if (data.goal === 'website_traffic' && data.website_url) return `— ${data.website_url}`;
-    if (data.goal === 'phone_calls' && data.phone_number) return `— ${data.phone_number}`;
-    if (data.goal === 'boost_post' && data.post_url) return `— ${data.post_url}`;
-    return '';
-  };
-
-  // Creative sentence
-  const getCreativeSentence = () => {
-    if (data.creative_type === 'new_creative') {
-      const hasAssets = data.creative_assets?.length > 0;
-      const hasDesc = !!data.description;
-      if (hasDesc && hasAssets) return `A new ad creative has been prepared with a description and ${data.creative_assets.length} uploaded file${data.creative_assets.length > 1 ? 's' : ''}.`;
-      if (hasDesc) return `A new ad creative will be created based on your description by our team.`;
-      if (hasAssets) return `${data.creative_assets.length} creative file${data.creative_assets.length > 1 ? 's have' : ' has'} been uploaded for your ad.`;
-      return `Our team will create the ad creative for you.`;
-    }
-    // existing_post
-    if (data.post_url) return `This campaign will boost your existing Facebook post.`;
-    return `This campaign will promote your Facebook page.`;
+    if (data.goal === 'website_traffic') return `getting more website visitors`;
+    if (data.goal === 'phone_calls') return `getting phone calls`;
+    if (data.goal === 'boost_post') return `boosting your Facebook post`;
+    if (data.goal === 'page_followers') return `gaining page followers`;
+    if (data.goal === 'brand_awareness') return `building brand awareness`;
+    return 'running a campaign';
   };
 
   const formatCost = () => {
@@ -57,36 +43,25 @@ export default function StepSummary({ data }) {
       <p className="text-muted-foreground text-sm mb-6">Review your campaign before proceeding to payment.</p>
 
       <div className="space-y-4 mb-6">
-
-        {/* Overview paragraph */}
-        <div className="bg-secondary/40 rounded-xl p-4">
+        {/* Main summary paragraph */}
+        <div className="bg-secondary/40 rounded-xl p-4 space-y-3">
           <p className="text-sm leading-relaxed text-foreground">
-            <span className="font-semibold">{data.page_name || 'Your page'}</span> will run a{' '}
-            <span className="font-semibold">{goalConfig ? `${goalConfig.icon} ${goalConfig.label}` : 'campaign'}</span>{' '}
-            campaign{getGoalDetail() ? ` ${getGoalDetail()}` : ''}, targeting{' '}
-            <span className="font-semibold">{genderDesc}</span>{' '}
-            aged <span className="font-semibold">{data.audience_age_min}–{data.audience_age_max}</span>{' '}
-            in <span className="font-semibold">{locationDesc}</span>.
+            You are running a Facebook ad campaign with the goal of <span className="font-semibold">{getGoalText()}</span>.
           </p>
-        </div>
 
-        {/* Creative paragraph */}
-        <div className="bg-secondary/40 rounded-xl p-4">
           <p className="text-sm leading-relaxed text-foreground">
-            {getCreativeSentence()}
+            Your target audience is located in <span className="font-semibold">{locationDesc}</span>, aged <span className="font-semibold">{data.audience_age_min}–{data.audience_age_max}</span>, and includes <span className="font-semibold">{data.audience_gender === 'all' ? 'all genders' : data.audience_gender === 'male' ? 'men only' : 'women only'}</span>.
           </p>
-        </div>
 
-        {/* Package & duration paragraph */}
-        <div className="bg-secondary/40 rounded-xl p-4">
           <p className="text-sm leading-relaxed text-foreground">
-            The campaign will run on the{' '}
-            <span className="font-semibold">{pkg?.label || '—'}</span> package{' '}
-            on a <span className="font-semibold">{dur?.label || '—'}</span> basis.
-            {estimated && (
-              <> You can expect an estimated <span className="font-semibold">{estimated.reach.toLocaleString()} people reached</span> and up to <span className="font-semibold">{estimated.impressions.toLocaleString()} impressions</span>.</>
-            )}
+            Your budget is <span className="font-semibold">{formatCost()}</span> on a <span className="font-semibold">{dur?.label || '—'}</span> basis using the <span className="font-semibold">{pkg?.label || '—'}</span> package.
           </p>
+
+          {estimated && (
+            <p className="text-sm leading-relaxed text-foreground">
+              Based on these settings, you can expect an estimated <span className="font-semibold">{estimated.reach.toLocaleString()} people reached</span> with approximately <span className="font-semibold">{estimated.impressions.toLocaleString()} impressions</span>.
+            </p>
+          )}
         </div>
       </div>
 
