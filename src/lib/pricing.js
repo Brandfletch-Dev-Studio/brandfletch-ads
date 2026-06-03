@@ -1,12 +1,59 @@
-// Pricing engine — prices come from ExchangeRate entity (admin-managed)
-// Hardcoded tables are kept only as a last-resort fallback
+// Pricing engine - clients never see fee breakdowns, only final prices
+import { COUNTRY_CURRENCY } from './constants';
 
 export const PACKAGES = {
-  starter:    { label: 'Starter',    description: 'Designed for small businesses',       color: 'blue' },
-  growth:     { label: 'Growth',     description: 'Designed for growing businesses',     color: 'indigo' },
-  business:   { label: 'Business',   description: 'Designed for established businesses', color: 'purple' },
-  premium:    { label: 'Premium',    description: 'Designed for maximum reach',          color: 'gold' },
-  enterprise: { label: 'Enterprise', description: 'Custom advertising solution',         color: 'gray' },
+  starter:    { label: 'Starter',    daily_usd: 1,    description: 'Designed for small businesses',       color: 'blue' },
+  growth:     { label: 'Growth',     daily_usd: 3,    description: 'Designed for growing businesses',     color: 'indigo' },
+  business:   { label: 'Business',   daily_usd: 5,    description: 'Designed for established businesses', color: 'purple' },
+  premium:    { label: 'Premium',    daily_usd: 10,   description: 'Designed for maximum reach',          color: 'gold' },
+  enterprise: { label: 'Enterprise', daily_usd: null, description: 'Custom advertising solution',         color: 'gray' },
+};
+
+// Base USD prices (includes all fees)
+const USD_PRICES = {
+  starter:  { daily: 1.50,  weekly: 10.50,  monthly: 42 },
+  growth:   { daily: 4.50,  weekly: 31.50,  monthly: 126 },
+  business: { daily: 7.50,  weekly: 52.50,  monthly: 210 },
+  premium:  { daily: 15.00, weekly: 105,    monthly: 420 },
+};
+
+// Fixed local-currency prices per country
+export const LOCAL_PRICES = {
+  Malawi: {
+    currency: 'MWK', symbol: 'MK',
+    starter:  { daily: 6000,   weekly: 39000,   monthly: 150000 },
+    growth:   { daily: 18000,  weekly: 105000,  monthly: 450000 },
+    business: { daily: 30000,  weekly: 175000,  monthly: 700000 },
+    premium:  { daily: 55000,  weekly: 350000,  monthly: 1400000 },
+  },
+  Zambia: {
+    currency: 'ZMW', symbol: 'ZK',
+    starter:  { daily: 40,    weekly: 280,    monthly: 1100 },
+    growth:   { daily: 120,   weekly: 840,    monthly: 3300 },
+    business: { daily: 200,   weekly: 1400,   monthly: 5500 },
+    premium:  { daily: 400,   weekly: 2800,   monthly: 11000 },
+  },
+  'South Africa': {
+    currency: 'ZAR', symbol: 'R',
+    starter:  { daily: 28,    weekly: 195,    monthly: 770 },
+    growth:   { daily: 84,    weekly: 585,    monthly: 2310 },
+    business: { daily: 140,   weekly: 975,    monthly: 3850 },
+    premium:  { daily: 280,   weekly: 1950,   monthly: 7700 },
+  },
+  Kenya: {
+    currency: 'KES', symbol: 'KSh',
+    starter:  { daily: 200,   weekly: 1400,   monthly: 5500 },
+    growth:   { daily: 600,   weekly: 4200,   monthly: 16500 },
+    business: { daily: 1000,  weekly: 7000,   monthly: 27500 },
+    premium:  { daily: 2000,  weekly: 14000,  monthly: 55000 },
+  },
+  Tanzania: {
+    currency: 'TZS', symbol: 'TSh',
+    starter:  { daily: 4000,  weekly: 28000,  monthly: 110000 },
+    growth:   { daily: 12000, weekly: 84000,  monthly: 330000 },
+    business: { daily: 20000, weekly: 140000, monthly: 550000 },
+    premium:  { daily: 40000, weekly: 280000, monthly: 1100000 },
+  },
 };
 
 export const DURATIONS = {
@@ -16,57 +63,41 @@ export const DURATIONS = {
 };
 
 /**
- * Calculate price from a live ExchangeRate DB record.
- * Returns { amount, currency, symbol, display } or null.
- */
-export function calculatePriceFromRate(pkg, duration, exchangeRate) {
-  if (!exchangeRate || pkg === 'enterprise') return null;
-
-  const symbol = exchangeRate.currency_symbol || exchangeRate.currency_code;
-  const code = exchangeRate.currency_code;
-
-  // 1. Use the admin-defined pricing table if available
-  if (exchangeRate.use_fixed_pricing && exchangeRate.pricing_table?.[pkg]?.[duration]) {
-    const amount = exchangeRate.pricing_table[pkg][duration];
-    return {
-      amount,
-      currency: code,
-      symbol,
-      display: `${symbol} ${amount.toLocaleString()}`,
-    };
-  }
-
-  // 2. Fallback: convert from USD_PRICES using the exchange rate
-  const usdAmount = USD_PRICES[pkg]?.[duration];
-  if (!usdAmount || !exchangeRate.rate_to_usd) return null;
-  const amount = Math.round(usdAmount * exchangeRate.rate_to_usd);
-  return {
-    amount,
-    currency: code,
-    symbol,
-    display: `${symbol} ${amount.toLocaleString()}`,
-  };
-}
-
-// USD base prices — used as fallback when no exchange rate record exists
-export const USD_PRICES = {
-  starter:  { daily: 1.50,  weekly: 10.50,  monthly: 42 },
-  growth:   { daily: 4.50,  weekly: 31.50,  monthly: 126 },
-  business: { daily: 7.50,  weekly: 52.50,  monthly: 210 },
-  premium:  { daily: 15.00, weekly: 105,    monthly: 420 },
-};
-
-/**
- * Legacy synchronous helper (uses hardcoded tables — kept for non-wizard use).
- * Prefer calculatePriceFromRate() where possible.
+ * Returns { amount, currency, symbol, display, usdEquivalent? }
  */
 export function calculatePrice(pkg, duration, country) {
   if (pkg === 'enterprise') return null;
+
+  const local = LOCAL_PRICES[country];
+  if (local && local[pkg]) {
+    const amount = local[pkg][duration];
+    if (!amount) return null;
+    return {
+      amount,
+      currency: local.currency,
+      symbol: local.symbol,
+      display: `${local.symbol}${amount.toLocaleString()}`,
+    };
+  }
+
+  // Fallback to USD
   const usd = USD_PRICES[pkg];
   if (!usd) return null;
   const amount = usd[duration];
   if (!amount) return null;
-  return { amount, currency: 'USD', symbol: '$', display: `$${amount.toFixed(2)}` };
+  return {
+    amount,
+    currency: 'USD',
+    symbol: '$',
+    display: `$${amount.toFixed(2)}`,
+  };
+}
+
+/** Get the currency info for a country */
+export function getCurrencyForCountry(country) {
+  const local = LOCAL_PRICES[country];
+  if (local) return { code: local.currency, symbol: local.symbol };
+  return COUNTRY_CURRENCY[country] || { code: 'USD', symbol: '$' };
 }
 
 // Estimated results per day

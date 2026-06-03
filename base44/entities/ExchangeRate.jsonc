@@ -9,16 +9,12 @@
     "currency_name": {
       "type": "string"
     },
-    "currency_symbol": {
-      "type": "string",
-      "description": "e.g. MK, KSh, ZK"
-    },
     "country": {
       "type": "string"
     },
     "rate_to_usd": {
       "type": "number",
-      "description": "How many units of this currency = 1 USD (used as fallback if no pricing_table)"
+      "description": "How many units of this currency = 1 USD"
     },
     "is_active": {
       "type": "boolean",
@@ -26,70 +22,8 @@
     },
     "use_fixed_pricing": {
       "type": "boolean",
-      "default": true,
-      "description": "Use the pricing_table below instead of rate-based conversion"
-    },
-    "pricing_table": {
-      "type": "object",
-      "description": "Local currency prices per package/duration: { starter: { daily, weekly, monthly }, growth: {...}, ... }",
-      "properties": {
-        "starter": {
-          "type": "object",
-          "properties": {
-            "daily": {
-              "type": "number"
-            },
-            "weekly": {
-              "type": "number"
-            },
-            "monthly": {
-              "type": "number"
-            }
-          }
-        },
-        "growth": {
-          "type": "object",
-          "properties": {
-            "daily": {
-              "type": "number"
-            },
-            "weekly": {
-              "type": "number"
-            },
-            "monthly": {
-              "type": "number"
-            }
-          }
-        },
-        "business": {
-          "type": "object",
-          "properties": {
-            "daily": {
-              "type": "number"
-            },
-            "weekly": {
-              "type": "number"
-            },
-            "monthly": {
-              "type": "number"
-            }
-          }
-        },
-        "premium": {
-          "type": "object",
-          "properties": {
-            "daily": {
-              "type": "number"
-            },
-            "weekly": {
-              "type": "number"
-            },
-            "monthly": {
-              "type": "number"
-            }
-          }
-        }
-      }
+      "default": false,
+      "description": "For Malawi - use fixed local pricing table"
     }
   },
   "required": [

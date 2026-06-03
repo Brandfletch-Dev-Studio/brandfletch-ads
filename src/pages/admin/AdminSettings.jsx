@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
-import { Plus, Trash2, Save, DollarSign, CreditCard, Pencil, X, Check, Mail, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, Trash2, Save, DollarSign, CreditCard, Pencil, X, Check, Mail, Store } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,127 +10,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { COUNTRIES } from '@/lib/constants';
 import { toast } from 'sonner';
 
-const PACKAGES = ['starter', 'growth', 'business', 'premium'];
-const DURATIONS = ['daily', 'weekly', 'monthly'];
-
-function PricingTableEditor({ rate, onChange }) {
-  const table = rate.pricing_table || {};
-
-  function setCell(pkg, dur, val) {
-    const updated = {
-      ...table,
-      [pkg]: { ...table[pkg], [dur]: val === '' ? '' : parseFloat(val) || 0 },
-    };
-    onChange({ ...rate, pricing_table: updated });
-  }
-
-  return (
-    <div className="mt-3 overflow-x-auto">
-      <table className="w-full text-xs border-collapse">
-        <thead>
-          <tr>
-            <th className="text-left py-1 pr-3 text-muted-foreground font-medium">Package</th>
-            {DURATIONS.map(d => (
-              <th key={d} className="text-center py-1 px-1 text-muted-foreground font-medium capitalize">{d}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {PACKAGES.map(pkg => (
-            <tr key={pkg} className="border-t border-border/50">
-              <td className="py-1.5 pr-3 font-semibold capitalize">{pkg}</td>
-              {DURATIONS.map(dur => (
-                <td key={dur} className="py-1 px-1">
-                  <Input
-                    type="number"
-                    value={table[pkg]?.[dur] ?? ''}
-                    onChange={e => setCell(pkg, dur, e.target.value)}
-                    className="h-7 text-xs text-center w-24"
-                    placeholder="0"
-                  />
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-
-function RateRow({ rate, onSave, onDelete }) {
-  const [localRate, setLocalRate] = useState(rate);
-  const [expanded, setExpanded] = useState(false);
-
-  function handleSave() {
-    onSave(localRate);
-  }
-
-  return (
-    <div className="p-3 bg-secondary/50 rounded-xl">
-      <div className="flex items-center gap-3">
-        <div className="flex-1 grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <div>
-            <p className="text-xs text-muted-foreground mb-1">Currency</p>
-            <p className="font-semibold text-sm">{localRate.currency_code}</p>
-            <p className="text-xs text-muted-foreground">{localRate.country}</p>
-          </div>
-          <div>
-            <Label className="text-xs mb-1 block">Rate (per $1 USD)</Label>
-            <Input
-              type="number"
-              value={localRate.rate_to_usd}
-              onChange={e => setLocalRate(r => ({ ...r, rate_to_usd: parseFloat(e.target.value) }))}
-              className="h-8 text-sm"
-            />
-          </div>
-          <div className="flex items-center gap-2">
-            <Switch
-              checked={localRate.use_fixed_pricing}
-              onCheckedChange={v => setLocalRate(r => ({ ...r, use_fixed_pricing: v }))}
-            />
-            <span className="text-xs text-muted-foreground">Fixed pricing table</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Switch
-              checked={localRate.is_active}
-              onCheckedChange={v => setLocalRate(r => ({ ...r, is_active: v }))}
-            />
-            <span className="text-xs text-muted-foreground">Active</span>
-          </div>
-        </div>
-        <div className="flex items-center gap-1 flex-shrink-0">
-          <Button variant="ghost" size="icon" onClick={() => setExpanded(e => !e)} title="Edit pricing table">
-            {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-          </Button>
-          <Button variant="ghost" size="icon" onClick={handleSave}>
-            <Save className="w-4 h-4 text-green-600" />
-          </Button>
-          <Button variant="ghost" size="icon" onClick={() => onDelete(localRate.id)}>
-            <Trash2 className="w-4 h-4 text-destructive" />
-          </Button>
-        </div>
-      </div>
-
-      {expanded && (
-        <div className="mt-3 pt-3 border-t border-border/50">
-          <p className="text-xs font-semibold text-muted-foreground mb-1">
-            Local prices ({localRate.currency_code}) — edit then click Save
-          </p>
-          <PricingTableEditor rate={localRate} onChange={setLocalRate} />
-        </div>
-      )}
-    </div>
-  );
-}
-
 export default function AdminSettings() {
   const [rates, setRates] = useState([]);
   const [methods, setMethods] = useState([]);
-  const [newRate, setNewRate] = useState({ currency_code: '', currency_symbol: '', currency_name: '', country: '', rate_to_usd: '', use_fixed_pricing: true });
+  const [newRate, setNewRate] = useState({ currency_code: '', currency_name: '', country: '', rate_to_usd: '', use_fixed_pricing: false });
   const [newMethod, setNewMethod] = useState({ country: '', method_name: '', method_type: 'mobile_money', account_number: '', account_name: '', instructions: '' });
   const [editingMethod, setEditingMethod] = useState(null);
   const [editMethodData, setEditMethodData] = useState({});
+  const [services, setServices] = useState([]);
+  const [newService, setNewService] = useState({ name: '', description: '', category: 'page_setup', price_usd: 25 });
+  const [editingService, setEditingService] = useState(null);
+  const [editServiceData, setEditServiceData] = useState({});
   const [adminEmail, setAdminEmail] = useState('');
   const [savingEmail, setSavingEmail] = useState(false);
 
@@ -139,9 +29,11 @@ export default function AdminSettings() {
       base44.entities.ExchangeRate.list(),
       base44.entities.PaymentMethod.list(),
       base44.auth.me(),
-    ]).then(([r, m, u]) => {
+      base44.entities.Service.list('sort_order'),
+    ]).then(([r, m, u, s]) => {
       setRates(r);
       setMethods(m);
+      setServices(s);
       if (u?.admin_notification_email) setAdminEmail(u.admin_notification_email);
       else if (u?.email) setAdminEmail(u.email);
     });
@@ -154,18 +46,45 @@ export default function AdminSettings() {
     setSavingEmail(false);
   }
 
+  async function addService() {
+    if (!newService.name || !newService.price_usd) return;
+    await base44.entities.Service.create({ ...newService, is_active: true });
+    toast.success('Service added');
+    setNewService({ name: '', description: '', category: 'page_setup', price_usd: 25 });
+    const s = await base44.entities.Service.list('sort_order');
+    setServices(s);
+  }
+
+  async function toggleService(id, is_active) {
+    await base44.entities.Service.update(id, { is_active });
+    setServices(ss => ss.map(s => s.id === id ? { ...s, is_active } : s));
+  }
+
+  async function deleteService(id) {
+    await base44.entities.Service.delete(id);
+    setServices(ss => ss.filter(s => s.id !== id));
+    toast.success('Service deleted');
+  }
+
+  async function saveEditService() {
+    await base44.entities.Service.update(editingService, editServiceData);
+    setServices(ss => ss.map(s => s.id === editingService ? { ...s, ...editServiceData } : s));
+    setEditingService(null);
+    toast.success('Saved!', { duration: 1500 });
+  }
+
   async function saveRate(rate) {
     await base44.entities.ExchangeRate.update(rate.id, rate);
-    setRates(rs => rs.map(r => r.id === rate.id ? rate : r));
-    toast.success('Rate saved!', { duration: 1500 });
+    toast.success('Saved!', { duration: 1500 });
   }
 
   async function addRate() {
     if (!newRate.currency_code || !newRate.rate_to_usd) return;
-    const created = await base44.entities.ExchangeRate.create({ ...newRate, is_active: true, pricing_table: {} });
-    setRates(rs => [...rs, created]);
+    await base44.entities.ExchangeRate.create({ ...newRate, is_active: true });
     toast.success('Exchange rate added');
-    setNewRate({ currency_code: '', currency_symbol: '', currency_name: '', country: '', rate_to_usd: '', use_fixed_pricing: true });
+    setNewRate({ currency_code: '', currency_name: '', country: '', rate_to_usd: '', use_fixed_pricing: false });
+    const r = await base44.entities.ExchangeRate.list();
+    setRates(r);
   }
 
   async function deleteRate(id) {
@@ -186,6 +105,7 @@ export default function AdminSettings() {
   async function toggleMethod(id, is_active) {
     await base44.entities.PaymentMethod.update(id, { is_active });
     setMethods(ms => ms.map(m => m.id === id ? { ...m, is_active } : m));
+    toast.success(`Method ${is_active ? 'enabled' : 'disabled'}`);
   }
 
   async function deleteMethod(id) {
@@ -210,8 +130,70 @@ export default function AdminSettings() {
     <div className="p-4 lg:p-8 max-w-4xl mx-auto space-y-8">
       <div>
         <h1 className="text-2xl font-bold font-heading">Platform Settings</h1>
-        <p className="text-muted-foreground text-sm mt-1">Manage pricing, exchange rates, payment methods, and notifications</p>
+        <p className="text-muted-foreground text-sm mt-1">Manage exchange rates, payment methods, and notifications</p>
       </div>
+
+      {/* Marketplace Services */}
+      <Card className="shadow-sm">
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Store className="w-4 h-4" /> Marketplace Services
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-3">
+            {services.map(s => (
+              <div key={s.id} className="p-3 bg-secondary/50 rounded-xl">
+                {editingService === s.id ? (
+                  <div className="space-y-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <Input value={editServiceData.name || ''} onChange={e => setEditServiceData(d => ({ ...d, name: e.target.value }))} placeholder="Service name" className="h-8 text-sm" />
+                      <Input type="number" value={editServiceData.price_usd || ''} onChange={e => setEditServiceData(d => ({ ...d, price_usd: parseFloat(e.target.value) }))} placeholder="Price (USD)" className="h-8 text-sm" />
+                    </div>
+                    <Input value={editServiceData.description || ''} onChange={e => setEditServiceData(d => ({ ...d, description: e.target.value }))} placeholder="Description" className="h-8 text-sm" />
+                    <div className="flex items-center gap-2">
+                      <Button size="sm" onClick={saveEditService} className="gap-1 h-7"><Check className="w-3 h-3" /> Save</Button>
+                      <Button size="sm" variant="outline" onClick={() => setEditingService(null)} className="h-7"><X className="w-3 h-3" /> Cancel</Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-sm">{s.name}</p>
+                      <p className="text-xs text-muted-foreground">${s.price_usd} USD · {s.category?.replace('_', ' ')}</p>
+                      {s.description && <p className="text-xs text-muted-foreground mt-0.5 truncate">{s.description}</p>}
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <Switch checked={s.is_active} onCheckedChange={v => toggleService(s.id, v)} />
+                      <Button variant="ghost" size="icon" onClick={() => { setEditingService(s.id); setEditServiceData({ ...s }); }}><Pencil className="w-4 h-4" /></Button>
+                      <Button variant="ghost" size="icon" onClick={() => deleteService(s.id)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+          <div className="p-4 border-2 border-dashed border-border rounded-xl space-y-3">
+            <h4 className="text-sm font-semibold">Add Service</h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <Input value={newService.name} onChange={e => setNewService(s => ({ ...s, name: e.target.value }))} placeholder="Service name" />
+              <Input type="number" value={newService.price_usd} onChange={e => setNewService(s => ({ ...s, price_usd: parseFloat(e.target.value) }))} placeholder="Price in USD" />
+              <Select value={newService.category} onValueChange={v => setNewService(s => ({ ...s, category: v }))}>
+                <SelectTrigger><SelectValue placeholder="Category" /></SelectTrigger>
+                <SelectContent>
+                  {['page_setup','ads_management','content_creation','consulting','other'].map(c => (
+                    <SelectItem key={c} value={c}>{c.replace('_',' ')}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Input value={newService.description} onChange={e => setNewService(s => ({ ...s, description: e.target.value }))} placeholder="Short description" />
+            </div>
+            <Button onClick={addService} className="gap-2 bg-[hsl(var(--primary))] text-primary-foreground">
+              <Plus className="w-4 h-4" /> Add Service
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Admin Email Notifications */}
       <Card className="shadow-sm">
@@ -237,42 +219,71 @@ export default function AdminSettings() {
         </CardContent>
       </Card>
 
-      {/* Exchange Rates & Pricing Tables */}
+      {/* Exchange Rates */}
       <Card className="shadow-sm">
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
-            <DollarSign className="w-4 h-4" /> Local Pricing by Country
+            <DollarSign className="w-4 h-4" /> Exchange Rates
           </CardTitle>
-          <p className="text-sm text-muted-foreground mt-1">
-            Set the exact local-currency prices clients will see for each package and duration. Click the expand (↓) button to edit the pricing table per country.
-          </p>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-3">
             {rates.map(rate => (
-              <RateRow key={rate.id} rate={rate} onSave={saveRate} onDelete={deleteRate} />
+              <div key={rate.id} className="flex items-center gap-3 p-3 bg-secondary/50 rounded-xl">
+                <div className="flex-1 grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">Currency</p>
+                    <p className="font-semibold text-sm">{rate.currency_code}</p>
+                    <p className="text-xs text-muted-foreground">{rate.country}</p>
+                  </div>
+                  <div>
+                    <Label className="text-xs mb-1 block">Rate (per $1)</Label>
+                    <Input
+                      type="number"
+                      value={rate.rate_to_usd}
+                      onChange={e => setRates(rs => rs.map(r => r.id === rate.id ? { ...r, rate_to_usd: parseFloat(e.target.value) } : r))}
+                      className="h-8 text-sm"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Switch checked={rate.use_fixed_pricing} onCheckedChange={v => setRates(rs => rs.map(r => r.id === rate.id ? { ...r, use_fixed_pricing: v } : r))} />
+                    <span className="text-xs text-muted-foreground">Fixed pricing</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Switch checked={rate.is_active} onCheckedChange={v => setRates(rs => rs.map(r => r.id === rate.id ? { ...r, is_active: v } : r))} />
+                    <span className="text-xs text-muted-foreground">Active</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  <Button variant="ghost" size="icon" onClick={() => saveRate(rate)}>
+                    <Save className="w-4 h-4 text-green-600" />
+                  </Button>
+                  <Button variant="ghost" size="icon" onClick={() => deleteRate(rate.id)}>
+                    <Trash2 className="w-4 h-4 text-destructive" />
+                  </Button>
+                </div>
+              </div>
             ))}
           </div>
 
           {/* Add new rate */}
           <div className="p-4 border-2 border-dashed border-border rounded-xl space-y-3">
-            <h4 className="text-sm font-semibold">Add Country Rate</h4>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              <Input value={newRate.currency_code} onChange={e => setNewRate(r => ({ ...r, currency_code: e.target.value.toUpperCase() }))} placeholder="Code e.g. MWK" />
-              <Input value={newRate.currency_symbol} onChange={e => setNewRate(r => ({ ...r, currency_symbol: e.target.value }))} placeholder="Symbol e.g. MK" />
-              <Input value={newRate.currency_name} onChange={e => setNewRate(r => ({ ...r, currency_name: e.target.value }))} placeholder="Name e.g. Malawian Kwacha" />
+            <h4 className="text-sm font-semibold">Add Exchange Rate</h4>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <Input value={newRate.currency_code} onChange={e => setNewRate(r => ({ ...r, currency_code: e.target.value.toUpperCase() }))} placeholder="MWK" />
+              <Input value={newRate.currency_name} onChange={e => setNewRate(r => ({ ...r, currency_name: e.target.value }))} placeholder="Malawian Kwacha" />
               <Select value={newRate.country} onValueChange={v => setNewRate(r => ({ ...r, country: v }))}>
                 <SelectTrigger><SelectValue placeholder="Country" /></SelectTrigger>
                 <SelectContent>{COUNTRIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
               </Select>
-              <Input type="number" value={newRate.rate_to_usd} onChange={e => setNewRate(r => ({ ...r, rate_to_usd: e.target.value }))} placeholder="Rate per $1 USD" />
+              <Input type="number" value={newRate.rate_to_usd} onChange={e => setNewRate(r => ({ ...r, rate_to_usd: e.target.value }))} placeholder="Rate per $1" />
             </div>
             <div className="flex items-center gap-3">
               <Switch checked={newRate.use_fixed_pricing} onCheckedChange={v => setNewRate(r => ({ ...r, use_fixed_pricing: v }))} />
-              <span className="text-sm text-muted-foreground">Use fixed pricing table (recommended)</span>
+              <span className="text-sm text-muted-foreground">Use fixed local pricing (e.g. Malawi)</span>
             </div>
-            <Button onClick={addRate} className="gap-2">
-              <Plus className="w-4 h-4" /> Add Country
+            <Button onClick={addRate} className="gap-2 bg-[hsl(var(--primary))] text-primary-foreground">
+              <Plus className="w-4 h-4" /> Add Rate
             </Button>
           </div>
         </CardContent>
@@ -286,41 +297,50 @@ export default function AdminSettings() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Group by country */}
           {Array.from(new Set(methods.map(m => m.country))).map(country => (
             <div key={country}>
               <h4 className="font-semibold text-sm text-muted-foreground mb-2 uppercase tracking-wide">{country}</h4>
               <div className="space-y-2">
                 {methods.filter(m => m.country === country).map(m => (
-                  <div key={m.id} className="p-3 bg-secondary/50 rounded-xl">
-                    {editingMethod === m.id ? (
-                      <div className="space-y-2">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                          <Input value={editMethodData.method_name || ''} onChange={e => setEditMethodData(d => ({ ...d, method_name: e.target.value }))} placeholder="Method name" className="h-8 text-sm" />
-                          <Input value={editMethodData.account_name || ''} onChange={e => setEditMethodData(d => ({ ...d, account_name: e.target.value }))} placeholder="Account name" className="h-8 text-sm" />
-                          <Input value={editMethodData.account_number || ''} onChange={e => setEditMethodData(d => ({ ...d, account_number: e.target.value }))} placeholder="Account number" className="h-8 text-sm" />
-                        </div>
-                        <Input value={editMethodData.instructions || ''} onChange={e => setEditMethodData(d => ({ ...d, instructions: e.target.value }))} placeholder="Instructions" className="h-8 text-sm" />
-                        <div className="flex items-center gap-2">
-                          <Button size="sm" onClick={saveEditMethod} className="gap-1 h-7"><Check className="w-3 h-3" /> Save</Button>
-                          <Button size="sm" variant="outline" onClick={() => setEditingMethod(null)} className="h-7"><X className="w-3 h-3" /> Cancel</Button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-sm">{m.method_name}</p>
-                          {m.account_number && <p className="text-xs text-muted-foreground">{m.account_name} · {m.account_number}</p>}
-                          {m.instructions && <p className="text-xs text-muted-foreground italic mt-0.5">{m.instructions}</p>}
-                        </div>
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                          <Switch checked={m.is_active} onCheckedChange={v => toggleMethod(m.id, v)} />
-                          <Button variant="ghost" size="icon" onClick={() => startEdit(m)}><Pencil className="w-4 h-4" /></Button>
-                          <Button variant="ghost" size="icon" onClick={() => deleteMethod(m.id)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ))}
+                   <div key={m.id} className="p-3 bg-secondary/50 rounded-xl">
+                     {editingMethod === m.id ? (
+                       <div className="space-y-2">
+                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                           <Input value={editMethodData.method_name || ''} onChange={e => setEditMethodData(d => ({ ...d, method_name: e.target.value }))} placeholder="Method name" className="h-8 text-sm" />
+                           <Input value={editMethodData.account_name || ''} onChange={e => setEditMethodData(d => ({ ...d, account_name: e.target.value }))} placeholder="Account name" className="h-8 text-sm" />
+                           <Input value={editMethodData.account_number || ''} onChange={e => setEditMethodData(d => ({ ...d, account_number: e.target.value }))} placeholder="Account number" className="h-8 text-sm" />
+                         </div>
+                         <Input value={editMethodData.instructions || ''} onChange={e => setEditMethodData(d => ({ ...d, instructions: e.target.value }))} placeholder="Instructions" className="h-8 text-sm" />
+                         <div className="flex items-center gap-2">
+                           <Button size="sm" onClick={saveEditMethod} className="gap-1 h-7">
+                             <Check className="w-3 h-3" /> Save
+                           </Button>
+                           <Button size="sm" variant="outline" onClick={() => setEditingMethod(null)} className="h-7">
+                             <X className="w-3 h-3" /> Cancel
+                           </Button>
+                         </div>
+                       </div>
+                     ) : (
+                       <div className="flex items-center justify-between">
+                         <div className="flex-1 min-w-0">
+                           <p className="font-semibold text-sm">{m.method_name}</p>
+                           {m.account_number && <p className="text-xs text-muted-foreground">{m.account_name} · {m.account_number}</p>}
+                           {m.instructions && <p className="text-xs text-muted-foreground italic mt-0.5">{m.instructions}</p>}
+                         </div>
+                         <div className="flex items-center gap-2 flex-shrink-0">
+                           <Switch checked={m.is_active} onCheckedChange={v => toggleMethod(m.id, v)} />
+                           <Button variant="ghost" size="icon" onClick={() => startEdit(m)}>
+                             <Pencil className="w-4 h-4" />
+                           </Button>
+                           <Button variant="ghost" size="icon" onClick={() => deleteMethod(m.id)}>
+                             <Trash2 className="w-4 h-4 text-destructive" />
+                           </Button>
+                         </div>
+                       </div>
+                     )}
+                   </div>
+                 ))}
               </div>
             </div>
           ))}
@@ -338,7 +358,7 @@ export default function AdminSettings() {
               <Input value={newMethod.account_number} onChange={e => setNewMethod(m => ({ ...m, account_number: e.target.value }))} placeholder="Account / Number" />
             </div>
             <Input value={newMethod.instructions} onChange={e => setNewMethod(m => ({ ...m, instructions: e.target.value }))} placeholder="Payment instructions for clients..." />
-            <Button onClick={addMethod} className="gap-2">
+            <Button onClick={addMethod} className="gap-2 bg-[hsl(var(--primary))] text-primary-foreground">
               <Plus className="w-4 h-4" /> Add Method
             </Button>
           </div>

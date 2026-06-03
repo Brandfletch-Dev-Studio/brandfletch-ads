@@ -34,7 +34,6 @@ const adminNav = [
   { path: '/admin/ads', label: 'In-App Ads', icon: Tv2 },
   { path: '/admin/reports', label: 'Reports', icon: BarChart3 },
   { path: '/admin/audit-log', label: 'Audit Log', icon: ClipboardList },
-  { path: '/admin/marketplace', label: 'Marketplace', icon: ShoppingBag },
   { path: '/admin/settings', label: 'Settings', icon: Settings },
 ];
 

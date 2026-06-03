@@ -1,5 +1,5 @@
-import { PACKAGES, DURATIONS, calculateEstimatedResults } from '@/lib/pricing';
-import { GOALS, COUNTRY_CURRENCY } from '@/lib/constants';
+import { PACKAGES, DURATIONS, calculateEstimatedResults, LOCAL_PRICES } from '@/lib/pricing';
+import { GOALS } from '@/lib/constants';
 
 export default function StepSummary({ data }) {
   const goalConfig = GOALS.find(g => g.value === data.goal);
@@ -32,12 +32,9 @@ export default function StepSummary({ data }) {
   };
 
   const formatCost = () => {
-    const cfg = COUNTRY_CURRENCY[data.country];
-    const symbol = cfg?.symbol || '$';
-    const amount = data.total_cost || 0;
-    return amount >= 1000
-      ? `${symbol} ${amount.toLocaleString()}`
-      : `${symbol} ${amount.toFixed(2)}`;
+    const local = LOCAL_PRICES[data.country];
+    if (local) return `${local.symbol}${(data.total_cost || 0).toLocaleString()}`;
+    return `$${(data.total_cost || 0).toFixed(2)}`;
   };
 
   return (

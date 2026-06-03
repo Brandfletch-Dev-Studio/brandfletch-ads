@@ -37,20 +37,29 @@ export const GOALS = [
   { value: 'boost_post', label: 'Boost a Post', icon: '🚀', desc: 'Amplify an existing post on your Facebook Page' },
 ];
 
-/**
- * Format a USD amount into local currency.
- * Prefer passing an ExchangeRate DB record as the third argument.
- * Falls back to COUNTRY_CURRENCY symbol with no conversion if no rate provided.
- */
-export function formatLocalCurrency(usdAmount, country, exchangeRate) {
+// Format a USD amount into the user's local currency
+export function formatLocalCurrency(usdAmount, country) {
   const cfg = COUNTRY_CURRENCY[country];
-  const symbol = exchangeRate?.currency_symbol || exchangeRate?.currency_code || cfg?.symbol || '$';
-  const rate = exchangeRate?.rate_to_usd || 1;
+  if (!cfg) return `$${usdAmount.toFixed(2)}`;
+
+  // Approximate exchange rates (local units per 1 USD)
+  const rates = {
+    MWK: 1730,
+    ZMW: 27,
+    ZAR: 18.5,
+    KES: 130,
+    TZS: 2550,
+  };
+
+  const rate = rates[cfg.code] || 1;
   const localAmount = usdAmount * rate;
+
+  // Format with thousands separator
   const formatted = localAmount >= 1000
     ? localAmount.toLocaleString('en', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
     : localAmount.toFixed(2);
-  return `${symbol} ${formatted}`;
+
+  return `${cfg.symbol} ${formatted}`;
 }
 
 // Legacy — kept for backward compatibility
