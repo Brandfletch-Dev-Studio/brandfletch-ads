@@ -187,11 +187,11 @@ export default function CampaignPayment() {
           </div>
 
           <div>
-            <Label className="mb-1.5 block">Transaction Reference Number *</Label>
+            <Label className="mb-1.5 block">Transaction Reference Number <span className="text-muted-foreground font-normal">(optional)</span></Label>
             <Input
               value={reference}
               onChange={e => setReference(e.target.value)}
-              placeholder="Enter your transaction reference"
+              placeholder="Enter your transaction reference (if available)"
             />
           </div>
 

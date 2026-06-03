@@ -113,7 +113,7 @@ export default function Dashboard() {
       <AdPlacement placement="dashboard_bottom" userId={user?.id} hasCampaigns={campaigns.length > 0} hasPages={pages.length > 0} />
 
       {/* Tables row */}
-      <div className="grid lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
         {/* Recent Campaigns */}
         {campaigns.length > 0 && (
@@ -128,13 +128,13 @@ export default function Dashboard() {
                   <Link
                     key={c.id}
                     to={`/campaigns/${c.id}`}
-                    className="flex items-center justify-between px-6 py-3.5 hover:bg-secondary/40 transition-colors"
+                    className="flex items-center justify-between px-4 py-3 hover:bg-secondary/40 transition-colors gap-2"
                   >
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                       <p className="text-sm font-medium truncate">{c.page_name || 'Campaign'}</p>
                       <p className="text-xs text-muted-foreground capitalize mt-0.5">{c.package} · {c.duration}</p>
                     </div>
-                    <div className="flex-shrink-0 ml-3">
+                    <div className="flex-shrink-0">
                       <StatusBadge status={c.status} />
                     </div>
                   </Link>
@@ -154,14 +154,14 @@ export default function Dashboard() {
             <CardContent className="p-0">
               <div className="divide-y divide-border">
                 {pages.slice(0, 5).map(p => (
-                  <div key={p.id} className="flex items-center justify-between px-6 py-3.5">
-                    <div className="min-w-0">
+                  <div key={p.id} className="flex items-center justify-between px-4 py-3 gap-2">
+                    <div className="min-w-0 flex-1">
                       <p className="text-sm font-medium truncate">{p.page_name}</p>
                       {p.page_url && (
                         <p className="text-xs text-muted-foreground truncate mt-0.5">{p.page_url}</p>
                       )}
                     </div>
-                    <span className={`text-xs font-semibold px-2.5 py-1 rounded-full flex-shrink-0 ml-3 ${PAGE_STATUS_STYLES[p.connection_status] || PAGE_STATUS_STYLES.pending_verification}`}>
+                    <span className={`text-xs font-semibold px-2.5 py-1 rounded-full flex-shrink-0 ${PAGE_STATUS_STYLES[p.connection_status] || PAGE_STATUS_STYLES.pending_verification}`}>
                       {PAGE_STATUS_LABELS[p.connection_status] || 'Pending'}
                     </span>
                   </div>
