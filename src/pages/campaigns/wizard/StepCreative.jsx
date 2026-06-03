@@ -46,7 +46,7 @@ export default function StepCreative({ data, update }) {
       {/* Option selector */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
         <button
-          onClick={() => update({ creative_type: 'existing_post', creative_assets: [], description: '' })}
+          onClick={() => update({ creative_type: 'existing_post', creative_assets: [], description: '', creative_link: '' })}
           className={cn(
             "flex flex-col items-start gap-2 p-4 rounded-xl border-2 text-left transition-all",
             creativeType === 'existing_post'

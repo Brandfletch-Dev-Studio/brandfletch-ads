@@ -24,7 +24,8 @@ export default function StepGoal({ data, update }) {
   const platforms = data.messaging_platforms || [];
 
   function selectGoal(value) {
-    update({ goal: value, messaging_platforms: [], post_url: '', website_url: '', phone_number: '', whatsapp_number: '' });
+    // Only clear goal-specific fields — never wipe post_url set in the creative step
+    update({ goal: value, messaging_platforms: [], website_url: '', phone_number: '', whatsapp_number: '' });
     setUrlTouched(false);
   }
 
