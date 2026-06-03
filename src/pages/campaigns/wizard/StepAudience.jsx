@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { COUNTRIES } from '@/lib/constants';
 import { Label } from '@/components/ui/label';
@@ -7,49 +7,19 @@ import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { X, BookmarkPlus, MapPin, Loader2 } from 'lucide-react';
+import { X, BookmarkPlus, MapPin } from 'lucide-react';
 
 export default function StepAudience({ data, update, userId }) {
   const [savedAudiences, setSavedAudiences] = useState([]);
   const [countryInput, setCountryInput] = useState('');
   const [locationInput, setLocationInput] = useState('');
-  const [locationSuggestions, setLocationSuggestions] = useState([]);
-  const [loadingLocations, setLoadingLocations] = useState(false);
   const [showSaved, setShowSaved] = useState(false);
-  const locationDebounce = useRef(null);
 
   useEffect(() => {
     if (userId) {
       base44.entities.SavedAudience.filter({ user_id: userId }).then(setSavedAudiences);
     }
   }, [userId]);
-
-  // Debounced location search via LLM
-  useEffect(() => {
-    if (!locationInput || locationInput.length < 2) {
-      setLocationSuggestions([]);
-      return;
-    }
-    clearTimeout(locationDebounce.current);
-    locationDebounce.current = setTimeout(async () => {
-      setLoadingLocations(true);
-      const contextCountries = data.audience_countries?.length > 0
-        ? `Focus on these countries if relevant: ${data.audience_countries.join(', ')}.`
-        : '';
-      const res = await base44.integrations.Core.InvokeLLM({
-        prompt: `Suggest up to 8 real geographic locations (regions, states, provinces, districts, cities) matching "${locationInput}". ${contextCountries} Return only real places. Do not include countries themselves. Format each as "Location Name, Country".`,
-        response_json_schema: {
-          type: 'object',
-          properties: {
-            suggestions: { type: 'array', items: { type: 'string' } }
-          }
-        }
-      });
-      const already = [...(data.audience_regions || []), ...(data.audience_cities || [])];
-      setLocationSuggestions((res.suggestions || []).filter(s => !already.includes(s)));
-      setLoadingLocations(false);
-    }, 500);
-  }, [locationInput]);
 
   function addCountry(country) {
     if (!data.audience_countries.includes(country)) {
@@ -63,12 +33,13 @@ export default function StepAudience({ data, update, userId }) {
   }
 
   function addLocation(loc) {
+    const trimmed = loc.trim();
+    if (!trimmed) return;
     const existing = [...(data.audience_regions || []), ...(data.audience_cities || [])];
-    if (!existing.includes(loc)) {
-      update({ audience_regions: [...(data.audience_regions || []), loc] });
+    if (!existing.includes(trimmed)) {
+      update({ audience_regions: [...(data.audience_regions || []), trimmed] });
     }
     setLocationInput('');
-    setLocationSuggestions([]);
   }
 
   function removeLocation(loc) {
@@ -176,32 +147,22 @@ export default function StepAudience({ data, update, userId }) {
           <div>
             <Label className="mb-1 block">Regions, Districts &amp; Cities</Label>
             <p className="text-xs text-muted-foreground mb-2">
-              Narrow down to specific areas — e.g. Mangochi, Lusaka, London, California
+              Type a location and press Enter — e.g. Mangochi, Lusaka, London, California, Cairo
             </p>
-            <div className="relative">
-              <div className="relative">
+            <div className="flex gap-2">
+              <div className="relative flex-1">
                 <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
                   value={locationInput}
                   onChange={e => setLocationInput(e.target.value)}
-                  placeholder="Search regions, districts, cities..."
+                  onKeyDown={e => e.key === 'Enter' && addLocation(locationInput)}
+                  placeholder="Type a region, district or city..."
                   className="pl-9"
                 />
-                {loadingLocations && (
-                  <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground animate-spin" />
-                )}
               </div>
-              {locationSuggestions.length > 0 && (
-                <div className="absolute z-10 w-full top-full mt-1 bg-card border border-border rounded-xl shadow-lg max-h-52 overflow-y-auto">
-                  {locationSuggestions.map(s => (
-                    <button key={s} onClick={() => addLocation(s)}
-                      className="w-full text-left px-4 py-2.5 text-sm hover:bg-secondary transition-colors flex items-center gap-2">
-                      <MapPin className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                      {s}
-                    </button>
-                  ))}
-                </div>
-              )}
+              <Button type="button" variant="outline" onClick={() => addLocation(locationInput)} disabled={!locationInput.trim()}>
+                Add
+              </Button>
             </div>
             {allLocations.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-2">
