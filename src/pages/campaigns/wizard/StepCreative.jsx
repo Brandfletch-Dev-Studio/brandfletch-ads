@@ -3,15 +3,22 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
-import { Upload, X, FileImage } from 'lucide-react';
+import { Upload, X, FileImage, CheckCircle2, AlertCircle } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
 
+function isFacebookUrl(url) {
+  return /^https?:\/\/(www\.)?(facebook\.com|fb\.com|fb\.watch)\//i.test((url || '').trim());
+}
+
 export default function StepCreative({ data, update }) {
   const [uploading, setUploading] = useState(false);
+  const [urlTouched, setUrlTouched] = useState(false);
 
   // creative_type: 'existing_post' | 'new_creative'
   const creativeType = data.creative_type || 'existing_post';
+  const postUrl = data.post_url || '';
+  const postUrlValid = isFacebookUrl(postUrl);
 
   async function handleUpload(e) {
     const file = e.target.files[0];
@@ -89,13 +96,25 @@ export default function StepCreative({ data, update }) {
       {creativeType === 'existing_post' && (
         <div className="space-y-4">
           <div>
-            <Label className="font-semibold mb-1.5 block">Post URL</Label>
-            <Input
-              value={data.post_url || ''}
-              onChange={e => update({ post_url: e.target.value })}
-              placeholder="https://www.facebook.com/yourpage/posts/..."
-              className="h-11"
-            />
+            <Label className="font-semibold mb-1.5 block">Post URL <span className="text-destructive">*</span></Label>
+            <div className="relative">
+              <Input
+                value={postUrl}
+                onChange={e => { update({ post_url: e.target.value }); setUrlTouched(true); }}
+                onBlur={() => setUrlTouched(true)}
+                placeholder="https://www.facebook.com/yourpage/posts/..."
+                className={cn(
+                  "h-11 pr-10",
+                  urlTouched && postUrl && !postUrlValid && "border-destructive",
+                  postUrlValid && "border-green-500"
+                )}
+              />
+              {postUrlValid && <CheckCircle2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-green-500" />}
+              {urlTouched && postUrl && !postUrlValid && <AlertCircle className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-destructive" />}
+            </div>
+            {urlTouched && postUrl && !postUrlValid && (
+              <p className="text-xs text-destructive mt-1">Must be a valid Facebook URL (facebook.com, fb.com, or fb.watch)</p>
+            )}
             <p className="text-xs text-muted-foreground mt-1">
               Paste the link to the Facebook post you want to boost.
             </p>

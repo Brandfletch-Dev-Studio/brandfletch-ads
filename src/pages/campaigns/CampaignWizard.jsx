@@ -138,8 +138,8 @@ export default function CampaignWizard() {
               onClick={() => setStep(s => s + 1)}
               disabled={
                 (step === 1 && !data.page_id) ||
-                (step === 2 && data.creative_tab === 'post' && !data.post_url) ||
-                (step === 2 && data.creative_tab === 'describe' && !data.description) ||
+                (step === 2 && (data.creative_type === 'existing_post' || !data.creative_type) && !data.post_url) ||
+                (step === 2 && data.creative_type === 'new_creative' && !data.description) ||
                 (step === 3 && (
                   !data.goal ||
                   (data.goal === 'messages' && data.messaging_platforms?.length === 0) ||
