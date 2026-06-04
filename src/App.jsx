@@ -21,6 +21,7 @@ import ProfileSettings from '@/pages/ProfileSettings';
 import Messages from '@/pages/Messages';
 import Marketplace from '@/pages/Marketplace';
 import Notifications from '@/pages/Notifications';
+import SupportTickets from '@/pages/SupportTickets';
 
 // Admin pages
 import AdminOverview from '@/pages/admin/AdminOverview';
@@ -36,6 +37,7 @@ import AdminMessages from '@/pages/admin/AdminMessages';
 import AdminAds from '@/pages/admin/AdminAds';
 import AdminAuditLog from '@/pages/admin/AdminAuditLog';
 import AdminPricing from '@/pages/admin/AdminPricing';
+import AdminSupportTickets from '@/pages/admin/AdminSupportTickets';
 import Onboarding from '@/pages/Onboarding';
 import Login from '@/pages/Login';
 import Register from '@/pages/Register';
@@ -110,6 +112,7 @@ const AuthenticatedApp = () => {
         <Route path="/messages" element={<Messages />} />
         <Route path="/marketplace" element={<Marketplace />} />
         <Route path="/notifications" element={<Notifications />} />
+        <Route path="/support" element={<SupportTickets />} />
 
         {/* Admin/Staff routes */}
         <Route path="/admin" element={<AdminOverview />} />
@@ -125,6 +128,7 @@ const AuthenticatedApp = () => {
         <Route path="/admin/ads" element={<AdminAds />} />
         <Route path="/admin/audit-log" element={<AdminAuditLog />} />
         <Route path="/admin/pricing" element={<AdminPricing />} />
+        <Route path="/admin/support" element={<AdminSupportTickets />} />
       </Route>
 
       <Route path="*" element={<PageNotFound />} />
