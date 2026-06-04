@@ -1,6 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { base44 } from '@/api/base44Client';
 import { X, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -13,29 +11,12 @@ const BG_STYLES = {
   dark:   'bg-gradient-to-r from-gray-900 to-gray-800 text-white',
 };
 
-export default function AdBanner({ ad, userId, onDismiss }) {
-  const tracked = useRef(false);
-
-  useEffect(() => {
-    if (!tracked.current && ad?.id && userId) {
-      tracked.current = true;
-      base44.entities.AdEvent.create({ ad_id: ad.id, user_id: String(userId), event_type: 'impression' }).catch(() => {});
-    }
-  }, [ad?.id, userId]);
-
-  function handleClick() {
-    if (ad?.id && userId) {
-      base44.entities.AdEvent.create({ ad_id: ad.id, user_id: String(userId), event_type: 'click' }).catch(() => {});
-    }
-  }
-
-  function handleDismiss() {
-    if (ad?.id && userId) {
-      base44.entities.AdEvent.create({ ad_id: ad.id, user_id: String(userId), event_type: 'dismiss' }).catch(() => {});
-    }
-    if (onDismiss) onDismiss(ad.id);
-  }
-
+/**
+ * AdBanner — pure display component.
+ * Impression tracking is handled by useAds hook.
+ * onDismiss and onCtaClick are callbacks from parent.
+ */
+export default function AdBanner({ ad, onDismiss, onCtaClick }) {
   if (!ad) return null;
 
   const bg = BG_STYLES[ad.background_color] || BG_STYLES.blue;
@@ -53,13 +34,13 @@ export default function AdBanner({ ad, userId, onDismiss }) {
       <div className="flex items-center gap-2 flex-shrink-0">
         {ad.cta_label && ad.cta_url && (
           isExternal ? (
-            <a href={ad.cta_url} target="_blank" rel="noopener noreferrer" onClick={handleClick}>
+            <a href={ad.cta_url} target="_blank" rel="noopener noreferrer" onClick={() => onCtaClick?.(ad.id)}>
               <Button size="sm" variant="secondary" className="bg-white/20 hover:bg-white/30 text-white border-0 font-semibold gap-1 text-xs">
                 {ad.cta_label} <ArrowRight className="w-3 h-3" />
               </Button>
             </a>
           ) : (
-            <Link to={ad.cta_url} onClick={handleClick}>
+            <Link to={ad.cta_url} onClick={() => onCtaClick?.(ad.id)}>
               <Button size="sm" variant="secondary" className="bg-white/20 hover:bg-white/30 text-white border-0 font-semibold gap-1 text-xs">
                 {ad.cta_label} <ArrowRight className="w-3 h-3" />
               </Button>
@@ -67,7 +48,7 @@ export default function AdBanner({ ad, userId, onDismiss }) {
           )
         )}
         {ad.is_dismissable && (
-          <button onClick={handleDismiss} className="p-1 rounded-full hover:bg-white/20 transition-colors">
+          <button onClick={() => onDismiss?.(ad.id)} className="p-1 rounded-full hover:bg-white/20 transition-colors">
             <X className="w-4 h-4 opacity-80" />
           </button>
         )}

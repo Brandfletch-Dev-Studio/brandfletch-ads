@@ -367,38 +367,6 @@ export default function AdminSettings() {
         </CardContent>
       </Card>
 
-      {/* Danger Zone */}
-      <Card className="shadow-sm border-destructive/30">
-        <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2 text-destructive">
-            <ShieldAlert className="w-4 h-4" /> Danger Zone — Delete All Records
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <p className="text-sm text-muted-foreground">Permanently delete all records for a specific entity. This cannot be undone.</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {DANGER_ENTITIES.map(({ key, label }) => (
-              <div key={key} className="flex items-center justify-between p-3 bg-secondary/50 rounded-xl">
-                <span className="text-sm font-medium">{label}</span>
-                {confirmDelete === key ? (
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-destructive">Are you sure?</span>
-                    <Button size="sm" variant="destructive" disabled={deleting} className="h-7 text-xs" onClick={() => deleteAllEntity(key)}>
-                      {deleting ? 'Deleting...' : 'Yes, delete all'}
-                    </Button>
-                    <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setConfirmDelete(null)}>Cancel</Button>
-                  </div>
-                ) : (
-                  <Button size="sm" variant="outline" className="h-7 text-xs text-destructive border-destructive/40 hover:bg-destructive/10 gap-1" onClick={() => setConfirmDelete(key)}>
-                    <Trash2 className="w-3 h-3" /> Delete all
-                  </Button>
-                )}
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Payment Methods */}
       <Card className="shadow-sm">
         <CardHeader>
@@ -471,6 +439,38 @@ export default function AdminSettings() {
             <Button onClick={addMethod} className="gap-2 bg-[hsl(var(--primary))] text-primary-foreground">
               <Plus className="w-4 h-4" /> Add Method
             </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Danger Zone — last section */}
+      <Card className="shadow-sm border-destructive/30">
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2 text-destructive">
+            <ShieldAlert className="w-4 h-4" /> Danger Zone — Delete All Records
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-sm text-muted-foreground">Permanently delete all records for a specific entity. This cannot be undone.</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {DANGER_ENTITIES.map(({ key, label }) => (
+              <div key={key} className="flex items-center justify-between p-3 bg-secondary/50 rounded-xl">
+                <span className="text-sm font-medium">{label}</span>
+                {confirmDelete === key ? (
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-destructive">Are you sure?</span>
+                    <Button size="sm" variant="destructive" disabled={deleting} className="h-7 text-xs" onClick={() => deleteAllEntity(key)}>
+                      {deleting ? 'Deleting...' : 'Yes, delete all'}
+                    </Button>
+                    <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setConfirmDelete(null)}>Cancel</Button>
+                  </div>
+                ) : (
+                  <Button size="sm" variant="outline" className="h-7 text-xs text-destructive border-destructive/40 hover:bg-destructive/10 gap-1" onClick={() => setConfirmDelete(key)}>
+                    <Trash2 className="w-3 h-3" /> Delete all
+                  </Button>
+                )}
+              </div>
+            ))}
           </div>
         </CardContent>
       </Card>

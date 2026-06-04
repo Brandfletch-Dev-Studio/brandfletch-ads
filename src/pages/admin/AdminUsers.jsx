@@ -155,26 +155,35 @@ export default function AdminUsers() {
         )}
       </div>
 
-      {/* Role legend for staff tab */}
+      {/* Role legend for staff tab — hierarchical */}
       {activeTab === 'staff' && (
         <Card className="shadow-sm">
-          <CardHeader className="pb-3">
+          <CardHeader className="pb-2">
             <CardTitle className="text-sm font-semibold flex items-center gap-2">
-              <Shield className="w-4 h-4" /> Role Summary — Brandfletch Media
+              <Shield className="w-4 h-4" /> Role Hierarchy — Brandfletch Media
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          <CardContent className="pt-0">
+            <div className="space-y-1">
               {[
-                { role: 'admin', desc: 'Full system access' },
-                { role: 'ads_manager', desc: 'Campaigns, clients, reports' },
-                { role: 'campaign_manager', desc: 'Campaign delivery & comms' },
-                { role: 'finance', desc: 'Payments & financial settings' },
-                { role: 'sales_manager', desc: 'Leads & sales pipeline' },
-              ].map(({ role, desc }) => (
-                <div key={role} className="flex items-start gap-2 p-2 rounded-lg bg-secondary/50">
-                  <Badge className={`text-xs flex-shrink-0 ${ROLE_COLORS[role]}`}>{ROLE_LABELS[role]}</Badge>
-                  <p className="text-xs text-muted-foreground leading-tight">{desc}</p>
+                { role: 'admin',            desc: 'Full system access, all permissions',         level: 0, color: 'bg-purple-100 border-purple-300 text-purple-800' },
+                { role: 'ads_manager',      desc: 'Campaigns, clients, reports & approvals',     level: 1, color: 'bg-blue-100 border-blue-300 text-blue-800' },
+                { role: 'campaign_manager', desc: 'Campaign delivery & client comms',             level: 2, color: 'bg-sky-100 border-sky-300 text-sky-800' },
+                { role: 'sales_manager',    desc: 'Leads, onboarding & sales pipeline',          level: 2, color: 'bg-green-100 border-green-300 text-green-800' },
+                { role: 'finance',          desc: 'Payments, transactions & financial settings', level: 2, color: 'bg-amber-100 border-amber-300 text-amber-800' },
+              ].map(({ role, desc, level, color }) => (
+                <div key={role} className="flex items-center gap-2" style={{ paddingLeft: `${level * 20}px` }}>
+                  {level > 0 && (
+                    <div className="flex items-center gap-1 text-border flex-shrink-0">
+                      <div className="w-3 h-px bg-border" />
+                      <div className="w-1.5 h-1.5 rounded-full bg-border" />
+                    </div>
+                  )}
+                  <div className={`flex-1 flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-medium ${color}`}>
+                    <span className="font-semibold whitespace-nowrap">{ROLE_LABELS[role]}</span>
+                    <span className="text-[11px] opacity-70 hidden sm:block">·</span>
+                    <span className="opacity-70 hidden sm:block leading-tight">{desc}</span>
+                  </div>
                 </div>
               ))}
             </div>
