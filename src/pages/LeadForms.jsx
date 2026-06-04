@@ -146,7 +146,7 @@ export default function LeadForms() {
           <h1 className="text-2xl font-bold font-heading">Lead Forms</h1>
           <p className="text-muted-foreground">Create SEO-optimized lead capture forms</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <Link to="/leads/forms/ai">
             <Button variant="outline">
               <Wand2 className="w-4 h-4 mr-2" />
@@ -243,37 +243,19 @@ export default function LeadForms() {
                 </div>
                 
                 <div className="flex gap-2 flex-wrap">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setViewingForm(form)}
-                  >
-                    <Eye className="w-3 h-3 mr-1" />
-                    View
+                  <Button size="sm" variant="outline" onClick={() => setViewingForm(form)}>
+                    <Eye className="w-3 h-3 mr-1" /> View
                   </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setEditingForm(form)}
-                  >
-                    <Edit2 className="w-3 h-3 mr-1" />
-                    Edit
+                  <Button size="sm" variant="outline" onClick={() => setEditingForm(form)}>
+                    <Edit2 className="w-3 h-3 mr-1" /> Edit
                   </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleShare(form)}
-                  >
-                    <Share2 className="w-3 h-3 mr-1" />
-                    Share
+                  <Button size="sm" variant="outline" onClick={() => handleShare(form)}>
+                    <Share2 className="w-3 h-3 mr-1" /> Share
                   </Button>
                   <Button
                     size="sm"
                     variant={form.is_active ? 'destructive' : 'outline'}
-                    onClick={() => togglePublishMutation.mutate({ 
-                      id: form.id, 
-                      is_active: !form.is_active 
-                    })}
+                    onClick={() => togglePublishMutation.mutate({ id: form.id, is_active: !form.is_active })}
                   >
                     {form.is_active ? <Lock className="w-3 h-3" /> : <Globe className="w-3 h-3" />}
                   </Button>
@@ -444,7 +426,7 @@ function FormBuilder({ form, onSave, onCancel }) {
               <CardContent className="p-4">
                 <div className="flex items-start gap-4">
                   <div className="flex-1 space-y-3">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                       <div>
                         <Label className="text-xs">Label</Label>
                         <Input
@@ -513,7 +495,7 @@ function FormBuilder({ form, onSave, onCancel }) {
         </CardContent>
       </Card>
 
-      <div className="flex gap-4">
+      <div className="flex flex-wrap gap-2">
         <Button type="submit">
           {form?.id ? 'Update Form' : 'Create Form'}
         </Button>
