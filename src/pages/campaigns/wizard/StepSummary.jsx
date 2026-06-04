@@ -5,7 +5,10 @@ export default function StepSummary({ data }) {
   const goalConfig = GOALS.find(g => g.value === data.goal);
   const pkg = PACKAGES[data.package];
   const dur = DURATIONS[data.duration];
-  const estimated = calculateEstimatedResults(data.package, data.duration);
+  const isCustom = data.package === 'custom';
+  const estimated = isCustom ? 
+    { impressions: data.estimated_impressions || 0, reach: data.estimated_reach || 0 } :
+    calculateEstimatedResults(data.package, data.duration);
 
   const allLocations = [
     ...(data.audience_regions || []),
@@ -54,7 +57,15 @@ export default function StepSummary({ data }) {
           </p>
 
           <p className="text-sm leading-relaxed text-foreground">
-            Your budget is <span className="font-semibold">{formatCost()}</span> on a <span className="font-semibold">{dur?.label || '—'}</span> basis using the <span className="font-semibold">{pkg?.label || '—'}</span> package.
+            {isCustom ? (
+              <>
+                Your budget is <span className="font-semibold">{formatCost()}</span> for <span className="font-semibold">{data.custom_days || 0} days</span> at <span className="font-semibold">{new Intl.NumberFormat('en-US', { style: 'currency', currency: data.currency || 'USD' }).format(data.custom_daily_spend || 0)}/day</span>.
+              </>
+            ) : (
+              <>
+                Your budget is <span className="font-semibold">{formatCost()}</span> on a <span className="font-semibold">{dur?.label || '—'}</span> basis using the <span className="font-semibold">{pkg?.label || '—'}</span> package.
+              </>
+            )}
           </p>
 
           {estimated && (
