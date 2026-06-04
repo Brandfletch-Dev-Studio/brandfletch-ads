@@ -20,6 +20,7 @@ import SavedAudiences from '@/pages/SavedAudiences';
 import ProfileSettings from '@/pages/ProfileSettings';
 import Messages from '@/pages/Messages';
 import Marketplace from '@/pages/Marketplace';
+import Notifications from '@/pages/Notifications';
 
 // Admin pages
 import AdminOverview from '@/pages/admin/AdminOverview';
@@ -108,6 +109,7 @@ const AuthenticatedApp = () => {
         <Route path="/settings" element={<ProfileSettings />} />
         <Route path="/messages" element={<Messages />} />
         <Route path="/marketplace" element={<Marketplace />} />
+        <Route path="/notifications" element={<Notifications />} />
 
         {/* Admin/Staff routes */}
         <Route path="/admin" element={<AdminOverview />} />

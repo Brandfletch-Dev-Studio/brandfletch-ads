@@ -1,18 +1,27 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { Menu, LogOut, ChevronDown } from 'lucide-react';
+import { Menu, LogOut, ChevronDown, Bell, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel
 } from '@/components/ui/dropdown-menu';
 import { base44 } from '@/api/base44Client';
-import NotificationDropdown from '@/components/notifications/NotificationDropdown';
+import { useQuery } from '@tanstack/react-query';
 import BrandLogo from '@/components/BrandLogo';
 
 export default function TopBar({ onMenuToggle, currentUser, isStaff }) {
+  const navigate = useNavigate();
   const initials = currentUser?.full_name
     ? currentUser.full_name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
     : (currentUser?.email?.[0] || 'U').toUpperCase();
+
+  const { data: unreadNotifications = [] } = useQuery({
+    queryKey: ['unread-notifications', currentUser?.id],
+    queryFn: () => base44.entities.Notification.filter({ recipient_id: currentUser?.id, is_read: false }, '-created_date', 1),
+    enabled: !!currentUser?.id,
+    refetchInterval: 30000,
+  });
+  const unreadCount = unreadNotifications.length;
 
   return (
     <header className="h-16 relative flex items-center justify-between px-4 lg:px-8 border-b border-border bg-card flex-shrink-0 z-30">
@@ -48,8 +57,20 @@ export default function TopBar({ onMenuToggle, currentUser, isStaff }) {
           </Link>
         )}
 
-        {/* Notifications */}
-        <NotificationDropdown />
+        {/* Notifications — navigate to dedicated page */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="relative w-10 h-10"
+          onClick={() => navigate(isStaff ? '/admin/notifications' : '/notifications')}
+        >
+          <Bell className="w-5 h-5" />
+          {unreadCount > 0 && (
+            <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center font-bold px-1">
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </span>
+          )}
+        </Button>
 
         {/* Profile menu */}
         <DropdownMenu>
@@ -70,6 +91,13 @@ export default function TopBar({ onMenuToggle, currentUser, isStaff }) {
               <p className="font-semibold text-sm truncate">{currentUser?.full_name || 'Account'}</p>
               <p className="text-xs text-muted-foreground font-normal truncate">{currentUser?.email}</p>
             </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              className="gap-2 cursor-pointer"
+              onClick={() => navigate('/settings')}
+            >
+              <User className="w-4 h-4" /> Profile Settings
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
               className="text-destructive focus:text-destructive gap-2 cursor-pointer"

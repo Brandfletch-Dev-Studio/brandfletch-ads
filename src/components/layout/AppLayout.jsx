@@ -95,7 +95,10 @@ export default function AppLayout() {
         {/* Nav */}
         <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
           {navItems.map(({ path, label, icon: Icon }) => {
-            const active = location.pathname === path || location.pathname.startsWith(path + '/');
+            // Exact match for /admin to avoid it matching all /admin/* routes
+            const active = path === '/admin'
+              ? location.pathname === '/admin'
+              : location.pathname === path || location.pathname.startsWith(path + '/');
             const isMessages = path === '/messages' || path === '/admin/messages';
             return (
               <Link
