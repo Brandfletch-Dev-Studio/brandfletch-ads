@@ -1,10 +1,14 @@
 import { useState, useEffect } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { Palette, Target, Layout, Megaphone, Wallet, Clock, Plus } from 'lucide-react';
+import { Palette, Target, Layout, Megaphone, Wallet, Clock, Plus, Globe } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 
 export default function Dashboard() {
   const [user, setUser] = useState(null);
@@ -13,6 +17,7 @@ export default function Dashboard() {
   const [campaigns, setCampaigns] = useState([]);
   const [wallet, setWallet] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showLandingPageOrder, setShowLandingPageOrder] = useState(false);
 
   useEffect(() => { init(); }, []);
 
@@ -59,92 +64,82 @@ export default function Dashboard() {
             {getGreeting()}, {user?.full_name?.split(' ')[0] || 'there'}!
           </h1>
           <p className="text-white/90 mb-6 max-w-2xl" style={{ paddingLeft: '20px' }}>
-            Ready to grow your business with our powerful advertising tools?
+            Ready to grow your business with high-performing Facebook ad campaigns?
           </p>
-          <div className="flex gap-3" style={{ paddingLeft: '20px' }}>
+          <div style={{ paddingLeft: '20px' }}>
             <Link to="/campaigns/new">
               <Button size="lg" className="bg-white text-[hsl(var(--primary))] hover:bg-white/90">
                 <Megaphone className="w-5 h-5 mr-2" />
-                Create Campaign
-              </Button>
-            </Link>
-            <Link to="/designs">
-              <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/20">
-                <Palette className="w-5 h-5 mr-2" />
-                Order Design
+                Create Ad Campaign
               </Button>
             </Link>
           </div>
         </div>
       </div>
 
-      {/* Quick Stats - Ads First */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* Quick Stats - Column Form */}
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <Link to="/campaigns">
-          <Card className="hover:shadow-lg transition-all cursor-pointer border-l-4 border-l-blue-500">
+          <Card className="hover:shadow-lg transition-all cursor-pointer bg-gradient-to-br from-blue-500 to-blue-600 text-white border-0">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-3xl font-bold">{activeCampaigns}</p>
-                  <p className="text-sm text-muted-foreground mt-1 font-medium">Active Campaigns</p>
+                  <p className="text-4xl font-bold">{activeCampaigns}</p>
+                  <p className="text-sm text-white/90 mt-1 font-medium">Active Campaigns</p>
                 </div>
-                <Megaphone className="w-8 h-8 text-blue-500" />
+                <Megaphone className="w-10 h-10 text-white/80" />
               </div>
             </CardContent>
           </Card>
         </Link>
         <Link to="/campaigns">
-          <Card className="hover:shadow-lg transition-all cursor-pointer border-l-4 border-l-amber-500">
+          <Card className="hover:shadow-lg transition-all cursor-pointer bg-gradient-to-br from-amber-500 to-amber-600 text-white border-0">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-3xl font-bold">{pendingCampaigns}</p>
-                  <p className="text-sm text-muted-foreground mt-1 font-medium">Pending Campaigns</p>
+                  <p className="text-4xl font-bold">{pendingCampaigns}</p>
+                  <p className="text-sm text-white/90 mt-1 font-medium">Pending</p>
                 </div>
-                <Clock className="w-8 h-8 text-amber-500" />
+                <Clock className="w-10 h-10 text-white/80" />
               </div>
             </CardContent>
           </Card>
         </Link>
         <Link to="/wallet">
-          <Card className="hover:shadow-lg transition-all cursor-pointer border-l-4 border-l-green-500">
+          <Card className="hover:shadow-lg transition-all cursor-pointer bg-gradient-to-br from-green-500 to-green-600 text-white border-0">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-3xl font-bold">{walletBalance.toLocaleString()}</p>
-                  <p className="text-sm text-muted-foreground mt-1 font-medium">Wallet Balance</p>
+                  <p className="text-4xl font-bold">{walletBalance.toLocaleString()}</p>
+                  <p className="text-sm text-white/90 mt-1 font-medium">Wallet</p>
                 </div>
-                <Wallet className="w-8 h-8 text-green-500" />
+                <Wallet className="w-10 h-10 text-white/80" />
               </div>
             </CardContent>
           </Card>
         </Link>
-      </div>
-
-      {/* Secondary Stats - Designs and Leads */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Link to="/designs">
-          <Card className="hover:shadow-lg transition-all cursor-pointer border-l-4 border-l-purple-500">
+          <Card className="hover:shadow-lg transition-all cursor-pointer bg-gradient-to-br from-purple-500 to-purple-600 text-white border-0">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-3xl font-bold">{activeDesigns}</p>
-                  <p className="text-sm text-muted-foreground mt-1 font-medium">Designs in Progress</p>
+                  <p className="text-4xl font-bold">{activeDesigns}</p>
+                  <p className="text-sm text-white/90 mt-1 font-medium">Designs</p>
                 </div>
-                <Palette className="w-8 h-8 text-purple-500" />
+                <Palette className="w-10 h-10 text-white/80" />
               </div>
             </CardContent>
           </Card>
         </Link>
         <Link to="/leads">
-          <Card className="hover:shadow-lg transition-all cursor-pointer border-l-4 border-l-orange-500">
+          <Card className="hover:shadow-lg transition-all cursor-pointer bg-gradient-to-br from-orange-500 to-orange-600 text-white border-0">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-3xl font-bold">{activeLeads}</p>
-                  <p className="text-sm text-muted-foreground mt-1 font-medium">Active Leads</p>
+                  <p className="text-4xl font-bold">{activeLeads}</p>
+                  <p className="text-sm text-white/90 mt-1 font-medium">Leads</p>
                 </div>
-                <Target className="w-8 h-8 text-orange-500" />
+                <Target className="w-10 h-10 text-white/80" />
               </div>
             </CardContent>
           </Card>
@@ -155,18 +150,7 @@ export default function Dashboard() {
       <div>
         <h2 className="text-xl font-bold font-heading mb-4" style={{ paddingLeft: '20px' }}>Growth Tools</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => window.location.href='/campaigns/new'}>
-            <CardHeader className="pb-3">
-              <div className="w-12 h-12 rounded-lg bg-blue-50 flex items-center justify-center mb-2">
-                <Megaphone className="w-6 h-6 text-blue-700" />
-              </div>
-              <CardTitle className="text-lg">Facebook Ads</CardTitle>
-              <CardDescription className="text-sm">Create & manage ad campaigns</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button className="w-full">Create Campaign</Button>
-            </CardContent>
-          </Card>
+          {/* Design Services */}
           <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => window.location.href='/designs'}>
             <CardHeader className="pb-3">
               <div className="w-12 h-12 rounded-lg bg-purple-50 flex items-center justify-center mb-2">
@@ -179,6 +163,20 @@ export default function Dashboard() {
               <Button className="w-full" variant="outline">Order Design</Button>
             </CardContent>
           </Card>
+          {/* Landing Pages */}
+          <Card className="hover:shadow-md transition-shadow">
+            <CardHeader className="pb-3">
+              <div className="w-12 h-12 rounded-lg bg-pink-50 flex items-center justify-center mb-2">
+                <Globe className="w-6 h-6 text-pink-700" />
+              </div>
+              <CardTitle className="text-lg">Landing Pages</CardTitle>
+              <CardDescription className="text-sm">Custom landing page design</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button className="w-full" onClick={() => setShowLandingPageOrder(true)} variant="outline">Order Now</Button>
+            </CardContent>
+          </Card>
+          {/* Leads & CRM */}
           <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => window.location.href='/leads'}>
             <CardHeader className="pb-3">
               <div className="w-12 h-12 rounded-lg bg-orange-50 flex items-center justify-center mb-2">
@@ -305,6 +303,54 @@ export default function Dashboard() {
           </Card>
         </div>
       )}
+
+      {/* Landing Page Order Dialog */}
+      <Dialog open={showLandingPageOrder} onOpenChange={setShowLandingPageOrder}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Order Landing Page</DialogTitle>
+            <DialogDescription>
+              Request a custom landing page design. Our team will contact you with details and pricing.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            await base44.entities.ServiceOrder.create({
+              user_id: user.id,
+              service_id: 'landing_page',
+              service_name: 'Landing Page Design',
+              notes: formData.get('requirements'),
+              status: 'pending'
+            });
+            setShowLandingPageOrder(false);
+            alert('Your landing page order has been submitted! Our team will contact you soon.');
+          }} className="space-y-4">
+            <div>
+              <Label htmlFor="requirements">Project Requirements</Label>
+              <Textarea
+                id="requirements"
+                name="requirements"
+                placeholder="Describe your landing page needs (purpose, sections, features, etc.)"
+                className="h-32"
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="timeline">Timeline</Label>
+              <Input
+                id="timeline"
+                name="timeline"
+                placeholder="When do you need this completed?"
+              />
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setShowLandingPageOrder(false)}>Cancel</Button>
+              <Button type="submit">Submit Order</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
