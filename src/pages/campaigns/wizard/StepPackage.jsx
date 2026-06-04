@@ -10,19 +10,19 @@ import { Label } from '@/components/ui/label';
 export default function StepPackage({ data, update }) {
   const [selectedCountry, setSelectedCountry] = useState(data.country || '');
   const [dbPricing, setDbPricing] = useState([]);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     // Load live DB pricing
     base44.entities.PackagePricing.list().then(list => setDbPricing(list || [])).catch(() => {});
     // Pre-fill country from user profile if not already set
-    if (!selectedCountry) {
-      base44.auth.me().then(u => {
-        if (u?.country) {
-          setSelectedCountry(u.country);
-          update({ country: u.country });
-        }
-      });
-    }
+    base44.auth.me().then(u => {
+      if (u?.role === 'admin') setIsAdmin(true);
+      if (!selectedCountry && u?.country) {
+        setSelectedCountry(u.country);
+        update({ country: u.country });
+      }
+    });
   }, []);
 
   function calcPrice(pkg, duration, country) {
@@ -94,19 +94,25 @@ export default function StepPackage({ data, update }) {
         <p className="text-muted-foreground text-sm">Choose the budget that works for your business.</p>
       </div>
 
-      {/* Country selector */}
+      {/* Country selector — admin only */}
       <div>
         <Label className="mb-2 block">Your Country (for pricing)</Label>
-        <Select value={selectedCountry} onValueChange={handleCountryChange}>
-          <SelectTrigger>
-            <SelectValue placeholder="Select your country" />
-          </SelectTrigger>
-          <SelectContent>
-            {COUNTRIES.map(c => (
-              <SelectItem key={c} value={c}>{c}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        {isAdmin ? (
+          <Select value={selectedCountry} onValueChange={handleCountryChange}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select your country" />
+            </SelectTrigger>
+            <SelectContent>
+              {COUNTRIES.map(c => (
+                <SelectItem key={c} value={c}>{c}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        ) : (
+          <div className="flex h-9 w-full items-center rounded-md border border-input bg-secondary/50 px-3 text-sm text-muted-foreground">
+            {selectedCountry || 'No country set on your profile'}
+          </div>
+        )}
       </div>
 
       {/* Duration tabs */}
