@@ -25,12 +25,13 @@ import SupportTickets from '@/pages/SupportTickets';
 import Wallet from '@/pages/Wallet';
 import Designs from '@/pages/Designs';
 import Leads from '@/pages/Leads';
-import LeadFormBuilder from '@/pages/LeadFormBuilder';
+import LeadForms from '@/pages/LeadForms';
 import DesignerPortal from '@/pages/DesignerPortal';
 import About from '@/pages/About';
 import Contact from '@/pages/Contact';
 import PrivacyPolicy from '@/pages/PrivacyPolicy';
 import Terms from '@/pages/Terms';
+import PublicFormView from '@/pages/PublicFormView';
 
 // Admin pages
 import AdminOverview from '@/pages/admin/AdminOverview';
@@ -113,6 +114,7 @@ const AuthenticatedApp = () => {
       <Route path="/contact" element={<Contact />} />
       <Route path="/privacy-policy" element={<PrivacyPolicy />} />
       <Route path="/terms" element={<Terms />} />
+      <Route path="/forms/:formId" element={<PublicFormView />} />
       <Route element={<AppLayout />}>
         {/* Client routes */}
         <Route path="/" element={<Navigate to={isStaff ? "/admin" : "/dashboard"} replace />} />
@@ -128,7 +130,7 @@ const AuthenticatedApp = () => {
         <Route path="/wallet" element={<Wallet />} />
         <Route path="/designs" element={<Designs />} />
         <Route path="/leads" element={<Leads />} />
-        <Route path="/leads/forms" element={<LeadFormBuilder />} />
+        <Route path="/leads/forms" element={<LeadForms />} />
         <Route path="/designer" element={<DesignerPortal />} />
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/support" element={<SupportTickets />} />

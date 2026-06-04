@@ -76,7 +76,7 @@ export default function Leads() {
         <Link to="/leads/forms">
           <Button variant="outline">
             <FileText className="w-4 h-4 mr-2" />
-            Manage Forms
+            Lead Forms
           </Button>
         </Link>
         <Button className="gap-2">

@@ -1,54 +1,47 @@
-import { Link, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
+import { Home, Palette, Megaphone, Target, LifeBuoy, AlertCircle, CheckCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { LayoutDashboard, Megaphone, Facebook, Wallet, LifeBuoy, BarChart3, Users, Bell } from 'lucide-react';
+import { useAuth } from '@/lib/AuthContext';
 
-const clientItems = [
-  { path: '/dashboard', label: 'Home', icon: LayoutDashboard },
-  { path: '/campaigns', label: 'Campaigns', icon: Megaphone },
-  { path: '/pages', label: 'Pages', icon: Facebook },
-  { path: '/support', label: 'Support', icon: LifeBuoy },
-];
-
-const adminItems = [
-  { path: '/admin', label: 'Overview', icon: LayoutDashboard },
-  { path: '/admin/campaigns', label: 'Campaigns', icon: Megaphone },
-  { path: '/admin/payments', label: 'Payments', icon: Wallet },
-  { path: '/admin/notifications', label: 'Notifs', icon: Bell },
-  { path: '/admin/support', label: 'Support', icon: LifeBuoy },
-];
-
-export default function BottomNav({ isStaff, unreadCount = 0 }) {
+export default function BottomNav({ isStaff, unreadCount }) {
   const location = useLocation();
-  const isAdminView = location.pathname.startsWith('/admin');
-  const items = (isStaff && isAdminView) ? adminItems : clientItems;
+  const { user } = useAuth();
+
+  if (isStaff) return null;
+
+  const navItems = [
+    { path: '/dashboard', label: 'Home', icon: Home },
+    { path: '/designs', label: 'Designs', icon: Palette },
+    { path: '/campaigns', label: 'Campaigns', icon: Megaphone },
+    { path: '/leads', label: 'Leads', icon: Target },
+    { path: '/support', label: 'Support', icon: LifeBuoy },
+  ];
 
   return (
-    <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-card border-t border-border safe-bottom">
-      <div className="flex items-stretch">
-        {items.map(({ path, label, icon: Icon }) => {
-          const active = location.pathname === path || (path !== '/dashboard' && path !== '/admin' && location.pathname.startsWith(path));
+    <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-background border-t border-border safe-area-bottom">
+      <nav className="grid grid-cols-5 h-16">
+        {navItems.map(({ path, label, icon: Icon }) => {
+          const isActive = location.pathname === path || 
+            (path !== '/dashboard' && location.pathname.startsWith(path + '/'));
+          
           return (
             <Link
               key={path}
               to={path}
               className={cn(
-                'flex-1 flex flex-col items-center justify-center py-2 gap-0.5 min-h-[56px] transition-colors relative',
-                active
-                  ? 'text-[hsl(var(--primary))]'
-                  : 'text-muted-foreground'
+                "flex flex-col items-center justify-center gap-1 transition-colors",
+                isActive 
+                  ? "text-primary" 
+                  : "text-muted-foreground hover:text-foreground"
               )}
             >
-              <div className="relative">
-                <Icon className={cn('w-5 h-5', active && 'stroke-[2.5]')} />
-              </div>
-              <span className={cn('text-[10px] font-medium', active ? 'text-[hsl(var(--primary))]' : 'text-muted-foreground')}>
-                {label}
-              </span>
-              {active && <span className="absolute bottom-0 w-5 h-0.5 rounded-full bg-[hsl(var(--primary))]" />}
+              <Icon className="w-5 h-5" />
+              <span className="text-[10px] font-medium">{label}</span>
             </Link>
           );
         })}
-      </div>
-    </nav>
+      </nav>
+    </div>
   );
 }
