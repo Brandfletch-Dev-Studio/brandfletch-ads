@@ -1,0 +1,114 @@
+{
+  "name": "DesignRequest",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "designer_id": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "design_type": {
+      "type": "string",
+      "enum": [
+        "social_media_post",
+        "flyer",
+        "logo",
+        "banner",
+        "business_card",
+        "brochure",
+        "other"
+      ]
+    },
+    "request_type": {
+      "type": "string",
+      "enum": [
+        "retainer",
+        "per_design"
+      ],
+      "default": "per_design"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "submitted",
+        "in_progress",
+        "revision_requested",
+        "completed",
+        "delivered",
+        "cancelled"
+      ],
+      "default": "draft"
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "urgent"
+      ],
+      "default": "medium"
+    },
+    "revision_count": {
+      "type": "number",
+      "default": 0
+    },
+    "max_revisions": {
+      "type": "number",
+      "default": 2
+    },
+    "due_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "reference_files": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "deliverable_files": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "client_notes": {
+      "type": "string"
+    },
+    "designer_notes": {
+      "type": "string"
+    },
+    "admin_notes": {
+      "type": "string"
+    },
+    "price": {
+      "type": "number"
+    },
+    "currency": {
+      "type": "string",
+      "default": "USD"
+    },
+    "submitted_date": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "completed_date": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "user_id",
+    "title",
+    "design_type"
+  ]
+}

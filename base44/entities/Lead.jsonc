@@ -1,0 +1,74 @@
+{
+  "name": "Lead",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "form_id": {
+      "type": "string"
+    },
+    "form_name": {
+      "type": "string"
+    },
+    "lead_name": {
+      "type": "string"
+    },
+    "lead_email": {
+      "type": "string"
+    },
+    "lead_phone": {
+      "type": "string"
+    },
+    "company": {
+      "type": "string"
+    },
+    "stage": {
+      "type": "string",
+      "enum": [
+        "new_lead",
+        "contacted",
+        "qualified",
+        "proposal_sent",
+        "negotiation",
+        "won",
+        "lost"
+      ],
+      "default": "new_lead"
+    },
+    "assigned_to": {
+      "type": "string"
+    },
+    "lead_source": {
+      "type": "string"
+    },
+    "lead_data": {
+      "type": "object"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "last_contact_date": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "won_date": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "lost_reason": {
+      "type": "string"
+    },
+    "estimated_value": {
+      "type": "number"
+    },
+    "currency": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "user_id",
+    "form_id",
+    "lead_name"
+  ]
+}

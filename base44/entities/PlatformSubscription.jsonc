@@ -1,0 +1,54 @@
+{
+  "name": "PlatformSubscription",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "subscription_type": {
+      "type": "string",
+      "enum": [
+        "lead_module",
+        "design_retainer"
+      ],
+      "default": "lead_module"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "cancelled",
+        "expired",
+        "pending"
+      ],
+      "default": "pending"
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "end_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "amount": {
+      "type": "number"
+    },
+    "currency": {
+      "type": "string"
+    },
+    "auto_renew": {
+      "type": "boolean",
+      "default": true
+    },
+    "payment_method": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "user_id",
+    "subscription_type",
+    "amount",
+    "currency"
+  ]
+}
