@@ -15,10 +15,12 @@ export default function Messages() {
   const [attachment, setAttachment] = useState(null);
   const [uploading, setUploading] = useState(false);
   const bottomRef = useRef(null);
+  const userIdRef = useRef(null);
 
   useEffect(() => {
     base44.auth.me().then(u => {
       setUser(u);
+      userIdRef.current = u.id;
       base44.entities.Message.filter({ conversation_user_id: u.id }, '-created_date', 100).then(msgs => {
         setMessages(msgs.reverse());
         msgs.filter(m => m.sender_role === 'admin' && !m.is_read).forEach(m => {
@@ -28,7 +30,7 @@ export default function Messages() {
     });
 
     const unsub = base44.entities.Message.subscribe(event => {
-      if (event.type === 'create') {
+      if (event.type === 'create' && event.data?.conversation_user_id === userIdRef.current) {
         setMessages(prev => [...prev, event.data]);
       }
     });

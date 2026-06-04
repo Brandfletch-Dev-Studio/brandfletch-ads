@@ -1,27 +1,77 @@
-import { useState, useEffect } from 'react';
-import { Bell } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Bell, X, CheckCheck, Megaphone, DollarSign, AlertCircle, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
-  DropdownMenuLabel, DropdownMenuSeparator
-} from '@/components/ui/dropdown-menu';
 import { base44 } from '@/api/base44Client';
 import { formatDistanceToNow } from 'date-fns';
+import { cn } from '@/lib/utils';
+
+const TYPE_CONFIG = {
+  campaign_approved:    { icon: Megaphone,     color: 'text-green-600',  bg: 'bg-green-50' },
+  campaign_rejected:    { icon: Megaphone,     color: 'text-red-600',    bg: 'bg-red-50' },
+  campaign_submitted:   { icon: Megaphone,     color: 'text-blue-600',   bg: 'bg-blue-50' },
+  campaign_completed:   { icon: CheckCheck,    color: 'text-green-600',  bg: 'bg-green-50' },
+  payment_confirmed:    { icon: DollarSign,    color: 'text-green-600',  bg: 'bg-green-50' },
+  payment_rejected:     { icon: DollarSign,    color: 'text-red-600',    bg: 'bg-red-50' },
+  changes_requested:    { icon: AlertCircle,   color: 'text-amber-600',  bg: 'bg-amber-50' },
+  page_connected:       { icon: Info,          color: 'text-blue-600',   bg: 'bg-blue-50' },
+  page_rejected:        { icon: Info,          color: 'text-red-600',    bg: 'bg-red-50' },
+};
+
+function LiveTime({ date }) {
+  const [label, setLabel] = useState('');
+
+  useEffect(() => {
+    function update() {
+      if (!date) return;
+      setLabel(formatDistanceToNow(new Date(date), { addSuffix: true }));
+    }
+    update();
+    const interval = setInterval(update, 30000);
+    return () => clearInterval(interval);
+  }, [date]);
+
+  return <span className="text-[11px] text-muted-foreground">{label}</span>;
+}
 
 export default function NotificationDropdown() {
   const [notifications, setNotifications] = useState([]);
-  const [user, setUser] = useState(null);
+  const [open, setOpen] = useState(false);
+  const [userId, setUserId] = useState(null);
+  const ref = useRef(null);
 
   useEffect(() => {
     base44.auth.me().then(u => {
-      setUser(u);
-      if (u) loadNotifications(u.id);
+      if (!u) return;
+      setUserId(u.id);
+      loadNotifications(u.id);
     }).catch(() => {});
   }, []);
 
-  async function loadNotifications(userId) {
+  // Close on outside click
+  useEffect(() => {
+    function handleClick(e) {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    }
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
+
+  // Real-time subscription
+  useEffect(() => {
+    const unsub = base44.entities.Notification.subscribe(event => {
+      if (event.type === 'create' && event.data?.recipient_id === userId) {
+        setNotifications(prev => [event.data, ...prev]);
+      }
+      if (event.type === 'update') {
+        setNotifications(prev => prev.filter(n => n.id !== event.id || !event.data?.is_read));
+      }
+    });
+    return () => unsub();
+  }, [userId]);
+
+  async function loadNotifications(uid) {
     const data = await base44.entities.Notification.filter(
-      { recipient_id: userId, is_read: false }, '-created_date', 10
+      { recipient_id: uid, is_read: false }, '-created_date', 20
     );
     setNotifications(data);
   }
@@ -31,43 +81,88 @@ export default function NotificationDropdown() {
     setNotifications(prev => prev.filter(n => n.id !== id));
   }
 
-  const unread = notifications.filter(n => !n.is_read).length;
+  async function markAllRead() {
+    await Promise.all(notifications.map(n => base44.entities.Notification.update(n.id, { is_read: true })));
+    setNotifications([]);
+  }
+
+  const unread = notifications.length;
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative w-10 h-10">
-          <Bell className="w-5 h-5" />
-          {unread > 0 && (
-            <span className="absolute -top-1 -right-1 w-4 h-4 bg-[hsl(var(--accent))] text-white text-xs rounded-full flex items-center justify-center font-bold">
-              {unread > 9 ? '9+' : unread}
-            </span>
-          )}
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-80">
-        <DropdownMenuLabel className="font-semibold">Notifications</DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        {notifications.length === 0 ? (
-          <div className="py-6 text-center text-sm text-muted-foreground">
-            No new notifications
-          </div>
-        ) : (
-          notifications.slice(0, 6).map(n => (
-            <DropdownMenuItem
-              key={n.id}
-              onClick={() => markRead(n.id)}
-              className="flex flex-col items-start gap-1 py-3 cursor-pointer"
-            >
-              <p className="text-sm font-medium leading-tight">{n.title}</p>
-              <p className="text-xs text-muted-foreground line-clamp-2">{n.message}</p>
-              <p className="text-xs text-muted-foreground">
-                {formatDistanceToNow(new Date(n.created_date), { addSuffix: true })}
-              </p>
-            </DropdownMenuItem>
-          ))
+    <div className="relative" ref={ref}>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="relative w-10 h-10"
+        onClick={() => setOpen(o => !o)}
+      >
+        <Bell className="w-5 h-5" />
+        {unread > 0 && (
+          <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center font-bold px-1">
+            {unread > 9 ? '9+' : unread}
+          </span>
         )}
-      </DropdownMenuContent>
-    </DropdownMenu>
+      </Button>
+
+      {open && (
+        <div className="absolute right-0 top-12 w-96 bg-card border border-border rounded-2xl shadow-xl z-50 overflow-hidden">
+          {/* Header */}
+          <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+            <div>
+              <h3 className="font-semibold text-sm">Notifications</h3>
+              {unread > 0 && <p className="text-xs text-muted-foreground">{unread} unread</p>}
+            </div>
+            <div className="flex items-center gap-1">
+              {unread > 0 && (
+                <Button variant="ghost" size="sm" className="text-xs h-7 px-2 text-muted-foreground" onClick={markAllRead}>
+                  Mark all read
+                </Button>
+              )}
+              <Button variant="ghost" size="icon" className="w-7 h-7" onClick={() => setOpen(false)}>
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+
+          {/* List */}
+          <div className="max-h-[440px] overflow-y-auto divide-y divide-border">
+            {notifications.length === 0 ? (
+              <div className="py-12 text-center">
+                <Bell className="w-8 h-8 text-muted-foreground/30 mx-auto mb-3" />
+                <p className="text-sm font-medium text-muted-foreground">All caught up</p>
+                <p className="text-xs text-muted-foreground/70 mt-1">No new notifications</p>
+              </div>
+            ) : (
+              notifications.map(n => {
+                const cfg = TYPE_CONFIG[n.type] || { icon: Info, color: 'text-blue-600', bg: 'bg-blue-50' };
+                const Icon = cfg.icon;
+                return (
+                  <div
+                    key={n.id}
+                    className={cn("flex items-start gap-3 px-4 py-3 hover:bg-secondary/50 transition-colors cursor-pointer group")}
+                    onClick={() => markRead(n.id)}
+                  >
+                    <div className={cn("w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5", cfg.bg)}>
+                      <Icon className={cn("w-4 h-4", cfg.color)} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium leading-tight">{n.title}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{n.message}</p>
+                      <LiveTime date={n.created_date} />
+                    </div>
+                    <button
+                      className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-secondary"
+                      onClick={e => { e.stopPropagation(); markRead(n.id); }}
+                    >
+                      <X className="w-3 h-3 text-muted-foreground" />
+                    </button>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

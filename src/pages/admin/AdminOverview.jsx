@@ -48,13 +48,13 @@ export default function AdminOverview() {
   useEffect(() => {
     Promise.all([
       base44.entities.Campaign.list('-created_date', 500),
-      base44.entities.User.list(),
+      base44.entities.User.list().catch(() => []),
       base44.entities.WalletTransaction.list('-created_date', 500),
       base44.entities.ExchangeRate.filter({ is_active: true }),
     ]).then(([campaigns, users, transactions, exchangeRates]) => {
-      setAllData({ campaigns, users, transactions, exchangeRates });
+      setAllData({ campaigns, users: users || [], transactions, exchangeRates });
       setLoading(false);
-    });
+    }).catch(() => setLoading(false));
   }, []);
 
   const fromDate = getFromDate(timePeriod);

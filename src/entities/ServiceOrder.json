@@ -1,0 +1,29 @@
+{
+  "name": "ServiceOrder",
+  "type": "object",
+  "properties": {
+    "user_id": { "type": "string" },
+    "service_id": { "type": "string" },
+    "service_name": { "type": "string" },
+    "service_type": { "type": "string", "enum": ["service", "product"], "default": "service" },
+    "price_usd": { "type": "number" },
+    "currency": { "type": "string", "default": "USD" },
+    "total_cost": { "type": "number", "description": "Amount in local currency" },
+    "total_cost_usd": { "type": "number", "description": "USD equivalent for admin reference" },
+    "required_details": {
+      "type": "object",
+      "description": "Key-value pairs of required fields filled by client"
+    },
+    "notes": { "type": "string" },
+    "payment_method": { "type": "string" },
+    "payment_reference": { "type": "string" },
+    "payment_proof_url": { "type": "string" },
+    "admin_notes": { "type": "string" },
+    "status": {
+      "type": "string",
+      "enum": ["pending", "confirmed", "in_progress", "completed", "cancelled"],
+      "default": "pending"
+    }
+  },
+  "required": ["user_id", "service_id", "service_name"]
+}

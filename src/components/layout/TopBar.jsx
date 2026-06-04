@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { Menu, Bell, User, Settings, LogOut, Wallet, ChevronDown } from 'lucide-react';
+import { Menu, LogOut, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
@@ -70,19 +70,6 @@ export default function TopBar({ onMenuToggle, currentUser, isStaff }) {
               <p className="font-semibold text-sm truncate">{currentUser?.full_name || 'Account'}</p>
               <p className="text-xs text-muted-foreground font-normal truncate">{currentUser?.email}</p>
             </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <Link to="/settings" className="flex items-center gap-2 cursor-pointer">
-                <Settings className="w-4 h-4 text-muted-foreground" /> Profile & Settings
-              </Link>
-            </DropdownMenuItem>
-            {!isStaff && (
-              <DropdownMenuItem asChild>
-                <Link to="/wallet" className="flex items-center gap-2 cursor-pointer">
-                  <Wallet className="w-4 h-4 text-muted-foreground" /> Wallet
-                </Link>
-              </DropdownMenuItem>
-            )}
             <DropdownMenuSeparator />
             <DropdownMenuItem
               className="text-destructive focus:text-destructive gap-2 cursor-pointer"
