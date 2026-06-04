@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function BrandLogo({ size = 'md', dark = false }) {
+export default function BrandLogo({ size = 'md', dark = false, black = false }) {
   const sizes = {
     sm: { img: 'w-7 h-7', text: 'text-sm' },
     md: { img: 'w-9 h-9', text: 'text-base' },
@@ -9,8 +9,8 @@ export default function BrandLogo({ size = 'md', dark = false }) {
   };
   const s = sizes[size] || sizes.md;
 
-  const textColor = size === 'lg' ? 'text-white' : dark ? 'text-gray-900' : 'text-white';
-  const accentColor = size === 'lg' ? 'text-white/70' : dark ? 'text-[hsl(var(--primary))]' : 'text-[hsl(var(--accent))]';
+  const textColor = size === 'lg' ? 'text-white' : black ? 'text-black' : dark ? 'text-gray-900' : 'text-white';
+  const accentColor = size === 'lg' ? 'text-white/70' : black ? 'text-black/70' : dark ? 'text-[hsl(var(--primary))]' : 'text-[hsl(var(--accent))]';
 
   return (
     <div className={`flex items-center gap-2.5 ${size === 'lg' ? 'flex-col' : ''}`}>

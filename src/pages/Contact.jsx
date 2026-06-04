@@ -93,7 +93,7 @@ export default function Contact() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <Link to="/">
-          <BrandLogo size="sidebar" />
+          <BrandLogo size="sidebar" black />
         </Link>
         <nav className="flex gap-4">
           <Link to="/about" className="text-sm font-medium text-muted-foreground hover:text-foreground">About</Link>
