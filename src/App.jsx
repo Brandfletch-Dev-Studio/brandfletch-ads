@@ -25,6 +25,8 @@ import SupportTickets from '@/pages/SupportTickets';
 import Wallet from '@/pages/Wallet';
 import About from '@/pages/About';
 import Contact from '@/pages/Contact';
+import PrivacyPolicy from '@/pages/PrivacyPolicy';
+import Terms from '@/pages/Terms';
 
 // Admin pages
 import AdminOverview from '@/pages/admin/AdminOverview';
@@ -103,6 +105,8 @@ const AuthenticatedApp = () => {
       <Route path="/onboarding" element={<Onboarding />} />
       <Route path="/about" element={<About />} />
       <Route path="/contact" element={<Contact />} />
+      <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+      <Route path="/terms" element={<Terms />} />
       <Route element={<AppLayout />}>
         {/* Client routes */}
         <Route path="/" element={<Navigate to={isStaff ? "/admin" : "/dashboard"} replace />} />
