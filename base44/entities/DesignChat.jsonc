@@ -1,0 +1,44 @@
+{
+  "name": "DesignChat",
+  "type": "object",
+  "properties": {
+    "design_request_id": {
+      "type": "string",
+      "description": "Associated design request"
+    },
+    "sender_id": {
+      "type": "string",
+      "description": "User who sent the message"
+    },
+    "sender_role": {
+      "type": "string",
+      "enum": [
+        "client",
+        "designer",
+        "admin"
+      ],
+      "description": "Role of the sender"
+    },
+    "message": {
+      "type": "string",
+      "description": "Message content"
+    },
+    "file_urls": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Optional attached files"
+    },
+    "is_read": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "design_request_id",
+    "sender_id",
+    "sender_role",
+    "message"
+  ]
+}

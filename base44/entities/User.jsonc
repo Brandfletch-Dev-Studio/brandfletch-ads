@@ -6,6 +6,7 @@
       "type": "string",
       "enum": [
         "user",
+        "designer",
         "campaign_manager",
         "finance",
         "sales_manager",
@@ -45,6 +46,18 @@
       "type": "boolean",
       "default": false,
       "description": "Suspended users cannot access the platform"
+    },
+    "designer_specialties": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Designer's areas of expertise"
+    },
+    "designer_capacity": {
+      "type": "number",
+      "default": 10,
+      "description": "Max concurrent projects for designer"
     }
   }
 }

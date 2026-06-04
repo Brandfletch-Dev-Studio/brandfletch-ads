@@ -41,7 +41,7 @@ export default function AdminSettings() {
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const [designPricing, setDesignPricing] = useState([]);
-  const [newDesignPricing, setNewDesignPricing] = useState({ pricing_type: 'per_design', country: 'Malawi', currency: 'MWK', symbol: 'MK', price: 15000, monthly_quota: 20, max_revisions: 2, is_active: true });
+  const [newDesignPricing, setNewDesignPricing] = useState({ pricing_type: 'per_design', country: 'Malawi', currency: 'MWK', symbol: 'MK', price: 15000, monthly_quota: 20, max_revisions: 2 });
 
   useEffect(() => {
     Promise.all([
