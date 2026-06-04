@@ -1,0 +1,34 @@
+{
+  "name": "DesignerProfile",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "specialties": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "max_concurrent_projects": {
+      "type": "number",
+      "default": 5
+    },
+    "is_available": {
+      "type": "boolean",
+      "default": true
+    },
+    "rating": {
+      "type": "number",
+      "default": 0
+    },
+    "completed_designs": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "user_id"
+  ]
+}

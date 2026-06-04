@@ -26,6 +26,7 @@ import Wallet from '@/pages/Wallet';
 import Designs from '@/pages/Designs';
 import Leads from '@/pages/Leads';
 import LeadFormBuilder from '@/pages/LeadFormBuilder';
+import DesignerPortal from '@/pages/DesignerPortal';
 import About from '@/pages/About';
 import Contact from '@/pages/Contact';
 import PrivacyPolicy from '@/pages/PrivacyPolicy';
@@ -128,6 +129,7 @@ const AuthenticatedApp = () => {
         <Route path="/designs" element={<Designs />} />
         <Route path="/leads" element={<Leads />} />
         <Route path="/leads/forms" element={<LeadFormBuilder />} />
+        <Route path="/designer" element={<DesignerPortal />} />
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/support" element={<SupportTickets />} />
         <Route path="/messages" element={<Navigate to="/support" replace />} />
