@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -8,9 +9,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Palette, Plus, ArrowLeft } from 'lucide-react';
+import { Palette, Plus, ArrowLeft, Lock } from 'lucide-react';
 import { toast } from 'sonner';
 import DesignRequestForm from '@/components/designs/DesignRequestForm';
+import DesignSubscription from '@/components/designs/DesignSubscription';
 
 const DESIGN_TYPES = {
   social_media_post: 'Social Media Post',
@@ -25,6 +27,7 @@ const DESIGN_TYPES = {
 
 export default function Designs() {
   const [showNewForm, setShowNewForm] = useState(false);
+  const [showSubscription, setShowSubscription] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null);
   const queryClient = useQueryClient();
 
@@ -46,9 +49,15 @@ export default function Designs() {
     enabled: !!user,
   });
 
+  const { data: designPricing } = useQuery({
+    queryKey: ['designPricing'],
+    queryFn: () => base44.entities.DesignPricing.filter({ pricing_type: 'per_design', is_active: true }).then(r => r[0]),
+  });
+
   const designQuota = subscription?.monthly_quota || 0;
   const designsUsed = (requests || []).filter(r => r.status === 'completed' || r.status === 'delivered').length;
   const designsRemaining = designQuota > 0 ? designQuota - designsUsed : null;
+  const hasActiveSubscription = !!subscription;
 
   const updateRequestMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.DesignRequest.update(id, data),
@@ -65,6 +74,38 @@ export default function Designs() {
     completed: (requests || []).filter(r => ['completed', 'delivered'].includes(r.status)).length,
   };
 
+  const handleNewRequest = () => {
+    if (!hasActiveSubscription) {
+      setShowSubscription(true);
+    } else {
+      setShowNewForm(true);
+    }
+  };
+
+  if (showSubscription) {
+    return (
+      <div className="p-[15px] space-y-6">
+        <Button variant="outline" onClick={() => setShowSubscription(false)}>
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back to Designs
+        </Button>
+        <DesignSubscription onSubscribe={() => setShowSubscription(false)} />
+      </div>
+    );
+  }
+
+  if (showNewForm) {
+    return (
+      <div className="p-[15px] space-y-6">
+        <Button variant="outline" onClick={() => setShowNewForm(false)}>
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back to Designs
+        </Button>
+        <DesignRequestForm onSuccess={() => setShowNewForm(false)} />
+      </div>
+    );
+  }
+
   if (selectedRequest) {
     return (
       <RequestDetail
@@ -79,17 +120,17 @@ export default function Designs() {
     <div className="p-[15px] space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold font-heading">Design Requests</h1>
-          <p className="text-muted-foreground">Manage your design projects</p>
+          <h1 className="text-2xl font-bold font-heading" style={{ paddingLeft: '20px' }}>Design Requests</h1>
+          <p className="text-muted-foreground" style={{ paddingLeft: '20px' }}>Manage your design projects</p>
         </div>
-        <Button onClick={() => setShowNewForm(true)}>
+        <Button onClick={handleNewRequest}>
           <Plus className="w-4 h-4 mr-2" />
           New Request
         </Button>
       </div>
 
       {/* Subscription Status */}
-      {subscription && (
+      {hasActiveSubscription ? (
         <Card className="bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
@@ -98,7 +139,7 @@ export default function Designs() {
                   <Palette className="w-5 h-5 text-purple-700" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold">Design Retainer Plan</p>
+                  <p className="text-sm font-semibold">Design Retainer Plan Active</p>
                   <p className="text-xs text-muted-foreground">
                     {designsUsed} of {designQuota} designs used
                     {designsRemaining !== null && designsRemaining > 0 && (
@@ -121,6 +162,30 @@ export default function Designs() {
                 className="bg-purple-600 h-2 rounded-full transition-all"
                 style={{ width: `${designQuota > 0 ? (designsUsed / designQuota) * 100 : 0}%` }}
               />
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card className="border-amber-200 bg-amber-50">
+          <CardContent className="p-6">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0">
+                <Lock className="w-6 h-6 text-amber-700" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-lg text-amber-900 mb-2">Subscribe to Order Designs</h3>
+                <p className="text-sm text-amber-800 mb-4">
+                  You need an active design subscription to request new designs. Choose between our monthly retainer plan or pay-per-design option.
+                </p>
+                <div className="flex gap-3">
+                  <Button onClick={handleNewRequest}>
+                    View Subscription Plans
+                  </Button>
+                  <Link to="/marketplace">
+                    <Button variant="outline">Browse Services</Button>
+                  </Link>
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -168,16 +233,14 @@ export default function Designs() {
         </Card>
       </div>
 
-      {showNewForm ? (
-        <DesignRequestForm onSuccess={() => setShowNewForm(false)} />
-      ) : isLoading ? (
+      {isLoading ? (
         <p className="text-muted-foreground">Loading...</p>
       ) : !requests || requests.length === 0 ? (
         <Card>
           <CardContent className="p-8 text-center">
             <Palette className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
             <p className="text-muted-foreground mb-4">No design requests yet</p>
-            <Button onClick={() => setShowNewForm(true)}>
+            <Button onClick={handleNewRequest}>
               <Plus className="w-4 h-4 mr-2" />
               Create Your First Request
             </Button>
