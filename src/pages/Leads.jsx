@@ -10,7 +10,8 @@ import {
   Search, 
   Filter,
   Target,
-  Zap
+  Zap,
+  Download
 } from 'lucide-react';
 import { toast } from 'sonner';
 import AddLeadDialog from '@/components/leads/AddLeadDialog';
@@ -99,6 +100,38 @@ export default function Leads() {
     updateStageMutation.mutate({ leadId: lead.id, newStage });
   };
 
+  const handleExportCSV = () => {
+    if (!filteredLeads || filteredLeads.length === 0) {
+      toast.error('No leads to export');
+      return;
+    }
+
+    const headers = ['Name', 'Email', 'Phone', 'Company', 'Stage', 'Grade', 'Estimated Value', 'Source', 'Created Date'];
+    const csvData = filteredLeads.map(lead => [
+      lead.lead_name || '',
+      lead.lead_email || '',
+      lead.lead_phone || '',
+      lead.company || '',
+      lead.stage || '',
+      lead.grade || '',
+      lead.estimated_value || '',
+      lead.lead_source || '',
+      new Date(lead.created_date).toLocaleDateString()
+    ]);
+
+    const csvContent = [
+      headers.join(','),
+      ...csvData.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `leads_${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+    toast.success('Leads exported successfully!');
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       {/* Hero Section */}
@@ -123,6 +156,10 @@ export default function Leads() {
                     AI Form Builder
                   </Button>
                 </Link>
+                <Button variant="outline" className="gap-2 bg-white/10 hover:bg-white/20 text-white border-white/30" onClick={handleExportCSV}>
+                  <Download className="w-4 h-4" />
+                  Export CSV
+                </Button>
               </div>
             </div>
 
