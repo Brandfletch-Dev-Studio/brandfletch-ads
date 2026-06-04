@@ -37,6 +37,7 @@ export default function Designs() {
     queryKey: ['myDesignRequests'],
     queryFn: () => base44.entities.DesignRequest.filter({ user_id: user?.id }),
     enabled: !!user,
+    initialData: [],
   });
 
   const { data: subscription } = useQuery({
@@ -46,7 +47,7 @@ export default function Designs() {
   });
 
   const designQuota = subscription?.monthly_quota || 0;
-  const designsUsed = requests?.filter(r => r.status === 'completed' || r.status === 'delivered').length || 0;
+  const designsUsed = (requests || []).filter(r => r.status === 'completed' || r.status === 'delivered').length;
   const designsRemaining = designQuota > 0 ? designQuota - designsUsed : null;
 
   const updateRequestMutation = useMutation({
@@ -58,10 +59,10 @@ export default function Designs() {
   });
 
   const stats = {
-    total: requests?.length || 0,
-    draft: requests?.filter(r => r.status === 'draft').length || 0,
-    inProgress: requests?.filter(r => ['in_progress', 'submitted'].includes(r.status)).length || 0,
-    completed: requests?.filter(r => ['completed', 'delivered'].includes(r.status)).length || 0,
+    total: (requests || []).length,
+    draft: (requests || []).filter(r => r.status === 'draft').length,
+    inProgress: (requests || []).filter(r => ['in_progress', 'submitted'].includes(r.status)).length,
+    completed: (requests || []).filter(r => ['completed', 'delivered'].includes(r.status)).length,
   };
 
   if (selectedRequest) {
@@ -171,7 +172,7 @@ export default function Designs() {
         <DesignRequestForm onSuccess={() => setShowNewForm(false)} />
       ) : isLoading ? (
         <p className="text-muted-foreground">Loading...</p>
-      ) : requests?.length === 0 ? (
+      ) : !requests || requests.length === 0 ? (
         <Card>
           <CardContent className="p-8 text-center">
             <Palette className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
@@ -184,7 +185,7 @@ export default function Designs() {
         </Card>
       ) : (
         <div className="space-y-3">
-          {requests.map((request) => (
+          {(requests || []).map((request) => (
             <Card key={request.id} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setSelectedRequest(request)}>
               <CardHeader>
                 <div className="flex items-start justify-between">
