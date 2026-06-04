@@ -12,7 +12,7 @@ export default function StepSelectPage({ data, update, userId, user }) {
   useEffect(() => {
     if (userId) {
       base44.entities.FacebookPage.filter(
-        { user_id: userId, connection_status: 'connected' }
+        { user_id: userId }
       ).then(p => {
         setPages(p);
         // If user has connected pages and none selected yet, pre-select first
@@ -48,7 +48,12 @@ export default function StepSelectPage({ data, update, userId, user }) {
                 <Facebook className="w-5 h-5 text-blue-600" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-sm">{page.page_name}</p>
+                <div className="flex items-center gap-2">
+                  <p className="font-semibold text-sm">{page.page_name}</p>
+                  {page.connection_status !== 'connected' && (
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 font-medium">Pending</span>
+                  )}
+                </div>
                 <p className="text-xs text-muted-foreground truncate">{page.page_url}</p>
               </div>
               {data.page_id === page.id && (
