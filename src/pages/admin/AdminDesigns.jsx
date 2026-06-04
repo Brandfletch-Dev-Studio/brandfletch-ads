@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Palette, Search, Users, ArrowLeft } from 'lucide-react';
+import { Palette, Search, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 
 const STATUS_OPTIONS = [
@@ -85,7 +85,7 @@ export default function AdminDesigns() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="p-[15px] space-y-6">
       <div>
         <h1 className="text-2xl font-bold font-heading">Design Requests</h1>
         <p className="text-muted-foreground">Manage all design requests from clients</p>
@@ -146,8 +146,8 @@ export default function AdminDesigns() {
         </Card>
       </div>
 
-      <div className="flex gap-4">
-        <div className="flex-1 relative">
+      <div className="flex flex-wrap gap-4">
+        <div className="flex-1 min-w-[200px] relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
             placeholder="Search by title or user ID..."
@@ -238,7 +238,7 @@ function RequestDetail({ request, designers, onClose, onUpdate }) {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="p-[15px] space-y-6">
       <Button variant="outline" onClick={onClose}>
         <ArrowLeft className="w-4 h-4 mr-2" />
         Back to List
@@ -325,19 +325,6 @@ function RequestDetail({ request, designers, onClose, onUpdate }) {
             <div>
               <h4 className="font-semibold mb-2">Designer Notes</h4>
               <p className="text-sm text-muted-foreground">{request.designer_notes}</p>
-            </div>
-          )}
-
-          {request.deliverable_files && request.deliverable_files.length > 0 && (
-            <div>
-              <h4 className="font-semibold mb-2">Delivered Files</h4>
-              <div className="space-y-2">
-                {request.deliverable_files.map((file, idx) => (
-                  <a key={idx} href={file} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 hover:underline block">
-                    📄 Download File {idx + 1}
-                  </a>
-                ))}
-              </div>
             </div>
           )}
         </CardContent>
