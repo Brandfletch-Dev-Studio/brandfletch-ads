@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { Plus, ArrowRight } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import StatusBadge from '@/components/ui/StatusBadge';
+import GrowthToolsMarketplace from '@/components/dashboard/GrowthToolsMarketplace';
 
 const PAGE_STATUS_STYLES = {
   connected:            'bg-green-100 text-green-700',
@@ -65,27 +66,41 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold font-heading">Dashboard</h1>
-          <p className="text-muted-foreground">Welcome back, {user?.full_name || user?.email}</p>
+    <div className="space-y-8">
+      {/* Hero Section - Ads CTA */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[hsl(var(--primary))] to-[hsl(var(--accent))] p-6 md:p-8 text-white">
+        <div className="relative z-10">
+          <h1 className="text-2xl md:text-3xl font-bold font-heading mb-2">
+            Welcome back, {user?.full_name?.split(' ')[0] || 'there'}!
+          </h1>
+          <p className="text-white/90 mb-6 max-w-2xl">
+            Ready to grow your business with powerful Facebook & Instagram ads?
+          </p>
+          <div className="flex flex-wrap gap-4">
+            <Link to="/campaigns/new">
+              <Button size="lg" className="bg-white text-[hsl(var(--primary))] hover:bg-white/90">
+                <Plus className="w-5 h-5 mr-2" />
+                Create Campaign
+              </Button>
+            </Link>
+            <Link to="/campaigns">
+              <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/20">
+                View Campaigns
+              </Button>
+            </Link>
+          </div>
         </div>
-        <Link to="/campaigns/new">
-          <Button>
-            <Plus className="w-4 h-4 mr-2" />
-            New Campaign
-          </Button>
-        </Link>
+        <div className="absolute right-0 top-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
+        <div className="absolute right-20 bottom-0 w-32 h-32 bg-white/10 rounded-full translate-y-1/2" />
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      {/* Quick Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-4">
         {stats.map((stat) => (
           <Link key={stat.label} to={stat.to}>
-            <Card className={`border-l-4 ${stat.accent} hover:shadow-md transition-shadow cursor-pointer`}>
-              <CardContent className="p-4">
-                <p className="text-2xl font-bold">{stat.value}</p>
+            <Card className="hover:shadow-lg transition-all cursor-pointer border-l-4 ${stat.accent}">
+              <CardContent className="p-3 md:p-4">
+                <p className="text-xl md:text-2xl font-bold">{stat.value}</p>
                 <p className="text-xs text-muted-foreground mt-1">{stat.label}</p>
               </CardContent>
             </Card>
@@ -93,9 +108,14 @@ export default function Dashboard() {
         ))}
       </div>
 
+      {/* Growth Tools Marketplace */}
+      <GrowthToolsMarketplace />
+
       {/* Recent Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Campaigns */}
+      <div>
+        <h2 className="text-xl font-bold font-heading mb-4">Recent Activity</h2>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Campaigns */}
         {campaigns.length > 0 && (
           <Card className="shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between pb-3 border-b">
@@ -221,6 +241,7 @@ export default function Dashboard() {
             </CardContent>
           </Card>
         )}
+        </div>
       </div>
 
       {/* Empty state prompts */}

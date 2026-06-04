@@ -39,6 +39,16 @@ export default function Designs() {
     enabled: !!user,
   });
 
+  const { data: subscription } = useQuery({
+    queryKey: ['userSubscription'],
+    queryFn: () => base44.entities.PlatformSubscription.filter({ user_id: user?.id, subscription_type: 'design_retainer', status: 'active' }).then(r => r[0]),
+    enabled: !!user,
+  });
+
+  const designQuota = subscription?.monthly_quota || 0;
+  const designsUsed = requests?.filter(r => r.status === 'completed' || r.status === 'delivered').length || 0;
+  const designsRemaining = designQuota > 0 ? designQuota - designsUsed : null;
+
   const updateRequestMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.DesignRequest.update(id, data),
     onSuccess: () => {
@@ -76,6 +86,44 @@ export default function Designs() {
           New Request
         </Button>
       </div>
+
+      {/* Subscription Status */}
+      {subscription && (
+        <Card className="bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
+                  <Palette className="w-5 h-5 text-purple-700" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold">Design Retainer Plan</p>
+                  <p className="text-xs text-muted-foreground">
+                    {designsUsed} of {designQuota} designs used
+                    {designsRemaining !== null && designsRemaining > 0 && (
+                      <span className="ml-2 text-green-600 font-medium">
+                        ({designsRemaining} remaining)
+                      </span>
+                    )}
+                  </p>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-2xl font-bold text-purple-700">
+                  {designQuota > 0 ? Math.round((designsUsed / designQuota) * 100) : 0}%
+                </div>
+                <p className="text-xs text-muted-foreground">Used</p>
+              </div>
+            </div>
+            <div className="mt-3 w-full bg-purple-200 rounded-full h-2">
+              <div 
+                className="bg-purple-600 h-2 rounded-full transition-all"
+                style={{ width: `${designQuota > 0 ? (designsUsed / designQuota) * 100 : 0}%` }}
+              />
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>

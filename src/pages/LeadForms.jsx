@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -9,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Edit2, Trash2, Eye, Share2, BarChart3, Settings, Globe, Lock, Copy, ExternalLink, Target } from 'lucide-react';
+import { Plus, Edit2, Trash2, Eye, Share2, BarChart3, Settings, Globe, Lock, Copy, ExternalLink, Target, Wand2 } from 'lucide-react';
 import { toast } from 'sonner';
 import FormAnalytics from '@/components/lead-forms/FormAnalytics';
 
@@ -146,6 +147,12 @@ export default function LeadForms() {
           <p className="text-muted-foreground">Create SEO-optimized lead capture forms</p>
         </div>
         <div className="flex gap-2">
+          <Link to="/leads/forms/ai">
+            <Button variant="outline">
+              <Wand2 className="w-4 h-4 mr-2" />
+              AI Builder
+            </Button>
+          </Link>
           <Button variant="outline" onClick={() => setShowAnalytics(true)}>
             <BarChart3 className="w-4 h-4 mr-2" />
             Analytics
