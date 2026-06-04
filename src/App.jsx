@@ -21,7 +21,6 @@ import ProfileSettings from '@/pages/ProfileSettings';
 import Messages from '@/pages/Messages';
 import Notifications from '@/pages/Notifications';
 import SupportTickets from '@/pages/SupportTickets';
-import Wallet from '@/pages/Wallet';
 import Designs from '@/pages/Designs';
 import DesignPayment from '@/pages/DesignPayment';
 import Leads from '@/pages/Leads';
@@ -126,7 +125,6 @@ const AuthenticatedApp = () => {
         <Route path="/campaigns/:id/payment" element={<CampaignPayment />} />
         <Route path="/audiences" element={<SavedAudiences />} />
         <Route path="/settings" element={<ProfileSettings />} />
-        <Route path="/wallet" element={<Wallet />} />
         <Route path="/designs" element={<Designs />} />
         <Route path="/designs/payment" element={<DesignPayment />} />
         <Route path="/leads" element={<Leads />} />

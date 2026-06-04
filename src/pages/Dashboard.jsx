@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { Palette, Target, Layout, Megaphone, Wallet, Clock, Plus, Globe } from 'lucide-react';
+import { Palette, Target, Layout, Megaphone, Clock, Plus, Globe } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';

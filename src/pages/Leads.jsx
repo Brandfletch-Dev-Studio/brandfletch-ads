@@ -133,142 +133,140 @@ export default function Leads() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+    <div className="p-[15px] space-y-6">
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-b-3xl shadow-xl overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex-1">
-              <h1 className="text-3xl font-bold mb-2">Lead Management</h1>
-              <p className="text-blue-100">Track and manage your sales pipeline</p>
-              
-              <div className="flex flex-wrap gap-3 mt-6">
-                <AddLeadDialog onSuccess={refetch} />
-                <Link to="/leads/forms">
-                  <Button variant="outline" className="gap-2 bg-white/10 hover:bg-white/20 text-white border-white/30">
-                    <Target className="w-4 h-4" />
-                    Lead Forms
-                  </Button>
-                </Link>
-
-                <Button variant="outline" className="gap-2 bg-white/10 hover:bg-white/20 text-white border-white/30" onClick={handleExportCSV}>
-                  <Download className="w-4 h-4" />
-                  Export CSV
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 p-6 md:p-8 text-white">
+        <div className="relative z-10">
+          <h1 className="text-2xl md:text-3xl font-bold font-heading mb-2" style={{ paddingLeft: '20px' }}>
+            Lead Management
+          </h1>
+          <p className="text-white/90 mb-6 max-w-2xl" style={{ paddingLeft: '20px' }}>
+            Track and manage your sales pipeline
+          </p>
+          <div style={{ paddingLeft: '20px' }}>
+            <div className="flex flex-wrap gap-3">
+              <AddLeadDialog onSuccess={refetch} />
+              <Link to="/leads/forms">
+                <Button variant="outline" className="gap-2 bg-white/10 hover:bg-white/20 text-white border-white/30">
+                  <Target className="w-4 h-4" />
+                  Lead Forms
                 </Button>
-              </div>
+              </Link>
+
+              <Button variant="outline" className="gap-2 bg-white/10 hover:bg-white/20 text-white border-white/30" onClick={handleExportCSV}>
+                <Download className="w-4 h-4" />
+                Export CSV
+              </Button>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 -mt-8">
-        {/* Toolbar */}
-        <Card className="mb-6 shadow-lg">
-          <CardContent className="p-4">
-            <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-              <div className="relative flex-1 w-full">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <Input
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search by name, company, or email..."
-                  className="pl-9"
-                />
-              </div>
-              <div className="flex gap-2 items-center flex-wrap">
-                <span className="text-sm text-gray-500">Filters:</span>
-                <select
-                  value={stageFilter}
-                  onChange={(e) => setStageFilter(e.target.value)}
-                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm hover:border-blue-500 transition-colors"
+      {/* Toolbar */}
+      <Card className="shadow-lg">
+        <CardContent className="p-4">
+          <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+            <div className="relative flex-1 w-full">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search by name, company, or email..."
+                className="pl-9"
+              />
+            </div>
+            <div className="flex gap-2 items-center flex-wrap">
+              <span className="text-sm text-gray-500">Filters:</span>
+              <select
+                value={stageFilter}
+                onChange={(e) => setStageFilter(e.target.value)}
+                className="border border-gray-300 rounded-lg px-3 py-2 text-sm hover:border-blue-500 transition-colors"
+              >
+                {STAGES.map((s) => (
+                  <option key={s.value} value={s.value}>{s.label}</option>
+                ))}
+              </select>
+              <select
+                value={gradeFilter}
+                onChange={(e) => setGradeFilter(e.target.value)}
+                className="border border-gray-300 rounded-lg px-3 py-2 text-sm hover:border-blue-500 transition-colors"
+              >
+                {GRADES.map((g) => (
+                  <option key={g.value} value={g.value}>{g.label}</option>
+                ))}
+              </select>
+              <div className="border-l border-gray-300 h-6 mx-2" />
+              <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+                <Button
+                  variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('grid')}
+                  className="h-8 px-3 text-sm"
                 >
-                  {STAGES.map((s) => (
-                    <option key={s.value} value={s.value}>{s.label}</option>
-                  ))}
-                </select>
-                <select
-                  value={gradeFilter}
-                  onChange={(e) => setGradeFilter(e.target.value)}
-                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm hover:border-blue-500 transition-colors"
+                  Grid
+                </Button>
+                <Button
+                  variant={viewMode === 'kanban' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('kanban')}
+                  className="h-8 px-3 text-sm"
                 >
-                  {GRADES.map((g) => (
-                    <option key={g.value} value={g.value}>{g.label}</option>
-                  ))}
-                </select>
-                <div className="border-l border-gray-300 h-6 mx-2" />
-                <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
-                  <Button
-                    variant={viewMode === 'grid' ? 'default' : 'ghost'}
-                    size="sm"
-                    onClick={() => setViewMode('grid')}
-                    className="h-8 px-3 text-sm"
-                  >
-                    Grid
-                  </Button>
-                  <Button
-                    variant={viewMode === 'kanban' ? 'default' : 'ghost'}
-                    size="sm"
-                    onClick={() => setViewMode('kanban')}
-                    className="h-8 px-3 text-sm"
-                  >
-                    Kanban
-                  </Button>
-                </div>
+                  Kanban
+                </Button>
               </div>
             </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Content */}
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[...Array(6)].map((_, i) => (
+            <Card key={i} className="animate-pulse">
+              <CardContent className="p-6">
+                <div className="h-6 bg-gray-200 rounded w-3/4 mb-4" />
+                <div className="space-y-2">
+                  <div className="h-4 bg-gray-200 rounded w-1/2" />
+                  <div className="h-4 bg-gray-200 rounded w-full" />
+                  <div className="h-4 bg-gray-200 rounded w-2/3" />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : filteredLeads.length === 0 ? (
+        <Card className="py-16">
+          <CardContent className="text-center">
+            <h3 className="text-xl font-semibold text-gray-700 mb-2">
+              {search || stageFilter !== 'all' ? 'No leads found' : 'No leads yet'}
+            </h3>
+            <p className="text-gray-500 mb-6">
+              {search || stageFilter !== 'all'
+                ? 'Try adjusting your search or filters'
+                : 'Start building your pipeline by adding your first lead'}
+            </p>
+            {!search && stageFilter === 'all' && (
+              <AddLeadDialog onSuccess={refetch} />
+            )}
           </CardContent>
         </Card>
-
-        {/* Content */}
-        {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[...Array(6)].map((_, i) => (
-              <Card key={i} className="animate-pulse">
-                <CardContent className="p-6">
-                  <div className="h-6 bg-gray-200 rounded w-3/4 mb-4" />
-                  <div className="space-y-2">
-                    <div className="h-4 bg-gray-200 rounded w-1/2" />
-                    <div className="h-4 bg-gray-200 rounded w-full" />
-                    <div className="h-4 bg-gray-200 rounded w-2/3" />
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : filteredLeads.length === 0 ? (
-          <Card className="py-16">
-            <CardContent className="text-center">
-              <h3 className="text-xl font-semibold text-gray-700 mb-2">
-                {search || stageFilter !== 'all' ? 'No leads found' : 'No leads yet'}
-              </h3>
-              <p className="text-gray-500 mb-6">
-                {search || stageFilter !== 'all'
-                  ? 'Try adjusting your search or filters'
-                  : 'Start building your pipeline by adding your first lead'}
-              </p>
-              {!search && stageFilter === 'all' && (
-                <AddLeadDialog onSuccess={refetch} />
-              )}
-            </CardContent>
-          </Card>
-        ) : viewMode === 'kanban' ? (
-          <KanbanBoard 
-            leads={filteredLeads} 
-            onStageChange={handleStageChange}
-          />
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredLeads.map((lead) => (
-              <LeadCard
-                key={lead.id}
-                lead={lead}
-                onStageChange={handleStageChange}
-              />
-            ))}
-          </div>
-        )}
-      </div>
+      ) : viewMode === 'kanban' ? (
+        <KanbanBoard 
+          leads={filteredLeads} 
+          onStageChange={handleStageChange}
+        />
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {filteredLeads.map((lead) => (
+            <LeadCard
+              key={lead.id}
+              lead={lead}
+              onStageChange={handleStageChange}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
