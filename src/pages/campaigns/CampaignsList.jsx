@@ -37,8 +37,17 @@ export default function CampaignsList() {
   });
 
   const formatCost = (c) => {
-    if (c.currency === 'MWK') return `MK${(c.total_cost || 0).toLocaleString()}`;
-    return `$${(c.total_cost || 0).toFixed(2)}`;
+    const cost = c.total_cost || 0;
+    const currency = c.currency || 'USD';
+    
+    if (currency === 'MWK') return `MK${cost.toLocaleString()}`;
+    if (currency === 'KES') return `KSh${cost.toLocaleString()}`;
+    if (currency === 'ZMW') return `ZK${cost.toLocaleString()}`;
+    if (currency === 'USD') return `$${cost.toFixed(2)}`;
+    if (currency === 'EUR') return `€${cost.toFixed(2)}`;
+    if (currency === 'GBP') return `£${cost.toFixed(2)}`;
+    
+    return `${currency} ${cost.toLocaleString()}`;
   };
 
   return (

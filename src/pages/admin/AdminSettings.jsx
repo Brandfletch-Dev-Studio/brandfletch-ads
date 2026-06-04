@@ -151,6 +151,13 @@ export default function AdminSettings() {
     setDesignPricing(dp);
   }
 
+  async function deleteDesignPricing(id) {
+    await base44.entities.DesignPricing.delete(id);
+    toast.success('Design pricing deleted');
+    const dp = await base44.entities.DesignPricing.list();
+    setDesignPricing(dp);
+  }
+
   async function deleteAllEntity(entityKey) {
     setDeleting(true);
     const records = await base44.entities[entityKey].list();
