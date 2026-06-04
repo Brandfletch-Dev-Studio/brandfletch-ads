@@ -10,9 +10,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Edit2, Trash2, Eye, Share2, BarChart3, Settings, Globe, Lock, Copy, ExternalLink, Target, Wand2, Zap, FileText, CheckCircle, User, Mail, Phone, Building2, Sparkles } from 'lucide-react';
+import { Plus, Edit2, Trash2, Eye, Share2, Settings, Globe, Lock, Copy, ExternalLink, Target, Wand2, Zap, FileText, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
-import FormAnalytics from '@/components/lead-forms/FormAnalytics';
 import FormBuilder from '@/components/lead-forms/FormBuilder';
 import FormPreview from '@/components/lead-forms/FormPreview';
 
@@ -41,7 +40,6 @@ export default function LeadForms() {
   const queryClient = useQueryClient();
   const [editingForm, setEditingForm] = useState(null);
   const [viewingForm, setViewingForm] = useState(null);
-  const [showAnalytics, setShowAnalytics] = useState(false);
 
   const { data: forms, isLoading } = useQuery({
     queryKey: ['myLeadForms'],
@@ -102,16 +100,6 @@ export default function LeadForms() {
     toast.success('Form URL copied to clipboard!');
   };
 
-  const stats = {
-    total: forms?.length || 0,
-    active: forms?.filter(f => f.is_active).length || 0,
-    totalSubmissions: forms?.reduce((sum, f) => sum + (f.total_submissions || 0), 0) || 0,
-  };
-
-  if (showAnalytics) {
-    return <FormAnalytics forms={forms} onClose={() => setShowAnalytics(false)} />;
-  }
-
   if (editingForm) {
     return (
       <div className="space-y-6">
@@ -169,54 +157,7 @@ export default function LeadForms() {
                     AI Builder
                   </Button>
                 </Link>
-                <Button variant="outline" onClick={() => setShowAnalytics(true)} className="gap-2 bg-white/10 hover:bg-white/20 text-white border-white/30">
-                  <BarChart3 className="w-4 h-4" />
-                  Analytics
-                </Button>
               </div>
-            </div>
-
-            {/* Stats */}
-            <div className="grid grid-cols-3 gap-4">
-              <Card className="bg-white/10 backdrop-blur-sm border-0">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-white/20 rounded-lg">
-                      <Plus className="w-6 h-6" />
-                    </div>
-                    <div>
-                      <p className="text-3xl font-bold">{stats.total}</p>
-                      <p className="text-sm text-blue-100">Total Forms</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card className="bg-white/10 backdrop-blur-sm border-0">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-green-500/30 rounded-lg">
-                      <Globe className="w-6 h-6" />
-                    </div>
-                    <div>
-                      <p className="text-3xl font-bold">{stats.active}</p>
-                      <p className="text-sm text-blue-100">Published</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card className="bg-white/10 backdrop-blur-sm border-0">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-purple-500/30 rounded-lg">
-                      <Target className="w-6 h-6" />
-                    </div>
-                    <div>
-                      <p className="text-3xl font-bold">{stats.totalSubmissions}</p>
-                      <p className="text-sm text-blue-100">Total Leads</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
             </div>
           </div>
         </div>

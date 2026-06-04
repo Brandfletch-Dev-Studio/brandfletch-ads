@@ -162,34 +162,6 @@ export default function Leads() {
                 </Button>
               </div>
             </div>
-
-            {/* Stats */}
-            <div className="grid grid-cols-2 gap-3">
-              <Card className="bg-white/10 backdrop-blur-sm border-0">
-                <CardContent className="p-3">
-                  <p className="text-2xl font-bold">{stats.total}</p>
-                  <p className="text-xs text-blue-100">Total</p>
-                </CardContent>
-              </Card>
-              <Card className="bg-white/10 backdrop-blur-sm border-0">
-                <CardContent className="p-3">
-                  <p className="text-2xl font-bold">{stats.won}</p>
-                  <p className="text-xs text-blue-100">Won</p>
-                </CardContent>
-              </Card>
-              <Card className="bg-white/10 backdrop-blur-sm border-0">
-                <CardContent className="p-3">
-                  <p className="text-2xl font-bold">{stats.hotLeads}</p>
-                  <p className="text-xs text-blue-100">Hot</p>
-                </CardContent>
-              </Card>
-              <Card className="bg-white/10 backdrop-blur-sm border-0">
-                <CardContent className="p-3">
-                  <p className="text-xl font-bold">{(stats.totalValue / 1000).toFixed(1)}K</p>
-                  <p className="text-xs text-blue-100">Value</p>
-                </CardContent>
-              </Card>
-            </div>
           </div>
         </div>
       </div>
