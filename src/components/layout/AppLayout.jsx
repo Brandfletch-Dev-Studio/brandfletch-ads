@@ -4,7 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { Link, useLocation, Outlet } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import {
-  LayoutDashboard, Megaphone, Facebook, Users, Wallet,
+  LayoutDashboard, Megaphone, Facebook, Users, Wallet as WalletIcon,
   Settings, X, ChevronRight, BarChart3, Shield, Bell, ShoppingBag, Tv2, ClipboardList, Tags, LifeBuoy, Info, Mail
 } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
@@ -20,7 +20,7 @@ const clientNav = [
   { path: '/campaigns', label: 'Campaigns', icon: Megaphone },
   { path: '/pages', label: 'Facebook Pages', icon: Facebook },
   { path: '/audiences', label: 'Audiences', icon: Users },
-  { path: '/wallet', label: 'Wallet', icon: Wallet },
+  { path: '/wallet', label: 'Wallet', icon: WalletIcon },
   { path: '/marketplace', label: 'Marketplace', icon: ShoppingBag },
   { path: '/support', label: 'Support', icon: LifeBuoy },
   { path: '/settings', label: 'Settings', icon: Settings },
@@ -31,7 +31,7 @@ const ALL_ADMIN_NAV = [
   { key: 'campaigns',      path: '/admin/campaigns',       label: 'All Campaigns',  icon: Megaphone,       permission: 'campaigns.view' },
   { key: 'pages',          path: '/admin/pages',           label: 'Page Requests',  icon: Facebook,        permission: 'pages.view' },
   { key: 'users',          path: '/admin/users',           label: 'Team & Users',   icon: Users,           permission: 'users.view' },
-  { key: 'payments',       path: '/admin/payments',        label: 'Payments',       icon: Wallet,          permission: 'payments.view' },
+  { key: 'payments',       path: '/admin/payments',        label: 'Payments',       icon: WalletIcon,      permission: 'payments.view' },
   { key: 'notifications',  path: '/admin/notifications',   label: 'Notifications',  icon: Bell,            permission: 'notifications.view' },
   { key: 'ads',            path: '/admin/ads',             label: 'In-App Ads',     icon: Tv2,             permission: 'ads.view' },
   { key: 'reports',        path: '/admin/reports',         label: 'Reports',        icon: BarChart3,       permission: 'reports.view' },
