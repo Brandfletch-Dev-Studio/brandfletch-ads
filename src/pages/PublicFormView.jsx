@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CheckCircle, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import MultiStepFormView from '@/components/lead-forms/MultiStepFormView';
 
 export default function PublicFormView() {
   const { formId } = useParams();
@@ -109,15 +110,17 @@ export default function PublicFormView() {
 
   if (submitted) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50">
-        <Card className="max-w-lg w-full mx-4">
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <Card className="max-w-md w-full">
           <CardContent className="p-8 text-center">
-            <CheckCircle className="w-16 h-16 mx-auto text-green-600 mb-4" />
+            <CheckCircle className="w-16 h-16 mx-auto text-green-500 mb-4" />
             <h2 className="text-2xl font-bold mb-2">Thank You!</h2>
-            <p className="text-muted-foreground mb-6">{form.success_message}</p>
-            {!form.redirect_url && (
-              <Button onClick={() => window.location.href = '/'}>
-                Return Home
+            <p className="text-muted-foreground mb-6">
+              {form.success_message || 'Your submission has been received.'}
+            </p>
+            {form.redirect_url && (
+              <Button onClick={() => window.location.href = form.redirect_url}>
+                Continue
               </Button>
             )}
           </CardContent>
@@ -126,10 +129,25 @@ export default function PublicFormView() {
     );
   }
 
+  // Check if form uses multi-step layout
+  if (form.form_build_type === 'multi_step') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 py-12 px-4">
+        <MultiStepFormView
+          form={form}
+          onSubmit={async (data) => {
+            await submitMutation.mutateAsync(data);
+          }}
+        />
+      </div>
+    );
+  }
+
+  // Traditional single-page form
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 py-12 px-4">
+    <div className="min-h-screen bg-muted/30 py-12 px-4">
       <div className="max-w-2xl mx-auto">
-        <Card className="shadow-lg">
+        <Card className="shadow-xl">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl">{form.form_name}</CardTitle>
           </CardHeader>
