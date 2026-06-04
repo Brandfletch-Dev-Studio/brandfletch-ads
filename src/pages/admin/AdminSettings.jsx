@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
-import { Plus, Trash2, Save, DollarSign, CreditCard, Pencil, X, Check, Mail, Store } from 'lucide-react';
+import { Plus, Trash2, Save, DollarSign, CreditCard, Pencil, X, Check, Mail, Store, AlertTriangle, ShieldAlert } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,6 +9,16 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { COUNTRIES } from '@/lib/constants';
 import { toast } from 'sonner';
+
+const DANGER_ENTITIES = [
+  { key: 'Campaign', label: 'Campaigns', entity: 'Campaign' },
+  { key: 'WalletTransaction', label: 'Wallet Transactions', entity: 'WalletTransaction' },
+  { key: 'Notification', label: 'Notifications', entity: 'Notification' },
+  { key: 'AuditLog', label: 'Audit Logs', entity: 'AuditLog' },
+  { key: 'Message', label: 'Messages', entity: 'Message' },
+  { key: 'FacebookPage', label: 'Facebook Pages', entity: 'FacebookPage' },
+  { key: 'SavedAudience', label: 'Saved Audiences', entity: 'SavedAudience' },
+];
 
 export default function AdminSettings() {
   const [rates, setRates] = useState([]);
@@ -25,6 +35,8 @@ export default function AdminSettings() {
   const [editServiceData, setEditServiceData] = useState({});
   const [adminEmail, setAdminEmail] = useState('');
   const [savingEmail, setSavingEmail] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -115,6 +127,17 @@ export default function AdminSettings() {
     await base44.entities.PaymentMethod.delete(id);
     setMethods(ms => ms.filter(m => m.id !== id));
     toast.success('Method deleted');
+  }
+
+  async function deleteAllEntity(entityKey) {
+    setDeleting(true);
+    const records = await base44.entities[entityKey].list();
+    for (const r of records) {
+      await base44.entities[entityKey].delete(r.id);
+    }
+    setDeleting(false);
+    setConfirmDelete(null);
+    toast.success(`All ${entityKey} records deleted`);
   }
 
   function startEdit(m) {
@@ -340,6 +363,38 @@ export default function AdminSettings() {
             <Button onClick={addRate} className="gap-2 bg-[hsl(var(--primary))] text-primary-foreground">
               <Plus className="w-4 h-4" /> Add Rate
             </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Danger Zone */}
+      <Card className="shadow-sm border-destructive/30">
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2 text-destructive">
+            <ShieldAlert className="w-4 h-4" /> Danger Zone — Delete All Records
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-sm text-muted-foreground">Permanently delete all records for a specific entity. This cannot be undone.</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {DANGER_ENTITIES.map(({ key, label }) => (
+              <div key={key} className="flex items-center justify-between p-3 bg-secondary/50 rounded-xl">
+                <span className="text-sm font-medium">{label}</span>
+                {confirmDelete === key ? (
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-destructive">Are you sure?</span>
+                    <Button size="sm" variant="destructive" disabled={deleting} className="h-7 text-xs" onClick={() => deleteAllEntity(key)}>
+                      {deleting ? 'Deleting...' : 'Yes, delete all'}
+                    </Button>
+                    <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setConfirmDelete(null)}>Cancel</Button>
+                  </div>
+                ) : (
+                  <Button size="sm" variant="outline" className="h-7 text-xs text-destructive border-destructive/40 hover:bg-destructive/10 gap-1" onClick={() => setConfirmDelete(key)}>
+                    <Trash2 className="w-3 h-3" /> Delete all
+                  </Button>
+                )}
+              </div>
+            ))}
           </div>
         </CardContent>
       </Card>

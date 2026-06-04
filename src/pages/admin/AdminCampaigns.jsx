@@ -1,17 +1,21 @@
 import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Link } from 'react-router-dom';
-import { Search, Filter } from 'lucide-react';
+import { Search, Trash2, AlertTriangle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import StatusBadge from '@/components/ui/StatusBadge';
 import { format } from 'date-fns';
+import { toast } from 'sonner';
 
 export default function AdminCampaigns() {
   const [campaigns, setCampaigns] = useState([]);
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('all');
   const [loading, setLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState(null);
+  const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
 
   useEffect(() => {
     base44.entities.Campaign.list('-created_date', 200).then(c => {
@@ -19,6 +23,29 @@ export default function AdminCampaigns() {
       setLoading(false);
     });
   }, []);
+
+  async function deleteCampaign(e, id) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (deletingId === id) {
+      await base44.entities.Campaign.delete(id);
+      setCampaigns(cs => cs.filter(c => c.id !== id));
+      setDeletingId(null);
+      toast.success('Campaign deleted');
+    } else {
+      setDeletingId(id);
+    }
+  }
+
+  async function deleteBulk() {
+    const toDelete = filtered;
+    for (const c of toDelete) {
+      await base44.entities.Campaign.delete(c.id);
+    }
+    setCampaigns(cs => cs.filter(c => !toDelete.find(d => d.id === c.id)));
+    setConfirmBulkDelete(false);
+    toast.success(`${toDelete.length} campaigns deleted`);
+  }
 
   const STATUSES = ['all', 'pending_review', 'awaiting_payment', 'active', 'approved', 'paused', 'completed', 'rejected'];
 
@@ -37,9 +64,24 @@ export default function AdminCampaigns() {
 
   return (
     <div className="p-4 lg:p-8 max-w-6xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold font-heading">All Campaigns</h1>
-        <p className="text-muted-foreground text-sm mt-1">{campaigns.length} total campaigns</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold font-heading">All Campaigns</h1>
+          <p className="text-muted-foreground text-sm mt-1">{campaigns.length} total campaigns</p>
+        </div>
+        {filtered.length > 0 && filter !== 'all' && (
+          confirmBulkDelete ? (
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-destructive font-medium">Delete all {filtered.length} {filter.replace(/_/g,' ')} campaigns?</span>
+              <Button size="sm" variant="destructive" onClick={deleteBulk}>Yes, delete all</Button>
+              <Button size="sm" variant="outline" onClick={() => setConfirmBulkDelete(false)}>Cancel</Button>
+            </div>
+          ) : (
+            <Button size="sm" variant="outline" className="text-destructive border-destructive/40 hover:bg-destructive/10 gap-1.5" onClick={() => setConfirmBulkDelete(true)}>
+              <Trash2 className="w-3.5 h-3.5" /> Delete all {filtered.length} {filter.replace(/_/g,' ')}
+            </Button>
+          )
+        )}
       </div>
 
       <div className="flex flex-col sm:flex-row gap-3">
@@ -70,13 +112,22 @@ export default function AdminCampaigns() {
                   <div className="flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3 min-w-0">
                       <div className="min-w-0">
-                        <p className="font-semibold text-sm truncate">{c.page_name || 'Campaign'}</p>
+                        <p className="font-semibold text-sm truncate">{c.campaign_name || c.page_name || 'Campaign'}</p>
                         <p className="text-xs text-muted-foreground capitalize">{c.package} · {c.duration} · {formatCost(c)} · {c.country || '—'}</p>
                       </div>
                     </div>
-                    <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
-                      <StatusBadge status={c.status} />
-                      <p className="text-xs text-muted-foreground">{c.created_date ? format(new Date(c.created_date), 'MMM d, yyyy') : ''}</p>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <div className="flex flex-col items-end gap-1.5">
+                        <StatusBadge status={c.status} />
+                        <p className="text-xs text-muted-foreground">{c.created_date ? format(new Date(c.created_date), 'MMM d, yyyy') : ''}</p>
+                      </div>
+                      <button
+                        onClick={(e) => deleteCampaign(e, c.id)}
+                        title={deletingId === c.id ? 'Click again to confirm' : 'Delete campaign'}
+                        className={`p-1.5 rounded-lg transition-colors flex-shrink-0 ${deletingId === c.id ? 'bg-destructive/10 text-destructive' : 'text-muted-foreground hover:text-destructive hover:bg-destructive/10'}`}
+                      >
+                        {deletingId === c.id ? <AlertTriangle className="w-4 h-4" /> : <Trash2 className="w-4 h-4" />}
+                      </button>
                     </div>
                   </div>
                 </CardContent>
