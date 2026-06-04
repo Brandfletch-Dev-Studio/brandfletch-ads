@@ -16,9 +16,14 @@ export default function DesignSubscription({ onSubscribe }) {
     queryFn: () => base44.auth.me(),
   });
 
-  const { data: exchangeRate } = useQuery({
-    queryKey: ['exchangeRate'],
-    queryFn: () => base44.entities.ExchangeRate.filter({ is_active: true }).then(r => r[0]),
+  const { data: paymentMethods } = useQuery({
+    queryKey: ['paymentMethods'],
+    queryFn: () => base44.entities.PaymentMethod.filter({ is_active: true }).then(r => r.sort((a, b) => a.sort_order - b.sort_order)),
+  });
+
+  const { data: designPricing } = useQuery({
+    queryKey: ['designPricing'],
+    queryFn: () => base44.entities.DesignPricing.filter({ is_active: true }),
   });
 
   const createSubscriptionMutation = useMutation({
@@ -58,17 +63,20 @@ export default function DesignSubscription({ onSubscribe }) {
     },
   });
 
+  const perDesignPricing = designPricing?.find(p => p.pricing_type === 'per_design');
+  const retainerPricing = designPricing?.find(p => p.pricing_type === 'retainer');
+
   const plans = [
     {
       id: 'per_design',
       name: 'Pay Per Design',
-      price: 15000,
-      currency: 'MWK',
-      usd: 17,
+      price: perDesignPricing?.price || 15000,
+      currency: perDesignPricing?.currency || 'MWK',
+      symbol: perDesignPricing?.symbol || 'MK',
       description: 'Perfect for one-off design needs',
       features: [
         '1 professional design',
-        '2 revisions included',
+        `${perDesignPricing?.max_revisions || 2} revisions included`,
         'High-quality creatives',
         'Ad-optimized designs',
         '48-hour delivery',
@@ -79,13 +87,14 @@ export default function DesignSubscription({ onSubscribe }) {
     {
       id: 'monthly',
       name: 'Monthly Retainer',
-      price: 50000,
-      currency: 'MWK',
-      usd: 57,
+      price: retainerPricing?.price || 50000,
+      currency: retainerPricing?.currency || 'MWK',
+      symbol: retainerPricing?.symbol || 'MK',
+      monthlyQuota: retainerPricing?.monthly_quota || 20,
       description: 'Best value for growing businesses',
       features: [
-        'Up to 20 designs per month',
-        '5 revisions per project',
+        `Up to ${retainerPricing?.monthly_quota || 20} designs per month`,
+        `${retainerPricing?.max_revisions || 5} revisions per project`,
         'High-quality creatives',
         'Ad-optimized for best performance',
         'Priority support',
@@ -118,7 +127,7 @@ export default function DesignSubscription({ onSubscribe }) {
         <p className="text-muted-foreground">Select the plan that best fits your business needs</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {plans.map((plan) => (
           <Card
             key={plan.id}
@@ -127,43 +136,40 @@ export default function DesignSubscription({ onSubscribe }) {
             } ${plan.popular ? 'border-blue-300 bg-blue-50' : ''}`}
             onClick={() => handleSelectPlan(plan)}
           >
-            <CardHeader>
+            <CardHeader className="pb-4">
               {plan.popular && (
                 <Badge className="w-fit mb-2 bg-blue-600">
                   Most Popular
                 </Badge>
               )}
               <div className="flex items-center gap-3 mb-2">
-                <div className="w-12 h-12 rounded-lg bg-purple-100 flex items-center justify-center">
-                  <Palette className="w-6 h-6 text-purple-700" />
+                <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center flex-shrink-0">
+                  <Palette className="w-5 h-5 text-purple-700" />
                 </div>
-                <div>
-                  <CardTitle>{plan.name}</CardTitle>
-                  <CardDescription>{plan.description}</CardDescription>
+                <div className="min-w-0">
+                  <CardTitle className="text-lg">{plan.name}</CardTitle>
+                  <CardDescription className="text-sm">{plan.description}</CardDescription>
                 </div>
               </div>
-              <div className="mt-4">
-                <div className="flex items-baseline gap-2">
-                  <span className="text-4xl font-bold">{plan.price.toLocaleString()}</span>
-                  <span className="text-sm text-muted-foreground">{plan.currency}</span>
+              <div className="mt-3">
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-3xl font-bold">{plan.symbol}{plan.price.toLocaleString()}</span>
                 </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  ≈ ${plan.usd} USD
-                </p>
               </div>
             </CardHeader>
-            <CardContent>
-              <ul className="space-y-3">
+            <CardContent className="pt-0">
+              <ul className="space-y-2">
                 {plan.features.map((feature, index) => (
-                  <li key={index} className="flex items-start gap-2 text-sm">
-                    <Check className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
+                  <li key={index} className="flex items-start gap-2 text-xs">
+                    <Check className="w-3.5 h-3.5 text-green-600 flex-shrink-0 mt-0.5" />
                     <span>{feature}</span>
                   </li>
                 ))}
               </ul>
               <Button
-                className="w-full mt-6"
+                className="w-full mt-4"
                 variant={selectedPlan?.id === plan.id ? 'default' : 'outline'}
+                size="sm"
               >
                 {selectedPlan?.id === plan.id ? 'Selected' : 'Select Plan'}
               </Button>
@@ -174,18 +180,30 @@ export default function DesignSubscription({ onSubscribe }) {
 
       {selectedPlan && (
         <Card className="border-blue-200 bg-blue-50">
-          <CardContent className="p-6">
+          <CardContent className="p-4">
             <div className="flex items-start gap-3">
-              <AlertCircle className="w-6 h-6 text-blue-600 flex-shrink-0 mt-0.5" />
+              <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
               <div className="flex-1">
-                <h4 className="font-semibold text-blue-900 mb-2">Next Steps</h4>
-                <ol className="space-y-2 text-sm text-blue-800">
+                <h4 className="font-semibold text-blue-900 mb-2 text-base">Next Steps</h4>
+                <ol className="space-y-1.5 text-xs text-blue-800">
                   <li>1. Click "Proceed to Payment" to continue</li>
                   <li>2. Complete payment using your preferred method</li>
                   <li>3. Submit payment proof for verification</li>
                   <li>4. Once approved, you can start requesting designs immediately</li>
                 </ol>
-                <Button className="w-full mt-4" onClick={handleProceedToPayment}>
+                {paymentMethods && paymentMethods.length > 0 && (
+                  <div className="mt-3 pt-3 border-t border-blue-200">
+                    <p className="text-xs font-semibold text-blue-900 mb-1.5">Available Payment Methods:</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {paymentMethods.slice(0, 4).map((method) => (
+                        <Badge key={method.id} variant="outline" className="text-xs bg-white">
+                          {method.method_name}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                <Button className="w-full mt-4" size="sm" onClick={handleProceedToPayment}>
                   Proceed to Payment
                 </Button>
               </div>
@@ -195,26 +213,26 @@ export default function DesignSubscription({ onSubscribe }) {
       )}
 
       <Card className="border-green-200 bg-green-50">
-        <CardContent className="p-6">
+        <CardContent className="p-4">
           <div className="flex items-start gap-3">
-            <Check className="w-6 h-6 text-green-600 flex-shrink-0 mt-0.5" />
-            <div>
-              <h4 className="font-semibold text-green-900 mb-2">All Plans Include</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-green-800">
+            <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+            <div className="min-w-0">
+              <h4 className="font-semibold text-green-900 mb-2 text-base">All Plans Include</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-green-800">
                 <div className="flex items-center gap-2">
-                  <FileText className="w-4 h-4" />
+                  <FileText className="w-3.5 h-3.5" />
                   <span>Professional design brief template</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Palette className="w-4 h-4" />
+                  <Palette className="w-3.5 h-3.5" />
                   <span>High-quality, ad-optimized creatives</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <RefreshCcw className="w-4 h-4" />
+                  <RefreshCcw className="w-3.5 h-3.5" />
                   <span>Revision rounds as per plan</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <DollarSign className="w-4 h-4" />
+                  <DollarSign className="w-3.5 h-3.5" />
                   <span>Save on design costs vs freelancers</span>
                 </div>
               </div>
