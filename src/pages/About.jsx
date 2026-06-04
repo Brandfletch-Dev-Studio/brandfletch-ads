@@ -124,7 +124,7 @@ export default function About() {
       {/* Footer */}
       <div className="border-t pt-6 mt-8">
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-          <BrandLogo size="sidebar" />
+          <BrandLogo size="sidebar" black />
           <p className="text-sm text-muted-foreground">
             © {new Date().getFullYear()} Brandfletch Media. All rights reserved.
           </p>
