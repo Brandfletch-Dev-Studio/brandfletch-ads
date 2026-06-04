@@ -26,6 +26,7 @@ export default function AdminSettings() {
   const [rates, setRates] = useState([]);
   const [methods, setMethods] = useState([]);
   const [designPricing, setDesignPricing] = useState([]);
+  const [newDesignPricing, setNewDesignPricing] = useState({ pricing_type: 'per_design', country: '', currency: '', symbol: '', price: '', monthly_quota: null, max_revisions: 2 });
   const [newRate, setNewRate] = useState({ currency_code: '', currency_name: '', country: '', rate_to_usd: '', use_fixed_pricing: false });
   const [newMethod, setNewMethod] = useState({ country: '', method_name: '', method_type: 'mobile_money', account_number: '', account_name: '', instructions: '' });
   const [editingMethod, setEditingMethod] = useState(null);

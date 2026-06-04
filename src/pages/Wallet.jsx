@@ -28,8 +28,9 @@ export default function Wallet() {
       const wallets = await base44.entities.Wallet.filter({ user_id: user?.id });
       if (wallets.length === 0) {
         const country = user?.country || 'Malawi';
-        const exchangeRate = await base44.entities.ExchangeRate.filter({ country, is_active: true }).then(r => r[0]);
-        const currency = exchangeRate?.currency_code || 'USD';
+        const exchangeRates = await base44.entities.ExchangeRate.filter({ country, is_active: true });
+        const currency = exchangeRates?.[0]?.currency_code || 'MWK';
+        console.log('Creating wallet with currency:', currency, 'for country:', country);
         const newWallet = await base44.entities.Wallet.create({
           user_id: user.id,
           balance: 0,
@@ -37,6 +38,7 @@ export default function Wallet() {
         });
         return newWallet;
       }
+      console.log('Existing wallet currency:', wallets[0].currency);
       return wallets[0];
     },
     enabled: !!user?.id,

@@ -44,11 +44,15 @@ export default function CampaignWizard() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    base44.auth.me().then(u => {
+    base44.auth.me().then(async u => {
       setUser(u);
+      const country = u?.country || 'Malawi';
+      const exchangeRates = await base44.entities.ExchangeRate.filter({ country, is_active: true });
+      const currency = exchangeRates?.[0]?.currency_code || 'MWK';
       setData(d => ({
         ...d,
-        country: u?.country || d.country,
+        country: country,
+        currency: currency,
         page_name: u?.fb_page_name || d.page_name,
         page_url: u?.fb_page_url || d.page_url,
       }));
