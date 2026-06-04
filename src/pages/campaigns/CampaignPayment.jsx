@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { Upload, CheckCircle2, ArrowLeft, Copy } from 'lucide-react';
+import { Upload, CheckCircle2, ArrowLeft, Copy, Wallet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -18,6 +18,8 @@ export default function CampaignPayment() {
   const [proofFile, setProofFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [wallet, setWallet] = useState(null);
+  const [payingWithWallet, setPayingWithWallet] = useState(false);
 
   useEffect(() => {
     init();
@@ -27,6 +29,14 @@ export default function CampaignPayment() {
     const c = await base44.entities.Campaign.filter({ id });
     const camp = c[0] || await base44.entities.Campaign.list().then(all => all.find(x => x.id === id));
     setCampaign(camp);
+    
+    // Get user's wallet
+    const user = await base44.auth.me();
+    const wallets = await base44.entities.Wallet.filter({ user_id: user.id });
+    if (wallets.length > 0) {
+      setWallet(wallets[0]);
+    }
+    
     if (camp?.country) {
       const methods = await base44.entities.PaymentMethod.filter({ country: camp.country, is_active: true }, 'sort_order');
       setPaymentMethods(methods);
@@ -77,12 +87,39 @@ export default function CampaignPayment() {
     setSubmitting(false);
   }
 
+  async function handlePayWithWallet() {
+    if (!wallet || wallet.balance < campaign.total_cost) {
+      toast.error('Insufficient wallet balance. Please top up your wallet first.');
+      navigate('/wallet');
+      return;
+    }
+
+    setPayingWithWallet(true);
+    try {
+      const response = await base44.functions.invoke('payCampaignWithWallet', { campaignId: id });
+      if (response.data.success) {
+        toast.success('Campaign paid successfully! Your campaign is now approved and active.');
+        setWallet(prev => ({ ...prev, balance: response.data.new_balance }));
+        navigate(`/campaigns/${id}`);
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Failed to process wallet payment');
+    } finally {
+      setPayingWithWallet(false);
+    }
+  }
+
   const formatCost = () => {
     if (!campaign) return '';
     const amt = campaign.total_cost || 0;
     const cur = campaign.currency || 'USD';
     if (cur === 'USD') return `$${amt.toFixed(2)}`;
     return `${cur} ${amt.toLocaleString()}`;
+  };
+
+  const formatCurrency = (amount, currency) => {
+    if (currency === 'USD') return `$${amount.toFixed(2)}`;
+    return `${currency} ${amount.toLocaleString()}`;
   };
 
   function CopyRow({ label, value }) {
@@ -105,6 +142,8 @@ export default function CampaignPayment() {
 
   if (!campaign) return <div className="p-8 text-center text-muted-foreground">Loading...</div>;
 
+  const canPayWithWallet = wallet && wallet.balance >= campaign.total_cost;
+
   return (
     <div className="p-4 lg:p-8 max-w-xl mx-auto space-y-6">
       <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
@@ -114,6 +153,52 @@ export default function CampaignPayment() {
       <div>
         <h1 className="text-2xl font-bold font-heading">Complete Payment</h1>
         <p className="text-muted-foreground text-sm mt-1">Submit your payment proof to activate your campaign.</p>
+      </div>
+
+      {/* Wallet payment option */}
+      {wallet && (
+        <Card className={`border-2 transition-all ${canPayWithWallet ? 'border-green-400 bg-green-50' : 'border-border'}`}>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Wallet className="w-5 h-5" /> Pay with Wallet
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium">Current Balance</p>
+                <p className="text-2xl font-bold">{formatCurrency(wallet.balance, wallet.currency)}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-sm font-medium">Campaign Cost</p>
+                <p className="text-lg font-bold">{formatCost()}</p>
+              </div>
+            </div>
+            {canPayWithWallet ? (
+              <Button
+                onClick={handlePayWithWallet}
+                disabled={payingWithWallet}
+                className="w-full bg-green-600 hover:bg-green-700 text-white"
+              >
+                {payingWithWallet ? 'Processing...' : 'Pay with Wallet Balance (Instant Approval)'}
+              </Button>
+            ) : (
+              <div className="text-sm text-amber-700 bg-amber-50 p-3 rounded-lg">
+                Insufficient balance. <a href="/wallet" className="underline font-medium">Top up your wallet</a> to pay instantly.
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Divider */}
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-border"></div>
+        </div>
+        <div className="relative flex justify-center text-xs uppercase">
+          <span className="bg-background px-2 text-muted-foreground">Or pay with traditional method</span>
+        </div>
       </div>
 
       {/* Amount card */}

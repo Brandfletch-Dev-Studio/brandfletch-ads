@@ -22,6 +22,7 @@ import Messages from '@/pages/Messages';
 import Marketplace from '@/pages/Marketplace';
 import Notifications from '@/pages/Notifications';
 import SupportTickets from '@/pages/SupportTickets';
+import Wallet from '@/pages/Wallet';
 import About from '@/pages/About';
 import Contact from '@/pages/Contact';
 
@@ -114,6 +115,7 @@ const AuthenticatedApp = () => {
         <Route path="/audiences" element={<SavedAudiences />} />
         <Route path="/settings" element={<ProfileSettings />} />
         <Route path="/marketplace" element={<Marketplace />} />
+        <Route path="/wallet" element={<Wallet />} />
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/support" element={<SupportTickets />} />
         <Route path="/messages" element={<Navigate to="/support" replace />} />

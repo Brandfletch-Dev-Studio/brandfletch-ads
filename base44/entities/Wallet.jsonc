@@ -1,0 +1,27 @@
+{
+  "name": "Wallet",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string",
+      "description": "Owner user ID"
+    },
+    "balance": {
+      "type": "number",
+      "default": 0,
+      "description": "Current balance in local currency"
+    },
+    "currency": {
+      "type": "string",
+      "default": "USD",
+      "description": "Wallet currency code"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "user_id"
+  ]
+}

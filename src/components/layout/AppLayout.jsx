@@ -20,6 +20,7 @@ const clientNav = [
   { path: '/campaigns', label: 'Campaigns', icon: Megaphone },
   { path: '/pages', label: 'Facebook Pages', icon: Facebook },
   { path: '/audiences', label: 'Audiences', icon: Users },
+  { path: '/wallet', label: 'Wallet', icon: Wallet },
   { path: '/marketplace', label: 'Marketplace', icon: ShoppingBag },
   { path: '/support', label: 'Support', icon: LifeBuoy },
   { path: '/settings', label: 'Settings', icon: Settings },

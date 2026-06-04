@@ -168,6 +168,15 @@
     "country": {
       "type": "string"
     },
+    "payment_type": {
+      "type": "string",
+      "enum": [
+        "wallet",
+        "external"
+      ],
+      "default": "external",
+      "description": "Whether paid via wallet balance or external payment method"
+    },
     "status": {
       "type": "string",
       "enum": [
