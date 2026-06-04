@@ -18,7 +18,9 @@ export default function AdminSettings() {
   const [editingMethod, setEditingMethod] = useState(null);
   const [editMethodData, setEditMethodData] = useState({});
   const [services, setServices] = useState([]);
-  const [newService, setNewService] = useState({ name: '', description: '', category: 'page_setup', price_usd: 25 });
+  const [newService, setNewService] = useState({ name: '', description: '', category: 'page_setup', price_usd: 25, type: 'service', required_fields: [] });
+  const [newFieldInput, setNewFieldInput] = useState('');
+  const [editFieldInput, setEditFieldInput] = useState('');
   const [editingService, setEditingService] = useState(null);
   const [editServiceData, setEditServiceData] = useState({});
   const [adminEmail, setAdminEmail] = useState('');
@@ -50,7 +52,8 @@ export default function AdminSettings() {
     if (!newService.name || !newService.price_usd) return;
     await base44.entities.Service.create({ ...newService, is_active: true });
     toast.success('Service added');
-    setNewService({ name: '', description: '', category: 'page_setup', price_usd: 25 });
+    setNewService({ name: '', description: '', category: 'page_setup', price_usd: 25, type: 'service', required_fields: [] });
+    setNewFieldInput('');
     const s = await base44.entities.Service.list('sort_order');
     setServices(s);
   }
@@ -145,39 +148,75 @@ export default function AdminSettings() {
             {services.map(s => (
               <div key={s.id} className="p-3 bg-secondary/50 rounded-xl">
                 {editingService === s.id ? (
-                  <div className="space-y-2">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      <Input value={editServiceData.name || ''} onChange={e => setEditServiceData(d => ({ ...d, name: e.target.value }))} placeholder="Service name" className="h-8 text-sm" />
-                      <Input type="number" value={editServiceData.price_usd || ''} onChange={e => setEditServiceData(d => ({ ...d, price_usd: parseFloat(e.target.value) }))} placeholder="Price (USD)" className="h-8 text-sm" />
+                <div className="space-y-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <Input value={editServiceData.name || ''} onChange={e => setEditServiceData(d => ({ ...d, name: e.target.value }))} placeholder="Service name" className="h-8 text-sm" />
+                    <Input type="number" value={editServiceData.price_usd || ''} onChange={e => setEditServiceData(d => ({ ...d, price_usd: parseFloat(e.target.value) }))} placeholder="Price (USD)" className="h-8 text-sm" />
+                  </div>
+                  <Input value={editServiceData.description || ''} onChange={e => setEditServiceData(d => ({ ...d, description: e.target.value }))} placeholder="Description" className="h-8 text-sm" />
+                  <div className="flex gap-2">
+                    <Select value={editServiceData.type || 'service'} onValueChange={v => setEditServiceData(d => ({ ...d, type: v }))}>
+                      <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="service">Service</SelectItem>
+                        <SelectItem value="product">Product</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium mb-1">Required Fields (from client)</p>
+                    <div className="flex flex-wrap gap-1 mb-1">
+                      {(editServiceData.required_fields || []).map((f, i) => (
+                        <span key={i} className="bg-secondary text-xs px-2 py-0.5 rounded-full flex items-center gap-1">
+                          {f}
+                          <button onClick={() => setEditServiceData(d => ({ ...d, required_fields: d.required_fields.filter((_, fi) => fi !== i) }))}><X className="w-3 h-3" /></button>
+                        </span>
+                      ))}
                     </div>
-                    <Input value={editServiceData.description || ''} onChange={e => setEditServiceData(d => ({ ...d, description: e.target.value }))} placeholder="Description" className="h-8 text-sm" />
-                    <div className="flex items-center gap-2">
-                      <Button size="sm" onClick={saveEditService} className="gap-1 h-7"><Check className="w-3 h-3" /> Save</Button>
-                      <Button size="sm" variant="outline" onClick={() => setEditingService(null)} className="h-7"><X className="w-3 h-3" /> Cancel</Button>
+                    <div className="flex gap-1">
+                      <Input value={editFieldInput} onChange={e => setEditFieldInput(e.target.value)} placeholder="e.g. Phone Number" className="h-7 text-xs flex-1"
+                        onKeyDown={e => { if (e.key === 'Enter' && editFieldInput.trim()) { setEditServiceData(d => ({ ...d, required_fields: [...(d.required_fields || []), editFieldInput.trim()] })); setEditFieldInput(''); }}} />
+                      <Button size="sm" className="h-7 text-xs" onClick={() => { if (editFieldInput.trim()) { setEditServiceData(d => ({ ...d, required_fields: [...(d.required_fields || []), editFieldInput.trim()] })); setEditFieldInput(''); }}}>Add</Button>
                     </div>
                   </div>
+                  <div className="flex items-center gap-2">
+                    <Button size="sm" onClick={saveEditService} className="gap-1 h-7"><Check className="w-3 h-3" /> Save</Button>
+                    <Button size="sm" variant="outline" onClick={() => setEditingService(null)} className="h-7"><X className="w-3 h-3" /> Cancel</Button>
+                  </div>
+                </div>
                 ) : (
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
                       <p className="font-semibold text-sm">{s.name}</p>
-                      <p className="text-xs text-muted-foreground">${s.price_usd} USD · {s.category?.replace('_', ' ')}</p>
-                      {s.description && <p className="text-xs text-muted-foreground mt-0.5 truncate">{s.description}</p>}
+                      <span className="text-[10px] bg-secondary px-1.5 py-0.5 rounded-full capitalize">{s.type || 'service'}</span>
                     </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <Switch checked={s.is_active} onCheckedChange={v => toggleService(s.id, v)} />
-                      <Button variant="ghost" size="icon" onClick={() => { setEditingService(s.id); setEditServiceData({ ...s }); }}><Pencil className="w-4 h-4" /></Button>
-                      <Button variant="ghost" size="icon" onClick={() => deleteService(s.id)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
-                    </div>
+                    <p className="text-xs text-muted-foreground">${s.price_usd} USD · {s.category?.replace('_', ' ')}</p>
+                    {s.description && <p className="text-xs text-muted-foreground mt-0.5 truncate">{s.description}</p>}
+                    {s.required_fields?.length > 0 && <p className="text-xs text-muted-foreground mt-0.5">Fields: {s.required_fields.join(', ')}</p>}
                   </div>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <Switch checked={s.is_active} onCheckedChange={v => toggleService(s.id, v)} />
+                    <Button variant="ghost" size="icon" onClick={() => { setEditingService(s.id); setEditServiceData({ ...s }); setEditFieldInput(''); }}><Pencil className="w-4 h-4" /></Button>
+                    <Button variant="ghost" size="icon" onClick={() => deleteService(s.id)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
+                  </div>
+                </div>
                 )}
               </div>
             ))}
           </div>
           <div className="p-4 border-2 border-dashed border-border rounded-xl space-y-3">
-            <h4 className="text-sm font-semibold">Add Service</h4>
+            <h4 className="text-sm font-semibold">Add Service / Product</h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Input value={newService.name} onChange={e => setNewService(s => ({ ...s, name: e.target.value }))} placeholder="Service name" />
+              <Input value={newService.name} onChange={e => setNewService(s => ({ ...s, name: e.target.value }))} placeholder="Name" />
               <Input type="number" value={newService.price_usd} onChange={e => setNewService(s => ({ ...s, price_usd: parseFloat(e.target.value) }))} placeholder="Price in USD" />
+              <Select value={newService.type} onValueChange={v => setNewService(s => ({ ...s, type: v }))}>
+                <SelectTrigger><SelectValue placeholder="Type" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="service">Service</SelectItem>
+                  <SelectItem value="product">Product</SelectItem>
+                </SelectContent>
+              </Select>
               <Select value={newService.category} onValueChange={v => setNewService(s => ({ ...s, category: v }))}>
                 <SelectTrigger><SelectValue placeholder="Category" /></SelectTrigger>
                 <SelectContent>
@@ -186,10 +225,26 @@ export default function AdminSettings() {
                   ))}
                 </SelectContent>
               </Select>
-              <Input value={newService.description} onChange={e => setNewService(s => ({ ...s, description: e.target.value }))} placeholder="Short description" />
+              <Input value={newService.description} onChange={e => setNewService(s => ({ ...s, description: e.target.value }))} placeholder="Short description" className="sm:col-span-2" />
+            </div>
+            <div>
+              <p className="text-xs font-medium mb-1">Required Fields (client must fill when ordering)</p>
+              <div className="flex flex-wrap gap-1 mb-2">
+                {(newService.required_fields || []).map((f, i) => (
+                  <span key={i} className="bg-secondary text-xs px-2 py-0.5 rounded-full flex items-center gap-1">
+                    {f}
+                    <button onClick={() => setNewService(s => ({ ...s, required_fields: s.required_fields.filter((_, fi) => fi !== i) }))}><X className="w-3 h-3" /></button>
+                  </span>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <Input value={newFieldInput} onChange={e => setNewFieldInput(e.target.value)} placeholder="e.g. Business Name" className="h-8 text-sm flex-1"
+                  onKeyDown={e => { if (e.key === 'Enter' && newFieldInput.trim()) { setNewService(s => ({ ...s, required_fields: [...(s.required_fields || []), newFieldInput.trim()] })); setNewFieldInput(''); }}} />
+                <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => { if (newFieldInput.trim()) { setNewService(s => ({ ...s, required_fields: [...(s.required_fields || []), newFieldInput.trim()] })); setNewFieldInput(''); }}}>+ Add Field</Button>
+              </div>
             </div>
             <Button onClick={addService} className="gap-2 bg-[hsl(var(--primary))] text-primary-foreground">
-              <Plus className="w-4 h-4" /> Add Service
+              <Plus className="w-4 h-4" /> Add
             </Button>
           </div>
         </CardContent>
