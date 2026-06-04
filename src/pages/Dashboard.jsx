@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import StatusBadge from '@/components/ui/StatusBadge';
 import AdPlacement from '@/components/ads/AdPlacement';
+import AgentChatWidget from '@/components/agents/AgentChatWidget';
 
 const PAGE_STATUS_STYLES = {
   connected:            'bg-green-100 text-green-700',
@@ -172,6 +173,12 @@ export default function Dashboard() {
         )}
 
       </div>
+
+      {/* AI Assistant Chat Widget */}
+      <AgentChatWidget 
+        agentName="campaign_setup_assistant" 
+        triggerPrompt="Need help starting your first campaign?" 
+      />
     </div>
   );
 }
