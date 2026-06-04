@@ -98,7 +98,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-4">
         {stats.map((stat) => (
           <Link key={stat.label} to={stat.to}>
-            <Card className="hover:shadow-lg transition-all cursor-pointer border-l-4 ${stat.accent}">
+            <Card className={`hover:shadow-lg transition-all cursor-pointer border-l-4 ${stat.accent}`}>
               <CardContent className="p-3 md:p-4">
                 <p className="text-xl md:text-2xl font-bold">{stat.value}</p>
                 <p className="text-xs text-muted-foreground mt-1">{stat.label}</p>
