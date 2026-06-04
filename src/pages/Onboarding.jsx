@@ -4,10 +4,9 @@ import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { COUNTRIES, COUNTRY_CURRENCY, formatLocalCurrency } from '@/lib/constants';
-import { ChevronRight, Check, Loader2, CheckCircle2, Facebook, Briefcase, Wrench, Copy, CheckCheck, ChevronDown } from 'lucide-react';
+import { COUNTRIES } from '@/lib/constants';
+import { ChevronRight, Check, Loader2, Facebook } from 'lucide-react';
 import BrandLogo from '@/components/BrandLogo';
 import { useQuery } from '@tanstack/react-query';
 
@@ -32,28 +31,11 @@ export default function Onboarding() {
   const [user, setUser] = useState(null);
   const [saving, setSaving] = useState(false);
   const [detectingLocation, setDetectingLocation] = useState(false);
-  const [uploadingFile, setUploadingFile] = useState(false);
-  const [fbPageChoice, setFbPageChoice] = useState(null); // 'yes' | 'no'
-  const [setupChoice, setSetupChoice] = useState(null);   // 'hire' | 'diy'
-  const [expandedMethod, setExpandedMethod] = useState(null);
-  const [copiedField, setCopiedField] = useState(null);
 
   const [form, setForm] = useState({
     full_name: '', business_name: '', business_type: '',
     phone: '', country: '', primary_goal: '',
-  });
-
-  const [setupForm, setSetupForm] = useState({
-    business_name: '', products_services: '', business_location: '',
-    whatsapp_number: '', email: '', additional_notes: '',
-    logo_urls: [],
-    payment_method_id: '', payment_reference: '', payment_proof_url: '',
-  });
-
-  const { data: pageSetupService } = useQuery({
-    queryKey: ['service-page-setup'],
-    queryFn: () => base44.entities.Service.filter({ category: 'page_setup', is_active: true }),
-    select: data => data[0],
+    fb_page_name: '', fb_page_url: '',
   });
 
   const { data: exchangeRates = [] } = useQuery({
@@ -61,17 +43,10 @@ export default function Onboarding() {
     queryFn: () => base44.entities.ExchangeRate.filter({ is_active: true }),
   });
 
-  const { data: paymentMethods = [] } = useQuery({
-    queryKey: ['payment-methods', form.country],
-    queryFn: () => base44.entities.PaymentMethod.filter({ country: form.country, is_active: true }),
-    enabled: !!form.country,
-  });
-
   useEffect(() => {
     base44.auth.me().then(u => {
       setUser(u);
       setForm(f => ({ ...f, full_name: u.full_name || '' }));
-      setSetupForm(f => ({ ...f, email: u.email || '' }));
       detectCountry();
     }).catch(() => navigate('/login'));
   }, []);
@@ -90,29 +65,6 @@ export default function Onboarding() {
   }
 
   function update(key, val) { setForm(f => ({ ...f, [key]: val })); }
-  function updateSetup(key, val) { setSetupForm(f => ({ ...f, [key]: val })); }
-
-  async function uploadFile(file) {
-    setUploadingFile(true);
-    const { file_url } = await base44.integrations.Core.UploadFile({ file });
-    setUploadingFile(false);
-    return file_url;
-  }
-
-  async function handleLogoUpload(e) {
-    const files = Array.from(e.target.files);
-    for (const file of files) {
-      const url = await uploadFile(file);
-      setSetupForm(f => ({ ...f, logo_urls: [...f.logo_urls, url] }));
-    }
-  }
-
-  async function handleProofUpload(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    const url = await uploadFile(file);
-    updateSetup('payment_proof_url', url);
-  }
 
   async function saveProfile() {
     await base44.auth.updateMe({
@@ -122,6 +74,8 @@ export default function Onboarding() {
       phone: form.phone,
       country: form.country,
       primary_goal: form.primary_goal,
+      fb_page_name: form.fb_page_name,
+      fb_page_url: form.fb_page_url,
       onboarded: true,
     });
   }
@@ -132,67 +86,12 @@ export default function Onboarding() {
     window.location.href = '/dashboard';
   }
 
-  async function submitHireRequest() {
-    setSaving(true);
-    await saveProfile();
-    const selectedMethod = paymentMethods.find(m => m.id === setupForm.payment_method_id);
-    await base44.entities.PageSetupRequest.create({
-      user_id: user?.id,
-      country: form.country,
-      business_name: setupForm.business_name,
-      products_services: setupForm.products_services,
-      business_location: setupForm.business_location,
-      whatsapp_number: setupForm.whatsapp_number,
-      email: setupForm.email,
-      logo_urls: setupForm.logo_urls,
-      additional_notes: setupForm.additional_notes,
-      payment_method: selectedMethod?.method_name || '',
-      payment_reference: setupForm.payment_reference,
-      payment_proof_url: setupForm.payment_proof_url,
-      status: setupForm.payment_proof_url ? 'paid' : 'pending_payment',
-    });
-    window.location.href = '/dashboard';
-  }
-
-  const isHireFlow = setupChoice === 'hire';
-  const baseSteps = [
+  const steps = [
     { id: 1, title: 'Your Details' },
     { id: 2, title: 'Your Business' },
     { id: 3, title: 'Your Goal' },
     { id: 4, title: 'Facebook Page' },
   ];
-  const hireSteps = [
-    ...baseSteps,
-    { id: 5, title: 'Page Details' },
-    { id: 6, title: 'Payment' },
-  ];
-  const steps = isHireFlow ? hireSteps : baseSteps;
-  const selectedPaymentMethod = paymentMethods.find(m => m.id === setupForm.payment_method_id);
-  const servicePrice = pageSetupService?.price_usd ?? 25;
-
-  function localPrice(usdAmount) {
-    const cc = COUNTRY_CURRENCY[form.country];
-    if (!cc) return { display: `$${usdAmount.toFixed(2)}`, local: null };
-    const liveRate = exchangeRates.find(r => r.country === form.country);
-    if (liveRate?.rate_to_usd) {
-      const local = usdAmount * liveRate.rate_to_usd;
-      const fmt = local >= 1000
-        ? local.toLocaleString('en', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
-        : local.toFixed(2);
-      const str = `${cc.symbol} ${fmt}`;
-      return { display: str, local: str, usd: `$${usdAmount}`, code: cc.code };
-    }
-    // fallback to hardcoded rates in constants
-    const str = formatLocalCurrency(usdAmount, form.country);
-    return { display: str, local: str, usd: `$${usdAmount}`, code: cc.code };
-  }
-
-  function copyText(text, field) {
-    navigator.clipboard.writeText(text);
-    setCopiedField(field);
-    setTimeout(() => setCopiedField(null), 2000);
-  }
-
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <div className="flex items-center justify-between px-6 py-4 border-b border-border">
@@ -319,243 +218,37 @@ export default function Onboarding() {
             {/* Step 4: Facebook Page */}
             {step === 4 && (
               <>
-                <h2 className="text-xl font-bold font-heading mb-1">Facebook Page</h2>
-                <p className="text-sm text-muted-foreground mb-6">Does your business have a Facebook Page?</p>
-
-                {fbPageChoice === null && (
-                  <div className="space-y-3">
-                    <button onClick={() => setFbPageChoice('yes')}
-                      className="w-full flex items-center gap-4 p-4 rounded-xl border-2 border-border hover:border-green-400 text-left transition-all">
-                      <CheckCircle2 className="w-6 h-6 text-green-500 flex-shrink-0" />
-                      <div>
-                        <p className="font-semibold text-sm">Yes, I have a Facebook Page</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">I'm ready to start advertising</p>
-                      </div>
-                    </button>
-                    <button onClick={() => setFbPageChoice('no')}
-                      className="w-full flex items-center gap-4 p-4 rounded-xl border-2 border-border hover:border-[hsl(var(--primary))]/40 text-left transition-all">
-                      <Facebook className="w-6 h-6 text-[hsl(var(--primary))] flex-shrink-0" />
-                      <div>
-                        <p className="font-semibold text-sm">No, I don't have one yet</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">I need help setting one up</p>
-                      </div>
-                    </button>
-                  </div>
-                )}
-
-                {fbPageChoice === 'yes' && (
-                  <div className="text-center py-4">
-                    <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto mb-3" />
-                    <p className="font-semibold">You're all set!</p>
-                    <p className="text-sm text-muted-foreground mt-1">You can connect your Facebook Page from the dashboard.</p>
-                  </div>
-                )}
-
-                {fbPageChoice === 'no' && setupChoice === null && (
-                  <div className="space-y-3">
-                    <p className="text-sm font-medium mb-3">How would you like to proceed?</p>
-                    <button onClick={() => setSetupChoice('hire')}
-                      className="w-full flex items-center gap-4 p-4 rounded-xl border-2 border-border hover:border-[hsl(var(--primary))]/50 text-left transition-all group">
-                      <div className="w-10 h-10 rounded-xl bg-[hsl(var(--primary))]/10 flex items-center justify-center flex-shrink-0">
-                        <Briefcase className="w-5 h-5 text-[hsl(var(--primary))]" />
-                      </div>
-                      <div>
-                        <p className="font-semibold text-sm">Hire Brandfletch</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">We'll professionally create and set up your Facebook Page for you</p>
-                        <p className="text-xs font-semibold text-[hsl(var(--primary))] mt-1">{localPrice(servicePrice).display}</p>
-                      </div>
-                    </button>
-                    <button onClick={() => { setSetupChoice('diy'); finish(); }}
-                      className="w-full flex items-center gap-4 p-4 rounded-xl border-2 border-border hover:border-border/60 text-left transition-all group">
-                      <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center flex-shrink-0">
-                        <Wrench className="w-5 h-5 text-muted-foreground" />
-                      </div>
-                      <div>
-                        <p className="font-semibold text-sm">I'll do it myself (DIY)</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">Go to the dashboard and connect your page when it's ready</p>
-                      </div>
-                    </button>
-                  </div>
-                )}
-
-                {fbPageChoice === 'no' && setupChoice === 'hire' && (
-                  <div className="text-center py-4">
-                    <div className="w-12 h-12 rounded-full bg-[hsl(var(--primary))]/10 flex items-center justify-center mx-auto mb-3">
-                      <Briefcase className="w-6 h-6 text-[hsl(var(--primary))]" />
-                    </div>
-                    <p className="font-semibold">Great choice!</p>
-                    <p className="text-sm text-muted-foreground mt-1">Fill in your business details and we'll get started on your Facebook Page.</p>
-                  </div>
-                )}
-              </>
-            )}
-
-            {/* Step 5: Business Details */}
-            {step === 5 && (
-              <>
-                <h2 className="text-xl font-bold font-heading mb-1">Business Details</h2>
-                <p className="text-sm text-muted-foreground mb-6">We need these to create your Facebook Page</p>
+                <h2 className="text-xl font-bold font-heading mb-1">Your Facebook Page</h2>
+                <p className="text-sm text-muted-foreground mb-6">Add your Facebook Page details so we can set up your campaigns.</p>
                 <div className="space-y-4">
-                  <div>
-                    <Label className="mb-1.5 block">Business Name *</Label>
-                    <Input value={setupForm.business_name} onChange={e => updateSetup('business_name', e.target.value)}
-                      placeholder="Your business name" className="h-11" />
+                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex gap-3">
+                    <Facebook className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                    <p className="text-sm text-blue-800">Don't worry about connecting your page now — we'll handle that after your first campaign payment is confirmed.</p>
                   </div>
                   <div>
-                    <Label className="mb-1.5 block">Products / Services You Offer *</Label>
-                    <Textarea value={setupForm.products_services} onChange={e => updateSetup('products_services', e.target.value)}
-                      placeholder="e.g. Women's clothing, accessories, custom orders..." rows={3} />
+                    <Label className="mb-1.5 block">Facebook Page Name *</Label>
+                    <Input
+                      value={form.fb_page_name}
+                      onChange={e => update('fb_page_name', e.target.value)}
+                      placeholder="e.g. Chisomo's Boutique"
+                      className="h-11"
+                    />
                   </div>
                   <div>
-                    <Label className="mb-1.5 block">Business Location *</Label>
-                    <Input value={setupForm.business_location} onChange={e => updateSetup('business_location', e.target.value)}
-                      placeholder="e.g. Area 18, Lilongwe" className="h-11" />
+                    <Label className="mb-1.5 block">Facebook Page URL <span className="text-muted-foreground font-normal">(optional)</span></Label>
+                    <Input
+                      value={form.fb_page_url}
+                      onChange={e => update('fb_page_url', e.target.value)}
+                      placeholder="e.g. facebook.com/ChisomoBoutique"
+                      className="h-11"
+                    />
                   </div>
-                  <div>
-                    <Label className="mb-1.5 block">WhatsApp Business Number *</Label>
-                    <Input value={setupForm.whatsapp_number} onChange={e => updateSetup('whatsapp_number', e.target.value)}
-                      placeholder="+265 999 000 000" className="h-11" />
-                  </div>
-                  <div>
-                    <Label className="mb-1.5 block">Email Address *</Label>
-                    <Input value={setupForm.email} onChange={e => updateSetup('email', e.target.value)}
-                      placeholder="business@example.com" className="h-11" />
-                  </div>
-                  <div>
-                    <Label className="mb-1.5 block">Logo or Business Pictures</Label>
-                    <input type="file" accept="image/*" multiple onChange={handleLogoUpload}
-                      className="block w-full text-sm text-muted-foreground file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-secondary file:text-foreground hover:file:bg-secondary/80 cursor-pointer" />
-                    {uploadingFile && <p className="text-xs text-muted-foreground mt-1 animate-pulse">Uploading...</p>}
-                    {setupForm.logo_urls.length > 0 && (
-                      <div className="flex gap-2 flex-wrap mt-2">
-                        {setupForm.logo_urls.map((url, i) => (
-                          <img key={i} src={url} alt="" className="w-14 h-14 rounded-lg object-cover border border-border" />
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  <div>
-                    <Label className="mb-1.5 block">Anything else you'd like customers to know?</Label>
-                    <Textarea value={setupForm.additional_notes} onChange={e => updateSetup('additional_notes', e.target.value)}
-                      placeholder="Opening hours, tagline, website, special offers..." rows={3} />
-                  </div>
+                  <p className="text-xs text-muted-foreground">Don't have a Facebook Page yet? You can skip this for now and add it later from your dashboard.</p>
                 </div>
               </>
             )}
 
-            {/* Step 6: Payment */}
-            {step === 6 && (
-              <>
-                <h2 className="text-xl font-bold font-heading mb-1">Payment</h2>
-                <p className="text-sm text-muted-foreground mb-4">Pay for your Facebook Page setup service</p>
 
-                {/* Amount box */}
-                <div className="bg-[hsl(var(--primary))]/5 border-2 border-[hsl(var(--primary))]/20 rounded-xl p-4 mb-5">
-                  <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium mb-1">Amount to Deposit</p>
-                  <p className="text-3xl font-bold text-[hsl(var(--primary))] font-heading">{localPrice(servicePrice).local || localPrice(servicePrice).display}</p>
-                  {localPrice(servicePrice).local && (
-                    <p className="text-xs text-muted-foreground mt-1">{localPrice(servicePrice).usd} USD · {localPrice(servicePrice).code}</p>
-                  )}
-                </div>
-
-                {paymentMethods.length === 0 ? (
-                  <div className="text-center py-6 text-muted-foreground text-sm">
-                    <p>No payment methods available for {form.country} yet.</p>
-                    <p className="mt-1">Contact us at support@brandfletch.com</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    <div>
-                      <Label className="mb-2 block">Select Payment Method *</Label>
-                      <div className="space-y-2">
-                        {paymentMethods.map(m => {
-                          const isSelected = setupForm.payment_method_id === m.id;
-                          const isExpanded = expandedMethod === m.id;
-                          return (
-                            <div key={m.id} className={`rounded-xl border-2 transition-all overflow-hidden ${
-                              isSelected ? 'border-[hsl(var(--primary))] bg-[hsl(var(--primary))]/5' : 'border-border'
-                            }`}>
-                              <button
-                                onClick={() => {
-                                  updateSetup('payment_method_id', m.id);
-                                  setExpandedMethod(isExpanded ? null : m.id);
-                                }}
-                                className="w-full text-left p-4 flex items-center justify-between gap-3"
-                              >
-                                <div className="flex items-center gap-3">
-                                  {isSelected && <Check className="w-4 h-4 text-[hsl(var(--primary))] flex-shrink-0" />}
-                                  <div>
-                                    <p className="font-semibold text-sm">{m.method_name}</p>
-                                    {!isExpanded && m.account_number && (
-                                      <p className="text-xs text-muted-foreground mt-0.5">{m.account_number}</p>
-                                    )}
-                                  </div>
-                                </div>
-                                <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform flex-shrink-0 ${isExpanded ? 'rotate-180' : ''}`} />
-                              </button>
-
-                              {isExpanded && (
-                                <div className="px-4 pb-4 space-y-2 border-t border-border/50 pt-3">
-                                  {m.account_name && (
-                                    <div className="flex items-center justify-between gap-2 bg-background rounded-lg px-3 py-2">
-                                      <div>
-                                        <p className="text-xs text-muted-foreground">Account Name</p>
-                                        <p className="text-sm font-semibold">{m.account_name}</p>
-                                      </div>
-                                      <button onClick={() => copyText(m.account_name, `name-${m.id}`)} className="p-1.5 rounded-lg hover:bg-secondary transition-colors flex-shrink-0">
-                                        {copiedField === `name-${m.id}` ? <CheckCheck className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4 text-muted-foreground" />}
-                                      </button>
-                                    </div>
-                                  )}
-                                  {m.account_number && (
-                                    <div className="flex items-center justify-between gap-2 bg-background rounded-lg px-3 py-2">
-                                      <div>
-                                        <p className="text-xs text-muted-foreground">Account Number</p>
-                                        <p className="text-sm font-semibold font-mono">{m.account_number}</p>
-                                      </div>
-                                      <button onClick={() => copyText(m.account_number, `num-${m.id}`)} className="p-1.5 rounded-lg hover:bg-secondary transition-colors flex-shrink-0">
-                                        {copiedField === `num-${m.id}` ? <CheckCheck className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4 text-muted-foreground" />}
-                                      </button>
-                                    </div>
-                                  )}
-                                  {m.instructions && (
-                                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-                                      <p className="text-xs font-medium text-amber-800 mb-1">Instructions</p>
-                                      <p className="text-xs text-amber-700 whitespace-pre-wrap">{m.instructions}</p>
-                                    </div>
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-
-                    <div>
-                      <Label className="mb-1.5 block">Payment Reference / Transaction ID</Label>
-                      <Input value={setupForm.payment_reference} onChange={e => updateSetup('payment_reference', e.target.value)}
-                        placeholder="e.g. TXN123456" className="h-11" />
-                    </div>
-
-                    <div>
-                      <Label className="mb-1.5 block">Upload Payment Proof *</Label>
-                      <input type="file" accept="image/*,application/pdf" onChange={handleProofUpload}
-                        className="block w-full text-sm text-muted-foreground file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-secondary file:text-foreground hover:file:bg-secondary/80 cursor-pointer" />
-                      {uploadingFile && <p className="text-xs text-muted-foreground mt-1 animate-pulse">Uploading...</p>}
-                      {setupForm.payment_proof_url ? (
-                        <div className="flex items-center gap-2 mt-2 text-green-600">
-                          <CheckCircle2 className="w-4 h-4" />
-                          <p className="text-xs font-medium">Proof uploaded — you're ready to submit!</p>
-                        </div>
-                      ) : (
-                        <p className="text-xs text-muted-foreground mt-1">Required before submitting</p>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </>
-            )}
 
           </div>
 
@@ -563,7 +256,6 @@ export default function Onboarding() {
           <div className="flex justify-between mt-5">
             {step > 1 ? (
               <Button variant="outline" onClick={() => {
-                if (step === 4) { setFbPageChoice(null); setSetupChoice(null); }
                 setStep(s => s - 1);
               }}>Back</Button>
             ) : (
@@ -587,38 +279,14 @@ export default function Onboarding() {
                 </Button>
               )}
 
-              {step === 4 && fbPageChoice === 'yes' && (
+              {step === 4 && (
                 <Button onClick={finish} disabled={saving}
                   className="gap-2 bg-[hsl(var(--accent))] hover:bg-[hsl(217,91%,48%)] text-white font-semibold">
                   {saving ? <><Loader2 className="w-4 h-4 animate-spin" /> Setting up...</> : <>Go to Dashboard <ChevronRight className="w-4 h-4" /></>}
                 </Button>
               )}
 
-              {step === 4 && fbPageChoice === 'no' && setupChoice === 'hire' && (
-                <Button onClick={() => setStep(5)}
-                  className="gap-2 bg-[hsl(var(--primary))] text-primary-foreground font-semibold">
-                  Continue <ChevronRight className="w-4 h-4" />
-                </Button>
-              )}
 
-              {step === 5 && (
-                <Button
-                  onClick={() => setStep(6)}
-                  disabled={!setupForm.business_name || !setupForm.products_services || !setupForm.business_location || !setupForm.whatsapp_number || !setupForm.email}
-                  className="gap-2 bg-[hsl(var(--primary))] text-primary-foreground font-semibold">
-                  Continue <ChevronRight className="w-4 h-4" />
-                </Button>
-              )}
-
-              {step === 6 && (
-                <Button onClick={submitHireRequest} disabled={saving || uploadingFile || !setupForm.payment_method_id || !setupForm.payment_proof_url}
-                  className="gap-2 bg-[hsl(var(--accent))] hover:bg-[hsl(217,91%,48%)] text-white font-semibold">
-                  {saving
-                    ? <><Loader2 className="w-4 h-4 animate-spin" /> Submitting...</>
-                    : <>Submit &amp; Go to Dashboard <ChevronRight className="w-4 h-4" /></>
-                  }
-                </Button>
-              )}
             </div>
           </div>
         </div>

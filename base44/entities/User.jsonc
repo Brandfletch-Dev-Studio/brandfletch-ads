@@ -50,6 +50,14 @@
     "primary_goal": {
       "type": "string"
     },
+    "fb_page_name": {
+      "type": "string",
+      "description": "Facebook Page name collected at onboarding"
+    },
+    "fb_page_url": {
+      "type": "string",
+      "description": "Facebook Page URL collected at onboarding"
+    },
     "admin_notification_email": {
       "type": "string"
     },

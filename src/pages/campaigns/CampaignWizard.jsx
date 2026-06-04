@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
-import StepSelectPage from './wizard/StepSelectPage';
 import StepCreative from './wizard/StepCreative';
 import StepGoal from './wizard/StepGoal';
 import StepAudience from './wizard/StepAudience';
@@ -14,12 +13,11 @@ import StepPackage from './wizard/StepPackage';
 import StepSummary from './wizard/StepSummary';
 
 const STEPS = [
-  { id: 1, label: 'Page' },
-  { id: 2, label: 'Creative' },
-  { id: 3, label: 'Goal' },
-  { id: 4, label: 'Audience' },
-  { id: 5, label: 'Package' },
-  { id: 6, label: 'Summary' },
+  { id: 1, label: 'Creative' },
+  { id: 2, label: 'Goal' },
+  { id: 3, label: 'Audience' },
+  { id: 4, label: 'Package' },
+  { id: 5, label: 'Summary' },
 ];
 
 export default function CampaignWizard() {
@@ -43,10 +41,12 @@ export default function CampaignWizard() {
   useEffect(() => {
     base44.auth.me().then(u => {
       setUser(u);
-      // Pre-fill country and currency from user profile
-      if (u?.country) {
-        setData(d => ({ ...d, country: u.country }));
-      }
+      setData(d => ({
+        ...d,
+        country: u?.country || d.country,
+        page_name: u?.fb_page_name || d.page_name,
+        page_url: u?.fb_page_url || d.page_url,
+      }));
     });
   }, []);
 
@@ -116,12 +116,11 @@ export default function CampaignWizard() {
 
         {/* Step content */}
         <div className="bg-card rounded-2xl border border-border shadow-sm p-6 lg:p-8">
-          {step === 1 && <StepSelectPage data={data} update={update} userId={user?.id} />}
-          {step === 2 && <StepCreative data={data} update={update} />}
-          {step === 3 && <StepGoal data={data} update={update} />}
-          {step === 4 && <StepAudience data={data} update={update} userId={user?.id} />}
-          {step === 5 && <StepPackage data={data} update={update} />}
-          {step === 6 && <StepSummary data={data} update={update} />}
+          {step === 1 && <StepCreative data={data} update={update} />}
+          {step === 2 && <StepGoal data={data} update={update} />}
+          {step === 3 && <StepAudience data={data} update={update} userId={user?.id} />}
+          {step === 4 && <StepPackage data={data} update={update} />}
+          {step === 5 && <StepSummary data={data} update={update} />}
         </div>
 
         {/* Nav */}
@@ -133,20 +132,19 @@ export default function CampaignWizard() {
           >
             <ChevronLeft className="w-4 h-4" /> {step === 1 ? 'Cancel' : 'Back'}
           </Button>
-          {step < 6 ? (
+          {step < 5 ? (
             <Button
               onClick={() => setStep(s => s + 1)}
               disabled={
-                (step === 1 && !data.page_id) ||
-                (step === 2 && (data.creative_type === 'existing_post' || !data.creative_type) && !data.post_url) ||
-                (step === 2 && data.creative_type === 'new_creative' && !data.description) ||
-                (step === 3 && (
+                (step === 1 && (data.creative_type === 'existing_post' || !data.creative_type) && !data.post_url) ||
+                (step === 1 && data.creative_type === 'new_creative' && !data.description) ||
+                (step === 2 && (
                   !data.goal ||
                   (data.goal === 'messages' && data.messaging_platforms?.length === 0) ||
                   (data.goal === 'website_traffic' && !data.website_url) ||
                   (data.goal === 'phone_calls' && !data.phone_number)
                 )) ||
-                (step === 5 && !data.package)
+                (step === 4 && !data.package)
               }
               className="gap-2 bg-[hsl(var(--primary))] text-primary-foreground font-semibold"
             >
