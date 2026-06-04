@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
-import { Check, X, ExternalLink, Search, Mail } from 'lucide-react';
+import { Check, X, ExternalLink, Search } from 'lucide-react';
 import { useRoleGuard } from '@/hooks/useRoleGuard';
 import { useAuditLog } from '@/hooks/useAuditLog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -30,17 +30,6 @@ export default function AdminPayments() {
   }
 
   const staffUser = async () => base44.auth.me();
-
-  async function sendAdminEmail(subject, body) {
-    const admin = await staffUser();
-    const emailTo = admin?.admin_notification_email || admin?.email;
-    if (!emailTo) return;
-    await base44.integrations.Core.SendEmail({
-      to: emailTo,
-      subject,
-      body,
-    });
-  }
 
   async function verify(id, status, txn) {
     // Guard: only act on pending transactions
@@ -88,30 +77,15 @@ export default function AdminPayments() {
       });
     }
 
-    // Email the client
-    if (txn.user_id) {
-      const allUsers = await base44.entities.User.list();
-      const clientUser = allUsers.find(u => u.id === txn.user_id);
-      if (clientUser?.email) {
-        const amountStr = `${txn.currency || 'USD'} ${(txn.amount || 0).toLocaleString()}`;
-        const emailData = status === 'confirmed'
-          ? {
-              subject: 'Payment Confirmed — Brandfletch Ads',
-              body: `Hi ${clientUser.full_name || 'there'},\n\nGreat news! Your payment of ${amountStr} has been confirmed. Your campaign is now under review and will be launched shortly.\n\nReference: ${txn.payment_reference || '—'}\n\nLog in to track your campaign: https://brandfletchads.base44.app/dashboard\n\n— Brandfletch Ads Team`,
-            }
-          : {
-              subject: 'Payment Could Not Be Verified — Brandfletch Ads',
-              body: `Hi ${clientUser.full_name || 'there'},\n\nUnfortunately we could not verify your payment of ${amountStr}.\n\nReason: ${notes[id] || 'Please contact our support team for assistance.'}\n\nReference: ${txn.payment_reference || '—'}\n\nPlease contact us or resubmit your payment proof.\n\n— Brandfletch Ads Team`,
-            };
-        base44.integrations.Core.SendEmail({ to: clientUser.email, from_name: 'Brandfletch Ads', ...emailData }).catch(() => {});
-      }
+    // Send email via backend function
+    if (txn.campaign_id) {
+      const emailEvent = status === 'confirmed' ? 'payment_confirmed' : 'payment_rejected';
+      base44.functions.invoke('campaignEmailAlerts', {
+        campaign_id: txn.campaign_id,
+        event_type: emailEvent,
+        notes: notes[id] || '',
+      }).catch(() => {});
     }
-
-    // Send admin email notification
-    await sendAdminEmail(
-      `Payment ${status === 'confirmed' ? 'Confirmed' : 'Rejected'} — Brandfletch Ads`,
-      `A payment of ${txn.currency || 'USD'} ${txn.amount} has been ${status}.\nReference: ${txn.payment_reference || '—'}\nCampaign: ${txn.campaign_id || '—'}\nNotes: ${notes[id] || 'None'}`
-    ).catch(() => {});
 
     toast.success(`Payment ${status}`);
     load();
