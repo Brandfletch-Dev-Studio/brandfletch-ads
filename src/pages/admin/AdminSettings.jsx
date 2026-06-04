@@ -9,6 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { COUNTRIES } from '@/lib/constants';
 import { toast } from 'sonner';
+import EmailTemplatesTab from '@/components/settings/EmailTemplatesTab';
 
 const DANGER_ENTITIES = [
   { key: 'Campaign', label: 'Campaigns', entity: 'Campaign' },
@@ -442,6 +443,9 @@ export default function AdminSettings() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Email Templates */}
+      <EmailTemplatesTab />
 
       {/* Danger Zone — last section */}
       <Card className="shadow-sm border-destructive/30">

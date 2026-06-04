@@ -1,0 +1,43 @@
+{
+  "name": "EmailTemplate",
+  "type": "object",
+  "properties": {
+    "event_type": {
+      "type": "string",
+      "enum": [
+        "pending_review",
+        "approved",
+        "active",
+        "completed",
+        "rejected",
+        "changes_requested",
+        "refunded",
+        "awaiting_payment",
+        "payment_submitted",
+        "payment_confirmed",
+        "payment_rejected"
+      ]
+    },
+    "subject": {
+      "type": "string"
+    },
+    "heading": {
+      "type": "string"
+    },
+    "body_text": {
+      "type": "string",
+      "description": "Main body paragraph. Use {{name}}, {{campaign_name}}, {{amount}}, {{notes}} as placeholders."
+    },
+    "cta_label": {
+      "type": "string"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "event_type",
+    "subject"
+  ]
+}

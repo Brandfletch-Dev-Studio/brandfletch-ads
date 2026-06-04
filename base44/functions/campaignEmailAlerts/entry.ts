@@ -2,9 +2,10 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 const APP_URL = 'https://brandfletchads.base44.app';
-const SUPPORT_EMAIL = 'support@brandfletchads.com';
+const SUPPORT_EMAIL = 'support@brandfletch.com';
 const BRAND_COLOR = '#0f2d6b';
 const ACCENT_COLOR = '#3b82f6';
+const LOGO_URL = 'https://media.base44.com/images/public/6a1e8f4f079c524483e324a2/0072409c5_file_0000000024d0722fa20034e2dedcbc9e.png';
 
 // ─── Shared HTML Components ────────────────────────────────────────────────
 
@@ -24,17 +25,17 @@ function emailWrapper(content, preheader = '') {
   body{margin:0;padding:0;background-color:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif}
   .email-body{background-color:#f1f5f9;padding:24px 16px}
   .card{background:#ffffff;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,0.08),0 1px 2px rgba(0,0,0,0.04);overflow:hidden}
-  .header{background:${BRAND_COLOR};padding:24px 32px;text-align:center}
+  .header{background:${BRAND_COLOR};padding:20px 28px;text-align:center}
   .header-logo{color:#ffffff;font-size:20px;font-weight:700;letter-spacing:-0.3px;text-decoration:none}
   .header-logo span{color:#93c5fd}
-  .body-content{padding:32px 32px 28px}
+  .body-content{padding:28px 28px 24px}
   .h1{font-size:22px;font-weight:700;color:#0f172a;line-height:1.3;margin:0 0 8px}
   .subtitle{font-size:15px;color:#64748b;margin:0 0 24px;line-height:1.5}
   .greeting{font-size:15px;color:#334155;margin:0 0 12px}
   .body-text{font-size:14px;color:#475569;line-height:1.6;margin:0 0 20px}
   .btn{display:inline-block;background:${ACCENT_COLOR};color:#ffffff;font-size:14px;font-weight:600;text-decoration:none;padding:11px 24px;border-radius:8px;margin:4px 0}
   .btn-outline{display:inline-block;background:#ffffff;color:${BRAND_COLOR};font-size:14px;font-weight:600;text-decoration:none;padding:10px 24px;border-radius:8px;margin:4px 0;border:1.5px solid #e2e8f0}
-  .info-card{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px 20px;margin:20px 0}
+  .info-card{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:14px 18px;margin:20px 0}
   .info-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #f1f5f9;font-size:13px}
   .info-row:last-child{border-bottom:none;padding-bottom:0}
   .info-label{color:#64748b;font-weight:500}
@@ -44,15 +45,15 @@ function emailWrapper(content, preheader = '') {
   .metric-value{font-size:20px;font-weight:700;color:#0f172a;display:block}
   .metric-label{font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;margin-top:2px;display:block}
   .divider{height:1px;background:#f1f5f9;margin:20px 0}
-  .footer{padding:20px 32px;background:#f8fafc;border-top:1px solid #f1f5f9;text-align:center}
+  .footer{padding:16px 28px;background:#f8fafc;border-top:1px solid #f1f5f9;text-align:center}
   .footer-brand{font-size:14px;font-weight:700;color:${BRAND_COLOR};margin:0 0 4px}
   .footer-text{font-size:12px;color:#94a3b8;margin:0 0 2px;line-height:1.5}
   .footer-link{color:${ACCENT_COLOR};text-decoration:none}
   @media only screen and (max-width:600px){
-    .email-body{padding:16px 12px}
-    .body-content{padding:24px 20px 20px}
-    .header{padding:20px 20px}
-    .footer{padding:16px 20px}
+    .email-body{padding:12px 8px}
+    .body-content{padding:20px 18px 18px}
+    .header{padding:16px 18px}
+    .footer{padding:14px 18px}
     .metrics-grid{grid-template-columns:repeat(2,1fr)}
     .h1{font-size:20px}
   }
@@ -62,11 +63,14 @@ function emailWrapper(content, preheader = '') {
 ${preheader ? `<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;font-size:1px;color:#f8fafc;line-height:1px">${preheader}&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;</div>` : ''}
 <table width="100%" cellpadding="0" cellspacing="0" border="0" class="email-body">
 <tr><td align="center">
-<table width="100%" style="max-width:560px" cellpadding="0" cellspacing="0" border="0">
+<table width="100%" style="max-width:620px" cellpadding="0" cellspacing="0" border="0">
 <tr><td>
 <div class="card">
   <div class="header">
-    <a href="${APP_URL}" class="header-logo">Brandfletch<span>Ads</span></a>
+    <a href="${APP_URL}" style="text-decoration:none;display:inline-flex;align-items:center;gap:10px">
+      <img src="${LOGO_URL}" alt="Brandfletch Ads" width="36" height="36" style="border-radius:8px;display:block;width:36px;height:36px" />
+      <span style="color:#ffffff;font-size:18px;font-weight:700;letter-spacing:-0.3px;vertical-align:middle">Brandfletch <span style="color:#93c5fd">Ads</span></span>
+    </a>
   </div>
   ${content}
   <div class="footer">
@@ -132,15 +136,15 @@ function fmt(n) {
 
 // ─── Email Template Builders ────────────────────────────────────────────────
 
-function buildCampaignSubmitted(campaign, user) {
+function buildCampaignSubmitted(campaign, user, _notes, heading, bodyText, ctaLabel) {
   const name = user?.full_name || 'there';
   const submittedDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
   const content = `
     <div class="body-content">
-      <p class="h1">Campaign Submitted</p>
+      <p class="h1">${heading || 'Campaign Submitted'}</p>
       <p class="subtitle">Your campaign is now pending review.</p>
       <p class="greeting">Hi ${name},</p>
-      <p class="body-text">We've received your campaign and it's now in our review queue. Our team typically reviews submissions within <strong>1–2 business days</strong>. We'll notify you as soon as there's an update.</p>
+      <p class="body-text">${bodyText || "We've received your campaign and it's now in our review queue. Our team verifies and launches campaigns within <strong>1–2 hours</strong>. We'll notify you as soon as there's an update."}</p>
       ${badge('Pending Review', 'amber')}
       ${infoCard([
         ['Campaign Name', campaign.campaign_name || campaign.page_name || '—'],
@@ -149,38 +153,38 @@ function buildCampaignSubmitted(campaign, user) {
         ['Amount', `${campaign.currency || 'USD'} ${fmt(campaign.total_cost)}`],
         ['Submitted', submittedDate],
       ])}
-      ${ctaButton('View Campaign', `${APP_URL}/campaigns/${campaign.id}`)}
+      ${ctaButton(ctaLabel || 'View Campaign', `${APP_URL}/campaigns/${campaign.id}`)}
     </div>`;
   return emailWrapper(content, `Your campaign has been submitted and is now pending review.`);
 }
 
-function buildCampaignApproved(campaign, user) {
+function buildCampaignApproved(campaign, user, _notes, heading, bodyText, ctaLabel) {
   const name = user?.full_name || 'there';
   const content = `
     <div class="body-content">
-      <p class="h1">Campaign Approved! 🎉</p>
+      <p class="h1">${heading || 'Campaign Approved! 🎉'}</p>
       <p class="subtitle">Your campaign has been reviewed and approved.</p>
       <p class="greeting">Hi ${name},</p>
-      <p class="body-text">Great news — your campaign has been approved by our team and will begin running shortly. Keep an eye on your dashboard for live performance updates.</p>
+      <p class="body-text">${bodyText || "Great news — your campaign has been approved by our team and will begin running shortly. Keep an eye on your dashboard for live performance updates."}</p>
       ${badge('Approved', 'blue')}
       ${infoCard([
         ['Campaign', campaign.campaign_name || campaign.page_name || '—'],
         ['Package', campaign.package ? campaign.package.charAt(0).toUpperCase() + campaign.package.slice(1) : '—'],
         ['Budget', `${campaign.currency || 'USD'} ${fmt(campaign.total_cost)}`],
       ])}
-      ${ctaButton('View Campaign', `${APP_URL}/campaigns/${campaign.id}`)}
+      ${ctaButton(ctaLabel || 'View Campaign', `${APP_URL}/campaigns/${campaign.id}`)}
     </div>`;
   return emailWrapper(content, `Your campaign has been approved and will start running soon.`);
 }
 
-function buildCampaignActive(campaign, user) {
+function buildCampaignActive(campaign, user, _notes, heading, bodyText, ctaLabel) {
   const name = user?.full_name || 'there';
   const content = `
     <div class="body-content">
-      <p class="h1">Your Campaign Is Live 🚀</p>
+      <p class="h1">${heading || 'Your Campaign Is Live 🚀'}</p>
       <p class="subtitle">Your ads are now actively running.</p>
       <p class="greeting">Hi ${name},</p>
-      <p class="body-text">Your campaign is now live and your ads are reaching your target audience. Performance data will begin accumulating — check your dashboard to track impressions, clicks, and results in real time.</p>
+      <p class="body-text">${bodyText || "Your campaign is now live and your ads are reaching your target audience. Performance data will begin accumulating — check your dashboard to track impressions, clicks, and results in real time."}</p>
       ${badge('Active', 'green')}
       ${infoCard([
         ['Campaign', campaign.campaign_name || campaign.page_name || '—'],
@@ -190,22 +194,22 @@ function buildCampaignActive(campaign, user) {
         ...(campaign.start_date ? [['Start Date', campaign.start_date]] : []),
         ...(campaign.end_date ? [['End Date', campaign.end_date]] : []),
       ])}
-      ${ctaButton('View Performance', `${APP_URL}/campaigns/${campaign.id}`)}
+      ${ctaButton(ctaLabel || 'View Performance', `${APP_URL}/campaigns/${campaign.id}`)}
     </div>`;
   return emailWrapper(content, `Your campaign is now live and reaching your audience.`);
 }
 
-function buildCampaignCompleted(campaign, user) {
+function buildCampaignCompleted(campaign, user, _notes, heading, bodyText, ctaLabel) {
   const name = user?.full_name || 'there';
   const cpr = campaign.clicks > 0 && campaign.total_cost
     ? `${campaign.currency || 'USD'} ${(campaign.total_cost / campaign.clicks).toFixed(2)}`
     : '—';
   const content = `
     <div class="body-content">
-      <p class="h1">Campaign Completed</p>
+      <p class="h1">${heading || 'Campaign Completed'}</p>
       <p class="subtitle">Your campaign has successfully run its full course.</p>
       <p class="greeting">Hi ${name},</p>
-      <p class="body-text">Your campaign for <strong>${campaign.campaign_name || campaign.page_name || 'your page'}</strong> has completed. Here's a summary of your results:</p>
+      <p class="body-text">${bodyText || `Your campaign for <strong>${campaign.campaign_name || campaign.page_name || 'your page'}</strong> has completed. Here's a summary of your results:`}</p>
       ${badge('Completed', 'darkgreen')}
       ${metricsGrid([
         ['Reach', fmt(campaign.reach)],
@@ -217,51 +221,51 @@ function buildCampaignCompleted(campaign, user) {
         ['Cost Per Result', cpr],
         ...(campaign.completed_date ? [['Completed', campaign.completed_date]] : []),
       ])}
-      ${ctaButton('View Full Report', `${APP_URL}/campaigns/${campaign.id}`)}
+      ${ctaButton(ctaLabel || 'View Full Report', `${APP_URL}/campaigns/${campaign.id}`)}
     </div>`;
   return emailWrapper(content, `Your campaign has completed. View your final performance report.`);
 }
 
-function buildCampaignRejected(campaign, user, notes) {
+function buildCampaignRejected(campaign, user, notes, heading, bodyText, ctaLabel) {
   const name = user?.full_name || 'there';
   const content = `
     <div class="body-content">
-      <p class="h1">Campaign Requires Changes</p>
+      <p class="h1">${heading || 'Campaign Requires Changes'}</p>
       <p class="subtitle">Your campaign could not be approved in its current state.</p>
       <p class="greeting">Hi ${name},</p>
-      <p class="body-text">After reviewing your campaign for <strong>${campaign.campaign_name || campaign.page_name || 'your page'}</strong>, our team was unable to approve it. Please review the feedback below and make the necessary adjustments.</p>
+      <p class="body-text">${bodyText || `After reviewing your campaign for <strong>${campaign.campaign_name || campaign.page_name || 'your page'}</strong>, our team was unable to approve it. Please review the feedback below and make the necessary adjustments.`}</p>
       ${badge('Rejected', 'red')}
       ${notes ? `<div class="info-card"><p style="margin:0 0 4px;font-size:12px;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:0.5px">Reason</p><p style="margin:0;font-size:14px;color:#1e293b;line-height:1.6">${notes}</p></div>` : ''}
       <p class="body-text" style="margin-top:16px">If you have questions, reply to this email or reach out to our support team — we're happy to help.</p>
-      ${ctaButton('Edit Campaign', `${APP_URL}/campaigns/${campaign.id}`)}
+      ${ctaButton(ctaLabel || 'Edit Campaign', `${APP_URL}/campaigns/${campaign.id}`)}
     </div>`;
   return emailWrapper(content, `Your campaign requires changes before it can be approved.`);
 }
 
-function buildCampaignChangesRequested(campaign, user, notes) {
+function buildCampaignChangesRequested(campaign, user, notes, heading, bodyText, ctaLabel) {
   const name = user?.full_name || 'there';
   const content = `
     <div class="body-content">
-      <p class="h1">Changes Requested</p>
+      <p class="h1">${heading || 'Changes Requested'}</p>
       <p class="subtitle">Our team has reviewed your campaign and needs a few updates.</p>
       <p class="greeting">Hi ${name},</p>
-      <p class="body-text">We've reviewed your campaign for <strong>${campaign.campaign_name || campaign.page_name || 'your page'}</strong> and would like to request some adjustments before we can proceed.</p>
+      <p class="body-text">${bodyText || `We've reviewed your campaign for <strong>${campaign.campaign_name || campaign.page_name || 'your page'}</strong> and would like to request some adjustments before we can proceed.`}</p>
       ${badge('Changes Requested', 'amber')}
       ${notes ? `<div class="info-card"><p style="margin:0 0 4px;font-size:12px;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:0.5px">Requested Changes</p><p style="margin:0;font-size:14px;color:#1e293b;line-height:1.6">${notes}</p></div>` : ''}
-      ${ctaButton('Update Campaign', `${APP_URL}/campaigns/${campaign.id}`)}
+      ${ctaButton(ctaLabel || 'Update Campaign', `${APP_URL}/campaigns/${campaign.id}`)}
     </div>`;
   return emailWrapper(content, `Your campaign needs a few updates before it can be approved.`);
 }
 
-function buildCampaignRefunded(campaign, user, notes) {
+function buildCampaignRefunded(campaign, user, notes, heading, bodyText, ctaLabel) {
   const name = user?.full_name || 'there';
   const refundDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
   const content = `
     <div class="body-content">
-      <p class="h1">Refund Processed</p>
+      <p class="h1">${heading || 'Refund Processed'}</p>
       <p class="subtitle">Your refund has been successfully processed.</p>
       <p class="greeting">Hi ${name},</p>
-      <p class="body-text">A refund has been issued for your campaign. Please allow a few business days for the funds to reflect depending on your payment method.</p>
+      <p class="body-text">${bodyText || "A refund has been issued for your campaign. Please allow a few business days for the funds to reflect depending on your payment method."}</p>
       ${badge('Refunded', 'purple')}
       ${infoCard([
         ['Campaign', campaign.campaign_name || campaign.page_name || '—'],
@@ -270,25 +274,25 @@ function buildCampaignRefunded(campaign, user, notes) {
         ...(notes ? [['Notes', notes]] : []),
       ])}
       <p class="body-text">If you have any questions about your refund, please contact our support team.</p>
-      ${ctaButton('View Campaign', `${APP_URL}/campaigns/${campaign.id}`)}
+      ${ctaButton(ctaLabel || 'View Campaign', `${APP_URL}/campaigns/${campaign.id}`)}
     </div>`;
   return emailWrapper(content, `Your refund has been processed successfully.`);
 }
 
-function buildAwaitingPayment(campaign, user) {
+function buildAwaitingPayment(campaign, user, _notes, heading, bodyText, ctaLabel) {
   const name = user?.full_name || 'there';
   const content = `
     <div class="body-content">
-      <p class="h1">Complete Your Payment</p>
+      <p class="h1">${heading || 'Complete Your Payment'}</p>
       <p class="subtitle">One step left to launch your campaign.</p>
       <p class="greeting">Hi ${name},</p>
-      <p class="body-text">Your campaign is configured and ready to go! Complete your payment to submit it for review and get your ads running.</p>
+      <p class="body-text">${bodyText || "Your campaign is configured and ready to go! Complete your payment to submit it for review and get your ads running."}</p>
       ${infoCard([
         ['Campaign', campaign.campaign_name || campaign.page_name || '—'],
         ['Package', campaign.package ? campaign.package.charAt(0).toUpperCase() + campaign.package.slice(1) : '—'],
         ['Total Due', `${campaign.currency || 'USD'} ${fmt(campaign.total_cost)}`],
       ])}
-      ${ctaButton('Complete Payment', `${APP_URL}/campaigns/${campaign.id}/payment`)}
+      ${ctaButton(ctaLabel || 'Complete Payment', `${APP_URL}/campaigns/${campaign.id}/payment`)}
     </div>`;
   return emailWrapper(content, `Your campaign is ready — complete payment to launch.`);
 }
@@ -455,22 +459,48 @@ Deno.serve(async (req) => {
       return Response.json({ error: `Unknown event_type: ${event_type}` }, { status: 400 });
     }
 
-    const campaigns = await base44.asServiceRole.entities.Campaign.filter({ id: campaign_id });
+    const [campaigns, allUsers, storedTemplates] = await Promise.all([
+      base44.asServiceRole.entities.Campaign.filter({ id: campaign_id }),
+      base44.asServiceRole.entities.User.list(),
+      base44.asServiceRole.entities.EmailTemplate.filter({ event_type }),
+    ]);
+
     const campaign = campaigns[0];
     if (!campaign) return Response.json({ error: 'Campaign not found' }, { status: 404 });
 
-    const allUsers = await base44.asServiceRole.entities.User.list();
     const clientUser = allUsers.find(u => u.id === campaign.user_id);
     const admins = allUsers.filter(u => u.role === 'admin');
+    const storedTpl = storedTemplates[0];
+
+    // Apply custom template overrides if stored & active
+    const applyTpl = (htmlFn, subject, campaign, user, notes) => {
+      if (storedTpl && storedTpl.is_active !== false) {
+        const n = user?.full_name || 'there';
+        const body = (storedTpl.body_text || '')
+          .replace(/\{\{name\}\}/g, n)
+          .replace(/\{\{campaign_name\}\}/g, campaign.campaign_name || campaign.page_name || '')
+          .replace(/\{\{amount\}\}/g, `${campaign.currency || 'USD'} ${fmt(campaign.total_cost)}`)
+          .replace(/\{\{notes\}\}/g, notes || '');
+        return {
+          subject: storedTpl.subject || subject,
+          html: htmlFn(campaign, user, notes, storedTpl.heading, body, storedTpl.cta_label),
+        };
+      }
+      return {
+        subject: typeof subject === 'function' ? subject(campaign) : subject,
+        html: htmlFn(campaign, user, notes),
+      };
+    };
 
     const results = { client: null, admin: null };
 
     if (clientUser?.email && config.clientHtml) {
+      const { subject, html } = applyTpl(config.clientHtml, config.clientSubject, campaign, clientUser, notes);
       await base44.asServiceRole.integrations.Core.SendEmail({
         to: clientUser.email,
         from_name: 'Brandfletch Ads',
-        subject: typeof config.clientSubject === 'function' ? config.clientSubject(campaign) : config.clientSubject,
-        body: config.clientHtml(campaign, clientUser, notes),
+        subject,
+        body: html,
       });
       results.client = `sent to ${clientUser.email}`;
     }
