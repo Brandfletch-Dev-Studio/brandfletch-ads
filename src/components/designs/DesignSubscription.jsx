@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -9,6 +10,7 @@ import { toast } from 'sonner';
 
 export default function DesignSubscription({ onSubscribe }) {
   const [selectedPlan, setSelectedPlan] = useState(null);
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
 
   const { data: user } = useQuery({
@@ -28,6 +30,7 @@ export default function DesignSubscription({ onSubscribe }) {
 
   const createSubscriptionMutation = useMutation({
     mutationFn: async (planData) => {
+      // Create pending subscription record
       const subscription = await base44.entities.PlatformSubscription.create({
         user_id: user.id,
         subscription_type: 'design_retainer',
@@ -38,28 +41,25 @@ export default function DesignSubscription({ onSubscribe }) {
         auto_renew: true,
       });
 
-      // Create design request with payment pending
-      if (planData.planType === 'per_design') {
-        // For per-design, create a pending design request
-        await base44.entities.DesignRequest.create({
-          user_id: user.id,
-          title: 'Per Design Order',
-          description: 'Awaiting payment and project brief',
-          design_type: 'other',
-          request_type: 'per_design',
-          status: 'draft',
-          priority: 'medium',
-          price: planData.amount,
-          currency: planData.currency,
-        });
-      }
+      // Create service order for payment processing
+      await base44.entities.ServiceOrder.create({
+        user_id: user.id,
+        service_id: planData.planType === 'monthly' ? 'design_retainer_monthly' : 'design_per_design',
+        service_name: planData.planType === 'monthly' ? 'Monthly Design Retainer' : 'Pay Per Design',
+        total_cost: planData.amount,
+        total_cost_usd: planData.planType === 'monthly' ? (retainerPricing?.price || 50000) / 1000 : (perDesignPricing?.price || 15000) / 1000,
+        currency: planData.currency,
+        status: 'pending',
+      });
 
       return subscription;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['userSubscription'] });
-      toast.success('Subscription initiated! Complete payment to activate.');
-      onSubscribe?.();
+      toast.success('Subscription initiated! Redirecting to payment...');
+      setTimeout(() => {
+        navigate('/designs/payment');
+      }, 500);
     },
   });
 

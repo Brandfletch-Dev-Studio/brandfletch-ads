@@ -5,7 +5,7 @@ import { Link, useLocation, Outlet } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import {
   LayoutDashboard, Megaphone, Facebook, Users, Wallet as WalletIcon,
-  Settings, X, ChevronRight, BarChart3, Shield, Bell, ShoppingBag, Tv2, ClipboardList, Tags, LifeBuoy, Info, Mail,
+  Settings, X, ChevronRight, BarChart3, Shield, Bell, Tv2, ClipboardList, Tags, LifeBuoy, Info, Mail,
   Palette, Target
 } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
@@ -24,7 +24,6 @@ const clientNav = [
   { path: '/pages', label: 'Facebook Pages', icon: Facebook },
   { path: '/audiences', label: 'Audiences', icon: Users },
   { path: '/wallet', label: 'Wallet', icon: WalletIcon },
-  { path: '/marketplace', label: 'Marketplace', icon: ShoppingBag },
   { path: '/support', label: 'Support', icon: LifeBuoy },
   { path: '/settings', label: 'Settings', icon: Settings },
 ];

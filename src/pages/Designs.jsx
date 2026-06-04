@@ -177,14 +177,9 @@ export default function Designs() {
                 <p className="text-sm text-amber-800 mb-4">
                   You need an active design subscription to request new designs. Choose between our monthly retainer plan or pay-per-design option.
                 </p>
-                <div className="flex gap-3">
-                  <Button onClick={handleNewRequest}>
-                    View Subscription Plans
-                  </Button>
-                  <Link to="/marketplace">
-                    <Button variant="outline">Browse Services</Button>
-                  </Link>
-                </div>
+                <Button onClick={handleNewRequest}>
+                  View Subscription Plans
+                </Button>
               </div>
             </div>
           </CardContent>
