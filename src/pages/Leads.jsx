@@ -15,14 +15,13 @@ import {
   Star,
   Zap,
   Target,
-  Briefcase,
-  Plus,
-  FileText
+  LayoutGrid,
+  Columns
 } from 'lucide-react';
 import { toast } from 'sonner';
 import AddLeadDialog from '@/components/leads/AddLeadDialog';
 import LeadCard from '@/components/leads/LeadCard';
-import AdPlacement from '@/components/ads/AdPlacement';
+import KanbanBoard from '@/components/leads/KanbanBoard';
 
 const STAGES = [
   { value: 'all', label: 'All Stages' },
@@ -48,6 +47,7 @@ export default function Leads() {
   const [search, setSearch] = useState('');
   const [stageFilter, setStageFilter] = useState('all');
   const [gradeFilter, setGradeFilter] = useState('all');
+  const [viewMode, setViewMode] = useState('kanban');
 
   const { data: leads, isLoading, refetch } = useQuery({
     queryKey: ['leads'],
@@ -55,15 +55,6 @@ export default function Leads() {
       const user = await base44.auth.me();
       if (!user) return [];
       return base44.entities.Lead.filter({ user_id: user.id }, '-created_date');
-    },
-  });
-
-  const { data: forms } = useQuery({
-    queryKey: ['leadForms'],
-    queryFn: async () => {
-      const user = await base44.auth.me();
-      if (!user) return [];
-      return base44.entities.LeadForm.filter({ user_id: user.id });
     },
   });
 
@@ -78,17 +69,20 @@ export default function Leads() {
   const updateStageMutation = useMutation({
     mutationFn: async ({ leadId, newStage }) => {
       const user = await base44.auth.me();
+      const lead = leads.find(l => l.id === leadId);
       await base44.entities.Lead.update(leadId, { stage: newStage });
       
       if (newStage === 'won') {
         await base44.entities.LeadStageChange.create({
           lead_id: leadId,
           user_id: user.id,
-          from_stage: leads.find(l => l.id === leadId).stage,
+          from_stage: lead?.stage || 'unknown',
           to_stage: newStage,
-          won_date: new Date().toISOString(),
         });
       }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['leads'] });
       toast.success('Lead updated!');
       refetch();
     },
@@ -107,9 +101,13 @@ export default function Leads() {
     return matchSearch && matchStage && matchGrade;
   }) || [];
 
+  const handleStageChange = (lead, newStage) => {
+    updateStageMutation.mutate({ leadId: lead.id, newStage });
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      {/* Beautiful Hero Section */}
+      {/* Hero Section */}
       <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
@@ -124,7 +122,6 @@ export default function Leads() {
                 Manage your sales pipeline, track leads, and close more deals with our powerful CRM system.
               </p>
               
-              {/* Quick Actions */}
               <div className="flex flex-wrap gap-3 mt-8">
                 <AddLeadDialog onSuccess={refetch} />
                 <Link to="/leads/forms">
@@ -142,7 +139,7 @@ export default function Leads() {
               </div>
             </div>
 
-            {/* Hero Stats */}
+            {/* Stats */}
             <div className="grid grid-cols-2 gap-4">
               <Card className="bg-white/10 backdrop-blur-sm border-0">
                 <CardContent className="p-4">
@@ -203,11 +200,11 @@ export default function Leads() {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 -mt-8">
-        {/* Search and Filters */}
+        {/* Toolbar */}
         <Card className="mb-6 shadow-lg">
           <CardContent className="p-4">
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="relative flex-1">
+            <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+              <div className="relative flex-1 w-full">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <Input
                   value={search}
@@ -216,7 +213,7 @@ export default function Leads() {
                   className="pl-9"
                 />
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 items-center flex-wrap">
                 <div className="flex items-center gap-2 text-sm text-gray-500">
                   <Filter className="w-4 h-4" />
                   <span>Filters:</span>
@@ -239,21 +236,42 @@ export default function Leads() {
                     <option key={g.value} value={g.value}>{g.label}</option>
                   ))}
                 </select>
+                <div className="border-l border-gray-300 h-6 mx-2" />
+                <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+                  <Button
+                    variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setViewMode('grid')}
+                    className="h-8 px-2"
+                  >
+                    <LayoutGrid className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant={viewMode === 'kanban' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setViewMode('kanban')}
+                    className="h-8 px-2"
+                  >
+                    <Columns className="w-4 h-4" />
+                  </Button>
+                </div>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Leads Grid */}
+        {/* Content */}
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <Card key={i} className="h-64 animate-pulse">
+            {[...Array(6)].map((_, i) => (
+              <Card key={i} className="animate-pulse">
                 <CardContent className="p-6">
                   <div className="h-6 bg-gray-200 rounded w-3/4 mb-4" />
-                  <div className="h-4 bg-gray-200 rounded w-1/2 mb-2" />
-                  <div className="h-4 bg-gray-200 rounded w-full mb-2" />
-                  <div className="h-4 bg-gray-200 rounded w-2/3" />
+                  <div className="space-y-2">
+                    <div className="h-4 bg-gray-200 rounded w-1/2" />
+                    <div className="h-4 bg-gray-200 rounded w-full" />
+                    <div className="h-4 bg-gray-200 rounded w-2/3" />
+                  </div>
                 </CardContent>
               </Card>
             ))}
@@ -261,20 +279,33 @@ export default function Leads() {
         ) : filteredLeads.length === 0 ? (
           <Card className="py-16">
             <CardContent className="text-center">
-              <Briefcase className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-              <h3 className="text-xl font-semibold mb-2">No leads found</h3>
+              <Users className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+              <h3 className="text-xl font-semibold text-gray-700 mb-2">
+                {search || stageFilter !== 'all' ? 'No leads found' : 'No leads yet'}
+              </h3>
               <p className="text-gray-500 mb-6">
-                {leads?.length === 0 
-                  ? "Start building your pipeline by adding your first lead!"
-                  : "Try adjusting your filters to see more results."}
+                {search || stageFilter !== 'all'
+                  ? 'Try adjusting your search or filters'
+                  : 'Start building your pipeline by adding your first lead'}
               </p>
-              {leads?.length === 0 && <AddLeadDialog onSuccess={refetch} />}
+              {!search && stageFilter === 'all' && (
+                <AddLeadDialog onSuccess={refetch} />
+              )}
             </CardContent>
           </Card>
+        ) : viewMode === 'kanban' ? (
+          <KanbanBoard 
+            leads={filteredLeads} 
+            onStageChange={handleStageChange}
+          />
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredLeads.map((lead) => (
-              <LeadCard key={lead.id} lead={lead} onStageChange={(l, ns) => updateStageMutation.mutate({ leadId: l.id, newStage: ns })} />
+              <LeadCard
+                key={lead.id}
+                lead={lead}
+                onStageChange={handleStageChange}
+              />
             ))}
           </div>
         )}
