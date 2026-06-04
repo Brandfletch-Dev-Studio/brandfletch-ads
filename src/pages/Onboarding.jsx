@@ -223,7 +223,10 @@ export default function Onboarding() {
                 <div className="space-y-4">
                   <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex gap-3">
                     <Facebook className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                    <p className="text-sm text-blue-800">Don't worry about connecting your page now — we'll handle that after your first campaign payment is confirmed.</p>
+                    <div>
+                      <p className="text-sm text-blue-800">Don't worry about connecting your page now — we'll handle that after your first campaign payment is confirmed.</p>
+                      <p className="text-xs text-blue-700 mt-2">You can always set up and connect your business page later.</p>
+                    </div>
                   </div>
                   <div>
                     <Label className="mb-1.5 block">Facebook Page Name *</Label>

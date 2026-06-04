@@ -27,10 +27,13 @@ export default function Wallet() {
     queryFn: async () => {
       const wallets = await base44.entities.Wallet.filter({ user_id: user?.id });
       if (wallets.length === 0) {
+        const country = user?.country || 'Malawi';
+        const exchangeRate = await base44.entities.ExchangeRate.filter({ country, is_active: true }).then(r => r[0]);
+        const currency = exchangeRate?.currency_code || 'USD';
         const newWallet = await base44.entities.Wallet.create({
           user_id: user.id,
           balance: 0,
-          currency: 'USD',
+          currency: currency,
         });
         return newWallet;
       }
