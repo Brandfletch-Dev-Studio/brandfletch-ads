@@ -1,173 +1,182 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
-import { MessageCircle, Plus } from 'lucide-react';
+import { Send, Upload, MessageCircle, Paperclip, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import SupportConversationList from '@/components/support/SupportConversationList';
-import SupportChatPanel from '@/components/support/SupportChatPanel';
 
 export default function Messages() {
-  const [user, setUser] = useState(null);
-  const [conversations, setConversations] = useState([]);
   const [messages, setMessages] = useState([]);
-  const [activeConversation, setActiveConversation] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const isMobile = useIsMobile();
+  const [user, setUser] = useState(null);
+  const [input, setInput] = useState('');
+  const [sending, setSending] = useState(false);
+  const [attachment, setAttachment] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const bottomRef = useRef(null);
+  const userIdRef = useRef(null);
 
   useEffect(() => {
-    loadConversations();
+    base44.auth.me().then(u => {
+      setUser(u);
+      userIdRef.current = u.id;
+      base44.entities.Message.filter({ conversation_user_id: u.id }, '-created_date', 100).then(msgs => {
+        setMessages(msgs.reverse());
+        msgs.filter(m => m.sender_role === 'admin' && !m.is_read).forEach(m => {
+          base44.entities.Message.update(m.id, { is_read: true }).catch(() => {});
+        });
+      });
+    });
+
     const unsub = base44.entities.Message.subscribe(event => {
-      if (event.type === 'create') {
-        loadConversations();
-        if (activeConversation) {
-          loadMessages(activeConversation);
-        }
+      if (event.type === 'create' && event.data?.conversation_user_id === userIdRef.current) {
+        setMessages(prev => [...prev, event.data]);
       }
     });
+
     return () => unsub();
-  }, [activeConversation]);
+  }, []);
 
-  async function loadConversations() {
-    try {
-      const u = await base44.auth.me();
-      setUser(u);
-      const allMessages = await base44.entities.Message.filter({ conversation_user_id: u.id }, '-created_date', 500);
-      
-      const grouped = {};
-      allMessages.forEach(msg => {
-        const date = msg.created_date?.split('T')[0] || 'unknown';
-        if (!grouped[date]) {
-          grouped[date] = {
-            id: date,
-            subject: `Support - ${date}`,
-            status: 'open',
-            created_date: msg.created_date,
-            updated_date: msg.created_date,
-            message_count: 0,
-            last_message: null,
-            _messages: [],
-          };
-        }
-        grouped[date].message_count++;
-        grouped[date].last_message = msg;
-        grouped[date].updated_date = msg.created_date;
-        grouped[date]._messages.push(msg);
-      });
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
-      const convs = Object.values(grouped).sort((a, b) => new Date(b.updated_date) - new Date(a.updated_date));
-      setConversations(convs);
-      
-      if (convs.length > 0 && !activeConversation) {
-        setActiveConversation(convs[0]);
-        setMessages(convs[0]._messages.reverse());
-      }
-    } catch (err) {
-      console.error('Failed to load conversations:', err);
-    } finally {
-      setLoading(false);
-    }
+  async function handleUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    setUploading(true);
+    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    setAttachment(file_url);
+    setUploading(false);
   }
 
-  async function loadMessages(conv) {
-    try {
-      const msgs = conv._messages || await base44.entities.Message.filter({ conversation_user_id: user.id }, '-created_date', 100);
-      setMessages(msgs.reverse());
-      msgs.filter(m => m.sender_role === 'admin' && !m.is_read).forEach(m => {
-        base44.entities.Message.update(m.id, { is_read: true }).catch(() => {});
-      });
-    } catch (err) {
-      console.error('Failed to load messages:', err);
-    }
+  async function handleSend(e) {
+    e.preventDefault();
+    if (!input.trim() && !attachment) return;
+    setSending(true);
+    const isStaff = ['admin', 'campaign_manager', 'finance'].includes(user?.role);
+    await base44.entities.Message.create({
+      sender_id: user.id,
+      sender_name: user.full_name || user.email,
+      sender_role: isStaff ? 'admin' : 'user',
+      content: input.trim(),
+      attachment_url: attachment || '',
+      is_read: false,
+      conversation_user_id: user.id,
+    });
+    setInput('');
+    setAttachment(null);
+    setSending(false);
   }
 
-  async function handleSend(content, attachment) {
-    try {
-      await base44.entities.Message.create({
-        sender_id: user.id,
-        sender_name: user.full_name || user.email,
-        sender_role: 'user',
-        content,
-        attachment_url: attachment || '',
-        is_read: false,
-        conversation_user_id: user.id,
-      });
-      loadConversations();
-      if (activeConversation) {
-        loadMessages(activeConversation);
-      }
-    } catch (err) {
-      toast.error('Failed to send message');
-    }
-  }
+  const isStaff = ['admin', 'campaign_manager', 'finance'].includes(user?.role);
 
-  function handleSelect(conv) {
-    setActiveConversation(conv);
-    loadMessages(conv);
-  }
-
-  function handleBack() {
-    setActiveConversation(null);
-  }
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-center">
-          <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin mx-auto mb-3" />
-          <p className="text-sm text-muted-foreground">Loading conversations...</p>
-        </div>
-      </div>
-    );
+  function isMyMessage(msg) {
+    return isStaff ? msg.sender_role === 'admin' : msg.sender_role === 'user';
   }
 
   return (
-    <div className="h-[calc(100vh-4rem)] bg-background">
+    <div className="flex flex-col h-[calc(100vh-7rem)] lg:h-[calc(100vh-4rem)] max-w-2xl mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-card">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-[hsl(var(--primary))] flex items-center justify-center">
-            <MessageCircle className="w-5 h-5 text-primary-foreground" />
-          </div>
-          <div>
-            <h1 className="font-semibold text-lg">Support</h1>
-            <p className="text-xs text-muted-foreground">Get help with your campaigns</p>
-          </div>
+      <div className="flex items-center gap-3 px-4 py-3 border-b border-border bg-card flex-shrink-0">
+        <div className="w-9 h-9 rounded-xl bg-[hsl(var(--primary))] flex items-center justify-center">
+          <MessageCircle className="w-5 h-5 text-primary-foreground" />
         </div>
-        <Button size="sm" className="gap-2">
-          <Plus className="w-4 h-4" />
-          New Request
-        </Button>
+        <div>
+          <h1 className="font-semibold text-sm">Brandfletch Media</h1>
+          <p className="text-xs text-muted-foreground">Your campaign team</p>
+        </div>
+        <span className="ml-auto flex items-center gap-1.5 text-xs text-green-600 font-medium">
+          <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" /> Online
+        </span>
       </div>
 
-      {/* Content */}
-      <div className="flex h-full">
-        {/* Conversation list */}
-        <div className={cn(
-          "w-full lg:w-80 border-r border-border bg-card flex-shrink-0",
-          isMobile && activeConversation && "hidden"
-        )}>
-          <SupportConversationList
-            conversations={conversations}
-            activeId={activeConversation?.id}
-            onSelect={handleSelect}
-          />
-        </div>
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
+        {messages.length === 0 && (
+          <div className="flex flex-col items-center justify-center h-full text-center gap-3 py-12">
+            <MessageCircle className="w-12 h-12 text-muted-foreground/30" />
+            <div>
+              <p className="font-medium text-muted-foreground">No messages yet</p>
+              <p className="text-sm text-muted-foreground/70 mt-1">Send us a message and we'll respond shortly.</p>
+            </div>
+          </div>
+        )}
 
-        {/* Chat panel */}
-        <div className={cn(
-          "flex-1",
-          isMobile && !activeConversation && "hidden"
-        )}>
-          <SupportChatPanel
-            conversation={activeConversation}
-            messages={messages}
-            onSend={handleSend}
-            onBack={handleBack}
-            isMobile={isMobile}
+        {messages.map((msg, idx) => {
+          const mine = isMyMessage(msg);
+          const showDate = idx === 0 || (
+            new Date(msg.created_date).toDateString() !== new Date(messages[idx - 1]?.created_date).toDateString()
+          );
+          return (
+            <div key={msg.id}>
+              {showDate && (
+                <div className="flex justify-center my-2">
+                  <span className="text-xs text-muted-foreground bg-secondary px-3 py-1 rounded-full">
+                    {format(new Date(msg.created_date), 'MMMM d, yyyy')}
+                  </span>
+                </div>
+              )}
+              <div className={cn("flex gap-2", mine ? "justify-end" : "justify-start")}>
+                {!mine && (
+                  <div className="w-7 h-7 rounded-full bg-[hsl(var(--primary))] flex items-center justify-center text-primary-foreground text-xs font-bold flex-shrink-0 mt-auto">
+                    B
+                  </div>
+                )}
+                <div className={cn(
+                  "max-w-[75%] rounded-2xl px-4 py-2.5 text-sm shadow-sm",
+                  mine
+                    ? "bg-[hsl(var(--primary))] text-primary-foreground rounded-br-sm"
+                    : "bg-card border border-border rounded-bl-sm"
+                )}>
+                  {msg.content && <p className="leading-relaxed whitespace-pre-wrap">{msg.content}</p>}
+                  {msg.attachment_url && (
+                    <a href={msg.attachment_url} target="_blank" rel="noreferrer" className="mt-2 block">
+                      <img src={msg.attachment_url} alt="attachment" className="rounded-lg max-h-48 w-auto" />
+                    </a>
+                  )}
+                  <p className={cn("text-[10px] mt-1", mine ? "text-primary-foreground/60 text-right" : "text-muted-foreground text-right")}>
+                    {msg.created_date ? format(new Date(msg.created_date), 'HH:mm') : ''}
+                  </p>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+        <div ref={bottomRef} />
+      </div>
+
+      {/* Input */}
+      <div className="px-4 py-3 border-t border-border bg-card flex-shrink-0">
+        {attachment && (
+          <div className="flex items-center gap-2 mb-2 p-2 rounded-lg bg-secondary text-xs">
+            <Paperclip className="w-3.5 h-3.5 text-muted-foreground" />
+            <span className="text-muted-foreground truncate flex-1">Attachment ready</span>
+            <button onClick={() => setAttachment(null)}><X className="w-3.5 h-3.5 text-muted-foreground hover:text-foreground" /></button>
+          </div>
+        )}
+        <form onSubmit={handleSend} className="flex items-center gap-2">
+          <label className="flex-shrink-0 cursor-pointer text-muted-foreground hover:text-foreground transition-colors p-2">
+            <Paperclip className="w-5 h-5" />
+            <input type="file" accept="image/*,application/pdf" className="hidden" onChange={handleUpload} disabled={uploading} />
+          </label>
+          <Input
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            placeholder="Type a message..."
+            className="flex-1 rounded-full h-10 bg-secondary border-0 focus-visible:ring-1"
+            onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { handleSend(e); } }}
           />
-        </div>
+          <Button
+            type="submit"
+            size="icon"
+            disabled={sending || uploading || (!input.trim() && !attachment)}
+            className="rounded-full w-10 h-10 bg-[hsl(var(--primary))] text-primary-foreground flex-shrink-0"
+          >
+            <Send className="w-4 h-4" />
+          </Button>
+        </form>
       </div>
     </div>
   );
