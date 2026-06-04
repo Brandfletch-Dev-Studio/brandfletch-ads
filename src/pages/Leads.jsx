@@ -7,16 +7,10 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { 
-  Users, 
-  TrendingUp, 
-  DollarSign, 
   Search, 
   Filter,
-  Star,
-  Zap,
   Target,
-  LayoutGrid,
-  Columns
+  Zap
 } from 'lucide-react';
 import { toast } from 'sonner';
 import AddLeadDialog from '@/components/leads/AddLeadDialog';
@@ -108,21 +102,14 @@ export default function Leads() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white rounded-b-3xl shadow-xl">
+      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-b-3xl shadow-xl overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex-1">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
-                  <Users className="w-8 h-8" />
-                </div>
-                <h1 className="text-4xl font-bold">Leads & CRM</h1>
-              </div>
-              <p className="text-xl text-blue-100 max-w-2xl">
-                Manage your sales pipeline, track leads, and close more deals with our powerful CRM system.
-              </p>
+              <h1 className="text-3xl font-bold mb-2">Lead Management</h1>
+              <p className="text-blue-100">Track and manage your sales pipeline</p>
               
-              <div className="flex flex-wrap gap-3 mt-8">
+              <div className="flex flex-wrap gap-3 mt-6">
                 <AddLeadDialog onSuccess={refetch} />
                 <Link to="/leads/forms">
                   <Button variant="outline" className="gap-2 bg-white/10 hover:bg-white/20 text-white border-white/30">
@@ -140,57 +127,29 @@ export default function Leads() {
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-3">
               <Card className="bg-white/10 backdrop-blur-sm border-0">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-white/20 rounded-lg">
-                      <Users className="w-6 h-6" />
-                    </div>
-                    <div>
-                      <p className="text-3xl font-bold">{stats.total}</p>
-                      <p className="text-sm text-blue-100">Total Leads</p>
-                    </div>
-                  </div>
+                <CardContent className="p-3">
+                  <p className="text-2xl font-bold">{stats.total}</p>
+                  <p className="text-xs text-blue-100">Total</p>
                 </CardContent>
               </Card>
               <Card className="bg-white/10 backdrop-blur-sm border-0">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-green-500/30 rounded-lg">
-                      <TrendingUp className="w-6 h-6" />
-                    </div>
-                    <div>
-                      <p className="text-3xl font-bold">{stats.won}</p>
-                      <p className="text-sm text-blue-100">Won Deals</p>
-                    </div>
-                  </div>
+                <CardContent className="p-3">
+                  <p className="text-2xl font-bold">{stats.won}</p>
+                  <p className="text-xs text-blue-100">Won</p>
                 </CardContent>
               </Card>
               <Card className="bg-white/10 backdrop-blur-sm border-0">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-red-500/30 rounded-lg">
-                      <Star className="w-6 h-6" />
-                    </div>
-                    <div>
-                      <p className="text-3xl font-bold">{stats.hotLeads}</p>
-                      <p className="text-sm text-blue-100">Hot Leads</p>
-                    </div>
-                  </div>
+                <CardContent className="p-3">
+                  <p className="text-2xl font-bold">{stats.hotLeads}</p>
+                  <p className="text-xs text-blue-100">Hot</p>
                 </CardContent>
               </Card>
               <Card className="bg-white/10 backdrop-blur-sm border-0">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-yellow-500/30 rounded-lg">
-                      <DollarSign className="w-6 h-6" />
-                    </div>
-                    <div>
-                      <p className="text-2xl font-bold">{(stats.totalValue / 1000).toFixed(1)}K</p>
-                      <p className="text-sm text-blue-100">Pipeline Value</p>
-                    </div>
-                  </div>
+                <CardContent className="p-3">
+                  <p className="text-xl font-bold">{(stats.totalValue / 1000).toFixed(1)}K</p>
+                  <p className="text-xs text-blue-100">Value</p>
                 </CardContent>
               </Card>
             </div>
@@ -214,10 +173,7 @@ export default function Leads() {
                 />
               </div>
               <div className="flex gap-2 items-center flex-wrap">
-                <div className="flex items-center gap-2 text-sm text-gray-500">
-                  <Filter className="w-4 h-4" />
-                  <span>Filters:</span>
-                </div>
+                <span className="text-sm text-gray-500">Filters:</span>
                 <select
                   value={stageFilter}
                   onChange={(e) => setStageFilter(e.target.value)}
@@ -242,17 +198,17 @@ export default function Leads() {
                     variant={viewMode === 'grid' ? 'default' : 'ghost'}
                     size="sm"
                     onClick={() => setViewMode('grid')}
-                    className="h-8 px-2"
+                    className="h-8 px-3 text-sm"
                   >
-                    <LayoutGrid className="w-4 h-4" />
+                    Grid
                   </Button>
                   <Button
                     variant={viewMode === 'kanban' ? 'default' : 'ghost'}
                     size="sm"
                     onClick={() => setViewMode('kanban')}
-                    className="h-8 px-2"
+                    className="h-8 px-3 text-sm"
                   >
-                    <Columns className="w-4 h-4" />
+                    Kanban
                   </Button>
                 </div>
               </div>
@@ -279,7 +235,6 @@ export default function Leads() {
         ) : filteredLeads.length === 0 ? (
           <Card className="py-16">
             <CardContent className="text-center">
-              <Users className="w-16 h-16 mx-auto mb-4 text-gray-300" />
               <h3 className="text-xl font-semibold text-gray-700 mb-2">
                 {search || stageFilter !== 'all' ? 'No leads found' : 'No leads yet'}
               </h3>
