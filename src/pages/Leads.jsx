@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
+import { Link } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -72,6 +73,12 @@ export default function Leads() {
           <h1 className="text-2xl font-bold font-heading">Leads & CRM</h1>
           <p className="text-muted-foreground">Manage your leads and sales pipeline</p>
         </div>
+        <Link to="/leads/forms">
+          <Button variant="outline">
+            <FileText className="w-4 h-4 mr-2" />
+            Manage Forms
+          </Button>
+        </Link>
         <Button className="gap-2">
           <Plus className="w-4 h-4" /> New Lead
         </Button>

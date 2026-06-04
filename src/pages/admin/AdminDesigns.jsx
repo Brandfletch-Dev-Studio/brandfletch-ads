@@ -6,7 +6,10 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Palette, Search } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Palette, Search, Users, ArrowLeft } from 'lucide-react';
+import { toast } from 'sonner';
 
 const STATUS_OPTIONS = [
   { value: 'draft', label: 'Draft' },
@@ -32,6 +35,7 @@ const DESIGN_TYPES = [
 export default function AdminDesigns() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [selectedRequest, setSelectedRequest] = useState(null);
   const queryClient = useQueryClient();
 
   const { data: designRequests, isLoading } = useQuery({
@@ -39,10 +43,19 @@ export default function AdminDesigns() {
     queryFn: () => base44.entities.DesignRequest.list(),
   });
 
-  const updateStatusMutation = useMutation({
-    mutationFn: ({ id, status }) => base44.entities.DesignRequest.update(id, { status }),
+  const { data: designers } = useQuery({
+    queryKey: ['designers'],
+    queryFn: () => base44.entities.User.filter({ role: 'designer' }),
+  });
+
+  const updateRequestMutation = useMutation({
+    mutationFn: ({ id, data }) => base44.entities.DesignRequest.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['adminDesignRequests'] });
+      if (selectedRequest) {
+        queryClient.invalidateQueries({ queryKey: ['adminDesignRequest', selectedRequest.id] });
+      }
+      toast.success('Updated!');
     },
   });
 
@@ -59,6 +72,17 @@ export default function AdminDesigns() {
     inProgress: designRequests?.filter(r => r.status === 'in_progress').length || 0,
     completed: designRequests?.filter(r => r.status === 'completed' || r.status === 'delivered').length || 0,
   };
+
+  if (selectedRequest) {
+    return (
+      <RequestDetail
+        request={selectedRequest}
+        designers={designers || []}
+        onClose={() => setSelectedRequest(null)}
+        onUpdate={(data) => updateRequestMutation.mutate({ id: selectedRequest.id, data })}
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -157,7 +181,7 @@ export default function AdminDesigns() {
           </Card>
         ) : (
           filteredRequests?.map((request) => (
-            <Card key={request.id}>
+            <Card key={request.id} className="cursor-pointer hover:shadow-md" onClick={() => setSelectedRequest(request)}>
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div>
@@ -167,38 +191,157 @@ export default function AdminDesigns() {
                       User: {request.user_id}
                     </p>
                   </div>
-                  <Badge className={`px-2 py-1 rounded-full text-xs font-medium ${
+                  <Badge className={
                     request.status === 'completed' || request.status === 'delivered' ? 'bg-green-100 text-green-800' :
                     request.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
                     request.status === 'submitted' ? 'bg-amber-100 text-amber-800' :
                     'bg-gray-100 text-gray-800'
-                  }`}>
+                  }>
                     {request.status}
                   </Badge>
                 </div>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-muted-foreground mb-3">{request.description}</p>
-                <div className="flex gap-2">
-                  <Select
-                    value={request.status}
-                    onValueChange={(value) => updateStatusMutation.mutate({ id: request.id, status: value })}
-                  >
-                    <SelectTrigger className="w-40">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {STATUS_OPTIONS.map((opt) => (
-                        <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                <p className="text-sm text-muted-foreground mb-2">{request.description}</p>
+                <div className="flex gap-4 text-xs text-muted-foreground">
+                  {request.due_date && <span>Due: {new Date(request.due_date).toLocaleDateString()}</span>}
+                  {request.designer_id && <span>Designer: {request.designer_id}</span>}
                 </div>
               </CardContent>
             </Card>
           ))
         )}
       </div>
+    </div>
+  );
+}
+
+function RequestDetail({ request, designers, onClose, onUpdate }) {
+  const [designerId, setDesignerId] = useState(request.designer_id || '');
+  const [adminNotes, setAdminNotes] = useState(request.admin_notes || '');
+  const [status, setStatus] = useState(request.status);
+
+  const handleAssign = () => {
+    onUpdate({
+      designer_id: designerId,
+      status: designerId && status === 'submitted' ? 'in_progress' : status,
+    });
+  };
+
+  const handleSaveNotes = () => {
+    onUpdate({ admin_notes: adminNotes });
+  };
+
+  const handleStatusChange = (newStatus) => {
+    setStatus(newStatus);
+    onUpdate({ status: newStatus });
+  };
+
+  return (
+    <div className="space-y-6">
+      <Button variant="outline" onClick={onClose}>
+        <ArrowLeft className="w-4 h-4 mr-2" />
+        Back to List
+      </Button>
+
+      <Card>
+        <CardHeader>
+          <div className="flex items-start justify-between">
+            <div>
+              <CardTitle>{request.title}</CardTitle>
+              <p className="text-sm text-muted-foreground mt-1">
+                {DESIGN_TYPES.find(t => t.value === request.design_type)?.label}
+              </p>
+            </div>
+            <Select value={status} onValueChange={handleStatusChange}>
+              <SelectTrigger className="w-40">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {STATUS_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div>
+            <h4 className="font-semibold mb-2">Description</h4>
+            <p className="text-sm text-muted-foreground">{request.description}</p>
+          </div>
+
+          <div>
+            <h4 className="font-semibold mb-2">Client Notes</h4>
+            <p className="text-sm text-muted-foreground">{request.client_notes}</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <Label htmlFor="designer">Assign Designer</Label>
+              <Select value={designerId} onValueChange={setDesignerId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a designer" />
+                </SelectTrigger>
+                <SelectContent>
+                  {designers.map((designer) => (
+                    <SelectItem key={designer.id} value={designer.id}>
+                      {designer.full_name || designer.email}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button className="mt-3" onClick={handleAssign} disabled={!designerId}>
+                {request.designer_id ? 'Reassign' : 'Assign'} Designer
+              </Button>
+            </div>
+
+            <div>
+              <h4 className="font-semibold mb-2">Request Details</h4>
+              <div className="text-sm space-y-2">
+                <p><span className="text-muted-foreground">Priority:</span> {request.priority}</p>
+                {request.due_date && <p><span className="text-muted-foreground">Due:</span> {new Date(request.due_date).toLocaleDateString()}</p>}
+                {request.submitted_date && <p><span className="text-muted-foreground">Submitted:</span> {new Date(request.submitted_date).toLocaleDateString()}</p>}
+                {request.designer_id && <p><span className="text-muted-foreground">Designer:</span> {request.designer_id}</p>}
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <Label htmlFor="admin_notes">Admin Notes</Label>
+            <Textarea
+              id="admin_notes"
+              value={adminNotes}
+              onChange={(e) => setAdminNotes(e.target.value)}
+              className="min-h-[80px]"
+              placeholder="Internal notes..."
+            />
+            <Button size="sm" className="mt-2" onClick={handleSaveNotes}>
+              Save Notes
+            </Button>
+          </div>
+
+          {request.designer_notes && (
+            <div>
+              <h4 className="font-semibold mb-2">Designer Notes</h4>
+              <p className="text-sm text-muted-foreground">{request.designer_notes}</p>
+            </div>
+          )}
+
+          {request.deliverable_files && request.deliverable_files.length > 0 && (
+            <div>
+              <h4 className="font-semibold mb-2">Delivered Files</h4>
+              <div className="space-y-2">
+                {request.deliverable_files.map((file, idx) => (
+                  <a key={idx} href={file} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 hover:underline block">
+                    📄 Download File {idx + 1}
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

@@ -1,174 +1,83 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { base44 } from '@/api/base44Client';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Palette, Plus, Clock, CheckCircle, AlertCircle, FileText } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Palette, Plus, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
+import DesignRequestForm from '@/components/designs/DesignRequestForm';
 
-const DESIGN_TYPES = [
-  { value: 'social_media_post', label: 'Social Media Post' },
-  { value: 'facebook_ad', label: 'Facebook Ad' },
-  { value: 'instagram_story', label: 'Instagram Story' },
-  { value: 'logo', label: 'Logo Design' },
-  { value: 'banner', label: 'Banner' },
-  { value: 'flyer', label: 'Flyer' },
-  { value: 'business_card', label: 'Business Card' },
-  { value: 'other', label: 'Other' },
-];
-
-const STATUS_CONFIG = {
-  draft: { label: 'Draft', color: 'bg-gray-100 text-gray-800' },
-  submitted: { label: 'Submitted', color: 'bg-blue-100 text-blue-800' },
-  in_progress: { label: 'In Progress', color: 'bg-amber-100 text-amber-800' },
-  revision_requested: { label: 'Revision Requested', color: 'bg-orange-100 text-orange-800' },
-  completed: { label: 'Completed', color: 'bg-green-100 text-green-800' },
-  delivered: { label: 'Delivered', color: 'bg-purple-100 text-purple-800' },
-  cancelled: { label: 'Cancelled', color: 'bg-red-100 text-red-800' },
+const DESIGN_TYPES = {
+  social_media_post: 'Social Media Post',
+  facebook_ad: 'Facebook Ad',
+  instagram_story: 'Instagram Story',
+  logo: 'Logo Design',
+  banner: 'Banner',
+  flyer: 'Flyer',
+  business_card: 'Business Card',
+  other: 'Other',
 };
 
 export default function Designs() {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [newRequest, setNewRequest] = useState({
-    title: '',
-    design_type: '',
-    request_type: 'per_design',
-    description: '',
-    due_date: '',
-  });
-
+  const [showNewForm, setShowNewForm] = useState(false);
+  const [selectedRequest, setSelectedRequest] = useState(null);
   const queryClient = useQueryClient();
 
-  const { data: designRequests, isLoading } = useQuery({
-    queryKey: ['designRequests'],
-    queryFn: async () => {
-      const user = await base44.auth.me();
-      if (!user) return [];
-      return base44.entities.DesignRequest.filter({ user_id: user.id });
-    },
+  const { data: user } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me(),
   });
 
-  const createRequestMutation = useMutation({
-    mutationFn: (data) => base44.entities.DesignRequest.create(data),
+  const { data: requests, isLoading } = useQuery({
+    queryKey: ['myDesignRequests'],
+    queryFn: () => base44.entities.DesignRequest.filter({ user_id: user?.id }),
+    enabled: !!user,
+  });
+
+  const updateRequestMutation = useMutation({
+    mutationFn: ({ id, data }) => base44.entities.DesignRequest.update(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['designRequests'] });
-      setIsDialogOpen(false);
-      setNewRequest({ title: '', design_type: '', request_type: 'per_design', description: '', due_date: '' });
-      toast.success('Design request submitted!');
+      queryClient.invalidateQueries({ queryKey: ['myDesignRequests'] });
+      toast.success('Updated!');
     },
   });
-
-  const handleSubmit = () => {
-    if (!newRequest.title || !newRequest.design_type) {
-      toast.error('Please fill in required fields');
-      return;
-    }
-    createRequestMutation.mutate({
-      ...newRequest,
-      status: 'submitted',
-      submitted_date: new Date().toISOString(),
-    });
-  };
 
   const stats = {
-    total: designRequests?.length || 0,
-    inProgress: designRequests?.filter(r => r.status === 'in_progress').length || 0,
-    completed: designRequests?.filter(r => r.status === 'completed' || r.status === 'delivered').length || 0,
-    pending: designRequests?.filter(r => r.status === 'submitted' || r.status === 'draft').length || 0,
+    total: requests?.length || 0,
+    draft: requests?.filter(r => r.status === 'draft').length || 0,
+    inProgress: requests?.filter(r => ['in_progress', 'submitted'].includes(r.status)).length || 0,
+    completed: requests?.filter(r => ['completed', 'delivered'].includes(r.status)).length || 0,
   };
+
+  if (selectedRequest) {
+    return (
+      <RequestDetail
+        request={selectedRequest}
+        onClose={() => setSelectedRequest(null)}
+        onUpdate={(data) => updateRequestMutation.mutate({ id: selectedRequest.id, data })}
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold font-heading">Design Requests</h1>
-          <p className="text-muted-foreground">Request professional designs for your business</p>
+          <p className="text-muted-foreground">Manage your design projects</p>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="gap-2">
-              <Plus className="w-4 h-4" /> New Request
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Create Design Request</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label>Request Title *</Label>
-                <Input
-                  value={newRequest.title}
-                  onChange={(e) => setNewRequest({ ...newRequest, title: e.target.value })}
-                  placeholder="e.g., Instagram Post for Product Launch"
-                />
-              </div>
-              <div>
-                <Label>Design Type *</Label>
-                <Select
-                  value={newRequest.design_type}
-                  onValueChange={(value) => setNewRequest({ ...newRequest, design_type: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select design type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {DESIGN_TYPES.map((type) => (
-                      <SelectItem key={type.value} value={type.value}>
-                        {type.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>Request Type</Label>
-                <Select
-                  value={newRequest.request_type}
-                  onValueChange={(value) => setNewRequest({ ...newRequest, request_type: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="retainer">Design Retainer</SelectItem>
-                    <SelectItem value="per_design">Per Design</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>Description</Label>
-                <Textarea
-                  value={newRequest.description}
-                  onChange={(e) => setNewRequest({ ...newRequest, description: e.target.value })}
-                  placeholder="Describe your design requirements, brand guidelines, colors, etc."
-                  className="h-24"
-                />
-              </div>
-              <div>
-                <Label>Due Date (Optional)</Label>
-                <Input
-                  type="date"
-                  value={newRequest.due_date}
-                  onChange={(e) => setNewRequest({ ...newRequest, due_date: e.target.value })}
-                />
-              </div>
-              <Button onClick={handleSubmit} className="w-full" disabled={createRequestMutation.isPending}>
-                Submit Request
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <Button onClick={() => setShowNewForm(true)}>
+          <Plus className="w-4 h-4 mr-2" />
+          New Request
+        </Button>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
@@ -177,7 +86,7 @@ export default function Designs() {
               </div>
               <div>
                 <p className="text-2xl font-bold">{stats.total}</p>
-                <p className="text-xs text-muted-foreground">Total Requests</p>
+                <p className="text-xs text-muted-foreground">Total</p>
               </div>
             </div>
           </CardContent>
@@ -186,7 +95,7 @@ export default function Designs() {
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
-                <Clock className="w-5 h-5 text-amber-700" />
+                <Palette className="w-5 h-5 text-amber-700" />
               </div>
               <div>
                 <p className="text-2xl font-bold">{stats.inProgress}</p>
@@ -199,7 +108,7 @@ export default function Designs() {
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
-                <CheckCircle className="w-5 h-5 text-green-700" />
+                <Palette className="w-5 h-5 text-green-700" />
               </div>
               <div>
                 <p className="text-2xl font-bold">{stats.completed}</p>
@@ -208,61 +117,144 @@ export default function Designs() {
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center">
-                <AlertCircle className="w-5 h-5 text-gray-700" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{stats.pending}</p>
-                <p className="text-xs text-muted-foreground">Pending</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       </div>
 
-      {/* Design Requests List */}
-      <div className="space-y-3">
-        <h2 className="text-lg font-semibold">Your Requests</h2>
-        {isLoading ? (
-          <p className="text-muted-foreground">Loading...</p>
-        ) : designRequests?.length === 0 ? (
-          <Card>
-            <CardContent className="p-8 text-center">
-              <Palette className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
-              <p className="text-muted-foreground">No design requests yet. Create your first request!</p>
-            </CardContent>
-          </Card>
-        ) : (
-          designRequests?.map((request) => (
-            <Card key={request.id}>
+      {showNewForm ? (
+        <DesignRequestForm onSuccess={() => setShowNewForm(false)} />
+      ) : isLoading ? (
+        <p className="text-muted-foreground">Loading...</p>
+      ) : requests?.length === 0 ? (
+        <Card>
+          <CardContent className="p-8 text-center">
+            <Palette className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
+            <p className="text-muted-foreground mb-4">No design requests yet</p>
+            <Button onClick={() => setShowNewForm(true)}>
+              <Plus className="w-4 h-4 mr-2" />
+              Create Your First Request
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-3">
+          {requests.map((request) => (
+            <Card key={request.id} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setSelectedRequest(request)}>
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div>
                     <CardTitle className="text-base">{request.title}</CardTitle>
                     <p className="text-sm text-muted-foreground mt-1">
-                      {DESIGN_TYPES.find(t => t.value === request.design_type)?.label} • {request.request_type === 'retainer' ? 'Retainer' : 'Per Design'}
+                      {DESIGN_TYPES[request.design_type]} • {request.request_type === 'retainer' ? 'Retainer' : 'Per Design'}
                     </p>
                   </div>
-                  <Badge className={STATUS_CONFIG[request.status]?.color}>
-                    {STATUS_CONFIG[request.status]?.label}
+                  <Badge className={
+                    request.status === 'completed' || request.status === 'delivered' ? 'bg-green-100 text-green-800' :
+                    request.status === 'in_progress' || request.status === 'submitted' ? 'bg-blue-100 text-blue-800' :
+                    request.status === 'draft' ? 'bg-gray-100 text-gray-800' :
+                    'bg-orange-100 text-orange-800'
+                  }>
+                    {request.status.replace('_', ' ')}
                   </Badge>
                 </div>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-muted-foreground">{request.description}</p>
-                {request.due_date && (
-                  <p className="text-xs text-muted-foreground mt-2">
-                    Due: {new Date(request.due_date).toLocaleDateString()}
-                  </p>
-                )}
+                <p className="text-sm text-muted-foreground line-clamp-2">{request.description}</p>
+                <div className="flex gap-4 mt-3 text-xs text-muted-foreground">
+                  {request.due_date && <span>Due: {new Date(request.due_date).toLocaleDateString()}</span>}
+                  {request.submitted_date && <span>Submitted: {new Date(request.submitted_date).toLocaleDateString()}</span>}
+                </div>
               </CardContent>
             </Card>
-          ))
-        )}
-      </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function RequestDetail({ request, onClose, onUpdate }) {
+  const [notes, setNotes] = useState(request.client_notes || '');
+
+  const handleSaveNotes = () => {
+    onUpdate({ client_notes: notes });
+  };
+
+  return (
+    <div className="space-y-6">
+      <Button variant="outline" onClick={onClose}>
+        <ArrowLeft className="w-4 h-4 mr-2" />
+        Back to Requests
+      </Button>
+
+      <Card>
+        <CardHeader>
+          <div className="flex items-start justify-between">
+            <div>
+              <CardTitle>{request.title}</CardTitle>
+              <p className="text-sm text-muted-foreground mt-1">
+                {DESIGN_TYPES[request.design_type]} • {request.request_type === 'retainer' ? 'Retainer' : 'Per Design'}
+              </p>
+            </div>
+            <Badge className={
+              request.status === 'completed' || request.status === 'delivered' ? 'bg-green-100 text-green-800' :
+              request.status === 'in_progress' || request.status === 'submitted' ? 'bg-blue-100 text-blue-800' :
+              request.status === 'draft' ? 'bg-gray-100 text-gray-800' :
+              'bg-orange-100 text-orange-800'
+            }>
+              {request.status.replace('_', ' ')}
+            </Badge>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <h4 className="font-semibold mb-2">Description</h4>
+            <p className="text-sm text-muted-foreground">{request.description}</p>
+          </div>
+
+          {request.designer_notes && (
+            <div>
+              <h4 className="font-semibold mb-2">Designer Notes</h4>
+              <p className="text-sm text-muted-foreground">{request.designer_notes}</p>
+            </div>
+          )}
+
+          <div>
+            <h4 className="font-semibold mb-2">Your Notes</h4>
+            <Textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              className="min-h-[80px]"
+            />
+            <Button size="sm" className="mt-2" onClick={handleSaveNotes}>
+              Save Notes
+            </Button>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <span className="text-muted-foreground">Priority:</span>
+              <span className="ml-2 font-medium">{request.priority}</span>
+            </div>
+            {request.due_date && (
+              <div>
+                <span className="text-muted-foreground">Due Date:</span>
+                <span className="ml-2 font-medium">{new Date(request.due_date).toLocaleDateString()}</span>
+              </div>
+            )}
+            {request.submitted_date && (
+              <div>
+                <span className="text-muted-foreground">Submitted:</span>
+                <span className="ml-2 font-medium">{new Date(request.submitted_date).toLocaleDateString()}</span>
+              </div>
+            )}
+            {request.completed_date && (
+              <div>
+                <span className="text-muted-foreground">Completed:</span>
+                <span className="ml-2 font-medium">{new Date(request.completed_date).toLocaleDateString()}</span>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
