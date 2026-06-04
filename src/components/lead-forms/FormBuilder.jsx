@@ -5,10 +5,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { Settings, FileText, Layers, MessageSquare, Save, Globe, LinkIcon, Sparkles, Mail, Plus } from 'lucide-react';
+import { Settings, FileText, Layers, MessageSquare, Save, Globe, LinkIcon, Sparkles, Mail, Plus, Wand2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import FieldEditor from './FieldEditor';
+import AIFormSuggestions from './AIFormSuggestions';
 
 const FORM_CATEGORIES = [
   { value: 'contact', label: 'Contact Form' },
@@ -29,6 +30,7 @@ const FORM_BUILD_TYPES = [
 
 export default function FormBuilder({ form, onSave, onCancel }) {
   const [selectedFormType, setSelectedFormType] = useState(form?.form_build_type || 'traditional');
+  const [showAIBuilder, setShowAIBuilder] = useState(!form?.id && !form?.fields?.length);
   const [formData, setFormData] = useState({
     form_name: form?.form_name || '',
     form_type: form?.form_type || 'contact',
@@ -66,8 +68,39 @@ export default function FormBuilder({ form, onSave, onCancel }) {
     onSave({ ...formData, form_build_type: selectedFormType });
   };
 
+  const handleAIFieldsGenerated = (fields) => {
+    setFormData({ ...formData, fields });
+    setShowAIBuilder(false);
+    toast.success('AI fields added! You can now edit them below.');
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {/* AI Form Builder */}
+      {showAIBuilder && (
+        <AIFormSuggestions
+          formType={formData.form_type}
+          onFieldsGenerated={handleAIFieldsGenerated}
+          onSkip={() => setShowAIBuilder(false)}
+        />
+      )}
+
+      {!showAIBuilder && formData.fields.length === 0 && (
+        <div className="text-center p-6 bg-muted/50 rounded-lg border-2 border-dashed">
+          <Sparkles className="w-12 h-12 mx-auto mb-3 text-purple-400" />
+          <h3 className="text-lg font-medium mb-2">Start with AI or Build Manually</h3>
+          <p className="text-muted-foreground mb-4">Let AI generate optimized fields for your form type</p>
+          <Button
+            type="button"
+            onClick={() => setShowAIBuilder(true)}
+            className="gap-2 bg-purple-600 hover:bg-purple-700"
+          >
+            <Wand2 className="w-4 h-4" />
+            Launch AI Form Builder
+          </Button>
+        </div>
+      )}
+
       {/* Form Type Selection */}
       <Card className="shadow-lg">
         <CardHeader>
