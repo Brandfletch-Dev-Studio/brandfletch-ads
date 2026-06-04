@@ -2,6 +2,10 @@
   "name": "Campaign",
   "type": "object",
   "properties": {
+    "campaign_name": {
+      "type": "string",
+      "description": "User-defined name to identify the campaign"
+    },
     "user_id": {
       "type": "string"
     },

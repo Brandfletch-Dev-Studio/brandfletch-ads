@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
+import StepName from './wizard/StepName';
 import StepSelectPage from './wizard/StepSelectPage';
 import StepCreative from './wizard/StepCreative';
 import StepGoal from './wizard/StepGoal';
@@ -14,12 +15,13 @@ import StepPackage from './wizard/StepPackage';
 import StepSummary from './wizard/StepSummary';
 
 const STEPS = [
-  { id: 1, label: 'Page' },
-  { id: 2, label: 'Creative' },
-  { id: 3, label: 'Goal' },
-  { id: 4, label: 'Audience' },
-  { id: 5, label: 'Package' },
-  { id: 6, label: 'Summary' },
+  { id: 1, label: 'Name' },
+  { id: 2, label: 'Page' },
+  { id: 3, label: 'Creative' },
+  { id: 4, label: 'Goal' },
+  { id: 5, label: 'Audience' },
+  { id: 6, label: 'Package' },
+  { id: 7, label: 'Summary' },
 ];
 
 export default function CampaignWizard() {
@@ -27,6 +29,7 @@ export default function CampaignWizard() {
   const [step, setStep] = useState(1);
   const [user, setUser] = useState(null);
   const [data, setData] = useState({
+    campaign_name: '',
     page_id: '', page_name: '',
     goal: '', promote_type: '', post_url: '', website_url: '', phone_number: '',
     creative_assets: [], creative_link: '', creative_type: 'existing_post', description: '',
@@ -118,12 +121,13 @@ export default function CampaignWizard() {
 
         {/* Step content */}
         <div className="bg-card rounded-2xl border border-border shadow-sm p-6 lg:p-8">
-          {step === 1 && <StepSelectPage data={data} update={update} userId={user?.id} user={user} />}
-          {step === 2 && <StepCreative data={data} update={update} />}
-          {step === 3 && <StepGoal data={data} update={update} />}
-          {step === 4 && <StepAudience data={data} update={update} userId={user?.id} />}
-          {step === 5 && <StepPackage data={data} update={update} />}
-          {step === 6 && <StepSummary data={data} update={update} />}
+          {step === 1 && <StepName data={data} update={update} />}
+          {step === 2 && <StepSelectPage data={data} update={update} userId={user?.id} user={user} />}
+          {step === 3 && <StepCreative data={data} update={update} />}
+          {step === 4 && <StepGoal data={data} update={update} />}
+          {step === 5 && <StepAudience data={data} update={update} userId={user?.id} />}
+          {step === 6 && <StepPackage data={data} update={update} />}
+          {step === 7 && <StepSummary data={data} update={update} />}
         </div>
 
         {/* Nav */}
@@ -135,26 +139,27 @@ export default function CampaignWizard() {
           >
             <ChevronLeft className="w-4 h-4" /> {step === 1 ? 'Cancel' : 'Back'}
           </Button>
-          {step < 6 ? (
+          {step < 7 ? (
             <Button
               onClick={() => setStep(s => s + 1)}
               disabled={
-                (step === 1 && !data.page_name) ||
-                (step === 2 && (data.creative_type === 'existing_post' || !data.creative_type) && !data.post_url) ||
-                (step === 2 && data.creative_type === 'new_creative' && !data.description) ||
-                (step === 3 && (
+                (step === 1 && !data.campaign_name?.trim()) ||
+                (step === 2 && !data.page_name) ||
+                (step === 3 && (data.creative_type === 'existing_post' || !data.creative_type) && !data.post_url) ||
+                (step === 3 && data.creative_type === 'new_creative' && !data.description) ||
+                (step === 4 && (
                   !data.goal ||
                   (data.goal === 'messages' && data.messaging_platforms?.length === 0) ||
                   (data.goal === 'website_traffic' && !data.website_url) ||
                   (data.goal === 'phone_calls' && !data.phone_number)
                 )) ||
-                (step === 5 && !data.package)
+                (step === 6 && !data.package)
               }
               className="gap-2 bg-[hsl(var(--primary))] text-primary-foreground font-semibold"
             >
               Continue <ChevronRight className="w-4 h-4" />
             </Button>
-          ) : step === 6 ? (
+          ) : step === 7 ? (
             <Button
               onClick={handleSubmit}
               disabled={submitting}
