@@ -23,6 +23,8 @@ import Marketplace from '@/pages/Marketplace';
 import Notifications from '@/pages/Notifications';
 import SupportTickets from '@/pages/SupportTickets';
 import Wallet from '@/pages/Wallet';
+import Designs from '@/pages/Designs';
+import Leads from '@/pages/Leads';
 import About from '@/pages/About';
 import Contact from '@/pages/Contact';
 import PrivacyPolicy from '@/pages/PrivacyPolicy';
@@ -43,6 +45,8 @@ import AdminAds from '@/pages/admin/AdminAds';
 import AdminAuditLog from '@/pages/admin/AdminAuditLog';
 import AdminPricing from '@/pages/admin/AdminPricing';
 import AdminSupportTickets from '@/pages/admin/AdminSupportTickets';
+import AdminDesigns from '@/pages/admin/AdminDesigns';
+import AdminLeads from '@/pages/admin/AdminLeads';
 import Onboarding from '@/pages/Onboarding';
 import Login from '@/pages/Login';
 import Register from '@/pages/Register';
@@ -120,6 +124,8 @@ const AuthenticatedApp = () => {
         <Route path="/settings" element={<ProfileSettings />} />
         <Route path="/marketplace" element={<Marketplace />} />
         <Route path="/wallet" element={<Wallet />} />
+        <Route path="/designs" element={<Designs />} />
+        <Route path="/leads" element={<Leads />} />
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/support" element={<SupportTickets />} />
         <Route path="/messages" element={<Navigate to="/support" replace />} />
@@ -135,6 +141,8 @@ const AuthenticatedApp = () => {
         <Route path="/admin/notifications" element={<AdminNotifications />} />
         <Route path="/admin/settings" element={<AdminSettings />} />
         <Route path="/admin/ads" element={<AdminAds />} />
+        <Route path="/admin/designs" element={<AdminDesigns />} />
+        <Route path="/admin/leads" element={<AdminLeads />} />
         <Route path="/admin/audit-log" element={<AdminAuditLog />} />
         <Route path="/admin/pricing" element={<AdminPricing />} />
         <Route path="/admin/support" element={<AdminSupportTickets />} />

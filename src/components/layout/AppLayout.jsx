@@ -5,7 +5,8 @@ import { Link, useLocation, Outlet } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import {
   LayoutDashboard, Megaphone, Facebook, Users, Wallet as WalletIcon,
-  Settings, X, ChevronRight, BarChart3, Shield, Bell, ShoppingBag, Tv2, ClipboardList, Tags, LifeBuoy, Info, Mail
+  Settings, X, ChevronRight, BarChart3, Shield, Bell, ShoppingBag, Tv2, ClipboardList, Tags, LifeBuoy, Info, Mail,
+  Palette, Target
 } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -18,6 +19,8 @@ import BottomNav from '@/components/layout/BottomNav';
 const clientNav = [
   { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { path: '/campaigns', label: 'Campaigns', icon: Megaphone },
+  { path: '/designs', label: 'Designs', icon: Palette },
+  { path: '/leads', label: 'Leads', icon: Target },
   { path: '/pages', label: 'Facebook Pages', icon: Facebook },
   { path: '/audiences', label: 'Audiences', icon: Users },
   { path: '/wallet', label: 'Wallet', icon: WalletIcon },
@@ -29,6 +32,8 @@ const clientNav = [
 const ALL_ADMIN_NAV = [
   { key: 'overview',       path: '/admin',                 label: 'Overview',       icon: LayoutDashboard, permission: null },
   { key: 'campaigns',      path: '/admin/campaigns',       label: 'All Campaigns',  icon: Megaphone,       permission: 'campaigns.view' },
+  { key: 'designs',        path: '/admin/designs',         label: 'Design Requests',icon: Palette,         permission: 'designs.view' },
+  { key: 'leads',          path: '/admin/leads',           label: 'Leads & CRM',    icon: Target,          permission: 'leads.view' },
   { key: 'pages',          path: '/admin/pages',           label: 'Page Requests',  icon: Facebook,        permission: 'pages.view' },
   { key: 'users',          path: '/admin/users',           label: 'Team & Users',   icon: Users,           permission: 'users.view' },
   { key: 'payments',       path: '/admin/payments',        label: 'Payments',       icon: WalletIcon,      permission: 'payments.view' },

@@ -6,10 +6,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Palette, Plus, Clock, CheckCircle, AlertCircle } from 'lucide-react';
+import { Palette, Plus, Clock, CheckCircle, AlertCircle, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 
 const DESIGN_TYPES = [
@@ -24,11 +24,13 @@ const DESIGN_TYPES = [
 ];
 
 const STATUS_CONFIG = {
-  pending: { label: 'Pending Review', color: 'bg-amber-100 text-amber-800' },
-  in_progress: { label: 'In Progress', color: 'bg-blue-100 text-blue-800' },
-  revision: { label: 'Revision Requested', color: 'bg-orange-100 text-orange-800' },
+  draft: { label: 'Draft', color: 'bg-gray-100 text-gray-800' },
+  submitted: { label: 'Submitted', color: 'bg-blue-100 text-blue-800' },
+  in_progress: { label: 'In Progress', color: 'bg-amber-100 text-amber-800' },
+  revision_requested: { label: 'Revision Requested', color: 'bg-orange-100 text-orange-800' },
   completed: { label: 'Completed', color: 'bg-green-100 text-green-800' },
-  rejected: { label: 'Rejected', color: 'bg-red-100 text-red-800' },
+  delivered: { label: 'Delivered', color: 'bg-purple-100 text-purple-800' },
+  cancelled: { label: 'Cancelled', color: 'bg-red-100 text-red-800' },
 };
 
 export default function Designs() {
@@ -45,7 +47,11 @@ export default function Designs() {
 
   const { data: designRequests, isLoading } = useQuery({
     queryKey: ['designRequests'],
-    queryFn: () => base44.entities.DesignRequest.filter({}),
+    queryFn: async () => {
+      const user = await base44.auth.me();
+      if (!user) return [];
+      return base44.entities.DesignRequest.filter({ user_id: user.id });
+    },
   });
 
   const createRequestMutation = useMutation({
@@ -63,14 +69,18 @@ export default function Designs() {
       toast.error('Please fill in required fields');
       return;
     }
-    createRequestMutation.mutate(newRequest);
+    createRequestMutation.mutate({
+      ...newRequest,
+      status: 'submitted',
+      submitted_date: new Date().toISOString(),
+    });
   };
 
   const stats = {
     total: designRequests?.length || 0,
     inProgress: designRequests?.filter(r => r.status === 'in_progress').length || 0,
-    completed: designRequests?.filter(r => r.status === 'completed').length || 0,
-    pending: designRequests?.filter(r => r.status === 'pending').length || 0,
+    completed: designRequests?.filter(r => r.status === 'completed' || r.status === 'delivered').length || 0,
+    pending: designRequests?.filter(r => r.status === 'submitted' || r.status === 'draft').length || 0,
   };
 
   return (
