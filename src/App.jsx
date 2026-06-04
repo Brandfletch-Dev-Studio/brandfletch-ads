@@ -22,6 +22,8 @@ import Messages from '@/pages/Messages';
 import Marketplace from '@/pages/Marketplace';
 import Notifications from '@/pages/Notifications';
 import SupportTickets from '@/pages/SupportTickets';
+import About from '@/pages/About';
+import Contact from '@/pages/Contact';
 
 // Admin pages
 import AdminOverview from '@/pages/admin/AdminOverview';
@@ -98,6 +100,8 @@ const AuthenticatedApp = () => {
       <Route path="/reset-password" element={<ResetPassword />} />
 
       <Route path="/onboarding" element={<Onboarding />} />
+      <Route path="/about" element={<About />} />
+      <Route path="/contact" element={<Contact />} />
       <Route element={<AppLayout />}>
         {/* Client routes */}
         <Route path="/" element={<Navigate to={isStaff ? "/admin" : "/dashboard"} replace />} />

@@ -5,7 +5,7 @@ import { Link, useLocation, Outlet } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import {
   LayoutDashboard, Megaphone, Facebook, Users, Wallet,
-  Settings, X, ChevronRight, BarChart3, Shield, Bell, ShoppingBag, Tv2, ClipboardList, Tags, LifeBuoy
+  Settings, X, ChevronRight, BarChart3, Shield, Bell, ShoppingBag, Tv2, ClipboardList, Tags, LifeBuoy, Info, Mail
 } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -175,6 +175,23 @@ export default function AppLayout() {
         {/* Page content */}
         <main className="flex-1 overflow-y-auto pb-16 lg:pb-0">
           <Outlet />
+          
+          {/* Footer */}
+          <footer className="border-t bg-card px-4 py-4">
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-3 text-sm text-muted-foreground">
+              <p>© {new Date().getFullYear()} Brandfletch Media</p>
+              <div className="flex gap-4">
+                <Link to="/about" className="hover:text-foreground flex items-center gap-1">
+                  <Info className="w-3 h-3" />
+                  About
+                </Link>
+                <Link to="/contact" className="hover:text-foreground flex items-center gap-1">
+                  <Mail className="w-3 h-3" />
+                  Contact
+                </Link>
+              </div>
+            </div>
+          </footer>
         </main>
 
         {/* Mobile bottom nav */}
