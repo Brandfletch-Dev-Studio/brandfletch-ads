@@ -1,11 +1,10 @@
-import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Edit2, Copy, ExternalLink } from 'lucide-react';
+import { Edit2, Copy, ExternalLink, Eye, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function FormPreview({ form, onClose, onEdit }) {
@@ -14,10 +13,13 @@ export default function FormPreview({ form, onClose, onEdit }) {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold">Form Preview</h2>
+        <div className="flex items-center gap-2">
+          <Eye className="w-6 h-6 text-blue-600" />
+          <h2 className="text-xl font-bold">Form Preview</h2>
+        </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={onEdit}>
-            <Edit2 className="w-4 h-4 mr-2" />
+          <Button variant="outline" onClick={onEdit} className="gap-2">
+            <Edit2 className="w-4 h-4" />
             Edit
           </Button>
           <Button variant="outline" onClick={onClose}>
@@ -26,9 +28,10 @@ export default function FormPreview({ form, onClose, onEdit }) {
         </div>
       </div>
 
-      <Card>
+      <Card className="shadow-xl">
         <CardHeader>
           <CardTitle>{form.form_name}</CardTitle>
+          <CardDescription>Live preview of your form</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -61,13 +64,16 @@ export default function FormPreview({ form, onClose, onEdit }) {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="shadow-lg">
         <CardHeader>
-          <CardTitle className="text-base">Form URL</CardTitle>
+          <CardTitle className="text-base flex items-center gap-2">
+            <ExternalLink className="w-4 h-4" />
+            Form URL
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex items-center gap-2">
-            <Input value={formUrl} readOnly className="font-mono text-sm" />
+            <Input value={formUrl} readOnly className="font-mono text-sm bg-muted/50" />
             <Button
               size="sm"
               variant="outline"
@@ -90,19 +96,22 @@ export default function FormPreview({ form, onClose, onEdit }) {
       </Card>
 
       {form.meta_title && (
-        <Card>
+        <Card className="shadow-lg border-green-200 bg-green-50">
           <CardHeader>
-            <CardTitle className="text-base">SEO Preview</CardTitle>
+            <CardTitle className="text-base flex items-center gap-2 text-green-800">
+              <FileText className="w-4 h-4" />
+              SEO Preview
+            </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-3">
             <div>
-              <p className="text-xs text-muted-foreground">Meta Title</p>
-              <p className="text-sm font-medium">{form.meta_title}</p>
+              <p className="text-xs text-green-700 font-semibold mb-1">Meta Title</p>
+              <p className="text-sm font-medium text-green-900">{form.meta_title}</p>
             </div>
             {form.meta_description && (
-              <div className="mt-3">
-                <p className="text-xs text-muted-foreground">Meta Description</p>
-                <p className="text-sm text-muted-foreground">{form.meta_description}</p>
+              <div>
+                <p className="text-xs text-green-700 font-semibold mb-1">Meta Description</p>
+                <p className="text-sm text-green-800">{form.meta_description}</p>
               </div>
             )}
           </CardContent>

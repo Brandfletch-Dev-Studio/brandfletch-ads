@@ -108,8 +108,8 @@ export default function Leads() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white rounded-b-3xl shadow-xl">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-4">
