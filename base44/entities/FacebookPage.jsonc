@@ -38,6 +38,11 @@
     },
     "admin_notes": {
       "type": "string"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Optional description of the Facebook Page"
     }
   },
   "required": [

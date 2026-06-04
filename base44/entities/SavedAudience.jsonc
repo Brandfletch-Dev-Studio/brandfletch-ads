@@ -47,6 +47,11 @@
         "female"
       ],
       "default": "all"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Optional description of the target audience"
     }
   },
   "required": [
