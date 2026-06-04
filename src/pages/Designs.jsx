@@ -9,10 +9,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Palette, Plus, ArrowLeft, Lock } from 'lucide-react';
+import { Palette, Plus, ArrowLeft, Lock, MessageSquare } from 'lucide-react';
 import { toast } from 'sonner';
 import DesignRequestForm from '@/components/designs/DesignRequestForm';
 import DesignSubscription from '@/components/designs/DesignSubscription';
+import DesignChatComponent from '@/components/designs/DesignChatComponent';
 
 const DESIGN_TYPES = {
   social_media_post: 'Social Media Post',
@@ -280,6 +281,7 @@ export default function Designs() {
 
 function RequestDetail({ request, onClose, onUpdate }) {
   const [notes, setNotes] = useState(request.client_notes || '');
+  const [showChat, setShowChat] = useState(false);
 
   const handleSaveNotes = () => {
     onUpdate({ client_notes: notes });
@@ -292,76 +294,119 @@ function RequestDetail({ request, onClose, onUpdate }) {
         Back to Requests
       </Button>
 
-      <Card>
-        <CardHeader>
-          <div className="flex items-start justify-between">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Project Details */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Project Details</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
             <div>
-              <CardTitle>{request.title}</CardTitle>
-              <p className="text-sm text-muted-foreground mt-1">
-                {DESIGN_TYPES[request.design_type]} • {request.request_type === 'retainer' ? 'Retainer' : 'Per Design'}
-              </p>
+              <h4 className="font-semibold mb-2">Description</h4>
+              <p className="text-sm text-muted-foreground">{request.description}</p>
             </div>
-            <Badge className={
-              request.status === 'completed' || request.status === 'delivered' ? 'bg-green-100 text-green-800' :
-              request.status === 'in_progress' || request.status === 'submitted' ? 'bg-blue-100 text-blue-800' :
-              request.status === 'draft' ? 'bg-gray-100 text-gray-800' :
-              'bg-orange-100 text-orange-800'
-            }>
-              {request.status.replace('_', ' ')}
-            </Badge>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <h4 className="font-semibold mb-2">Description</h4>
-            <p className="text-sm text-muted-foreground">{request.description}</p>
-          </div>
 
-          {request.designer_notes && (
-            <div>
-              <h4 className="font-semibold mb-2">Designer Notes</h4>
-              <p className="text-sm text-muted-foreground">{request.designer_notes}</p>
-            </div>
-          )}
-
-          <div>
-            <h4 className="font-semibold mb-2">Your Notes</h4>
-            <Textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              className="min-h-[80px]"
-            />
-            <Button size="sm" className="mt-2" onClick={handleSaveNotes}>
-              Save Notes
-            </Button>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <span className="text-muted-foreground">Priority:</span>
-              <span className="ml-2 font-medium">{request.priority}</span>
-            </div>
-            {request.due_date && (
+            {request.designer_notes && (
               <div>
-                <span className="text-muted-foreground">Due Date:</span>
-                <span className="ml-2 font-medium">{new Date(request.due_date).toLocaleDateString()}</span>
+                <h4 className="font-semibold mb-2">Designer Notes</h4>
+                <p className="text-sm text-muted-foreground">{request.designer_notes}</p>
               </div>
             )}
-            {request.submitted_date && (
+
+            <div>
+              <h4 className="font-semibold mb-2">Your Notes</h4>
+              <Textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                className="min-h-[80px]"
+              />
+              <Button size="sm" className="mt-2" onClick={handleSaveNotes}>
+                Save Notes
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <span className="text-muted-foreground">Submitted:</span>
-                <span className="ml-2 font-medium">{new Date(request.submitted_date).toLocaleDateString()}</span>
+                <span className="text-muted-foreground">Priority:</span>
+                <span className="ml-2 font-medium">{request.priority}</span>
+              </div>
+              {request.due_date && (
+                <div>
+                  <span className="text-muted-foreground">Due Date:</span>
+                  <span className="ml-2 font-medium">{new Date(request.due_date).toLocaleDateString()}</span>
+                </div>
+              )}
+              {request.submitted_date && (
+                <div>
+                  <span className="text-muted-foreground">Submitted:</span>
+                  <span className="ml-2 font-medium">{new Date(request.submitted_date).toLocaleDateString()}</span>
+                </div>
+              )}
+              {request.completed_date && (
+                <div>
+                  <span className="text-muted-foreground">Completed:</span>
+                  <span className="ml-2 font-medium">{new Date(request.completed_date).toLocaleDateString()}</span>
+                </div>
+              )}
+            </div>
+
+            {request.reference_files?.length > 0 && (
+              <div>
+                <h4 className="font-semibold mb-2">Reference Files</h4>
+                <div className="space-y-1">
+                  {request.reference_files.map((url, i) => (
+                    <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="block text-sm text-primary hover:underline">
+                      Reference {i + 1}
+                    </a>
+                  ))}
+                </div>
               </div>
             )}
-            {request.completed_date && (
+
+            {request.deliverable_files?.length > 0 && (
               <div>
-                <span className="text-muted-foreground">Completed:</span>
-                <span className="ml-2 font-medium">{new Date(request.completed_date).toLocaleDateString()}</span>
+                <h4 className="font-semibold mb-2">Delivered Files</h4>
+                <div className="space-y-1">
+                  {request.deliverable_files.map((url, i) => (
+                    <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="block text-sm text-primary hover:underline">
+                      Delivery {i + 1}
+                    </a>
+                  ))}
+                </div>
               </div>
             )}
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+
+        {/* Chat Section */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <MessageSquare className="w-5 h-5" />
+                Project Chat
+              </CardTitle>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowChat(!showChat)}
+              >
+                {showChat ? 'Hide Chat' : 'Open Chat'}
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {showChat ? (
+              <DesignChatComponent designRequestId={request.id} />
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <MessageSquare className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                <p className="text-sm">Click "Open Chat" to start a conversation with your designer</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

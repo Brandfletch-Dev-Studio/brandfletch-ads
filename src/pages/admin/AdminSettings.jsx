@@ -40,8 +40,6 @@ export default function AdminSettings() {
   const [savingEmail, setSavingEmail] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
-  const [designPricing, setDesignPricing] = useState([]);
-  const [newDesignPricing, setNewDesignPricing] = useState({ pricing_type: 'per_design', country: 'Malawi', currency: 'MWK', symbol: 'MK', price: 15000, monthly_quota: 20, max_revisions: 2 });
 
   useEffect(() => {
     Promise.all([
@@ -150,33 +148,6 @@ export default function AdminSettings() {
     toast.success('Saved!', { duration: 1500 });
     const dp = await base44.entities.DesignPricing.list();
     setDesignPricing(dp);
-  }
-
-  async function deleteDesignPricing(id) {
-    await base44.entities.DesignPricing.delete(id);
-    setDesignPricing(dp => dp.filter(p => p.id !== id));
-    toast.success('Pricing deleted');
-  }
-
-  async function addDesignPricing() {
-    if (!newDesignPricing.country || !newDesignPricing.price) return;
-    await base44.entities.DesignPricing.create({ ...newDesignPricing, is_active: true });
-    toast.success('Design pricing added');
-    setNewDesignPricing({ pricing_type: 'per_design', country: 'Malawi', currency: 'MWK', symbol: 'MK', price: 15000, monthly_quota: 20, max_revisions: 2, is_active: true });
-    const dp = await base44.entities.DesignPricing.list();
-    setDesignPricing(dp);
-  }
-
-  async function updateDesignPricing(id, data) {
-    await base44.entities.DesignPricing.update(id, data);
-    setDesignPricing(dp => dp.map(p => p.id === id ? { ...p, ...data } : p));
-    toast.success('Saved!', { duration: 1500 });
-  }
-
-  async function deleteDesignPricing(id) {
-    await base44.entities.DesignPricing.delete(id);
-    setDesignPricing(dp => dp.filter(p => p.id !== id));
-    toast.success('Pricing deleted');
   }
 
   async function deleteAllEntity(entityKey) {
