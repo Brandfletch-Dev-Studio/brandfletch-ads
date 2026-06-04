@@ -10,7 +10,7 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
 function isFacebookUrl(url) {
-  return /^https?:\/\/(www\.)?(facebook\.com|fb\.com)\//i.test(url.trim());
+  return /^https?:\/\/(www\.)?(facebook\.com|fb\.com)(\/.*)?$/i.test(url.trim());
 }
 
 export default function FacebookPages() {
