@@ -41,7 +41,6 @@ Generate a JSON response with this exact structure:
 Rules:
 - Include only relevant fields for the requested form type
 - Use appropriate field types (email for email, phone for phone numbers, etc.)
-- Add conditional logic fields where needed (e.g., if "Other" is selected, add custom input)
 - Make required fields truly necessary
 - Keep it concise but comprehensive
 
@@ -71,7 +70,7 @@ Respond with ONLY the JSON, no explanation.`,
           required: ["form_name", "form_type", "fields", "success_message"]
         }
       });
-      return JSON.parse(response.data);
+      return response.data;
     },
     onSuccess: (data) => {
       setGeneratedForm(data);
