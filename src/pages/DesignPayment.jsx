@@ -29,6 +29,9 @@ export default function DesignPayment() {
     const u = await base44.auth.me();
     setUser(u);
     
+    // Get user's country from profile or default to Malawi
+    const userCountry = u.country || 'Malawi';
+    
     // Get most recent pending design subscription
     const subscriptions = await base44.entities.PlatformSubscription.filter({ 
       user_id: u.id, 
@@ -46,8 +49,11 @@ export default function DesignPayment() {
       setWallet(wallets[0]);
     }
     
-    // Get payment methods
-    const methods = await base44.entities.PaymentMethod.filter({ is_active: true }, 'sort_order');
+    // Get payment methods for user's country only
+    const methods = await base44.entities.PaymentMethod.filter({ 
+      is_active: true, 
+      country: userCountry 
+    }, 'sort_order');
     setPaymentMethods(methods);
   }
 

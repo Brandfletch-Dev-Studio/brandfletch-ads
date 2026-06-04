@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
-import { Plus, Trash2, Save, DollarSign, CreditCard, Pencil, X, Check, Mail, Store, AlertTriangle, ShieldAlert } from 'lucide-react';
+import { Plus, Trash2, Save, DollarSign, CreditCard, Pencil, X, Check, Mail, Store, AlertTriangle, ShieldAlert, Palette } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,6 +25,7 @@ const DANGER_ENTITIES = [
 export default function AdminSettings() {
   const [rates, setRates] = useState([]);
   const [methods, setMethods] = useState([]);
+  const [designPricing, setDesignPricing] = useState([]);
   const [newRate, setNewRate] = useState({ currency_code: '', currency_name: '', country: '', rate_to_usd: '', use_fixed_pricing: false });
   const [newMethod, setNewMethod] = useState({ country: '', method_name: '', method_type: 'mobile_money', account_number: '', account_name: '', instructions: '' });
   const [editingMethod, setEditingMethod] = useState(null);
@@ -38,6 +40,8 @@ export default function AdminSettings() {
   const [savingEmail, setSavingEmail] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [designPricing, setDesignPricing] = useState([]);
+  const [newDesignPricing, setNewDesignPricing] = useState({ pricing_type: 'per_design', country: 'Malawi', currency: 'MWK', symbol: 'MK', price: 15000, monthly_quota: 20, max_revisions: 2, is_active: true });
 
   useEffect(() => {
     Promise.all([
@@ -45,10 +49,12 @@ export default function AdminSettings() {
       base44.entities.PaymentMethod.list(),
       base44.auth.me(),
       base44.entities.Service.list('sort_order'),
-    ]).then(([r, m, u, s]) => {
+      base44.entities.DesignPricing.list(),
+    ]).then(([r, m, u, s, dp]) => {
       setRates(r);
       setMethods(m);
       setServices(s);
+      setDesignPricing(dp);
       if (u?.admin_notification_email) setAdminEmail(u.admin_notification_email);
       else if (u?.email) setAdminEmail(u.email);
     });
@@ -128,6 +134,49 @@ export default function AdminSettings() {
     await base44.entities.PaymentMethod.delete(id);
     setMethods(ms => ms.filter(m => m.id !== id));
     toast.success('Method deleted');
+  }
+
+  async function addDesignPricing() {
+    if (!newDesignPricing.country || !newDesignPricing.price) return;
+    await base44.entities.DesignPricing.create({ ...newDesignPricing, is_active: true });
+    toast.success('Design pricing added');
+    setNewDesignPricing({ pricing_type: 'per_design', country: '', currency: '', symbol: '', price: '', monthly_quota: null, max_revisions: 2 });
+    const dp = await base44.entities.DesignPricing.list();
+    setDesignPricing(dp);
+  }
+
+  async function updateDesignPricing(id, data) {
+    await base44.entities.DesignPricing.update(id, data);
+    toast.success('Saved!', { duration: 1500 });
+    const dp = await base44.entities.DesignPricing.list();
+    setDesignPricing(dp);
+  }
+
+  async function deleteDesignPricing(id) {
+    await base44.entities.DesignPricing.delete(id);
+    setDesignPricing(dp => dp.filter(p => p.id !== id));
+    toast.success('Pricing deleted');
+  }
+
+  async function addDesignPricing() {
+    if (!newDesignPricing.country || !newDesignPricing.price) return;
+    await base44.entities.DesignPricing.create({ ...newDesignPricing, is_active: true });
+    toast.success('Design pricing added');
+    setNewDesignPricing({ pricing_type: 'per_design', country: 'Malawi', currency: 'MWK', symbol: 'MK', price: 15000, monthly_quota: 20, max_revisions: 2, is_active: true });
+    const dp = await base44.entities.DesignPricing.list();
+    setDesignPricing(dp);
+  }
+
+  async function updateDesignPricing(id, data) {
+    await base44.entities.DesignPricing.update(id, data);
+    setDesignPricing(dp => dp.map(p => p.id === id ? { ...p, ...data } : p));
+    toast.success('Saved!', { duration: 1500 });
+  }
+
+  async function deleteDesignPricing(id) {
+    await base44.entities.DesignPricing.delete(id);
+    setDesignPricing(dp => dp.filter(p => p.id !== id));
+    toast.success('Pricing deleted');
   }
 
   async function deleteAllEntity(entityKey) {
@@ -368,7 +417,141 @@ export default function AdminSettings() {
         </CardContent>
       </Card>
 
+      {/* Design Pricing by Country */}
+      <Card className="shadow-sm">
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Palette className="w-4 h-4" /> Design Pricing by Country
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {Array.from(new Set(designPricing.map(p => p.country))).map(country => (
+            <div key={country}>
+              <h4 className="font-semibold text-sm text-muted-foreground mb-2 uppercase tracking-wide">{country}</h4>
+              <div className="space-y-2">
+                {designPricing.filter(p => p.country === country).map(p => (
+                  <div key={p.id} className="p-3 bg-secondary/50 rounded-xl">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className="font-semibold text-sm">{p.pricing_type === 'retainer' ? 'Monthly Retainer' : 'Pay Per Design'}</p>
+                          <Badge variant={p.is_active ? 'default' : 'secondary'} className="text-xs">{p.is_active ? 'Active' : 'Inactive'}</Badge>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {p.symbol}{p.price.toLocaleString()} {p.currency}
+                          {p.pricing_type === 'retainer' && p.monthly_quota && ` • ${p.monthly_quota} designs/month`}
+                          {p.max_revisions && ` • ${p.max_revisions} revisions`}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <Switch checked={p.is_active} onCheckedChange={v => updateDesignPricing(p.id, { is_active: v })} />
+                        <Button variant="ghost" size="icon" onClick={() => deleteDesignPricing(p.id)}>
+                          <Trash2 className="w-4 h-4 text-destructive" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+
+          <div className="p-4 border-2 border-dashed border-border rounded-xl space-y-3">
+            <h4 className="text-sm font-semibold">Add Design Pricing</h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <Select value={newDesignPricing.pricing_type} onValueChange={v => setNewDesignPricing(p => ({ ...p, pricing_type: v }))}>
+                <SelectTrigger><SelectValue placeholder="Pricing Type" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="per_design">Pay Per Design</SelectItem>
+                  <SelectItem value="retainer">Monthly Retainer</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={newDesignPricing.country} onValueChange={v => setNewDesignPricing(p => ({ ...p, country: v }))}>
+                <SelectTrigger><SelectValue placeholder="Country" /></SelectTrigger>
+                <SelectContent>{COUNTRIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+              </Select>
+              <Input value={newDesignPricing.currency} onChange={e => setNewDesignPricing(p => ({ ...p, currency: e.target.value.toUpperCase() }))} placeholder="Currency (e.g. MWK)" />
+              <Input value={newDesignPricing.symbol} onChange={e => setNewDesignPricing(p => ({ ...p, symbol: e.target.value }))} placeholder="Symbol (e.g. MK)" />
+              <Input type="number" value={newDesignPricing.price} onChange={e => setNewDesignPricing(p => ({ ...p, price: parseFloat(e.target.value) }))} placeholder="Price" />
+              {newDesignPricing.pricing_type === 'retainer' && (
+                <Input type="number" value={newDesignPricing.monthly_quota} onChange={e => setNewDesignPricing(p => ({ ...p, monthly_quota: parseInt(e.target.value) }))} placeholder="Monthly Quota" />
+              )}
+              <Input type="number" value={newDesignPricing.max_revisions} onChange={e => setNewDesignPricing(p => ({ ...p, max_revisions: parseInt(e.target.value) }))} placeholder="Max Revisions" />
+            </div>
+            <Button onClick={addDesignPricing} className="gap-2 bg-[hsl(var(--primary))] text-primary-foreground">
+              <Plus className="w-4 h-4" /> Add Pricing
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Payment Methods */}
+      <Card className="shadow-sm">
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Palette className="w-4 h-4" /> Design Pricing by Country
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {Array.from(new Set(designPricing.map(p => p.country))).map(country => (
+            <div key={country}>
+              <h4 className="font-semibold text-sm text-muted-foreground mb-2 uppercase tracking-wide">{country}</h4>
+              <div className="space-y-2">
+                {designPricing.filter(p => p.country === country).map(p => (
+                  <div key={p.id} className="p-3 bg-secondary/50 rounded-xl">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className="font-semibold text-sm">{p.pricing_type === 'retainer' ? 'Monthly Retainer' : 'Pay Per Design'}</p>
+                          <Badge variant={p.is_active ? 'default' : 'secondary'} className="text-xs">{p.is_active ? 'Active' : 'Inactive'}</Badge>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {p.symbol}{p.price.toLocaleString()} {p.currency}
+                          {p.pricing_type === 'retainer' && p.monthly_quota && ` • ${p.monthly_quota} designs/month`}
+                          {p.max_revisions && ` • ${p.max_revisions} revisions`}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <Switch checked={p.is_active} onCheckedChange={v => updateDesignPricing(p.id, { is_active: v })} />
+                        <Button variant="ghost" size="icon" onClick={() => deleteDesignPricing(p.id)}>
+                          <Trash2 className="w-4 h-4 text-destructive" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+          <div className="p-4 border-2 border-dashed border-border rounded-xl space-y-3">
+            <h4 className="text-sm font-semibold">Add Design Pricing</h4>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <Select value={newDesignPricing.pricing_type} onValueChange={v => setNewDesignPricing(p => ({ ...p, pricing_type: v }))}>
+                <SelectTrigger><SelectValue placeholder="Type" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="per_design">Pay Per Design</SelectItem>
+                  <SelectItem value="retainer">Monthly Retainer</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={newDesignPricing.country} onValueChange={v => setNewDesignPricing(p => ({ ...p, country: v }))}>
+                <SelectTrigger><SelectValue placeholder="Country" /></SelectTrigger>
+                <SelectContent>{COUNTRIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+              </Select>
+              <Input value={newDesignPricing.currency} onChange={e => setNewDesignPricing(p => ({ ...p, currency: e.target.value.toUpperCase() }))} placeholder="Currency" />
+              <Input value={newDesignPricing.symbol} onChange={e => setNewDesignPricing(p => ({ ...p, symbol: e.target.value }))} placeholder="Symbol" />
+              <Input type="number" value={newDesignPricing.price} onChange={e => setNewDesignPricing(p => ({ ...p, price: parseFloat(e.target.value) }))} placeholder="Price" />
+              {newDesignPricing.pricing_type === 'retainer' && (
+                <Input type="number" value={newDesignPricing.monthly_quota} onChange={e => setNewDesignPricing(p => ({ ...p, monthly_quota: parseInt(e.target.value) }))} placeholder="Quota" />
+              )}
+              <Input type="number" value={newDesignPricing.max_revisions} onChange={e => setNewDesignPricing(p => ({ ...p, max_revisions: parseInt(e.target.value) }))} placeholder="Revisions" />
+            </div>
+            <Button onClick={addDesignPricing} className="gap-2">
+              <Plus className="w-4 h-4" /> Add Pricing
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
       <Card className="shadow-sm">
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
@@ -376,7 +559,6 @@ export default function AdminSettings() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Group by country */}
           {Array.from(new Set(methods.map(m => m.country))).map(country => (
             <div key={country}>
               <h4 className="font-semibold text-sm text-muted-foreground mb-2 uppercase tracking-wide">{country}</h4>

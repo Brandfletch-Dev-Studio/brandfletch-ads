@@ -15,30 +15,22 @@ export default function Dashboard() {
   const [designs, setDesigns] = useState([]);
   const [leads, setLeads] = useState([]);
   const [campaigns, setCampaigns] = useState([]);
-  const [wallet, setWallet] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showLandingPageOrder, setShowLandingPageOrder] = useState(false);
-  const [currency, setCurrency] = useState({ code: 'MWK', symbol: 'MK' });
 
   useEffect(() => { init(); }, []);
 
   async function init() {
     const u = await base44.auth.me();
     setUser(u);
-    const [des, lds, camps, wallets, rates] = await Promise.all([
+    const [des, lds, camps] = await Promise.all([
       base44.entities.DesignRequest.filter({ user_id: u.id }, '-created_date', 5),
       base44.entities.Lead.filter({ user_id: u.id }, '-created_date', 5),
       base44.entities.Campaign.filter({ user_id: u.id }, '-created_date', 5),
-      base44.entities.Wallet.filter({ user_id: u.id }).then(r => r[0]),
-      base44.entities.ExchangeRate.filter({ is_active: true }).then(r => r[0]),
     ]);
     setDesigns(des);
     setLeads(lds);
     setCampaigns(camps);
-    setWallet(wallets);
-    if (rates) {
-      setCurrency({ code: rates.currency_code, symbol: rates.currency_code === 'MWK' ? 'MK' : rates.currency_code === 'USD' ? '$' : rates.currency_code });
-    }
     setLoading(false);
   }
 
@@ -54,8 +46,6 @@ export default function Dashboard() {
   const pendingCampaigns = campaigns.filter(c => ['pending_review', 'awaiting_payment', 'draft'].includes(c.status)).length;
   const activeDesigns = designs.filter(d => d.status === 'in_progress' || d.status === 'submitted').length;
   const activeLeads = leads.filter(l => !['won', 'lost'].includes(l.stage)).length;
-  const walletBalance = wallet?.balance || 0;
-  const walletSymbol = wallet?.currency === 'MWK' ? 'MK' : wallet?.currency === 'USD' ? '$' : wallet?.currency || 'MK';
 
   if (loading) {
     return <div className="p-8 text-center text-muted-foreground">Loading dashboard...</div>;
@@ -110,21 +100,6 @@ export default function Dashboard() {
                 <div>
                   <p className="text-2xl font-bold">{pendingCampaigns}</p>
                   <p className="text-xs text-muted-foreground">Pending</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </Link>
-        <Link to="/wallet">
-          <Card className="hover:shadow-lg transition-all cursor-pointer">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0">
-                  <Wallet className="w-5 h-5 text-green-700" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{walletSymbol}{walletBalance.toLocaleString()}</p>
-                  <p className="text-xs text-muted-foreground">Wallet</p>
                 </div>
               </div>
             </CardContent>

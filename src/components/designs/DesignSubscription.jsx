@@ -118,6 +118,10 @@ export default function DesignSubscription({ onSubscribe }) {
       amount: selectedPlan.price,
       currency: selectedPlan.currency,
     });
+    
+    if (onSubscribe) {
+      onSubscribe();
+    }
   };
 
   return (
@@ -179,37 +183,9 @@ export default function DesignSubscription({ onSubscribe }) {
       </div>
 
       {selectedPlan && (
-        <Card className="border-blue-200 bg-blue-50">
-          <CardContent className="p-4">
-            <div className="flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-              <div className="flex-1">
-                <h4 className="font-semibold text-blue-900 mb-2 text-base">Next Steps</h4>
-                <ol className="space-y-1.5 text-xs text-blue-800">
-                  <li>1. Click "Proceed to Payment" to continue</li>
-                  <li>2. Complete payment using your preferred method</li>
-                  <li>3. Submit payment proof for verification</li>
-                  <li>4. Once approved, you can start requesting designs immediately</li>
-                </ol>
-                {paymentMethods && paymentMethods.length > 0 && (
-                  <div className="mt-3 pt-3 border-t border-blue-200">
-                    <p className="text-xs font-semibold text-blue-900 mb-1.5">Available Payment Methods:</p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {paymentMethods.slice(0, 4).map((method) => (
-                        <Badge key={method.id} variant="outline" className="text-xs bg-white">
-                          {method.method_name}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                <Button className="w-full mt-4" size="sm" onClick={handleProceedToPayment}>
-                  Proceed to Payment
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <Button className="w-full" size="lg" onClick={handleProceedToPayment}>
+          Proceed to Payment
+        </Button>
       )}
 
       <Card className="border-green-200 bg-green-50">
