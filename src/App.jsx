@@ -26,7 +26,6 @@ import Designs from '@/pages/Designs';
 import DesignPayment from '@/pages/DesignPayment';
 import Leads from '@/pages/Leads';
 import LeadForms from '@/pages/LeadForms';
-import AIFormBuilder from '@/pages/AIFormBuilder';
 import DesignerPortal from '@/pages/DesignerPortal';
 import About from '@/pages/About';
 import Contact from '@/pages/Contact';
@@ -132,7 +131,6 @@ const AuthenticatedApp = () => {
         <Route path="/designs/payment" element={<DesignPayment />} />
         <Route path="/leads" element={<Leads />} />
         <Route path="/leads/forms" element={<LeadForms />} />
-        <Route path="/leads/forms/ai" element={<AIFormBuilder />} />
         <Route path="/designer" element={<DesignerPortal />} />
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/support" element={<SupportTickets />} />

@@ -150,12 +150,7 @@ export default function Leads() {
                     Lead Forms
                   </Button>
                 </Link>
-                <Link to="/leads/forms/ai">
-                  <Button variant="outline" className="gap-2 bg-white/10 hover:bg-white/20 text-white border-white/30">
-                    <Zap className="w-4 h-4" />
-                    AI Form Builder
-                  </Button>
-                </Link>
+
                 <Button variant="outline" className="gap-2 bg-white/10 hover:bg-white/20 text-white border-white/30" onClick={handleExportCSV}>
                   <Download className="w-4 h-4" />
                   Export CSV

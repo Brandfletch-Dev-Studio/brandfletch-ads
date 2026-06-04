@@ -151,12 +151,7 @@ export default function LeadForms() {
                   <Plus className="w-4 h-4" />
                   Create Form
                 </Button>
-                <Link to="/leads/forms/ai">
-                  <Button variant="outline" className="gap-2 bg-white/10 hover:bg-white/20 text-white border-white/30">
-                    <Wand2 className="w-4 h-4" />
-                    AI Builder
-                  </Button>
-                </Link>
+
               </div>
             </div>
           </div>
