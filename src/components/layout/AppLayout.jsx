@@ -8,6 +8,8 @@ import {
   Settings, X, ChevronRight, BarChart3, Shield, Bell, MessageCircle, ShoppingBag, Tv2, ClipboardList, Tags
 } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
+import { usePermissions } from '@/hooks/usePermissions';
+import { ROLE_LABELS } from '@/lib/permissions';
 
 import BrandLogo from '@/components/BrandLogo';
 import TopBar from '@/components/layout/TopBar';
@@ -23,30 +25,26 @@ const clientNav = [
   { path: '/settings', label: 'Settings', icon: Settings },
 ];
 
-const adminNav = [
-  { path: '/admin', label: 'Overview', icon: LayoutDashboard },
-  { path: '/admin/campaigns', label: 'All Campaigns', icon: Megaphone },
-  { path: '/admin/pages', label: 'Page Requests', icon: Facebook },
-  { path: '/admin/users', label: 'Users', icon: Users },
-  { path: '/admin/payments', label: 'Payments', icon: Wallet },
-  { path: '/admin/notifications', label: 'Notifications', icon: Bell },
-  { path: '/admin/messages', label: 'Messages', icon: MessageCircle },
-  { path: '/admin/ads', label: 'In-App Ads', icon: Tv2 },
-  { path: '/admin/reports', label: 'Reports', icon: BarChart3 },
-  { path: '/admin/audit-log', label: 'Audit Log', icon: ClipboardList },
-  { path: '/admin/pricing', label: 'Pricing', icon: Tags },
-  { path: '/admin/settings', label: 'Settings', icon: Settings },
+const ALL_ADMIN_NAV = [
+  { key: 'overview',       path: '/admin',                 label: 'Overview',       icon: LayoutDashboard, permission: null },
+  { key: 'campaigns',      path: '/admin/campaigns',       label: 'All Campaigns',  icon: Megaphone,       permission: 'campaigns.view' },
+  { key: 'pages',          path: '/admin/pages',           label: 'Page Requests',  icon: Facebook,        permission: 'pages.view' },
+  { key: 'users',          path: '/admin/users',           label: 'Team & Users',   icon: Users,           permission: 'users.view' },
+  { key: 'payments',       path: '/admin/payments',        label: 'Payments',       icon: Wallet,          permission: 'payments.view' },
+  { key: 'notifications',  path: '/admin/notifications',   label: 'Notifications',  icon: Bell,            permission: 'notifications.view' },
+  { key: 'messages',       path: '/admin/messages',        label: 'Messages',       icon: MessageCircle,   permission: 'messages.view' },
+  { key: 'ads',            path: '/admin/ads',             label: 'In-App Ads',     icon: Tv2,             permission: 'ads.view' },
+  { key: 'reports',        path: '/admin/reports',         label: 'Reports',        icon: BarChart3,       permission: 'reports.view' },
+  { key: 'audit_log',      path: '/admin/audit-log',       label: 'Audit Log',      icon: ClipboardList,   permission: 'audit_log.view' },
+  { key: 'pricing',        path: '/admin/pricing',         label: 'Pricing',        icon: Tags,            permission: 'pricing.view' },
+  { key: 'settings',       path: '/admin/settings',        label: 'Settings',       icon: Settings,        permission: 'settings.view' },
 ];
 
 export default function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
   const { user: currentUser } = useAuth();
-
-  const isAdmin = currentUser?.role === 'admin';
-  const isCampaignManager = currentUser?.role === 'campaign_manager';
-  const isFinance = currentUser?.role === 'finance';
-  const isStaff = isAdmin || isCampaignManager || isFinance;
+  const { isStaff, isSuperAdmin, can } = usePermissions();
 
   const { data: unreadMessages = [] } = useQuery({
     queryKey: ['unread-messages', currentUser?.id, isStaff],
@@ -59,7 +57,8 @@ export default function AppLayout() {
   const unreadCount = unreadMessages.length;
 
   const isAdminView = location.pathname.startsWith('/admin');
-  // Admin can switch to client view; use clientNav when in client view even if user is staff
+  // Filter admin nav by permissions
+  const adminNav = ALL_ADMIN_NAV.filter(item => !item.permission || can(item.permission));
   const navItems = (isStaff && isAdminView) ? adminNav : clientNav;
 
   return (
@@ -86,8 +85,8 @@ export default function AppLayout() {
           <div className="px-4 py-3 border-b border-[hsl(var(--sidebar-border))]">
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-[hsl(var(--sidebar-accent))]">
               <Shield className="w-3 h-3 text-[hsl(var(--sidebar-primary))]" />
-              <span className="text-xs font-medium text-[hsl(var(--sidebar-primary-foreground))] capitalize">
-                {currentUser?.role?.replace('_', ' ')}
+              <span className="text-xs font-medium text-[hsl(var(--sidebar-primary-foreground))]">
+                {ROLE_LABELS[currentUser?.role] || currentUser?.role}
               </span>
             </div>
           </div>
@@ -124,8 +123,8 @@ export default function AppLayout() {
             );
           })}
 
-          {/* Admin ↔ Client view switcher (admin only) */}
-          {isAdmin && (
+          {/* Admin ↔ Client view switcher (super admin only) */}
+          {isSuperAdmin && (
             <div className="pt-3 mt-3 border-t border-[hsl(var(--sidebar-border))]">
               <Link
                 to={isAdminView ? '/dashboard' : '/admin'}

@@ -5,12 +5,20 @@
     "role": {
       "type": "string",
       "enum": [
-        "admin",
         "user",
         "campaign_manager",
-        "finance"
+        "finance",
+        "sales_manager",
+        "ads_manager",
+        "admin",
+        "super_admin"
       ],
-      "default": "user"
+      "default": "user",
+      "description": "Platform role determining permissions"
+    },
+    "onboarded": {
+      "type": "boolean",
+      "default": false
     },
     "country": {
       "type": "string"
@@ -21,75 +29,22 @@
     "business_name": {
       "type": "string"
     },
-    "business_type": {
+    "business_category": {
       "type": "string"
     },
-    "business_website": {
+    "facebook_page_url": {
       "type": "string"
     },
-    "business_industry": {
-      "type": "string",
-      "enum": [
-        "retail",
-        "food_beverage",
-        "health_beauty",
-        "technology",
-        "real_estate",
-        "education",
-        "finance",
-        "hospitality",
-        "media_entertainment",
-        "ngo",
-        "professional_services",
-        "other"
-      ]
-    },
-    "business_description": {
+    "marketing_goal": {
       "type": "string"
-    },
-    "primary_goal": {
-      "type": "string"
-    },
-    "fb_page_name": {
-      "type": "string",
-      "description": "Facebook Page name collected at onboarding"
-    },
-    "fb_page_url": {
-      "type": "string",
-      "description": "Facebook Page URL collected at onboarding"
     },
     "admin_notification_email": {
       "type": "string"
     },
-    "notify_campaign_approved": {
+    "is_suspended": {
       "type": "boolean",
-      "default": true
-    },
-    "notify_campaign_rejected": {
-      "type": "boolean",
-      "default": true
-    },
-    "notify_payment_confirmed": {
-      "type": "boolean",
-      "default": true
-    },
-    "notify_campaign_completed": {
-      "type": "boolean",
-      "default": true
-    },
-    "notify_messages": {
-      "type": "boolean",
-      "default": true
-    },
-    "profile_photo": {
-      "type": "string"
-    },
-    "cover_photo": {
-      "type": "string"
-    },
-    "onboarded": {
-      "type": "boolean",
-      "default": false
+      "default": false,
+      "description": "Suspended users cannot access the platform"
     }
   }
 }

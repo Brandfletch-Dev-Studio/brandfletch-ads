@@ -83,7 +83,7 @@ const AuthenticatedApp = () => {
     }
   }
 
-  const isStaff = currentUser && ['admin', 'campaign_manager', 'finance'].includes(currentUser.role);
+  const isStaff = currentUser && ['admin', 'super_admin', 'ads_manager', 'campaign_manager', 'finance', 'sales_manager'].includes(currentUser.role);
   const isAdmin = currentUser?.role === 'admin';
 
   return (

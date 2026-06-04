@@ -25,7 +25,7 @@ const ACTION_COLORS = {
 };
 
 export default function AdminAuditLog() {
-  const { allowed } = useRoleGuard(['admin']);
+  const { allowed } = useRoleGuard(null, 'audit_log.view');
   const [search, setSearch] = useState('');
 
   const { data: logs = [], isLoading } = useQuery({
