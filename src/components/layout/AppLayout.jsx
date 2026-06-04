@@ -5,7 +5,7 @@ import { Link, useLocation, Outlet } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import {
   LayoutDashboard, Megaphone, Facebook, Users, Wallet,
-  Settings, X, ChevronRight, BarChart3, Shield, Bell, MessageCircle, ShoppingBag, Tv2, ClipboardList, Tags, LifeBuoy
+  Settings, X, ChevronRight, BarChart3, Shield, Bell, ShoppingBag, Tv2, ClipboardList, Tags, LifeBuoy
 } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -21,7 +21,6 @@ const clientNav = [
   { path: '/pages', label: 'Facebook Pages', icon: Facebook },
   { path: '/audiences', label: 'Audiences', icon: Users },
   { path: '/marketplace', label: 'Marketplace', icon: ShoppingBag },
-  { path: '/messages', label: 'Messages', icon: MessageCircle },
   { path: '/support', label: 'Support', icon: LifeBuoy },
   { path: '/settings', label: 'Settings', icon: Settings },
 ];
@@ -33,7 +32,6 @@ const ALL_ADMIN_NAV = [
   { key: 'users',          path: '/admin/users',           label: 'Team & Users',   icon: Users,           permission: 'users.view' },
   { key: 'payments',       path: '/admin/payments',        label: 'Payments',       icon: Wallet,          permission: 'payments.view' },
   { key: 'notifications',  path: '/admin/notifications',   label: 'Notifications',  icon: Bell,            permission: 'notifications.view' },
-  { key: 'messages',       path: '/admin/messages',        label: 'Messages',       icon: MessageCircle,   permission: 'messages.view' },
   { key: 'ads',            path: '/admin/ads',             label: 'In-App Ads',     icon: Tv2,             permission: 'ads.view' },
   { key: 'reports',        path: '/admin/reports',         label: 'Reports',        icon: BarChart3,       permission: 'reports.view' },
   { key: 'audit_log',      path: '/admin/audit-log',       label: 'Audit Log',      icon: ClipboardList,   permission: 'audit_log.view' },

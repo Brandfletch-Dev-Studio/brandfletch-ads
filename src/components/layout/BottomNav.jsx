@@ -1,12 +1,12 @@
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { LayoutDashboard, Megaphone, Facebook, Wallet, MessageCircle, BarChart3, Users, Bell } from 'lucide-react';
+import { LayoutDashboard, Megaphone, Facebook, Wallet, LifeBuoy, BarChart3, Users, Bell } from 'lucide-react';
 
 const clientItems = [
   { path: '/dashboard', label: 'Home', icon: LayoutDashboard },
   { path: '/campaigns', label: 'Campaigns', icon: Megaphone },
   { path: '/pages', label: 'Pages', icon: Facebook },
-  { path: '/messages', label: 'Messages', icon: MessageCircle },
+  { path: '/support', label: 'Support', icon: LifeBuoy },
 ];
 
 const adminItems = [
@@ -14,7 +14,7 @@ const adminItems = [
   { path: '/admin/campaigns', label: 'Campaigns', icon: Megaphone },
   { path: '/admin/payments', label: 'Payments', icon: Wallet },
   { path: '/admin/notifications', label: 'Notifs', icon: Bell },
-  { path: '/admin/messages', label: 'Messages', icon: MessageCircle },
+  { path: '/admin/support', label: 'Support', icon: LifeBuoy },
 ];
 
 export default function BottomNav({ isStaff, unreadCount = 0 }) {
@@ -40,11 +40,6 @@ export default function BottomNav({ isStaff, unreadCount = 0 }) {
             >
               <div className="relative">
                 <Icon className={cn('w-5 h-5', active && 'stroke-[2.5]')} />
-                {(path === '/messages' || path === '/admin/messages') && unreadCount > 0 && (
-                  <span className="absolute -top-1.5 -right-1.5 min-w-[14px] h-3.5 px-0.5 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center">
-                    {unreadCount > 99 ? '99+' : unreadCount}
-                  </span>
-                )}
               </div>
               <span className={cn('text-[10px] font-medium', active ? 'text-[hsl(var(--primary))]' : 'text-muted-foreground')}>
                 {label}

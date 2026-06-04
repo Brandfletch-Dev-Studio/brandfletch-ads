@@ -109,10 +109,10 @@ const AuthenticatedApp = () => {
         <Route path="/campaigns/:id/payment" element={<CampaignPayment />} />
         <Route path="/audiences" element={<SavedAudiences />} />
         <Route path="/settings" element={<ProfileSettings />} />
-        <Route path="/messages" element={<Messages />} />
         <Route path="/marketplace" element={<Marketplace />} />
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/support" element={<SupportTickets />} />
+        <Route path="/messages" element={<Navigate to="/support" replace />} />
 
         {/* Admin/Staff routes */}
         <Route path="/admin" element={<AdminOverview />} />
@@ -124,11 +124,11 @@ const AuthenticatedApp = () => {
         <Route path="/admin/reports" element={<AdminReports />} />
         <Route path="/admin/notifications" element={<AdminNotifications />} />
         <Route path="/admin/settings" element={<AdminSettings />} />
-        <Route path="/admin/messages" element={<AdminMessages />} />
         <Route path="/admin/ads" element={<AdminAds />} />
         <Route path="/admin/audit-log" element={<AdminAuditLog />} />
         <Route path="/admin/pricing" element={<AdminPricing />} />
         <Route path="/admin/support" element={<AdminSupportTickets />} />
+        <Route path="/admin/messages" element={<Navigate to="/admin/support" replace />} />
       </Route>
 
       <Route path="*" element={<PageNotFound />} />
