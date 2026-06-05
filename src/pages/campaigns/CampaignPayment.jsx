@@ -28,12 +28,20 @@ export default function CampaignPayment() {
     const camp = c[0] || await base44.entities.Campaign.list().then(all => all.find(x => x.id === id));
     setCampaign(camp);
 
-    const isMW = camp?.country?.toLowerCase() === 'malawi';
+    // Detect Malawi by country name, code, or currency
+    const isMW = camp?.country?.toLowerCase() === 'malawi' 
+      || camp?.country?.toUpperCase() === 'MW'
+      || camp?.currency === 'MWK';
     setIsMalawi(isMW);
 
-    if (!isMW && camp?.country) {
-      const methods = await base44.entities.PaymentMethod.filter({ country: camp.country, is_active: true }, 'sort_order');
-      setPaymentMethods(methods);
+    if (!isMW) {
+      if (camp?.country) {
+        const methods = await base44.entities.PaymentMethod.filter({ country: camp.country, is_active: true }, 'sort_order');
+        setPaymentMethods(methods);
+      } else {
+        const methods = await base44.entities.PaymentMethod.filter({ is_active: true }, 'sort_order');
+        setPaymentMethods(methods);
+      }
     }
   }
 

@@ -46,9 +46,12 @@ Deno.serve(async (req) => {
       return Response.json({ error: data.message || 'Payment initiation failed' }, { status: 400 });
     }
 
+    const checkoutUrl = data.data?.checkout_url || data.checkout_url;
+    const txRefOut = data.data?.tx_ref || tx_ref;
+
     return Response.json({
-      checkout_url: data.data.checkout_url,
-      tx_ref: data.data.data.tx_ref,
+      checkout_url: checkoutUrl,
+      tx_ref: txRefOut,
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });

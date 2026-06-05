@@ -27,20 +27,27 @@ export default function DesignPayment() {
     const u = await base44.auth.me();
     setUser(u);
 
-    const userCountry = u.country || 'Malawi';
-    const isMW = userCountry.toLowerCase() === 'malawi';
-    setIsMalawi(isMW);
-
     const subscriptions = await base44.entities.PlatformSubscription.filter({
       user_id: u.id,
       subscription_type: 'design_retainer',
       status: 'pending',
     }, '-created_date');
 
-    if (subscriptions.length > 0) setSubscription(subscriptions[0]);
+    const sub = subscriptions[0] || null;
+    if (sub) setSubscription(sub);
 
-    if (!isMW) {
+    // Detect Malawi by currency (MWK) or user country
+    const userCountry = u.country || '';
+    const subCurrency = sub?.currency || '';
+    const isMW = subCurrency === 'MWK' || userCountry.toLowerCase() === 'malawi' || userCountry.toUpperCase() === 'MW';
+    setIsMalawi(isMW);
+
+    if (!isMW && userCountry) {
       const methods = await base44.entities.PaymentMethod.filter({ is_active: true, country: userCountry }, 'sort_order');
+      setPaymentMethods(methods);
+    } else if (!isMW) {
+      // Try fetching generic payment methods
+      const methods = await base44.entities.PaymentMethod.filter({ is_active: true }, 'sort_order');
       setPaymentMethods(methods);
     }
   }
