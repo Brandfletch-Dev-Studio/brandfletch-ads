@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { toast } from 'sonner';
 import { base44 } from '@/api/base44Client';
 import { ArrowLeft, ExternalLink, CreditCard, Package, Target, Users, MapPin, FileImage, MessageSquare, Phone, Globe, Share2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,14 +15,35 @@ import { GOALS } from '@/lib/constants';
 export default function CampaignDetail() {
   const { id } = useParams();
   const [campaign, setCampaign] = useState(null);
+  const [verifying, setVerifying] = useState(false);
 
   useEffect(() => {
     base44.entities.Campaign.filter({}).then(all => {
       setCampaign(all.find(c => c.id === id));
     });
+
+    // Handle Paychangu return
+    const urlParams = new URLSearchParams(window.location.search);
+    const txRef = urlParams.get('paychangu_tx');
+    const paymentType = urlParams.get('payment_type');
+    if (txRef && paymentType === 'campaign') {
+      setVerifying(true);
+      base44.functions.invoke('verifyPaychanguPayment', { tx_ref: txRef, campaign_id: id, payment_type: 'campaign' })
+        .then(res => {
+          if (res.data?.verified) {
+            toast.success('Payment verified! Your campaign is under review.');
+            base44.entities.Campaign.filter({}).then(all => setCampaign(all.find(c => c.id === id)));
+          } else {
+            toast.error('Payment could not be verified. Please contact support.');
+          }
+          window.history.replaceState({}, '', `/campaigns/${id}`);
+        })
+        .finally(() => setVerifying(false));
+    }
   }, [id]);
 
   if (!campaign) return <div className="p-8 text-center text-muted-foreground">Loading...</div>;
+  if (verifying) return <div className="p-8 text-center text-muted-foreground">Verifying your payment...</div>;
 
   const formatCost = () => {
     const amt = campaign.total_cost || 0;

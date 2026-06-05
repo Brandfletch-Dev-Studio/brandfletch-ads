@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Palette, Plus, ArrowLeft, Lock, MessageSquare } from 'lucide-react';
+import { Palette, Plus, ArrowLeft, Lock, MessageSquare, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import DesignRequestForm from '@/components/designs/DesignRequestForm';
 import DesignSubscription from '@/components/designs/DesignSubscription';
@@ -30,7 +30,29 @@ export default function Designs() {
   const [showNewForm, setShowNewForm] = useState(false);
   const [showSubscription, setShowSubscription] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null);
+  const [verifying, setVerifying] = useState(false);
   const queryClient = useQueryClient();
+
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const txRef = urlParams.get('paychangu_tx');
+    const paymentType = urlParams.get('payment_type');
+    const subId = urlParams.get('sub_id');
+    if (txRef && paymentType === 'design' && subId) {
+      setVerifying(true);
+      base44.functions.invoke('verifyPaychanguPayment', { tx_ref: txRef, subscription_id: subId, payment_type: 'design' })
+        .then(res => {
+          if (res.data?.verified) {
+            toast.success('Payment verified! Your design subscription is now active.');
+            queryClient.invalidateQueries({ queryKey: ['userSubscription'] });
+          } else {
+            toast.error('Payment could not be verified. Please contact support.');
+          }
+          window.history.replaceState({}, '', '/designs');
+        })
+        .finally(() => setVerifying(false));
+    }
+  }, []);
 
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
@@ -82,6 +104,15 @@ export default function Designs() {
       setShowNewForm(true);
     }
   };
+
+  if (verifying) {
+    return (
+      <div className="p-8 text-center text-muted-foreground flex flex-col items-center gap-3">
+        <Loader2 className="w-8 h-8 animate-spin" />
+        <p>Verifying your payment...</p>
+      </div>
+    );
+  }
 
   if (showSubscription) {
     return (
