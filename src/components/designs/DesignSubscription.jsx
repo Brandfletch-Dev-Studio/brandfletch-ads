@@ -1,15 +1,17 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Check, Zap, Palette, RefreshCcw, FileText, DollarSign, AlertCircle } from 'lucide-react';
+import { Check, Palette, RefreshCcw, FileText, DollarSign, ExternalLink, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function DesignSubscription({ onSubscribe }) {
   const [selectedPlan, setSelectedPlan] = useState(null);
+  const [isMalawi, setIsMalawi] = useState(false);
+  const [paychanguLoading, setPaychanguLoading] = useState(false);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -18,19 +20,21 @@ export default function DesignSubscription({ onSubscribe }) {
     queryFn: () => base44.auth.me(),
   });
 
-  const { data: paymentMethods } = useQuery({
-    queryKey: ['paymentMethods'],
-    queryFn: () => base44.entities.PaymentMethod.filter({ is_active: true }).then(r => r.sort((a, b) => a.sort_order - b.sort_order)),
+  const { data: retainerPricing } = useQuery({
+    queryKey: ['designPricing'],
+    queryFn: () => base44.entities.DesignPricing.filter({ pricing_type: 'retainer', is_active: true }).then(r => r[0]),
   });
 
-  const { data: designPricing } = useQuery({
-    queryKey: ['designPricing'],
-    queryFn: () => base44.entities.DesignPricing.filter({ is_active: true }),
-  });
+  useEffect(() => {
+    if (user) {
+      const userCountry = user.country || '';
+      const isMW = userCountry.toLowerCase() === 'malawi' || userCountry.toUpperCase() === 'MW';
+      setIsMalawi(isMW);
+    }
+  }, [user]);
 
   const createSubscriptionMutation = useMutation({
     mutationFn: async (planData) => {
-      // Create pending subscription record
       const subscription = await base44.entities.PlatformSubscription.create({
         user_id: user.id,
         subscription_type: 'design_retainer',
@@ -41,82 +45,76 @@ export default function DesignSubscription({ onSubscribe }) {
         auto_renew: true,
       });
 
-      // Create service order for payment processing
-      await base44.entities.ServiceOrder.create({
-        user_id: user.id,
-        service_id: planData.planType === 'monthly' ? 'design_retainer_monthly' : 'design_per_design',
-        service_name: planData.planType === 'monthly' ? 'Monthly Design Retainer' : 'Pay Per Design',
-        total_cost: planData.amount,
-        total_cost_usd: planData.planType === 'monthly' ? (retainerPricing?.price || 50000) / 1000 : (perDesignPricing?.price || 15000) / 1000,
-        currency: planData.currency,
-        status: 'pending',
-      });
-
       return subscription;
     },
-    onSuccess: () => {
+    onSuccess: (subscription) => {
       queryClient.invalidateQueries({ queryKey: ['userSubscription'] });
-      toast.success('Subscription initiated! Redirecting to payment...');
-      setTimeout(() => {
-        navigate('/designs/payment');
-      }, 500);
+      
+      if (isMalawi) {
+        // Malawi: redirect straight to Paychangu
+        handlePaychanguRedirect(subscription);
+      } else {
+        // Other countries: go to manual payment page
+        toast.success('Subscription initiated! Proceed to payment...');
+        setTimeout(() => {
+          navigate('/designs/payment');
+        }, 500);
+      }
+      
+      if (onSubscribe) {
+        onSubscribe();
+      }
     },
   });
 
-  const perDesignPricing = designPricing?.find(p => p.pricing_type === 'per_design');
-  const retainerPricing = designPricing?.find(p => p.pricing_type === 'retainer');
+  async function handlePaychanguRedirect(subscription) {
+    setPaychanguLoading(true);
+    const txRef = `BF-DESIGN-${subscription.id}-${Date.now()}`;
+    const appUrl = window.location.origin;
 
-  const plans = [
-    {
-      id: 'per_design',
-      name: 'Pay Per Design',
-      price: perDesignPricing?.price || 15000,
-      currency: perDesignPricing?.currency || 'MWK',
-      symbol: perDesignPricing?.symbol || 'MK',
-      description: 'Perfect for one-off design needs',
-      features: [
-        '1 professional design',
-        `${perDesignPricing?.max_revisions || 2} revisions included`,
-        'High-quality creatives',
-        'Ad-optimized designs',
-        '48-hour delivery',
-        'No monthly commitment',
-      ],
-      popular: false,
-    },
-    {
-      id: 'monthly',
-      name: 'Monthly Retainer',
-      price: retainerPricing?.price || 50000,
-      currency: retainerPricing?.currency || 'MWK',
-      symbol: retainerPricing?.symbol || 'MK',
-      monthlyQuota: retainerPricing?.monthly_quota || 20,
-      description: 'Best value for growing businesses',
-      features: [
-        `Up to ${retainerPricing?.monthly_quota || 20} designs per month`,
-        `${retainerPricing?.max_revisions || 5} revisions per project`,
-        'High-quality creatives',
-        'Ad-optimized for best performance',
-        'Priority support',
-        'Save on design costs',
-        'Roll over unused designs',
-        'Dedicated designer',
-      ],
-      popular: true,
-    },
-  ];
+    const res = await base44.functions.invoke('paychanguCheckout', {
+      amount: subscription.amount,
+      currency: subscription.currency || 'MWK',
+      tx_ref: txRef,
+      description: 'Design Subscription - Monthly Retainer',
+      callback_url: `${appUrl}/designs?paychangu_tx=${txRef}&payment_type=design&sub_id=${subscription.id}`,
+      return_url: `${appUrl}/designs`,
+    });
 
-  const handleSelectPlan = (plan) => {
-    setSelectedPlan(plan);
+    setPaychanguLoading(false);
+
+    if (res.data?.checkout_url) {
+      window.location.href = res.data.checkout_url;
+    } else {
+      toast.error(res.data?.error || 'Failed to initiate payment');
+    }
+  }
+
+  const plan = {
+    id: 'monthly',
+    name: 'Monthly Retainer',
+    price: retainerPricing?.price || 50000,
+    currency: retainerPricing?.currency || 'MWK',
+    symbol: retainerPricing?.symbol || 'MK',
+    monthlyQuota: retainerPricing?.monthly_quota || 20,
+    description: 'Best value for growing businesses',
+    features: [
+      `Up to ${retainerPricing?.monthly_quota || 20} designs per month`,
+      `${retainerPricing?.max_revisions || 5} revisions per project`,
+      'High-quality creatives',
+      'Ad-optimized for best performance',
+      'Priority support',
+      'Save on design costs',
+      'Roll over unused designs',
+      'Dedicated designer',
+    ],
   };
 
-  const handleProceedToPayment = () => {
-    if (!selectedPlan) return;
-    
+  const handleSubscribe = () => {
     createSubscriptionMutation.mutate({
-      planType: selectedPlan.id,
-      amount: selectedPlan.price,
-      currency: selectedPlan.currency,
+      planType: 'monthly',
+      amount: plan.price,
+      currency: plan.currency,
     });
     
     if (onSubscribe) {
@@ -127,73 +125,65 @@ export default function DesignSubscription({ onSubscribe }) {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold font-heading">Choose Your Design Plan</h2>
-        <p className="text-muted-foreground">Select the plan that best fits your business needs</p>
+        <h2 className="text-2xl font-bold font-heading">Design Subscription Plan</h2>
+        <p className="text-muted-foreground">Unlimited creative support for your business</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {plans.map((plan) => (
-          <Card
-            key={plan.id}
-            className={`cursor-pointer transition-all hover:shadow-lg ${
-              selectedPlan?.id === plan.id ? 'border-2 border-blue-500 ring-2 ring-blue-200' : ''
-            } ${plan.popular ? 'border-blue-300 bg-blue-50' : ''}`}
-            onClick={() => handleSelectPlan(plan)}
+      <Card className="border-blue-300 bg-blue-50">
+        <CardHeader className="pb-4">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-12 h-12 rounded-lg bg-purple-100 flex items-center justify-center flex-shrink-0">
+              <Palette className="w-6 h-6 text-purple-700" />
+            </div>
+            <div className="min-w-0">
+              <CardTitle className="text-xl">{plan.name}</CardTitle>
+              <CardDescription className="text-sm">{plan.description}</CardDescription>
+            </div>
+          </div>
+          <div className="mt-3">
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-4xl font-bold">{plan.symbol}{plan.price.toLocaleString()}</span>
+              <span className="text-muted-foreground">/month</span>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <ul className="space-y-2">
+            {plan.features.map((feature, index) => (
+              <li key={index} className="flex items-start gap-2 text-sm">
+                <Check className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
+                <span>{feature}</span>
+              </li>
+            ))}
+          </ul>
+          <Button
+            className="w-full mt-6"
+            size="lg"
+            onClick={handleSubscribe}
+            disabled={createSubscriptionMutation.isPending || paychanguLoading}
           >
-            <CardHeader className="pb-4">
-              {plan.popular && (
-                <Badge className="w-fit mb-2 bg-blue-600">
-                  Most Popular
-                </Badge>
-              )}
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center flex-shrink-0">
-                  <Palette className="w-5 h-5 text-purple-700" />
-                </div>
-                <div className="min-w-0">
-                  <CardTitle className="text-lg">{plan.name}</CardTitle>
-                  <CardDescription className="text-sm">{plan.description}</CardDescription>
-                </div>
-              </div>
-              <div className="mt-3">
-                <div className="flex items-baseline gap-1.5">
-                  <span className="text-3xl font-bold">{plan.symbol}{plan.price.toLocaleString()}</span>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <ul className="space-y-2">
-                {plan.features.map((feature, index) => (
-                  <li key={index} className="flex items-start gap-2 text-xs">
-                    <Check className="w-3.5 h-3.5 text-green-600 flex-shrink-0 mt-0.5" />
-                    <span>{feature}</span>
-                  </li>
-                ))}
-              </ul>
-              <Button
-                className="w-full mt-4"
-                variant={selectedPlan?.id === plan.id ? 'default' : 'outline'}
-                size="sm"
-              >
-                {selectedPlan?.id === plan.id ? 'Selected' : 'Select Plan'}
-              </Button>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {selectedPlan && (
-        <Button className="w-full" size="lg" onClick={handleProceedToPayment}>
-          Proceed to Payment
-        </Button>
-      )}
+            {createSubscriptionMutation.isPending || paychanguLoading ? (
+              <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Processing...</>
+            ) : isMalawi ? (
+              <><>Subscribe & Pay with Paychangu</> <ExternalLink className="w-4 h-4 ml-2" /></>
+            ) : (
+              'Subscribe Now'
+            )}
+          </Button>
+          {isMalawi && (
+            <p className="text-xs text-muted-foreground mt-2 text-center">
+              You'll be redirected to secure checkout
+            </p>
+          )}
+        </CardContent>
+      </Card>
 
       <Card className="border-green-200 bg-green-50">
         <CardContent className="p-4">
           <div className="flex items-start gap-3">
             <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
             <div className="min-w-0">
-              <h4 className="font-semibold text-green-900 mb-2 text-base">All Plans Include</h4>
+              <h4 className="font-semibold text-green-900 mb-2 text-base">What You Get</h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-green-800">
                 <div className="flex items-center gap-2">
                   <FileText className="w-3.5 h-3.5" />
@@ -205,7 +195,7 @@ export default function DesignSubscription({ onSubscribe }) {
                 </div>
                 <div className="flex items-center gap-2">
                   <RefreshCcw className="w-3.5 h-3.5" />
-                  <span>Revision rounds as per plan</span>
+                  <span>Multiple revision rounds</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <DollarSign className="w-3.5 h-3.5" />

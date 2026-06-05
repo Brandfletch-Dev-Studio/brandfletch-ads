@@ -52,13 +52,17 @@ Deno.serve(async (req) => {
 
     // Handle design subscription payment
     if (payment_type === 'design' && subscription_id) {
+      const startDate = new Date();
+      const endDate = new Date(startDate);
+      endDate.setMonth(endDate.getMonth() + 1);
+
       await base44.entities.PlatformSubscription.update(subscription_id, {
         status: 'active',
         payment_method: 'Paychangu',
-        start_date: new Date().toISOString().split('T')[0],
+        start_date: startDate.toISOString().split('T')[0],
+        end_date: endDate.toISOString().split('T')[0],
       });
 
-      const sub = await base44.entities.PlatformSubscription.get(subscription_id);
       await base44.entities.WalletTransaction.create({
         user_id: user.id,
         type: 'payment',
