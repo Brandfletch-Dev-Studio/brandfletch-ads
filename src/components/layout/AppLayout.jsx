@@ -20,7 +20,7 @@ const clientNav = [
   { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { path: '/campaigns', label: 'Campaigns', icon: Megaphone },
   { path: '/designs', label: 'Designs', icon: Palette },
-  { path: '/leads', label: 'Leads', icon: Target },
+  { path: '/leads', label: 'Leads (Coming Soon)', icon: Target, disabled: true },
   { path: '/pages', label: 'Facebook Pages', icon: Facebook },
   { path: '/audiences', label: 'Audiences', icon: Users },
   { path: '/support', label: 'Support', icon: LifeBuoy },
@@ -31,7 +31,7 @@ const ALL_ADMIN_NAV = [
   { key: 'overview',       path: '/admin',                 label: 'Overview',       icon: LayoutDashboard, permission: null },
   { key: 'campaigns',      path: '/admin/campaigns',       label: 'All Campaigns',  icon: Megaphone,       permission: 'campaigns.view' },
   { key: 'designs',        path: '/admin/designs',         label: 'Design Requests',icon: Palette,         permission: 'designs.view' },
-  { key: 'leads',          path: '/admin/leads',           label: 'Leads & CRM',    icon: Target,          permission: 'leads.view' },
+  { key: 'leads',          path: '/admin/leads',           label: 'Leads & CRM (Coming Soon)',    icon: Target,          permission: 'leads.view', disabled: true },
   { key: 'pages',          path: '/admin/pages',           label: 'Page Requests',  icon: Facebook,        permission: 'pages.view' },
   { key: 'users',          path: '/admin/users',           label: 'Team & Users',   icon: Users,           permission: 'users.view' },
   { key: 'payments',       path: '/admin/payments',        label: 'Payments',       icon: WalletIcon,      permission: 'payments.view' },
@@ -98,12 +98,27 @@ export default function AppLayout() {
 
         {/* Nav */}
         <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-          {navItems.map(({ path, label, icon: Icon }) => {
+          {navItems.map(({ path, label, icon: Icon, disabled }) => {
             // Exact match for /admin to avoid it matching all /admin/* routes
             const active = path === '/admin'
               ? location.pathname === '/admin'
               : location.pathname === path || location.pathname.startsWith(path + '/');
             const isMessages = path === '/messages' || path === '/admin/messages';
+            
+            if (disabled) {
+              return (
+                <div
+                  key={path}
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all group text-[hsl(var(--sidebar-foreground))] opacity-50 cursor-not-allowed"
+                >
+                  <div className="relative flex-shrink-0">
+                    <Icon className="w-4 h-4" />
+                  </div>
+                  <span className="flex-1">{label}</span>
+                </div>
+              );
+            }
+            
             return (
               <Link
                 key={path}

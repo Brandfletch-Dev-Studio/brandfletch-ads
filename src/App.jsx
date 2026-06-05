@@ -23,7 +23,7 @@ import Notifications from '@/pages/Notifications';
 import SupportTickets from '@/pages/SupportTickets';
 import Designs from '@/pages/Designs';
 import DesignPayment from '@/pages/DesignPayment';
-import Leads from '@/pages/Leads';
+import LeadsComingSoon from '@/pages/LeadsComingSoon';
 import LeadForms from '@/pages/LeadForms';
 import DesignerPortal from '@/pages/DesignerPortal';
 import About from '@/pages/About';
@@ -127,7 +127,7 @@ const AuthenticatedApp = () => {
         <Route path="/settings" element={<ProfileSettings />} />
         <Route path="/designs" element={<Designs />} />
         <Route path="/designs/payment" element={<DesignPayment />} />
-        <Route path="/leads" element={<Leads />} />
+        <Route path="/leads" element={<LeadsComingSoon />} />
         <Route path="/leads/forms" element={<LeadForms />} />
         <Route path="/designer" element={<DesignerPortal />} />
         <Route path="/notifications" element={<Notifications />} />
@@ -146,7 +146,7 @@ const AuthenticatedApp = () => {
         <Route path="/admin/settings" element={<AdminSettings />} />
         <Route path="/admin/ads" element={<AdminAds />} />
         <Route path="/admin/designs" element={<AdminDesigns />} />
-        <Route path="/admin/leads" element={<AdminLeads />} />
+        <Route path="/admin/leads" element={<LeadsComingSoon />} />
         <Route path="/admin/audit-log" element={<AdminAuditLog />} />
         <Route path="/admin/pricing" element={<AdminPricing />} />
         <Route path="/admin/support" element={<AdminSupportTickets />} />
