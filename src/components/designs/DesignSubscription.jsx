@@ -35,13 +35,19 @@ export default function DesignSubscription({ onSubscribe }) {
 
   const createSubscriptionMutation = useMutation({
     mutationFn: async (planData) => {
+      const startDate = new Date();
+      const resetDate = new Date(startDate);
+      resetDate.setMonth(resetDate.getMonth() + 1);
       const subscription = await base44.entities.PlatformSubscription.create({
         user_id: user.id,
         subscription_type: 'design_retainer',
         status: 'pending',
         amount: planData.amount,
         currency: planData.currency,
-        start_date: new Date().toISOString().split('T')[0],
+        start_date: startDate.toISOString().split('T')[0],
+        monthly_quota: planData.monthlyQuota,
+        quota_used: 0,
+        quota_reset_date: resetDate.toISOString().split('T')[0],
         auto_renew: true,
       });
 
@@ -115,6 +121,7 @@ export default function DesignSubscription({ onSubscribe }) {
       planType: 'monthly',
       amount: plan.price,
       currency: plan.currency,
+      monthlyQuota: plan.monthlyQuota,
     });
     
     if (onSubscribe) {

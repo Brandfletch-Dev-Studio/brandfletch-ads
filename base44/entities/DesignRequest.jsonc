@@ -14,15 +14,33 @@
     "description": {
       "type": "string"
     },
+    "target_audience": {
+      "type": "string"
+    },
+    "brand_name": {
+      "type": "string"
+    },
+    "preferred_dimensions": {
+      "type": "string"
+    },
+    "preferred_style": {
+      "type": "string"
+    },
+    "special_instructions": {
+      "type": "string"
+    },
     "design_type": {
       "type": "string",
       "enum": [
         "social_media_post",
         "flyer",
-        "logo",
+        "poster",
         "banner",
         "business_card",
+        "logo",
         "brochure",
+        "presentation",
+        "custom",
         "other"
       ]
     },
@@ -39,10 +57,14 @@
       "enum": [
         "draft",
         "submitted",
+        "under_review",
+        "assigned",
         "in_progress",
+        "awaiting_feedback",
         "revision_requested",
-        "completed",
+        "approved",
         "delivered",
+        "completed",
         "cancelled"
       ],
       "default": "draft"
@@ -65,6 +87,9 @@
       "type": "number",
       "default": 2
     },
+    "revision_comments": {
+      "type": "string"
+    },
     "due_date": {
       "type": "string",
       "format": "date"
@@ -76,6 +101,12 @@
       }
     },
     "deliverable_files": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "draft_files": {
       "type": "array",
       "items": {
         "type": "string"

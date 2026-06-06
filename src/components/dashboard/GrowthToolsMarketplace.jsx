@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Palette, Target, ArrowRight, Zap, MessageCircle, FileText, Layout, Bot } from 'lucide-react';
+import { Palette, ArrowRight, Zap, MessageCircle, FileText, Bot } from 'lucide-react';
 
 export default function GrowthToolsMarketplace() {
   const tools = [
@@ -17,17 +17,6 @@ export default function GrowthToolsMarketplace() {
       textColor: 'text-purple-700',
     },
     {
-      id: 'leads',
-      title: 'Brandfletch Leads',
-      icon: Target,
-      description: 'Generate, collect and manage leads from one place. Build lead forms, capture prospects and organize customer information.',
-      cta: 'Manage Leads',
-      link: '/leads',
-      color: 'from-blue-500 to-cyan-500',
-      bgColor: 'bg-blue-50',
-      textColor: 'text-blue-700',
-    },
-    {
       id: 'whatsapp',
       title: 'WhatsApp Marketing',
       icon: MessageCircle,
@@ -38,18 +27,6 @@ export default function GrowthToolsMarketplace() {
       color: 'from-green-500 to-emerald-500',
       bgColor: 'bg-green-50',
       textColor: 'text-green-700',
-    },
-    {
-      id: 'landing-pages',
-      title: 'Landing Pages',
-      icon: Layout,
-      description: 'Create high-converting landing pages in minutes. No coding required. Perfect for campaigns, products and lead capture.',
-      cta: 'Coming Soon',
-      link: '#',
-      disabled: true,
-      color: 'from-orange-500 to-red-500',
-      bgColor: 'bg-orange-50',
-      textColor: 'text-orange-700',
     },
     {
       id: 'crm',

@@ -55,12 +55,20 @@ Deno.serve(async (req) => {
       const startDate = new Date();
       const endDate = new Date(startDate);
       endDate.setMonth(endDate.getMonth() + 1);
+      const resetDate = new Date(endDate);
+
+      // Fetch existing subscription to preserve quota
+      const existingSub = await base44.asServiceRole.entities.PlatformSubscription.get(subscription_id);
 
       await base44.entities.PlatformSubscription.update(subscription_id, {
         status: 'active',
         payment_method: 'Paychangu',
         start_date: startDate.toISOString().split('T')[0],
         end_date: endDate.toISOString().split('T')[0],
+        quota_used: 0,
+        quota_reset_date: resetDate.toISOString().split('T')[0],
+        // preserve monthly_quota if already set
+        ...(existingSub?.monthly_quota ? {} : { monthly_quota: 20 }),
       });
 
       await base44.entities.WalletTransaction.create({

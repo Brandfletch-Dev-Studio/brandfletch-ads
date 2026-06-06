@@ -37,6 +37,21 @@
     "currency": {
       "type": "string"
     },
+    "monthly_quota": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of design requests allowed per billing cycle"
+    },
+    "quota_used": {
+      "type": "number",
+      "default": 0,
+      "description": "Design requests used in current billing cycle"
+    },
+    "quota_reset_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date when quota resets (start of next billing cycle)"
+    },
     "auto_renew": {
       "type": "boolean",
       "default": true

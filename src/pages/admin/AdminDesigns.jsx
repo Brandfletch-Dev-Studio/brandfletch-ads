@@ -14,21 +14,27 @@ import { toast } from 'sonner';
 const STATUS_OPTIONS = [
   { value: 'draft', label: 'Draft' },
   { value: 'submitted', label: 'Submitted' },
+  { value: 'under_review', label: 'Under Review' },
+  { value: 'assigned', label: 'Assigned' },
   { value: 'in_progress', label: 'In Progress' },
+  { value: 'awaiting_feedback', label: 'Awaiting Feedback' },
   { value: 'revision_requested', label: 'Revision Requested' },
-  { value: 'completed', label: 'Completed' },
+  { value: 'approved', label: 'Approved' },
   { value: 'delivered', label: 'Delivered' },
+  { value: 'completed', label: 'Completed' },
   { value: 'cancelled', label: 'Cancelled' },
 ];
 
 const DESIGN_TYPES = [
   { value: 'social_media_post', label: 'Social Media Post' },
-  { value: 'facebook_ad', label: 'Facebook Ad' },
-  { value: 'instagram_story', label: 'Instagram Story' },
+  { value: 'flyer', label: 'Flyer' },
+  { value: 'poster', label: 'Poster' },
   { value: 'logo', label: 'Logo Design' },
   { value: 'banner', label: 'Banner' },
-  { value: 'flyer', label: 'Flyer' },
   { value: 'business_card', label: 'Business Card' },
+  { value: 'brochure', label: 'Brochure' },
+  { value: 'presentation', label: 'Presentation' },
+  { value: 'custom', label: 'Custom Design' },
   { value: 'other', label: 'Other' },
 ];
 
