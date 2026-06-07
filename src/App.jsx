@@ -25,6 +25,7 @@ import DesignPayment from '@/pages/DesignPayment';
 import LeadsComingSoon from '@/pages/LeadsComingSoon';
 import LeadForms from '@/pages/LeadForms';
 import DesignerPortal from '@/pages/DesignerPortal';
+import Referrals from '@/pages/Referrals';
 import About from '@/pages/About';
 import Contact from '@/pages/Contact';
 import PrivacyPolicy from '@/pages/PrivacyPolicy';
@@ -129,6 +130,7 @@ const AuthenticatedApp = () => {
         <Route path="/leads" element={<LeadsComingSoon />} />
         <Route path="/leads/forms" element={<LeadForms />} />
         <Route path="/designer" element={<DesignerPortal />} />
+        <Route path="/referrals" element={<Referrals />} />
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/support" element={<SupportTickets />} />
         <Route path="/messages" element={<Navigate to="/support" replace />} />
