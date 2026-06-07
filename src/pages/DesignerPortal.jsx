@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Palette, Clock, CheckCircle2, MessageSquare, Download, Upload, ArrowLeft, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useRoleGuard } from '@/hooks/useRoleGuard';
 import DesignChatComponent from '@/components/designs/DesignChatComponent';
 import DesignStatusTimeline from '@/components/designs/DesignStatusTimeline';
 
@@ -31,6 +32,7 @@ const STATUS_COLORS = {
 };
 
 export default function DesignerPortal() {
+  useRoleGuard(['admin', 'super_admin', 'ads_manager', 'campaign_manager', 'designer']);
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [showChat, setShowChat] = useState(false);
   const [designerNotes, setDesignerNotes] = useState('');
