@@ -1,10 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { CheckCircle2, Circle, ChevronRight, X, Rocket } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { base44 } from '@/api/base44Client';
+import { useAuth } from '@/lib/AuthContext';
 
 const STEPS = [
   {
@@ -26,15 +26,6 @@ const STEPS = [
     notifMessage: 'A user has started the Facebook page connection step.',
   },
   {
-    id: 'add_funds',
-    label: 'Add funds to your wallet',
-    description: 'Top up your wallet to activate campaigns.',
-    link: '/wallet',
-    linkLabel: 'Add Funds',
-    notifTitle: 'Wallet top-up started',
-    notifMessage: 'A user has visited the wallet to add funds.',
-  },
-  {
     id: 'first_campaign',
     label: 'Launch your first campaign',
     description: 'Create and submit a campaign for review.',
@@ -45,20 +36,43 @@ const STEPS = [
   },
 ];
 
-function getCompleted(user, pages, campaigns, wallet) {
+function getCompleted(user, pages, campaigns) {
   const done = new Set();
   if (user?.full_name && user?.business_name && user?.phone) done.add('profile');
-  if (pages.some(p => p.connection_status === 'connected' || p.connection_status === 'pending_verification')) done.add('facebook_page');
-  if (wallet > 0) done.add('add_funds');
+  if (pages.some(p =>
+    p.connection_status === 'connected' || p.connection_status === 'pending_verification'
+  )) done.add('facebook_page');
   if (campaigns.length > 0) done.add('first_campaign');
   return done;
 }
 
-export default function OnboardingChecklist({ user, pages, campaigns, wallet }) {
+/**
+ * Self-contained OnboardingChecklist — fetches its own data.
+ * Accepts no required props; just drop it anywhere in the client layout.
+ */
+export default function OnboardingChecklist() {
+  const { user } = useAuth();
+  const [pages, setPages] = useState([]);
+  const [campaigns, setCampaigns] = useState([]);
+  const [ready, setReady] = useState(false);
   const [dismissed, setDismissed] = useState(false);
   const [notifying, setNotifying] = useState(null);
 
-  const completed = getCompleted(user, pages, campaigns, wallet);
+  useEffect(() => {
+    if (!user?.id) return;
+    Promise.all([
+      base44.entities.FacebookPage.filter({ user_id: user.id }).catch(() => []),
+      base44.entities.Campaign.filter({ user_id: user.id }, '-created_date', 10).catch(() => []),
+    ]).then(([p, c]) => {
+      setPages(p);
+      setCampaigns(c);
+      setReady(true);
+    });
+  }, [user?.id]);
+
+  if (!ready || !user) return null;
+
+  const completed = getCompleted(user, pages, campaigns);
   const allDone = STEPS.every(s => completed.has(s.id));
 
   if (dismissed || allDone) return null;
@@ -66,20 +80,23 @@ export default function OnboardingChecklist({ user, pages, campaigns, wallet }) 
   async function handleStepClick(step) {
     if (notifying === step.id) return;
     setNotifying(step.id);
-    // Notify admins
-    const admins = await base44.entities.User.list();
-    const adminUsers = admins.filter(u => u.role === 'admin');
-    await Promise.all(adminUsers.map(admin =>
-      base44.entities.Notification.create({
-        recipient_id: admin.id,
-        recipient_role: 'admin',
-        title: step.notifTitle,
-        message: `${user?.full_name || user?.email || 'A user'} — ${step.notifMessage}`,
-        type: 'page_connected',
-        is_read: false,
-      })
-    ));
-    setNotifying(null);
+    try {
+      const admins = await base44.entities.User.filter({ role: 'admin' }).catch(() => []);
+      await Promise.all(admins.map(admin =>
+        base44.entities.Notification.create({
+          recipient_id: admin.id,
+          recipient_role: 'admin',
+          title: step.notifTitle,
+          message: `${user?.full_name || user?.email || 'A user'} — ${step.notifMessage}`,
+          type: 'page_connected',
+          is_read: false,
+        })
+      ));
+    } catch (err) {
+      // Non-blocking
+    } finally {
+      setNotifying(null);
+    }
   }
 
   const doneCount = STEPS.filter(s => completed.has(s.id)).length;
@@ -104,7 +121,6 @@ export default function OnboardingChecklist({ user, pages, campaigns, wallet }) 
             <X className="w-4 h-4" />
           </button>
         </div>
-        {/* Progress bar */}
         <div className="h-1.5 rounded-full bg-secondary mt-3 overflow-hidden">
           <div
             className="h-full bg-[hsl(var(--accent))] rounded-full transition-all duration-500"
