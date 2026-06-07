@@ -5,6 +5,7 @@ import { ChevronRight, ChevronLeft, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { useAuth } from '@/lib/AuthContext';
 
 import StepName from './wizard/StepName';
 import StepSelectPage from './wizard/StepSelectPage';
@@ -26,8 +27,8 @@ const STEPS = [
 
 export default function CampaignWizard() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [step, setStep] = useState(1);
-  const [user, setUser] = useState(null);
   const [data, setData] = useState({
     campaign_name: '',
     page_id: '', page_name: '',
@@ -44,20 +45,21 @@ export default function CampaignWizard() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    base44.auth.me().then(async u => {
-      setUser(u);
-      const country = u?.country || 'Malawi';
+    if (!user?.id) return;
+    async function init() {
+      const country = user?.country || 'Malawi';
       const exchangeRates = await base44.entities.ExchangeRate.filter({ country, is_active: true });
       const currency = exchangeRates?.[0]?.currency_code || 'MWK';
       setData(d => ({
         ...d,
         country: country,
         currency: currency,
-        page_name: u?.fb_page_name || d.page_name,
-        page_url: u?.fb_page_url || d.page_url,
+        page_name: user?.fb_page_name || d.page_name,
+        page_url: user?.fb_page_url || d.page_url,
       }));
-    });
-  }, []);
+    }
+    init();
+  }, [user?.id]);
 
   function update(fields) {
     setData(d => ({ ...d, ...fields }));
@@ -65,11 +67,12 @@ export default function CampaignWizard() {
 
   async function handleSubmit() {
     setSubmitting(true);
-    const campaign = await base44.entities.Campaign.create({
+    let campaign;
+    try { campaign = await base44.entities.Campaign.create({
       ...data,
       user_id: user.id,
       status: 'awaiting_payment',
-    });
+    }); } catch(e) { toast.error('Failed to create campaign'); setSubmitting(false); return; }
 
     if (data.save_audience && data.audience_name) {
       await base44.entities.SavedAudience.create({
@@ -86,6 +89,27 @@ export default function CampaignWizard() {
     }
 
     toast.success('Campaign created! Proceed to payment.');
+    // Notify admin via WhatsApp (non-blocking)
+    try {
+      const settings = await base44.entities.PublicSettings.list(null, 1).catch(() => []);
+      const adminPhone = settings?.[0]?.admin_whatsapp || settings?.[0]?.admin_phone;
+      if (adminPhone) {
+        base44.functions.invoke('sendWhatsApp', {
+          to: adminPhone,
+          message: [
+            '📢 *New Campaign Submitted — Brandfletch Ads*',
+            '',
+            `*Client:* ${user?.full_name || user?.email}`,
+            `*Campaign:* ${data.campaign_name || data.page_name || 'Untitled'}`,
+            `*Package:* ${data.package} | ${data.duration}`,
+            `*Country:* ${data.country}`,
+            `*Amount:* ${data.currency} ${data.total_cost?.toLocaleString()}`,
+            '',
+            'Review it in the admin panel.',
+          ].join('\n'),
+        }).catch(() => {});
+      }
+    } catch {}
     navigate(`/campaigns/${campaign.id}/payment`);
     setSubmitting(false);
   }
