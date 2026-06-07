@@ -14,6 +14,7 @@ import StatusBadge from '@/components/ui/StatusBadge';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { useRoleGuard } from '@/hooks/useRoleGuard';
+import { useAuth } from '@/lib/AuthContext';
 import { useAuditLog } from '@/hooks/useAuditLog';
 import { GOALS } from '@/lib/constants';
 
@@ -22,19 +23,20 @@ export default function AdminCampaignDetail() {
   const auditLog = useAuditLog();
   const { id } = useParams();
   const [campaign, setCampaign] = useState(null);
-  const [user, setUser] = useState(null);
   const [notes, setNotes] = useState('');
   const [metrics, setMetrics] = useState({ impressions: 0, reach: 0, clicks: 0, messages: 0, leads: 0 });
   const [saving, setSaving] = useState(false);
 
+  const { user } = useAuth();
+
   useEffect(() => {
-    base44.auth.me().then(setUser);
     loadCampaign();
   }, [id]);
 
   async function loadCampaign() {
-    const all = await base44.entities.Campaign.list();
-    const c = all.find(x => x.id === id);
+    // Fix: fetch only this campaign by ID, not the full table
+    const results = await base44.entities.Campaign.filter({ id });
+    const c = results?.[0] || null;
     setCampaign(c);
     if (c) {
       setNotes(c.manager_notes || '');
