@@ -1,6 +1,6 @@
 import { useLocation } from 'react-router-dom';
 import { Link } from 'react-router-dom';
-import { Home, Palette, Megaphone, Target, LifeBuoy, AlertCircle, CheckCircle } from 'lucide-react';
+import { Home, Palette, Megaphone, Gift, LifeBuoy } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/AuthContext';
 
@@ -11,28 +11,29 @@ export default function BottomNav({ isStaff, unreadCount }) {
   if (isStaff) return null;
 
   const navItems = [
-    { path: '/dashboard', label: 'Home', icon: Home },
-    { path: '/designs', label: 'Designs', icon: Palette },
-    { path: '/campaigns', label: 'Campaigns', icon: Megaphone },
-    { path: '/leads', label: 'Leads', icon: Target },
-    { path: '/support', label: 'Support', icon: LifeBuoy },
+    { path: '/dashboard',  label: 'Home',      icon: Home },
+    { path: '/campaigns',  label: 'Campaigns', icon: Megaphone },
+    { path: '/designs',    label: 'Designs',   icon: Palette },
+    { path: '/referrals',  label: 'Refer',     icon: Gift },
+    { path: '/support',    label: 'Support',   icon: LifeBuoy },
   ];
 
   return (
-    <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-background border-t border-border safe-area-bottom">
+    <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-background border-t border-border safe-area-bottom z-40">
       <nav className="grid grid-cols-5 h-16">
         {navItems.map(({ path, label, icon: Icon }) => {
-          const isActive = location.pathname === path || 
+          const isActive =
+            location.pathname === path ||
             (path !== '/dashboard' && location.pathname.startsWith(path + '/'));
-          
+
           return (
             <Link
               key={path}
               to={path}
               className={cn(
                 "flex flex-col items-center justify-center gap-1 transition-colors",
-                isActive 
-                  ? "text-primary" 
+                isActive
+                  ? "text-[hsl(var(--primary))]"
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
