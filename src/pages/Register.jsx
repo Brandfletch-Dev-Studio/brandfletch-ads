@@ -19,6 +19,9 @@ export default function Register() {
   const [showOtp, setShowOtp] = useState(false);
   const [otpCode, setOtpCode] = useState("");
 
+  // Capture referral code from URL ?ref=BF-XXXXXX
+  const referralCode = new URLSearchParams(window.location.search).get('ref') || '';
+
   useEffect(() => {
     base44.auth.isAuthenticated().then((authed) => {
       if (authed) window.location.href = "/onboarding";
@@ -47,6 +50,25 @@ export default function Register() {
     try {
       const result = await base44.auth.verifyOtp({ email, otpCode });
       if (result?.access_token) base44.auth.setToken(result.access_token);
+      // If user signed up via a referral link, record it
+      if (referralCode) {
+        try {
+          const me = await base44.auth.me();
+          // Store the referral code on the new user's profile
+          await base44.auth.updateMe({ referred_by: referralCode });
+          // Create a Referral record for the referrer to track
+          await base44.entities.Referral.create({
+            referral_code: referralCode,
+            referred_email: email,
+            referred_name: me?.full_name || '',
+            referred_user_id: me?.id || '',
+            status: 'pending',
+          });
+        } catch (err) {
+          // Non-blocking — don't prevent onboarding if referral tracking fails
+          console.warn('Referral tracking failed:', err);
+        }
+      }
       window.location.href = "/onboarding";
     } catch (err) {
       setError(err.message || "Invalid verification code");
