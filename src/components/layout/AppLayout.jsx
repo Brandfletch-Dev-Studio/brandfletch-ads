@@ -42,6 +42,7 @@ const ALL_ADMIN_NAV = [
   { key: 'audit_log',      path: '/admin/audit-log',       label: 'Audit Log',      icon: ClipboardList,   permission: 'audit_log.view' },
   { key: 'pricing',        path: '/admin/pricing',         label: 'Pricing',        icon: Tags,            permission: 'pricing.view' },
   { key: 'support',        path: '/admin/support',         label: 'Support Tickets',icon: LifeBuoy,        permission: 'support.view' },
+  { key: 'referrals',    path: '/admin/referrals',       label: 'Referrals',      icon: Gift,            permission: 'referrals.view' },
   { key: 'settings',       path: '/admin/settings',        label: 'Settings',       icon: Settings,        permission: 'settings.view' },
 ];
 
