@@ -36,6 +36,10 @@ export const ROLE_COLORS = {
 /**
  * Permission definitions per role.
  * A permission absent from a role = denied.
+ *
+ * Fix #9: added designs.view and leads.view to all roles that should
+ * see those admin nav items. Previously these perms were checked in the
+ * nav filter but never defined here, causing tabs to silently disappear.
  */
 const ROLE_PERMISSIONS = {
   super_admin: [
@@ -51,6 +55,9 @@ const ROLE_PERMISSIONS = {
     'ads.view', 'ads.manage',
     'pricing.view', 'pricing.edit',
     'pages.view', 'pages.manage',
+    'designs.view', 'designs.manage',   // ← added
+    'leads.view', 'leads.manage',       // ← added
+    'support.view', 'support.manage',   // ← added (support.view was also missing)
   ],
 
   ads_manager: [
@@ -66,6 +73,9 @@ const ROLE_PERMISSIONS = {
     'ads.view',
     'pricing.view',
     'pages.view', 'pages.manage',
+    'designs.view', 'designs.manage',   // ← added
+    'leads.view',                       // ← added
+    'support.view',                     // ← added
   ],
 
   campaign_manager: [
@@ -75,6 +85,9 @@ const ROLE_PERMISSIONS = {
     'messages.view', 'messages.send',
     'notifications.view',
     'pages.view', 'pages.manage',
+    'designs.view',                     // ← added
+    'leads.view',                       // ← added
+    'support.view',                     // ← added
   ],
 
   finance: [
@@ -84,6 +97,8 @@ const ROLE_PERMISSIONS = {
     'payments.view', 'payments.manage',
     'settings.view',
     'pricing.view', 'pricing.edit',
+    'designs.view',                     // ← added (finance needs visibility)
+    'support.view',                     // ← added
   ],
 
   sales_manager: [
@@ -91,6 +106,9 @@ const ROLE_PERMISSIONS = {
     'campaigns.view',
     'reports.view',
     'messages.view', 'messages.send',
+    'leads.view', 'leads.manage',       // ← added (sales_manager owns leads)
+    'designs.view',                     // ← added
+    'support.view',                     // ← added
   ],
 };
 
@@ -121,20 +139,25 @@ export function isStaffRole(role) {
 export function getAllowedAdminNavKeys(role) {
   const always = ['overview'];
   const map = {
-    campaigns:    'campaigns.view',
-    pages:        'pages.view',
-    users:        'users.view',
-    payments:     'payments.view',
-    notifications:'notifications.view',
-    messages:     'messages.view',
-    ads:          'ads.view',
-    reports:      'reports.view',
-    audit_log:    'audit_log.view',
-    pricing:      'pricing.view',
-    settings:     'settings.view',
+    campaigns:     'campaigns.view',
+    designs:       'designs.view',
+    leads:         'leads.view',
+    pages:         'pages.view',
+    users:         'users.view',
+    payments:      'payments.view',
+    notifications: 'notifications.view',
+    messages:      'messages.view',
+    ads:           'ads.view',
+    reports:       'reports.view',
+    audit_log:     'audit_log.view',
+    pricing:       'pricing.view',
+    support:       'support.view',
+    settings:      'settings.view',
   };
   return [
     ...always,
-    ...Object.entries(map).filter(([, perm]) => hasPermission(role, perm)).map(([key]) => key),
+    ...Object.entries(map)
+      .filter(([, perm]) => hasPermission(role, perm))
+      .map(([key]) => key),
   ];
 }
