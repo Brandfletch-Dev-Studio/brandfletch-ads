@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 import {
   LayoutDashboard, Megaphone, Facebook, Users, Wallet as WalletIcon,
   Settings, X, ChevronRight, BarChart3, Shield, Bell, Tv2, ClipboardList, Tags, LifeBuoy, Info, Mail,
-  Palette, Target
+  Palette, Target, Gift
 } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -23,6 +23,7 @@ const clientNav = [
   { path: '/leads', label: 'Leads (Coming Soon)', icon: Target, disabled: true },
   { path: '/pages', label: 'Facebook Pages', icon: Facebook },
   { path: '/audiences', label: 'Audiences', icon: Users },
+  { path: '/referrals', label: 'Refer & Earn', icon: Gift },
   { path: '/support', label: 'Support', icon: LifeBuoy },
   { path: '/settings', label: 'Settings', icon: Settings },
 ];
