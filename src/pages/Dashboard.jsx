@@ -1,38 +1,49 @@
 import { useState, useEffect } from 'react';
-import { Link, Navigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { Palette, Target, Layout, Megaphone, Clock, Plus, Globe } from 'lucide-react';
+import { useAuth } from '@/lib/AuthContext';
+import { Palette, Target, Megaphone, Clock, Globe } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { toast } from 'sonner';
 
 export default function Dashboard() {
-  const [user, setUser] = useState(null);
+  // Fix #6: use AuthContext user instead of calling base44.auth.me() again
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
   const [designs, setDesigns] = useState([]);
   const [leads, setLeads] = useState([]);
   const [campaigns, setCampaigns] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showLandingPageOrder, setShowLandingPageOrder] = useState(false);
+  const [landingForm, setLandingForm] = useState({ name: '', description: '', url: '' });
+  const [submittingOrder, setSubmittingOrder] = useState(false);
 
-  useEffect(() => { init(); }, []);
-
-  async function init() {
-    const u = await base44.auth.me();
-    setUser(u);
-    const [des, lds, camps] = await Promise.all([
-      base44.entities.DesignRequest.filter({ user_id: u.id }, '-created_date', 5),
-      base44.entities.Lead.filter({ user_id: u.id }, '-created_date', 5),
-      base44.entities.Campaign.filter({ user_id: u.id }, '-created_date', 5),
-    ]);
-    setDesigns(des);
-    setLeads(lds);
-    setCampaigns(camps);
-    setLoading(false);
-  }
+  useEffect(() => {
+    if (!user?.id) return;
+    async function loadData() {
+      try {
+        const [des, lds, camps] = await Promise.all([
+          base44.entities.DesignRequest.filter({ user_id: user.id }, '-created_date', 5),
+          base44.entities.Lead.filter({ user_id: user.id }, '-created_date', 5),
+          base44.entities.Campaign.filter({ user_id: user.id }, '-created_date', 5),
+        ]);
+        setDesigns(des);
+        setLeads(lds);
+        setCampaigns(camps);
+      } catch (err) {
+        console.error('Dashboard load error:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadData();
+  }, [user?.id]);
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -47,22 +58,73 @@ export default function Dashboard() {
   const activeDesigns = designs.filter(d => d.status === 'in_progress' || d.status === 'submitted').length;
   const activeLeads = leads.filter(l => !['won', 'lost'].includes(l.stage)).length;
 
-  if (loading) {
-    return <div className="p-8 text-center text-muted-foreground">Loading dashboard...</div>;
+  const formatCost = (c) => {
+    const cost = c.total_cost || 0;
+    const currency = c.currency || 'USD';
+    if (currency === 'MWK') return `MK${cost.toLocaleString()}`;
+    if (currency === 'KES') return `KSh${cost.toLocaleString()}`;
+    if (currency === 'ZMW') return `ZK${cost.toLocaleString()}`;
+    if (currency === 'ZAR') return `R${cost.toLocaleString()}`;
+    if (currency === 'TZS') return `TSh${cost.toLocaleString()}`;
+    if (currency === 'USD') return `$${cost.toFixed(2)}`;
+    return `${currency} ${cost.toLocaleString()}`;
+  };
+
+  const CAMPAIGN_STATUS_LABELS = {
+    draft: 'Draft', awaiting_payment: 'Awaiting Payment',
+    pending_review: 'Pending Review', approved: 'Approved',
+    active: 'Active', paused: 'Paused', completed: 'Completed',
+    rejected: 'Rejected', refunded: 'Refunded',
+  };
+
+  async function handleLandingPageOrder(e) {
+    e.preventDefault();
+    setSubmittingOrder(true);
+    try {
+      await base44.entities.ServiceOrder.create({
+        user_id: user.id,
+        user_name: user.full_name,
+        user_email: user.email,
+        service_type: 'landing_page',
+        ...landingForm,
+        status: 'pending',
+      });
+      toast.success('Landing page order submitted! We\'ll be in touch shortly.');
+      setShowLandingPageOrder(false);
+      setLandingForm({ name: '', description: '', url: '' });
+    } catch (err) {
+      toast.error('Failed to submit order. Please try again.');
+    } finally {
+      setSubmittingOrder(false);
+    }
+  }
+
+  if (loading || !user) {
+    return (
+      <div className="p-4 lg:p-8 space-y-6">
+        <div className="h-40 rounded-2xl bg-secondary animate-pulse" />
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {[1,2,3,4].map(i => <div key={i} className="h-20 rounded-xl bg-secondary animate-pulse" />)}
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {[1,2,3].map(i => <div key={i} className="h-40 rounded-xl bg-secondary animate-pulse" />)}
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="p-[15px] space-y-6">
-      {/* Hero Section with Campaign CTA */}
+    <div className="p-4 lg:p-8 space-y-6">
+      {/* Hero */}
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[hsl(var(--primary))] to-[hsl(var(--accent))] p-6 md:p-8 text-white">
         <div className="relative z-10">
-          <h1 className="text-2xl md:text-3xl font-bold font-heading mb-2" style={{ paddingLeft: '20px' }}>
+          <h1 className="text-2xl md:text-3xl font-bold font-heading mb-2 pl-5">
             {getGreeting()}, {user?.full_name?.split(' ')[0] || 'there'}!
           </h1>
-          <p className="text-white/90 mb-6 max-w-2xl" style={{ paddingLeft: '20px' }}>
+          <p className="text-white/90 mb-6 max-w-2xl pl-5">
             Ready to grow your business with high-performing Facebook ad campaigns?
           </p>
-          <div style={{ paddingLeft: '20px' }}>
+          <div className="pl-5">
             <Link to="/campaigns/new">
               <Button size="lg" className="bg-white text-[hsl(var(--primary))] hover:bg-white/90">
                 <Megaphone className="w-5 h-5 mr-2" />
@@ -74,7 +136,7 @@ export default function Dashboard() {
       </div>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Link to="/campaigns">
           <Card className="hover:shadow-lg transition-all cursor-pointer">
             <CardContent className="p-4">
@@ -137,12 +199,12 @@ export default function Dashboard() {
         </Link>
       </div>
 
-      {/* Featured Tools */}
+      {/* Growth Tools */}
       <div>
-        <h2 className="text-xl font-bold font-heading mb-4" style={{ paddingLeft: '20px' }}>Growth Tools</h2>
+        <h2 className="text-xl font-bold font-heading mb-4 pl-5">Growth Tools</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Design Services */}
-          <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => window.location.href='/designs'}>
+          {/* Fix #7: replace window.location.href with navigate() */}
+          <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/designs')}>
             <CardHeader className="pb-3">
               <div className="w-12 h-12 rounded-lg bg-purple-50 flex items-center justify-center mb-2">
                 <Palette className="w-6 h-6 text-purple-700" />
@@ -154,7 +216,7 @@ export default function Dashboard() {
               <Button className="w-full" variant="outline">Order Design</Button>
             </CardContent>
           </Card>
-          {/* Landing Pages */}
+
           <Card className="hover:shadow-md transition-shadow">
             <CardHeader className="pb-3">
               <div className="w-12 h-12 rounded-lg bg-pink-50 flex items-center justify-center mb-2">
@@ -167,8 +229,8 @@ export default function Dashboard() {
               <Button className="w-full" onClick={() => setShowLandingPageOrder(true)} variant="outline">Order Now</Button>
             </CardContent>
           </Card>
-          {/* Leads & CRM */}
-          <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => window.location.href='/leads'}>
+
+          <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/leads')}>
             <CardHeader className="pb-3">
               <div className="w-12 h-12 rounded-lg bg-orange-50 flex items-center justify-center mb-2">
                 <Target className="w-6 h-6 text-orange-700" />
@@ -184,160 +246,108 @@ export default function Dashboard() {
       </div>
 
       {/* Recent Activity */}
-      <div>
-        <h2 className="text-xl font-bold font-heading mb-4" style={{ paddingLeft: '20px' }}>Recent Activity</h2>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {campaigns.length > 0 && (
-            <Card className="shadow-sm">
-              <CardHeader className="flex flex-row items-center justify-between pb-3 border-b">
-                <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Campaigns</CardTitle>
-                <Link to="/campaigns" className="text-xs text-[hsl(var(--accent))] hover:underline font-medium">View all</Link>
-              </CardHeader>
-              <CardContent className="p-0">
-                <div className="divide-y divide-border">
-                  {campaigns.slice(0, 5).map(c => (
-                    <Link
-                      key={c.id}
-                      to={`/campaigns/${c.id}`}
-                      className="flex items-center justify-between px-4 py-3 hover:bg-secondary/40 transition-colors gap-2"
-                    >
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium truncate">{c.campaign_name}</p>
-                        <p className="text-xs text-muted-foreground capitalize mt-0.5">{c.objective?.replace('_', ' ')}</p>
-                      </div>
-                      <div className="flex-shrink-0">
-                        <span className={`text-xs font-semibold px-2 py-1 rounded-full ${
-                          c.status === 'active' ? 'bg-green-100 text-green-700' :
-                          c.status === 'pending_review' ? 'bg-blue-100 text-blue-700' :
-                          'bg-gray-100 text-gray-700'
-                        }`}>
-                          {c.status.replace('_', ' ')}
+      {(campaigns.length > 0 || designs.length > 0) && (
+        <div>
+          <h2 className="text-xl font-bold font-heading mb-4 pl-5">Recent Activity</h2>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {campaigns.length > 0 && (
+              <Card className="shadow-sm">
+                <CardHeader className="flex flex-row items-center justify-between pb-3 border-b">
+                  <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Campaigns</CardTitle>
+                  <Link to="/campaigns" className="text-xs text-[hsl(var(--accent))] hover:underline font-medium">View all</Link>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <div className="divide-y divide-border">
+                    {campaigns.slice(0, 5).map(c => (
+                      <Link
+                        key={c.id}
+                        to={`/campaigns/${c.id}`}
+                        className="flex items-center justify-between px-4 py-3 hover:bg-secondary/40 transition-colors gap-2"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium truncate">{c.campaign_name || c.page_name || 'Campaign'}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5 capitalize">
+                            {c.package} · {c.duration}
+                          </p>
+                        </div>
+                        <span className="text-xs font-medium text-muted-foreground capitalize flex-shrink-0">
+                          {CAMPAIGN_STATUS_LABELS[c.status] || c.status}
                         </span>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
+                      </Link>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
-          {designs.length > 0 && (
-            <Card className="shadow-sm">
-              <CardHeader className="flex flex-row items-center justify-between pb-3 border-b">
-                <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Design Requests</CardTitle>
-                <Link to="/designs" className="text-xs text-[hsl(var(--accent))] hover:underline font-medium">View all</Link>
-              </CardHeader>
-              <CardContent className="p-0">
-                <div className="divide-y divide-border">
-                  {designs.slice(0, 5).map(d => (
-                    <Link
-                      key={d.id}
-                      to="/designs"
-                      className="flex items-center justify-between px-4 py-3 hover:bg-secondary/40 transition-colors gap-2"
-                    >
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium truncate">{d.title}</p>
-                        <p className="text-xs text-muted-foreground capitalize mt-0.5">{d.design_type.replace('_', ' ')}</p>
+            {designs.length > 0 && (
+              <Card className="shadow-sm">
+                <CardHeader className="flex flex-row items-center justify-between pb-3 border-b">
+                  <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Designs</CardTitle>
+                  <Link to="/designs" className="text-xs text-[hsl(var(--accent))] hover:underline font-medium">View all</Link>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <div className="divide-y divide-border">
+                    {designs.slice(0, 5).map(d => (
+                      <div key={d.id} className="flex items-center justify-between px-4 py-3 gap-2">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium truncate">{d.title || d.design_type || 'Design Request'}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5 capitalize">{d.design_type}</p>
+                        </div>
+                        <span className="text-xs font-medium text-muted-foreground capitalize flex-shrink-0">{d.status}</span>
                       </div>
-                      <div className="flex-shrink-0">
-                        <span className={`text-xs font-semibold px-2 py-1 rounded-full ${
-                          d.status === 'completed' || d.status === 'delivered' ? 'bg-green-100 text-green-700' :
-                          d.status === 'in_progress' ? 'bg-blue-100 text-blue-700' :
-                          'bg-gray-100 text-gray-700'
-                        }`}>
-                          {d.status.replace('_', ' ')}
-                        </span>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-      </div>
-
-      {/* Empty states */}
-      {campaigns.length === 0 && (
-        <Card className="border-blue-200 bg-blue-50">
-          <CardContent className="p-8 text-center">
-            <Megaphone className="w-12 h-12 mx-auto text-blue-600 mb-3" />
-            <h3 className="text-lg font-semibold mb-2">Start Your First Campaign</h3>
-            <p className="text-muted-foreground mb-4">Create high-performing Facebook ads to grow your business</p>
-            <Link to="/campaigns/new">
-              <Button>
-                <Plus className="w-4 h-4 mr-2" />
-                Create Campaign
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
-      )}
-
-      {designs.length === 0 && leads.length === 0 && campaigns.length === 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Card>
-            <CardContent className="p-8 text-center">
-              <p className="text-muted-foreground mb-4">No design requests yet</p>
-              <Link to="/designs">
-                <Button variant="outline">Request Design</Button>
-              </Link>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-8 text-center">
-              <p className="text-muted-foreground mb-4">No leads yet</p>
-              <Link to="/leads/forms">
-                <Button variant="outline">Create Lead Form</Button>
-              </Link>
-            </CardContent>
-          </Card>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
         </div>
       )}
 
       {/* Landing Page Order Dialog */}
       <Dialog open={showLandingPageOrder} onOpenChange={setShowLandingPageOrder}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>Order Landing Page</DialogTitle>
-            <DialogDescription>
-              Request a custom landing page design. Our team will contact you with details and pricing.
-            </DialogDescription>
+            <DialogTitle>Order a Landing Page</DialogTitle>
+            <DialogDescription>Tell us about your landing page requirements and we'll get back to you with a quote.</DialogDescription>
           </DialogHeader>
-          <form onSubmit={async (e) => {
-            e.preventDefault();
-            const formData = new FormData(e.target);
-            await base44.entities.ServiceOrder.create({
-              user_id: user.id,
-              service_id: 'landing_page',
-              service_name: 'Landing Page Design',
-              notes: formData.get('requirements'),
-              status: 'pending'
-            });
-            setShowLandingPageOrder(false);
-            alert('Your landing page order has been submitted! Our team will contact you soon.');
-          }} className="space-y-4">
-            <div>
-              <Label htmlFor="requirements">Project Requirements</Label>
-              <Textarea
-                id="requirements"
-                name="requirements"
-                placeholder="Describe your landing page needs (purpose, sections, features, etc.)"
-                className="h-32"
+          <form onSubmit={handleLandingPageOrder} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="lp-name">Business / Page Name</Label>
+              <Input
+                id="lp-name"
+                value={landingForm.name}
+                onChange={e => setLandingForm(f => ({ ...f, name: e.target.value }))}
+                placeholder="Your business name"
                 required
               />
             </div>
-            <div>
-              <Label htmlFor="timeline">Timeline</Label>
+            <div className="space-y-2">
+              <Label htmlFor="lp-url">Existing Website URL (optional)</Label>
               <Input
-                id="timeline"
-                name="timeline"
-                placeholder="When do you need this completed?"
+                id="lp-url"
+                value={landingForm.url}
+                onChange={e => setLandingForm(f => ({ ...f, url: e.target.value }))}
+                placeholder="https://yourbusiness.com"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="lp-desc">Description & Requirements</Label>
+              <Textarea
+                id="lp-desc"
+                value={landingForm.description}
+                onChange={e => setLandingForm(f => ({ ...f, description: e.target.value }))}
+                placeholder="Describe what you need — goal, style, sections, etc."
+                className="min-h-[100px]"
+                required
               />
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setShowLandingPageOrder(false)}>Cancel</Button>
-              <Button type="submit">Submit Order</Button>
+              <Button type="submit" disabled={submittingOrder}>
+                {submittingOrder ? 'Submitting...' : 'Submit Order'}
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>
