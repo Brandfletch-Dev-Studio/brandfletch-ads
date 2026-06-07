@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/lib/AuthContext';
-import { Plus, Ticket, Clock, CheckCircle, AlertCircle, ChevronDown } from 'lucide-react';
+import { Plus, Ticket, Clock, CheckCircle, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -16,58 +16,70 @@ export default function SupportTickets() {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     subject: '',
     description: '',
     priority: 'medium',
-    category: 'general'
+    category: 'general',
   });
 
-  useEffect(() => {
-    base44.entities.SupportTicket.list('-created_date', 100).then(t => {
+  const loadTickets = useCallback(async () => {
+    try {
+      const t = await base44.entities.SupportTicket.list('-created_date', 100);
       setTickets(t);
+    } catch (err) {
+      console.error('Failed to load tickets:', err);
+    } finally {
       setLoading(false);
-    });
+    }
   }, []);
+
+  useEffect(() => {
+    loadTickets();
+  }, [loadTickets]);
 
   async function handleSubmit(e) {
     e.preventDefault();
+    if (submitting) return;
+    setSubmitting(true);
     try {
-      await base44.entities.SupportTicket.create({
+      const newTicket = await base44.entities.SupportTicket.create({
         user_id: user.id,
         user_name: user.full_name,
         user_email: user.email,
         ...formData,
-        status: 'open'
+        status: 'open',
       });
       toast.success('Ticket created successfully!');
       setCreating(false);
       setFormData({ subject: '', description: '', priority: 'medium', category: 'general' });
-      setTickets(prev => [
-        { ...prev[0], id: Date.now().toString(), created_date: new Date().toISOString() },
-        ...prev.slice(0)
-      ]);
+      // Prepend the actual returned record — no stale data, no spread bugs
+      setTickets(prev => [newTicket, ...prev]);
     } catch (error) {
-      toast.error('Failed to create ticket');
+      console.error('Ticket creation failed:', error);
+      toast.error('Failed to create ticket. Please try again.');
+    } finally {
+      setSubmitting(false);
     }
   }
 
   const getStatusConfig = (status) => {
     const configs = {
-      open: { color: 'bg-red-100 text-red-700 border-red-200', icon: AlertCircle, label: 'Open' },
-      in_progress: { color: 'bg-amber-100 text-amber-700 border-amber-200', icon: Clock, label: 'In Progress' },
-      resolved: { color: 'bg-green-100 text-green-700 border-green-200', icon: CheckCircle, label: 'Resolved' },
-      closed: { color: 'bg-gray-100 text-gray-700 border-gray-200', icon: Ticket, label: 'Closed' }
+      open:        { color: 'bg-red-100 text-red-700 border-red-200',   icon: AlertCircle,   label: 'Open' },
+      in_progress: { color: 'bg-amber-100 text-amber-700 border-amber-200', icon: Clock,     label: 'In Progress' },
+      resolved:    { color: 'bg-green-100 text-green-700 border-green-200', icon: CheckCircle, label: 'Resolved' },
+      closed:      { color: 'bg-gray-100 text-gray-700 border-gray-200',  icon: Ticket,      label: 'Closed' },
     };
     return configs[status] || configs.open;
   };
 
   const getPriorityConfig = (priority) => {
     const configs = {
-      low: 'bg-gray-100 text-gray-700',
+      low:    'bg-gray-100 text-gray-700',
       medium: 'bg-blue-100 text-blue-700',
-      high: 'bg-orange-100 text-orange-700',
-      urgent: 'bg-red-100 text-red-700'
+      high:   'bg-orange-100 text-orange-700',
+      urgent: 'bg-red-100 text-red-700',
     };
     return configs[priority] || configs.medium;
   };
@@ -75,7 +87,11 @@ export default function SupportTickets() {
   if (loading) {
     return (
       <div className="p-4 lg:p-8 max-w-5xl mx-auto">
-        <div className="space-y-3">{[1,2,3,4,5].map(i => <div key={i} className="h-32 rounded-xl bg-secondary animate-pulse" />)}</div>
+        <div className="space-y-3">
+          {[1, 2, 3, 4, 5].map(i => (
+            <div key={i} className="h-32 rounded-xl bg-secondary animate-pulse" />
+          ))}
+        </div>
       </div>
     );
   }
@@ -89,6 +105,7 @@ export default function SupportTickets() {
           </h1>
           <p className="text-muted-foreground text-sm mt-1">Track and manage your support requests</p>
         </div>
+
         <Dialog open={creating} onOpenChange={setCreating}>
           <DialogTrigger asChild>
             <Button className="gap-2">
@@ -147,7 +164,9 @@ export default function SupportTickets() {
               </div>
               <div className="flex gap-2 justify-end">
                 <Button type="button" variant="outline" onClick={() => setCreating(false)}>Cancel</Button>
-                <Button type="submit">Submit Ticket</Button>
+                <Button type="submit" disabled={submitting}>
+                  {submitting ? 'Submitting...' : 'Submit Ticket'}
+                </Button>
               </div>
             </form>
           </DialogContent>
@@ -165,7 +184,7 @@ export default function SupportTickets() {
       ) : (
         <div className="space-y-3">
           {tickets.map(ticket => {
-            const StatusIcon = getStatusConfig(ticket.status).icon;
+            const { color, icon: StatusIcon, label: statusLabel } = getStatusConfig(ticket.status);
             return (
               <Card key={ticket.id} className="hover:shadow-md transition-shadow">
                 <CardContent className="p-4">
@@ -176,18 +195,22 @@ export default function SupportTickets() {
                         <span className={`text-xs px-2 py-0.5 rounded-full border ${getPriorityConfig(ticket.priority)}`}>
                           {ticket.priority}
                         </span>
-                        <span className="text-xs text-muted-foreground capitalize">· {ticket.category.replace('_', ' ')}</span>
+                        <span className="text-xs text-muted-foreground capitalize">
+                          · {(ticket.category || '').replace('_', ' ')}
+                        </span>
                       </div>
                       <p className="text-sm text-muted-foreground line-clamp-2 mb-2">{ticket.description}</p>
                       <div className="flex items-center gap-4 text-xs text-muted-foreground">
                         <span>Created: {new Date(ticket.created_date).toLocaleDateString()}</span>
-                        {ticket.resolved_date && <span>Resolved: {new Date(ticket.resolved_date).toLocaleDateString()}</span>}
+                        {ticket.resolved_date && (
+                          <span>Resolved: {new Date(ticket.resolved_date).toLocaleDateString()}</span>
+                        )}
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className={`text-xs px-2.5 py-1 rounded-full border flex items-center gap-1.5 ${getStatusConfig(ticket.status).color}`}>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <span className={`text-xs px-2.5 py-1 rounded-full border flex items-center gap-1.5 ${color}`}>
                         <StatusIcon className="w-3 h-3" />
-                        {getStatusConfig(ticket.status).label}
+                        {statusLabel}
                       </span>
                     </div>
                   </div>
