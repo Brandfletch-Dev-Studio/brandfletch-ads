@@ -24,6 +24,7 @@ const INVITABLE_ROLES = [
   { value: 'sales_manager',    label: 'Sales Manager' },
   { value: 'finance',          label: 'Finance' },
   { value: 'ads_manager',      label: 'Ads Manager' },
+  { value: 'designer',         label: 'Designer' },
   { value: 'admin',            label: 'Super Admin' },
   { value: 'user',             label: 'Client' },
 ];
@@ -34,6 +35,7 @@ const ASSIGNABLE_ROLES = [
   { value: 'sales_manager',    label: 'Sales Manager' },
   { value: 'finance',          label: 'Finance' },
   { value: 'ads_manager',      label: 'Ads Manager' },
+  { value: 'designer',         label: 'Designer' },
   { value: 'admin',            label: 'Super Admin' },
 ];
 
