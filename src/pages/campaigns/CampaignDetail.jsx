@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { base44 } from '@/api/base44Client';
+import { useAuth } from '@/lib/AuthContext';
 import { ArrowLeft, ExternalLink, CreditCard, Package, Target, Users, MapPin, FileImage, MessageSquare, Phone, Globe, Share2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,13 +15,27 @@ import { GOALS } from '@/lib/constants';
 
 export default function CampaignDetail() {
   const { id } = useParams();
+  const { user } = useAuth();
   const [campaign, setCampaign] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [verifying, setVerifying] = useState(false);
 
+  async function loadCampaign() {
+    try {
+      // Fetch only this campaign by its ID — no privacy leak, no full-table scan
+      const results = await base44.entities.Campaign.filter({ id });
+      const found = results?.[0] || null;
+      setCampaign(found);
+    } catch (err) {
+      console.error('Failed to load campaign:', err);
+      toast.error('Could not load campaign.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
   useEffect(() => {
-    base44.entities.Campaign.filter({}).then(all => {
-      setCampaign(all.find(c => c.id === id));
-    });
+    loadCampaign();
 
     // Handle Paychangu return
     const urlParams = new URLSearchParams(window.location.search);
@@ -32,7 +47,7 @@ export default function CampaignDetail() {
         .then(res => {
           if (res.data?.verified) {
             toast.success('Payment verified! Your campaign is under review.');
-            base44.entities.Campaign.filter({}).then(all => setCampaign(all.find(c => c.id === id)));
+            loadCampaign();
           } else {
             toast.error('Payment could not be verified. Please contact support.');
           }
@@ -42,8 +57,43 @@ export default function CampaignDetail() {
     }
   }, [id]);
 
-  if (!campaign) return <div className="p-8 text-center text-muted-foreground">Loading...</div>;
-  if (verifying) return <div className="p-8 text-center text-muted-foreground">Verifying your payment...</div>;
+  // Loading skeleton
+  if (loading) {
+    return (
+      <div className="p-4 lg:p-8 max-w-4xl mx-auto space-y-6">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-lg bg-secondary animate-pulse" />
+          <div className="space-y-2 flex-1">
+            <div className="h-5 w-48 bg-secondary rounded animate-pulse" />
+            <div className="h-4 w-64 bg-secondary rounded animate-pulse" />
+          </div>
+        </div>
+        {[1, 2, 3].map(i => (
+          <div key={i} className="h-32 rounded-xl bg-secondary animate-pulse" />
+        ))}
+      </div>
+    );
+  }
+
+  if (verifying) {
+    return (
+      <div className="p-8 flex flex-col items-center justify-center gap-3 min-h-[300px]">
+        <div className="w-10 h-10 border-4 border-[hsl(var(--primary))]/20 border-t-[hsl(var(--primary))] rounded-full animate-spin" />
+        <p className="text-muted-foreground font-medium">Verifying your payment...</p>
+      </div>
+    );
+  }
+
+  if (!campaign) {
+    return (
+      <div className="p-8 text-center">
+        <p className="text-muted-foreground font-medium">Campaign not found.</p>
+        <Link to="/campaigns" className="text-sm text-[hsl(var(--accent))] hover:underline mt-2 inline-block">
+          Back to campaigns
+        </Link>
+      </div>
+    );
+  }
 
   const formatCost = () => {
     const amt = campaign.total_cost || 0;
@@ -165,7 +215,6 @@ export default function CampaignDetail() {
             { label: 'Package', value: campaign.package },
             { label: 'Duration', value: campaign.duration },
             { label: 'Total Cost', value: formatCost() },
-
             { label: 'Country', value: campaign.country },
             { label: 'Payment Method', value: campaign.payment_method },
             campaign.payment_reference ? { label: 'Reference', value: campaign.payment_reference } : null,
@@ -182,7 +231,7 @@ export default function CampaignDetail() {
       </Card>
 
       {/* Audience */}
-      {allLocations.length > 0 && (
+      {(allLocations.length > 0 || campaign.audience_worldwide) && (
         <Card className="shadow-sm">
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
@@ -190,20 +239,58 @@ export default function CampaignDetail() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 text-sm">
-            <div>
-              <p className="text-muted-foreground mb-1.5">Locations</p>
-              <div className="flex flex-wrap gap-1.5">
-                {allLocations.map(l => <Badge key={l} variant="secondary" className="text-xs">{l}</Badge>)}
+            {campaign.audience_worldwide ? (
+              <p className="text-muted-foreground">Worldwide targeting</p>
+            ) : (
+              <div>
+                <p className="text-muted-foreground mb-1.5">Locations</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {allLocations.map(l => <Badge key={l} variant="secondary" className="text-xs">{l}</Badge>)}
+                </div>
               </div>
-            </div>
+            )}
             <div className="flex justify-between py-1 border-t border-border">
               <span className="text-muted-foreground">Age Range</span>
               <span className="font-medium">{campaign.audience_age_min || 18} – {campaign.audience_age_max || 65}</span>
             </div>
             <div className="flex justify-between py-1 border-t border-border">
               <span className="text-muted-foreground">Gender</span>
-              <span className="font-medium capitalize">{campaign.audience_gender === 'all' ? 'All genders' : campaign.audience_gender}</span>
+              <span className="font-medium capitalize">{campaign.audience_gender || 'All'}</span>
             </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Creative */}
+      {(campaign.post_url || campaign.creative_link || campaign.description) && (
+        <Card className="shadow-sm">
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <FileImage className="w-4 h-4" /> Creative
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3 text-sm">
+            {campaign.creative_type && (
+              <div className="flex justify-between py-1 border-b border-border">
+                <span className="text-muted-foreground">Type</span>
+                <span className="font-medium capitalize">{campaign.creative_type.replace(/_/g, ' ')}</span>
+              </div>
+            )}
+            {campaign.post_url && (
+              <a href={campaign.post_url} target="_blank" rel="noopener noreferrer"
+                className="flex items-center gap-1.5 text-[hsl(var(--accent))] hover:underline">
+                <ExternalLink className="w-3.5 h-3.5" /> View Post
+              </a>
+            )}
+            {campaign.creative_link && (
+              <a href={campaign.creative_link} target="_blank" rel="noopener noreferrer"
+                className="flex items-center gap-1.5 text-[hsl(var(--accent))] hover:underline">
+                <ExternalLink className="w-3.5 h-3.5" /> View Creative
+              </a>
+            )}
+            {campaign.description && (
+              <p className="text-muted-foreground leading-relaxed">{campaign.description}</p>
+            )}
           </CardContent>
         </Card>
       )}
