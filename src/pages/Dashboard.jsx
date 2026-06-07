@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
+import OnboardingChecklist from '@/components/dashboard/OnboardingChecklist';
 
 export default function Dashboard() {
   // Fix #6: use AuthContext user instead of calling base44.auth.me() again
@@ -134,6 +135,9 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      {/* Onboarding Checklist — shown to new users until all steps complete */}
+      <OnboardingChecklist user={user} />
 
       {/* Quick Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
