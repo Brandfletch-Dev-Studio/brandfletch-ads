@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/lib/AuthContext';
-import { ArrowLeft, ExternalLink, CreditCard, Package, Target, Users, MapPin, FileImage, MessageSquare, Phone, Globe, Share2 } from 'lucide-react';
+import { ArrowLeft, ExternalLink, CreditCard, Package, Target, Users, MapPin, FileImage, MessageSquare, Phone, Globe, Share2, RefreshCw } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -12,10 +12,12 @@ import CampaignStageTracker from '@/components/campaigns/CampaignStageTracker';
 import CampaignMetricsPanel from '@/components/campaigns/CampaignMetricsPanel';
 import { format } from 'date-fns';
 import { GOALS } from '@/lib/constants';
+import CampaignShareCard from '@/components/campaigns/CampaignShareCard';
 
 export default function CampaignDetail() {
   const { id } = useParams();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [campaign, setCampaign] = useState(null);
   const [loading, setLoading] = useState(true);
   const [verifying, setVerifying] = useState(false);
@@ -121,6 +123,7 @@ export default function CampaignDetail() {
           <div className="flex items-center gap-3 flex-wrap">
             <h1 className="text-xl font-bold font-heading">{campaign.page_name || 'Campaign'}</h1>
             <StatusBadge status={campaign.status} />
+            <CampaignShareCard campaign={campaign} />
           </div>
           <p className="text-sm text-muted-foreground capitalize">{campaign.package} package · {campaign.duration} · {formatCost()}</p>
         </div>
@@ -294,6 +297,26 @@ export default function CampaignDetail() {
           </CardContent>
         </Card>
       )}
+
+      {/* Renewal CTA — shown when campaign is completed */}
+      {campaign.status === 'completed' && (
+        <div className="rounded-2xl bg-gradient-to-br from-[hsl(var(--primary))]/10 to-[hsl(var(--accent))]/10 border border-[hsl(var(--primary))]/20 p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <RefreshCw className="w-4 h-4 text-[hsl(var(--primary))]" />
+              <p className="font-semibold text-sm">Ready to run another campaign?</p>
+            </div>
+            <p className="text-sm text-muted-foreground">Keep the momentum going — launch a follow-up campaign with the same audience and settings.</p>
+          </div>
+          <button
+            onClick={() => navigate('/campaigns/new')}
+            className="flex-shrink-0 px-5 py-2.5 rounded-xl bg-[hsl(var(--primary))] text-white text-sm font-semibold hover:bg-[hsl(var(--primary))]/90 transition-colors whitespace-nowrap"
+          >
+            Renew Campaign
+          </button>
+        </div>
+      )}
+
     </div>
   );
 }
