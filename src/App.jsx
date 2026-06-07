@@ -1,7 +1,7 @@
 import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
-import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate, useNavigate } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
@@ -18,7 +18,6 @@ import CampaignDetail from '@/pages/campaigns/CampaignDetail';
 import CampaignPayment from '@/pages/campaigns/CampaignPayment';
 import SavedAudiences from '@/pages/SavedAudiences';
 import ProfileSettings from '@/pages/ProfileSettings';
-import Messages from '@/pages/Messages';
 import Notifications from '@/pages/Notifications';
 import SupportTickets from '@/pages/SupportTickets';
 import Designs from '@/pages/Designs';
@@ -42,7 +41,6 @@ import AdminUsers from '@/pages/admin/AdminUsers';
 import AdminPageRequests from '@/pages/admin/AdminPageRequests';
 import AdminReports from '@/pages/admin/AdminReports';
 import AdminNotifications from '@/pages/admin/AdminNotifications';
-import AdminMessages from '@/pages/admin/AdminMessages';
 import AdminAds from '@/pages/admin/AdminAds';
 import AdminAuditLog from '@/pages/admin/AdminAuditLog';
 import AdminPricing from '@/pages/admin/AdminPricing';
@@ -90,15 +88,15 @@ const AuthenticatedApp = () => {
       return null;
     }
 
-    // Redirect to onboarding if user hasn't completed it
+    // Fix #4: Use React Router <Navigate> instead of window.location.href
+    // This avoids a full page reload and preserves React state/context
     if (!isLoadingAuth && currentUser && !currentUser.onboarded && !isOnSkipRoute) {
-      window.location.href = '/onboarding';
-      return null;
+      return <Navigate to="/onboarding" replace />;
     }
   }
 
+  // Fix #5: Removed unused `isAdmin` variable
   const isStaff = currentUser && ['admin', 'super_admin', 'ads_manager', 'campaign_manager', 'finance', 'sales_manager'].includes(currentUser.role);
-  const isAdmin = currentUser?.role === 'admin';
 
   return (
     <Routes>
@@ -114,6 +112,7 @@ const AuthenticatedApp = () => {
       <Route path="/privacy-policy" element={<PrivacyPolicy />} />
       <Route path="/terms" element={<Terms />} />
       <Route path="/forms/:formId" element={<PublicFormView />} />
+
       <Route element={<AppLayout />}>
         {/* Client routes */}
         <Route path="/" element={<Navigate to={isStaff ? "/admin" : "/dashboard"} replace />} />
@@ -168,7 +167,7 @@ function App() {
         <Toaster />
       </QueryClientProvider>
     </AuthProvider>
-  )
+  );
 }
 
-export default App
+export default App;
