@@ -144,9 +144,12 @@ export default function CampaignPayment() {
         <ArrowLeft className="w-4 h-4" /> Back
       </button>
 
-      <div>
-        <h1 className="text-2xl font-bold font-heading">Complete Payment</h1>
-        <p className="text-muted-foreground text-sm mt-1">Pay to activate your campaign.</p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold font-heading">Complete Payment</h1>
+          <p className="text-muted-foreground text-sm mt-1">Pay to activate your campaign.</p>
+        </div>
+        <InvoiceDownload type="campaign" record={campaign} user={clientUser} />
       </div>
 
       {/* Amount card */}
