@@ -137,7 +137,7 @@ export default function Dashboard() {
       </div>
 
       {/* Onboarding Checklist — shown to new users until all steps complete */}
-      <OnboardingChecklist user={user} />
+      <OnboardingChecklist />
 
       {/* Quick Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
