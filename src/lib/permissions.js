@@ -8,39 +8,37 @@
  *   campaign_manager  → Campaign delivery & execution
  *   finance           → Payments & financial operations
  *   sales_manager     → Lead gen & sales pipeline
+ *   designer          → Assigned design work, no admin access beyond own queue
  *   user              → Client (no admin access)
  */
 
-export const STAFF_ROLES = ['super_admin', 'admin', 'ads_manager', 'campaign_manager', 'finance', 'sales_manager'];
+export const STAFF_ROLES = [
+  'super_admin', 'admin', 'ads_manager', 'campaign_manager',
+  'finance', 'sales_manager', 'designer',
+];
 
 export const ROLE_LABELS = {
-  super_admin: 'Super Admin',
-  admin: 'Super Admin',
-  ads_manager: 'Ads Manager',
+  super_admin:      'Super Admin',
+  admin:            'Super Admin',
+  ads_manager:      'Ads Manager',
   campaign_manager: 'Campaign Manager',
-  finance: 'Finance',
-  sales_manager: 'Sales Manager',
-  user: 'Client',
+  finance:          'Finance',
+  sales_manager:    'Sales Manager',
+  designer:         'Designer',
+  user:             'Client',
 };
 
 export const ROLE_COLORS = {
-  super_admin: 'bg-purple-100 text-purple-700',
-  admin: 'bg-purple-100 text-purple-700',
-  ads_manager: 'bg-blue-100 text-blue-700',
+  super_admin:      'bg-purple-100 text-purple-700',
+  admin:            'bg-purple-100 text-purple-700',
+  ads_manager:      'bg-blue-100 text-blue-700',
   campaign_manager: 'bg-sky-100 text-sky-700',
-  finance: 'bg-green-100 text-green-700',
-  sales_manager: 'bg-amber-100 text-amber-700',
-  user: 'bg-gray-100 text-gray-600',
+  finance:          'bg-green-100 text-green-700',
+  sales_manager:    'bg-amber-100 text-amber-700',
+  designer:         'bg-pink-100 text-pink-700',
+  user:             'bg-gray-100 text-gray-600',
 };
 
-/**
- * Permission definitions per role.
- * A permission absent from a role = denied.
- *
- * Fix #9: added designs.view and leads.view to all roles that should
- * see those admin nav items. Previously these perms were checked in the
- * nav filter but never defined here, causing tabs to silently disappear.
- */
 const ROLE_PERMISSIONS = {
   super_admin: [
     'clients.view', 'clients.create', 'clients.edit', 'clients.delete',
@@ -55,9 +53,10 @@ const ROLE_PERMISSIONS = {
     'ads.view', 'ads.manage',
     'pricing.view', 'pricing.edit',
     'pages.view', 'pages.manage',
-    'designs.view', 'designs.manage',   // ← added
-    'leads.view', 'leads.manage',       // ← added
-    'support.view', 'support.manage',   // ← added (support.view was also missing)
+    'designs.view', 'designs.manage',
+    'leads.view', 'leads.manage',
+    'support.view', 'support.manage',
+    'referrals.view',
   ],
 
   ads_manager: [
@@ -73,9 +72,9 @@ const ROLE_PERMISSIONS = {
     'ads.view',
     'pricing.view',
     'pages.view', 'pages.manage',
-    'designs.view', 'designs.manage',   // ← added
-    'leads.view',                       // ← added
-    'support.view',                     // ← added
+    'designs.view', 'designs.manage',
+    'leads.view',
+    'support.view',
   ],
 
   campaign_manager: [
@@ -85,9 +84,9 @@ const ROLE_PERMISSIONS = {
     'messages.view', 'messages.send',
     'notifications.view',
     'pages.view', 'pages.manage',
-    'designs.view',                     // ← added
-    'leads.view',                       // ← added
-    'support.view',                     // ← added
+    'designs.view',
+    'leads.view',
+    'support.view',
   ],
 
   finance: [
@@ -97,8 +96,8 @@ const ROLE_PERMISSIONS = {
     'payments.view', 'payments.manage',
     'settings.view',
     'pricing.view', 'pricing.edit',
-    'designs.view',                     // ← added (finance needs visibility)
-    'support.view',                     // ← added
+    'designs.view',
+    'support.view',
   ],
 
   sales_manager: [
@@ -106,18 +105,21 @@ const ROLE_PERMISSIONS = {
     'campaigns.view',
     'reports.view',
     'messages.view', 'messages.send',
-    'leads.view', 'leads.manage',       // ← added (sales_manager owns leads)
-    'designs.view',                     // ← added
-    'support.view',                     // ← added
+    'leads.view', 'leads.manage',
+    'designs.view',
+    'support.view',
+  ],
+
+  // Designer: sees only their own assigned design queue via DesignerPortal
+  // No access to campaigns, payments, users, or admin-wide views
+  designer: [
+    'designs.view',
+    'designs.work', // custom perm — marks ability to update assigned designs
   ],
 };
 
-// super_admin and admin are identical
 ROLE_PERMISSIONS.admin = ROLE_PERMISSIONS.super_admin;
 
-/**
- * Check if a role has a specific permission.
- */
 export function hasPermission(role, permission) {
   if (!role) return false;
   const perms = ROLE_PERMISSIONS[role];
@@ -125,18 +127,12 @@ export function hasPermission(role, permission) {
   return perms.includes(permission);
 }
 
-/**
- * Check if a role is a staff (admin-side) role.
- */
 export function isStaffRole(role) {
   return STAFF_ROLES.includes(role);
 }
 
-/**
- * Get nav items visible to a role.
- * Returns keys — layout maps them to routes.
- */
 export function getAllowedAdminNavKeys(role) {
+  if (role === 'designer') return ['designer_portal'];
   const always = ['overview'];
   const map = {
     campaigns:     'campaigns.view',
@@ -146,12 +142,12 @@ export function getAllowedAdminNavKeys(role) {
     users:         'users.view',
     payments:      'payments.view',
     notifications: 'notifications.view',
-    messages:      'messages.view',
     ads:           'ads.view',
     reports:       'reports.view',
     audit_log:     'audit_log.view',
     pricing:       'pricing.view',
     support:       'support.view',
+    referrals:     'referrals.view',
     settings:      'settings.view',
   };
   return [
