@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
+import { useDesignAssign } from '@/hooks/useDesignAssign';
 import {
   ImageIcon, Megaphone, Layout, CreditCard, Briefcase, Star, BookOpen, Presentation, Wand2,
   Upload, X, CheckCircle2, ChevronRight, Loader2, AlertCircle, FileText
@@ -45,6 +46,7 @@ export default function DesignRequestWizard({ subscription, onSuccess, onCancel 
   });
 
   const queryClient = useQueryClient();
+  const { assignDesign } = useDesignAssign();
 
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
@@ -69,10 +71,14 @@ export default function DesignRequestWizard({ subscription, onSuccess, onCancel 
       });
       return request;
     },
-    onSuccess: () => {
+    onSuccess: (createdRequest) => {
       queryClient.invalidateQueries({ queryKey: ['myDesignRequests'] });
       queryClient.invalidateQueries({ queryKey: ['userSubscription'] });
-      toast.success('Design request submitted!');
+      toast.success('Design request submitted! Assigning to a designer...');
+      // Auto-assign in background — non-blocking
+      if (createdRequest?.id) {
+        assignDesign(createdRequest.id, createdRequest, user?.full_name).catch(() => {});
+      }
       onSuccess();
     },
   });
