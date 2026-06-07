@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 import {
   LayoutDashboard, Megaphone, Facebook, Users, Wallet as WalletIcon,
   Settings, X, ChevronRight, BarChart3, Shield, Bell, Tv2, ClipboardList, Tags, LifeBuoy, Info, Mail,
-  Palette, Target, CreditCard
+  Palette, Target
 } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -103,7 +103,8 @@ export default function AppLayout() {
             const active = path === '/admin'
               ? location.pathname === '/admin'
               : location.pathname === path || location.pathname.startsWith(path + '/');
-            const isMessages = path === '/messages' || path === '/admin/messages';
+            // Fix #10: /messages routes are <Navigate> redirects — badge belongs on /support instead
+            const isMessages = path === '/support' || path === '/admin/support';
             
             if (disabled) {
               return (
