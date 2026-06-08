@@ -54,13 +54,6 @@ export default function AddLeadDialog({ onSuccess }) {
         estimated_value: data.estimated_value ? parseFloat(data.estimated_value) : null,
       });
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['leads'] });
-      toast.success('Lead created successfully!');
-      setOpen(false);
-      resetForm();
-      onSuccess?.();
-    },
     onError: () => {
       toast.error('Failed to create lead');
     },
@@ -94,14 +87,6 @@ export default function AddLeadDialog({ onSuccess }) {
       if (leads.length === 0) throw new Error('No valid leads found in file');
       await base44.entities.Lead.bulkCreate(leads);
       return leads.length;
-    },
-    onSuccess: (count) => {
-      queryClient.invalidateQueries({ queryKey: ['leads'] });
-      toast.success(`Successfully imported ${count} leads!`);
-      setOpen(false);
-      setFile(null);
-      setImportMode(false);
-      onSuccess?.();
     },
     onError: (error) => {
       toast.error(error.message || 'Failed to import leads');
