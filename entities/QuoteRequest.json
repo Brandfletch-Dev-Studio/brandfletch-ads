@@ -1,0 +1,70 @@
+{
+  "name": "QuoteRequest",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "user_name": {
+      "type": "string"
+    },
+    "user_email": {
+      "type": "string"
+    },
+    "business_name": {
+      "type": "string"
+    },
+    "business_activity": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "service_type": {
+      "type": "string",
+      "enum": [
+        "meta_ads",
+        "graphic_design",
+        "social_media",
+        "web_development"
+      ]
+    },
+    "selected_package": {
+      "type": "string"
+    },
+    "selected_duration": {
+      "type": "string"
+    },
+    "amount": {
+      "type": "number"
+    },
+    "currency": {
+      "type": "string"
+    },
+    "country": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "invoiced",
+        "paid",
+        "cancelled"
+      ],
+      "default": "pending"
+    },
+    "invoice_number": {
+      "type": "string"
+    },
+    "payment_reference": {
+      "type": "string"
+    },
+    "payment_method": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "type": "object"
+}
