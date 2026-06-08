@@ -53,24 +53,6 @@ export default function DesignSubscription({ onSubscribe }) {
 
       return subscription;
     },
-    onSuccess: (subscription) => {
-      queryClient.invalidateQueries({ queryKey: ['userSubscription'] });
-      
-      if (isMalawi) {
-        // Malawi: redirect straight to Paychangu
-        handlePaychanguRedirect(subscription);
-      } else {
-        // Other countries: go to manual payment page
-        toast.success('Subscription initiated! Proceed to payment...');
-        setTimeout(() => {
-          navigate('/designs/payment');
-        }, 500);
-      }
-      
-      if (onSubscribe) {
-        onSubscribe();
-      }
-    },
   });
 
   async function handlePaychanguRedirect(subscription) {
