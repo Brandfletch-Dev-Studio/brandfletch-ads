@@ -32,7 +32,7 @@ const STATUS_COLORS = {
 };
 
 export default function DesignerPortal() {
-  useRoleGuard(['admin', 'super_admin', 'ads_manager', 'campaign_manager', 'designer']);
+  useRoleGuard(['admin', 'super_admin', 'ads_manager', 'campaign_manager', 'creative_ops_director', 'designer']);
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [showChat, setShowChat] = useState(false);
   const [designerNotes, setDesignerNotes] = useState('');
