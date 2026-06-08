@@ -29,11 +29,6 @@ export default function DesignChatComponent({ designRequestId, readOnly = false 
     mutationFn: async (msgData) => {
       await base44.entities.DesignChat.create(msgData);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['designChat', designRequestId] });
-      setMessage('');
-      setFiles([]);
-    },
   });
 
   const scrollToBottom = () => {
