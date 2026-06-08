@@ -99,7 +99,7 @@ const AuthenticatedApp = () => {
   }
 
   // Fix #5: Removed unused `isAdmin` variable
-  const isStaff = currentUser && ['admin', 'super_admin', 'ads_manager', 'campaign_manager', 'finance', 'sales_manager'].includes(currentUser.role);
+  const isStaff = currentUser && ['admin', 'super_admin', 'ads_manager', 'campaign_manager', 'finance', 'sales_manager', 'creative_ops_director', 'designer'].includes(currentUser.role);
 
   return (
     <Routes>
