@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
@@ -472,11 +472,11 @@ function SettingsTab() {
   const { data: settingsData, isLoading } = useQuery({
     queryKey: ['affiliateSettings'],
     queryFn: () => base44.entities.AffiliateSettings.list(null, 1),
-    onSuccess: (data) => { if (data?.[0]) setSettings(data[0]); },
   });
 
-  // Sync on load
-  if (settingsData?.[0] && !settings) setSettings(settingsData[0]);
+  useEffect(() => {
+    if (settingsData?.[0] && !settings) setSettings(settingsData[0]);
+  }, [settingsData]);
 
   async function save() {
     if (!settings) return;
