@@ -33,9 +33,13 @@ export function useDesignAssign() {
 
   async function assignDesign(requestId, designRequest, clientName = '') {
     try {
-      // 1. Get all designers
-      const designers = await base44.entities.User.filter({ role: 'designer' });
-      if (!designers || designers.length === 0) {
+      // 1. Get all assignable designers — includes creative_ops_director (dept head can take work too)
+      const [designers, directors] = await Promise.all([
+        base44.entities.User.filter({ role: 'designer' }),
+        base44.entities.User.filter({ role: 'creative_ops_director' }),
+      ]);
+      const allDesigners = [...directors, ...designers];
+      if (!allDesigners || allDesigners.length === 0) {
         console.log('No designers found — design left unassigned');
         return null;
       }
@@ -43,7 +47,7 @@ export function useDesignAssign() {
       // 2. Count active jobs per designer
       const allActive = await base44.entities.DesignRequest.filter({});
       const workloads = {};
-      designers.forEach(d => { workloads[d.id] = 0; });
+      allDesigners.forEach(d => { workloads[d.id] = 0; });
       allActive.forEach(req => {
         if (
           req.designer_id &&
@@ -54,15 +58,15 @@ export function useDesignAssign() {
         }
       });
 
-      // 3. Pick lightest loaded designer
-      const assigned = designers.reduce((best, d) =>
+      // 3. Pick lightest loaded designer (COD included)
+      const assigned = allDesigners.reduce((best, d) =>
         (workloads[d.id] ?? 999) < (workloads[best.id] ?? 999) ? d : best
-      , designers[0]);
+      , allDesigners[0]);
 
-      // 4. Update the request
+      // 4. Update the request — save both id and name
       await base44.entities.DesignRequest.update(requestId, {
         designer_id: assigned.id,
-        designer_name: assigned.full_name || assigned.email,
+        designer_name: assigned.full_name || assigned.email || '',
         status: 'assigned',
       });
 
