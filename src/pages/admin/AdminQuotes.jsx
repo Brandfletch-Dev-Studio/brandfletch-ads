@@ -49,7 +49,6 @@ export default function AdminQuotes() {
 
   const updateMut = useMutation({
     mutationFn: ({ id, data }) => base44.entities.QuoteRequest.update(id, data),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['adminQuotes'] }); toast.success('Updated'); },
   });
 
   // Stats
