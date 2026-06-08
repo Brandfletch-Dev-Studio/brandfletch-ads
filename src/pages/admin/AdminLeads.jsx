@@ -31,10 +31,6 @@ export default function AdminLeads() {
 
   const updateLeadMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.Lead.update(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['adminLeads'] });
-      toast.success('Lead updated!');
-    },
   });
 
   const filteredLeads = leads?.filter(lead => {
