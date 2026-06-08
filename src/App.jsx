@@ -47,6 +47,7 @@ import AdminAuditLog from '@/pages/admin/AdminAuditLog';
 import AdminPricing from '@/pages/admin/AdminPricing';
 import AdminSupportTickets from '@/pages/admin/AdminSupportTickets';
 import AdminReferrals from '@/pages/admin/AdminReferrals';
+import AdminQuotes from '@/pages/admin/AdminQuotes';
 import AdminDesigns from '@/pages/admin/AdminDesigns';
 import AdminLeads from '@/pages/admin/AdminLeads';
 import Onboarding from '@/pages/Onboarding';
@@ -153,6 +154,7 @@ const AuthenticatedApp = () => {
         <Route path="/admin/pricing" element={<AdminPricing />} />
         <Route path="/admin/support" element={<AdminSupportTickets />} />
         <Route path="/admin/referrals" element={<AdminReferrals />} />
+        <Route path="/admin/quotes" element={<AdminQuotes />} />
         <Route path="/admin/messages" element={<Navigate to="/admin/support" replace />} />
       </Route>
 
