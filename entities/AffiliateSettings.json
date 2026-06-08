@@ -1,0 +1,32 @@
+{
+  "name": "AffiliateSettings",
+  "properties": {
+    "commission_rate": {
+      "type": "number",
+      "description": "Commission percentage e.g. 20 for 20%"
+    },
+    "minimum_payout": {
+      "type": "number",
+      "description": "Minimum balance required to request payout"
+    },
+    "minimum_payout_currency": {
+      "type": "string",
+      "default": "MWK"
+    },
+    "program_enabled": {
+      "type": "boolean",
+      "default": true
+    },
+    "welcome_message": {
+      "type": "string"
+    },
+    "terms_text": {
+      "type": "string"
+    },
+    "cookie_duration_days": {
+      "type": "number",
+      "default": 30
+    }
+  },
+  "type": "object"
+}
