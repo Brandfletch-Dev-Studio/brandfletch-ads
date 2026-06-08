@@ -152,10 +152,16 @@ export default function GetQuoteModal({ open, onClose }) {
   }
 
   function getAmount() {
+    // selectedPackage is the single source of truth — it's always set before step 4
+    if (selectedPackage?.amount && selectedPackage.amount > 0) {
+      return { amount: selectedPackage.amount, currency: selectedPackage.currency || 'MWK' };
+    }
+    // Fallbacks for meta_ads if selectedPackage.amount wasn't set at selection time
     if (service === 'meta_ads' && selectedPackage) {
       const pkg = packages.find(p => p.package === selectedPackage?.package && p.country === country);
       if (pkg) return { amount: pkg[selectedPackage.duration] || pkg.weekly, currency: pkg.currency || 'MWK' };
     }
+    // Fallback to raw pricing data
     if (service === 'graphic_design' && designPricing) {
       return { amount: designPricing.price, currency: designPricing.currency || 'MWK' };
     }
