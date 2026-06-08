@@ -130,6 +130,20 @@ export default function GetQuoteModal({ open, onClose }) {
       .catch(() => {});
   }, [service, country]);
 
+  // Auto-select package when single-option services load
+  useEffect(() => {
+    if (service === 'graphic_design' && designPricing && !selectedPackage) {
+      setSelectedPackage({ package: 'retainer', duration: 'monthly', amount: designPricing.price, currency: designPricing.currency || 'MWK' });
+    }
+  }, [designPricing, service]);
+
+  useEffect(() => {
+    if (service === 'social_media' && !selectedPackage) {
+      const amount = socialPricing?.price_usd ? socialPricing.price_usd * 1700 : 150000;
+      setSelectedPackage({ package: 'social_media', duration: 'monthly', amount, currency: 'MWK' });
+    }
+  }, [socialPricing, service]);
+
   function openWhatsApp() {
     const msg = encodeURIComponent("Hello Brandfletch Media. I would like a quotation for a website project.");
     window.open(`https://wa.me/?text=${msg}`, '_blank');
@@ -496,7 +510,7 @@ export default function GetQuoteModal({ open, onClose }) {
                     <p className="text-sm text-muted-foreground">Contact us for design retainer pricing in your country.</p>
                   </div>
                 )}
-                {!selectedPackage && designPricing && (() => { setSelectedPackage({ package: 'retainer', duration: 'monthly', amount: designPricing.price, currency: designPricing.currency }); return null; })()}
+{/* auto-selection handled via useEffect */}
               </div>
             )}
 
@@ -532,7 +546,7 @@ export default function GetQuoteModal({ open, onClose }) {
                     </div>
                   </CardContent>
                 </Card>
-                {!selectedPackage && (() => { setSelectedPackage({ package: 'social_media', duration: 'monthly', amount: socialPricing?.price_usd ? socialPricing.price_usd * 1700 : 150000, currency: 'MWK' }); return null; })()}
+{/* auto-selection handled via useEffect */}
               </div>
             )}
 
