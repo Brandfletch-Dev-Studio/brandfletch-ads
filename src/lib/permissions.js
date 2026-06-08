@@ -1,42 +1,68 @@
 /**
  * RBAC Permission System — Brandfletch Media
  *
- * Roles (in order of authority):
- *   super_admin       → Full unrestricted access
- *   admin             → Alias for super_admin (legacy / platform default)
- *   ads_manager       → Main operational administrator
- *   campaign_manager  → Campaign delivery & execution
- *   finance           → Payments & financial operations
- *   sales_manager     → Lead gen & sales pipeline
- *   designer          → Assigned design work, no admin access beyond own queue
- *   user              → Client (no admin access)
+ * Role Hierarchy:
+ *
+ *  ┌─ Super Admin ──────────────────────────────────────────┐
+ *  │                                                         │
+ *  │  ADS DEPARTMENT            DESIGN DEPARTMENT           │
+ *  │  ├─ Ads Manager            ├─ Creative Ops Director     │
+ *  │  │  └─ Campaign Manager    │  ├─ Designer               │
+ *  │  └─ Sales Manager          │  ├─ Sales Manager          │
+ *  │     └─ Finance             │  └─ Finance                │
+ *  └─────────────────────────────────────────────────────────┘
+ *
+ *  Note: Sales Manager and Finance serve both departments.
  */
 
 export const STAFF_ROLES = [
-  'super_admin', 'admin', 'ads_manager', 'campaign_manager',
-  'finance', 'sales_manager', 'designer',
+  'super_admin', 'admin',
+  'ads_manager', 'campaign_manager',
+  'creative_ops_director', 'designer',
+  'sales_manager', 'finance',
 ];
 
 export const ROLE_LABELS = {
-  super_admin:      'Super Admin',
-  admin:            'Super Admin',
-  ads_manager:      'Ads Manager',
-  campaign_manager: 'Campaign Manager',
-  finance:          'Finance',
-  sales_manager:    'Sales Manager',
-  designer:         'Designer',
-  user:             'Client',
+  super_admin:             'Super Admin',
+  admin:                   'Super Admin',
+  ads_manager:             'Ads Manager',
+  campaign_manager:        'Campaign Manager',
+  creative_ops_director:   'Creative Ops Director',
+  designer:                'Designer',
+  sales_manager:           'Sales Manager',
+  finance:                 'Finance',
+  user:                    'Client',
 };
 
 export const ROLE_COLORS = {
-  super_admin:      'bg-purple-100 text-purple-700',
-  admin:            'bg-purple-100 text-purple-700',
-  ads_manager:      'bg-blue-100 text-blue-700',
-  campaign_manager: 'bg-sky-100 text-sky-700',
-  finance:          'bg-green-100 text-green-700',
-  sales_manager:    'bg-amber-100 text-amber-700',
-  designer:         'bg-pink-100 text-pink-700',
-  user:             'bg-gray-100 text-gray-600',
+  super_admin:           'bg-purple-100 text-purple-700',
+  admin:                 'bg-purple-100 text-purple-700',
+  ads_manager:           'bg-blue-100 text-blue-700',
+  campaign_manager:      'bg-sky-100 text-sky-700',
+  creative_ops_director: 'bg-pink-100 text-pink-700',
+  designer:              'bg-rose-100 text-rose-700',
+  sales_manager:         'bg-amber-100 text-amber-700',
+  finance:               'bg-green-100 text-green-700',
+  user:                  'bg-gray-100 text-gray-600',
+};
+
+// Department groupings for hierarchy display
+export const ROLE_DEPARTMENTS = {
+  ads: {
+    label: 'Ads Department',
+    color: 'bg-blue-50 border-blue-200',
+    roles: ['ads_manager', 'campaign_manager'],
+  },
+  design: {
+    label: 'Design Department',
+    color: 'bg-pink-50 border-pink-200',
+    roles: ['creative_ops_director', 'designer'],
+  },
+  shared: {
+    label: 'Shared Roles',
+    color: 'bg-amber-50 border-amber-200',
+    roles: ['sales_manager', 'finance'],
+  },
 };
 
 const ROLE_PERMISSIONS = {
@@ -60,6 +86,7 @@ const ROLE_PERMISSIONS = {
     'quotes.view',
   ],
 
+  // ADS DEPARTMENT ──────────────────────────────────────────────
   ads_manager: [
     'clients.view', 'clients.create', 'clients.edit',
     'campaigns.view', 'campaigns.create', 'campaigns.edit', 'campaigns.manage',
@@ -73,9 +100,11 @@ const ROLE_PERMISSIONS = {
     'ads.view',
     'pricing.view',
     'pages.view', 'pages.manage',
-    'designs.view', 'designs.manage',
+    'designs.view',
     'leads.view',
     'support.view',
+    'referrals.view',
+    'quotes.view',
   ],
 
   campaign_manager: [
@@ -90,32 +119,51 @@ const ROLE_PERMISSIONS = {
     'support.view',
   ],
 
+  // DESIGN DEPARTMENT ───────────────────────────────────────────
+  // Creative Ops Director: head of the Design department
+  // Manages all designers, approves design work, sees financials for design
+  creative_ops_director: [
+    'designs.view', 'designs.manage', 'designs.work',
+    'clients.view',
+    'users.view',
+    'reports.view', 'reports.generate',
+    'messages.view', 'messages.send',
+    'notifications.view', 'notifications.send',
+    'payments.view',
+    'pricing.view',
+    'leads.view',
+    'support.view',
+    'quotes.view',
+  ],
+
+  // Designer: assigned design work only — no admin access beyond own queue
+  designer: [
+    'designs.view',
+    'designs.work',
+  ],
+
+  // SHARED ROLES ────────────────────────────────────────────────
   finance: [
     'clients.view',
     'campaigns.view',
+    'designs.view',
     'reports.view', 'reports.generate', 'reports.export',
     'payments.view', 'payments.manage',
     'settings.view',
     'pricing.view', 'pricing.edit',
-    'designs.view',
     'support.view',
+    'quotes.view',
   ],
 
   sales_manager: [
     'clients.view', 'clients.create', 'clients.edit',
     'campaigns.view',
+    'designs.view',
     'reports.view',
     'messages.view', 'messages.send',
     'leads.view', 'leads.manage',
-    'designs.view',
     'support.view',
-  ],
-
-  // Designer: sees only their own assigned design queue via DesignerPortal
-  // No access to campaigns, payments, users, or admin-wide views
-  designer: [
-    'designs.view',
-    'designs.work', // custom perm — marks ability to update assigned designs
+    'quotes.view',
   ],
 };
 
@@ -133,7 +181,14 @@ export function isStaffRole(role) {
 }
 
 export function getAllowedAdminNavKeys(role) {
+  // Designer — dedicated portal only
   if (role === 'designer') return ['designer_portal'];
+
+  // Creative Ops Director — design-focused admin nav
+  if (role === 'creative_ops_director') return [
+    'overview', 'designs', 'users', 'payments', 'reports', 'support', 'quotes',
+  ];
+
   const always = ['overview'];
   const map = {
     campaigns:     'campaigns.view',
@@ -150,6 +205,7 @@ export function getAllowedAdminNavKeys(role) {
     support:       'support.view',
     referrals:     'referrals.view',
     settings:      'settings.view',
+    quotes:        'quotes.view',
   };
   return [
     ...always,
