@@ -20,24 +20,45 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { ROLE_LABELS, ROLE_COLORS, STAFF_ROLES } from '@/lib/permissions';
 
 const INVITABLE_ROLES = [
-  { value: 'campaign_manager', label: 'Campaign Manager' },
-  { value: 'sales_manager',    label: 'Sales Manager' },
-  { value: 'finance',          label: 'Finance' },
-  { value: 'ads_manager',      label: 'Ads Manager' },
-  { value: 'designer',         label: 'Designer' },
-  { value: 'admin',            label: 'Super Admin' },
-  { value: 'user',             label: 'Client' },
+  { value: 'campaign_manager',      label: 'Campaign Manager' },
+  { value: 'sales_manager',         label: 'Sales Manager' },
+  { value: 'finance',               label: 'Finance' },
+  { value: 'ads_manager',           label: 'Ads Manager' },
+  { value: 'creative_ops_director', label: 'Creative Ops Director' },
+  { value: 'designer',              label: 'Designer' },
+  { value: 'admin',                 label: 'Super Admin' },
+  { value: 'user',                  label: 'Client' },
 ];
 
 const ASSIGNABLE_ROLES = [
-  { value: 'user',             label: 'Client' },
-  { value: 'campaign_manager', label: 'Campaign Manager' },
-  { value: 'sales_manager',    label: 'Sales Manager' },
-  { value: 'finance',          label: 'Finance' },
-  { value: 'ads_manager',      label: 'Ads Manager' },
-  { value: 'designer',         label: 'Designer' },
-  { value: 'admin',            label: 'Super Admin' },
+  { value: 'user',                  label: 'Client' },
+  { value: 'campaign_manager',      label: 'Campaign Manager' },
+  { value: 'sales_manager',         label: 'Sales Manager' },
+  { value: 'finance',               label: 'Finance' },
+  { value: 'ads_manager',           label: 'Ads Manager' },
+  { value: 'creative_ops_director', label: 'Creative Ops Director' },
+  { value: 'designer',              label: 'Designer' },
+  { value: 'admin',                 label: 'Super Admin' },
 ];
+
+// Role hierarchy row sub-component
+function HierarchyRow({ role, desc, level, color }) {
+  return (
+    <div className="flex items-center gap-2" style={{ paddingLeft: `${level * 16}px` }}>
+      {level > 0 && (
+        <div className="flex items-center gap-1 flex-shrink-0">
+          <div className="w-3 h-px bg-border" />
+          <div className="w-1.5 h-1.5 rounded-full bg-border" />
+        </div>
+      )}
+      <div className={`flex-1 flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-medium ${color}`}>
+        <span className="font-semibold whitespace-nowrap">{ROLE_LABELS[role]}</span>
+        <span className="text-[11px] opacity-60 hidden sm:block">·</span>
+        <span className="opacity-70 hidden sm:block leading-tight">{desc}</span>
+      </div>
+    </div>
+  );
+}
 
 export default function AdminUsers() {
   useRoleGuard(null, 'users.view');
@@ -167,27 +188,41 @@ export default function AdminUsers() {
           </CardHeader>
           <CardContent className="pt-0">
             <div className="space-y-1">
-              {[
-                { role: 'admin',            desc: 'Full system access, all permissions',         level: 0, color: 'bg-purple-100 border-purple-300 text-purple-800' },
-                { role: 'ads_manager',      desc: 'Campaigns, clients, reports & approvals',     level: 1, color: 'bg-blue-100 border-blue-300 text-blue-800' },
-                { role: 'campaign_manager', desc: 'Campaign delivery & client comms',             level: 2, color: 'bg-sky-100 border-sky-300 text-sky-800' },
-                { role: 'sales_manager',    desc: 'Leads, onboarding & sales pipeline',          level: 2, color: 'bg-green-100 border-green-300 text-green-800' },
-                { role: 'finance',          desc: 'Payments, transactions & financial settings', level: 2, color: 'bg-amber-100 border-amber-300 text-amber-800' },
-              ].map(({ role, desc, level, color }) => (
-                <div key={role} className="flex items-center gap-2" style={{ paddingLeft: `${level * 20}px` }}>
-                  {level > 0 && (
-                    <div className="flex items-center gap-1 text-border flex-shrink-0">
-                      <div className="w-3 h-px bg-border" />
-                      <div className="w-1.5 h-1.5 rounded-full bg-border" />
-                    </div>
-                  )}
-                  <div className={`flex-1 flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-medium ${color}`}>
-                    <span className="font-semibold whitespace-nowrap">{ROLE_LABELS[role]}</span>
-                    <span className="text-[11px] opacity-70 hidden sm:block">·</span>
-                    <span className="opacity-70 hidden sm:block leading-tight">{desc}</span>
-                  </div>
+              {/* Super Admin — top of everything */}
+              <HierarchyRow role="admin" desc="Full system access — all departments report here" level={0} color="bg-purple-100 border-purple-300 text-purple-800" />
+
+              {/* ADS DEPARTMENT */}
+              <div className="mt-3 mb-1">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground px-1 mb-1.5 flex items-center gap-1.5">
+                  <span className="inline-block w-2 h-2 rounded-full bg-blue-400" /> Ads Department
+                </p>
+                <div className="border-l-2 border-blue-200 ml-2 pl-2 space-y-1">
+                  <HierarchyRow role="ads_manager"      desc="Campaigns, clients, reports & approvals" level={0} color="bg-blue-100 border-blue-300 text-blue-800" />
+                  <HierarchyRow role="campaign_manager" desc="Campaign delivery & client comms"         level={1} color="bg-sky-100 border-sky-300 text-sky-800" />
                 </div>
-              ))}
+              </div>
+
+              {/* DESIGN DEPARTMENT */}
+              <div className="mt-3 mb-1">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground px-1 mb-1.5 flex items-center gap-1.5">
+                  <span className="inline-block w-2 h-2 rounded-full bg-pink-400" /> Design Department
+                </p>
+                <div className="border-l-2 border-pink-200 ml-2 pl-2 space-y-1">
+                  <HierarchyRow role="creative_ops_director" desc="Heads design dept — manages designers & approves work" level={0} color="bg-pink-100 border-pink-300 text-pink-800" />
+                  <HierarchyRow role="designer"              desc="Assigned design queue — no broader admin access"       level={1} color="bg-rose-100 border-rose-300 text-rose-800" />
+                </div>
+              </div>
+
+              {/* SHARED ROLES */}
+              <div className="mt-3">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground px-1 mb-1.5 flex items-center gap-1.5">
+                  <span className="inline-block w-2 h-2 rounded-full bg-amber-400" /> Shared Roles
+                </p>
+                <div className="border-l-2 border-amber-200 ml-2 pl-2 space-y-1">
+                  <HierarchyRow role="sales_manager" desc="Leads, onboarding & sales pipeline"        level={0} color="bg-amber-100 border-amber-300 text-amber-800" />
+                  <HierarchyRow role="finance"       desc="Payments, transactions & financial reports" level={0} color="bg-green-100 border-green-300 text-green-800" />
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
