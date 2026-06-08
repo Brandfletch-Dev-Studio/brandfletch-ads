@@ -50,11 +50,6 @@ export default function DesignerPortal() {
 
   const updateMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.DesignRequest.update(id, data),
-    onSuccess: (_, vars) => {
-      queryClient.invalidateQueries({ queryKey: ['designerRequests'] });
-      if (selectedRequest) setSelectedRequest(prev => ({ ...prev, ...vars.data }));
-      toast.success('Updated!');
-    },
   });
 
   const handleStatusChange = (newStatus) => {
