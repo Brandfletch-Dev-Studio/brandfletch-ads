@@ -71,16 +71,6 @@ export default function DesignRequestWizard({ subscription, onSuccess, onCancel 
       });
       return request;
     },
-    onSuccess: (createdRequest) => {
-      queryClient.invalidateQueries({ queryKey: ['myDesignRequests'] });
-      queryClient.invalidateQueries({ queryKey: ['userSubscription'] });
-      toast.success('Design request submitted! Assigning to a designer...');
-      // Auto-assign in background — non-blocking
-      if (createdRequest?.id) {
-        assignDesign(createdRequest.id, createdRequest, user?.full_name).catch(() => {});
-      }
-      onSuccess();
-    },
   });
 
   const handleFileUpload = async (files) => {
