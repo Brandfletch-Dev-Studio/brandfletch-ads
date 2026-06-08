@@ -122,18 +122,21 @@ const ROLE_PERMISSIONS = {
   // DESIGN DEPARTMENT ───────────────────────────────────────────
   // Creative Ops Director: head of the Design department
   // Manages all designers, approves design work, sees financials for design
+  // Creative Ops Director — Design department head.
+  // Can: run own design work, manage design team, see design-specific revenue + pricing + quotes
+  // Cannot: campaigns, ads, leads, referrals, platform settings, general pricing, general payments
   creative_ops_director: [
     'designs.view', 'designs.manage', 'designs.work',
-    'clients.view',
-    'users.view',
+    'designs.revenue',   // design-specific payment records
+    'designs.pricing',   // manage design pricing only
+    'designs.team',      // manage designers under them
+    'clients.view',      // see clients who have design requests
+    'users.view',        // see team members (filtered to design dept in UI)
     'reports.view', 'reports.generate',
     'messages.view', 'messages.send',
     'notifications.view', 'notifications.send',
-    'payments.view',
-    'pricing.view',
-    'leads.view',
-    'support.view',
-    'quotes.view',
+    'support.view', 'support.manage',
+    'quotes.view',       // see design quotes
   ],
 
   // Designer: assigned design work only — no admin access beyond own queue
@@ -184,9 +187,16 @@ export function getAllowedAdminNavKeys(role) {
   // Designer — dedicated portal only
   if (role === 'designer') return ['designer_portal'];
 
-  // Creative Ops Director — design-focused admin nav
+  // Creative Ops Director — design department head
+  // Only sees design-relevant nav: no campaigns, no ads, no referrals, no platform settings
   if (role === 'creative_ops_director') return [
-    'overview', 'designs', 'users', 'payments', 'reports', 'support', 'quotes',
+    'overview',    // dashboard overview
+    'designs',     // design requests management
+    'users',       // team management (filtered to designers in UI)
+    'payments',    // design revenue only (filtered in UI by service_type)
+    'reports',     // design performance reports
+    'support',     // client support for design issues
+    'quotes',      // design service quotes
   ];
 
   const always = ['overview'];
