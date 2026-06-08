@@ -41,30 +41,14 @@ export default function LeadFormBuilder() {
 
   const createFormMutation = useMutation({
     mutationFn: (formData) => base44.entities.LeadForm.create(formData),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['myLeadForms'] });
-      setShowBuilder(false);
-      setEditingForm(null);
-      toast.success('Form created!');
-    },
   });
 
   const updateFormMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.LeadForm.update(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['myLeadForms'] });
-      setShowBuilder(false);
-      setEditingForm(null);
-      toast.success('Form updated!');
-    },
   });
 
   const deleteFormMutation = useMutation({
     mutationFn: (id) => base44.entities.LeadForm.delete(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['myLeadForms'] });
-      toast.success('Form deleted!');
-    },
   });
 
   const handleSave = (formData) => {
