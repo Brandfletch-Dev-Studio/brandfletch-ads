@@ -45,10 +45,6 @@ export default function LeadFormView({ formId }) {
         total_submissions: (form.total_submissions || 0) + 1,
       });
     },
-    onSuccess: () => {
-      setSubmitted(true);
-      queryClient.invalidateQueries({ queryKey: ['leadForm', formId] });
-    },
   });
 
   const handleSubmit = (e) => {
