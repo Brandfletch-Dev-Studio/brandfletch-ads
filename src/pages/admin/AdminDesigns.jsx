@@ -56,13 +56,6 @@ export default function AdminDesigns() {
 
   const updateRequestMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.DesignRequest.update(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['adminDesignRequests'] });
-      if (selectedRequest) {
-        queryClient.invalidateQueries({ queryKey: ['adminDesignRequest', selectedRequest.id] });
-      }
-      toast.success('Updated!');
-    },
   });
 
   const filteredRequests = designRequests?.filter(request => {
