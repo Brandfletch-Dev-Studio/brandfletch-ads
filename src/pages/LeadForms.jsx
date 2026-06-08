@@ -59,37 +59,19 @@ export default function LeadForms() {
 
   const createFormMutation = useMutation({
     mutationFn: (formData) => base44.entities.LeadForm.create(formData),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['myLeadForms'] });
-      setEditingForm(null);
-      toast.success('Form created!');
-    },
   });
 
   const updateFormMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.LeadForm.update(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['myLeadForms'] });
-      setEditingForm(null);
-      toast.success('Form updated!');
-    },
   });
 
   const deleteFormMutation = useMutation({
     mutationFn: (id) => base44.entities.LeadForm.delete(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['myLeadForms'] });
-      toast.success('Form deleted!');
-    },
   });
 
   const togglePublishMutation = useMutation({
     mutationFn: ({ id, is_active }) => 
       base44.entities.LeadForm.update(id, { is_active }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['myLeadForms'] });
-      toast.success('Form status updated!');
-    },
   });
 
   const handleSave = (formData) => {
