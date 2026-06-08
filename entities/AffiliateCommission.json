@@ -1,5 +1,6 @@
 {
   "name": "AffiliateCommission",
+  "type": "object",
   "properties": {
     "affiliate_id": {
       "type": "string"
@@ -22,11 +23,13 @@
     "product_name": {
       "type": "string"
     },
-    "product_type": {
+    "service_type": {
       "type": "string",
       "enum": [
-        "campaign",
-        "design_retainer",
+        "meta_ads",
+        "graphic_design",
+        "web_development",
+        "social_media",
         "other"
       ]
     },
@@ -36,11 +39,22 @@
     "sale_currency": {
       "type": "string"
     },
+    "commission_mode": {
+      "type": "string",
+      "enum": [
+        "fixed",
+        "percentage"
+      ],
+      "default": "fixed",
+      "description": "Mode used when this commission was calculated"
+    },
     "commission_rate": {
-      "type": "number"
+      "type": "number",
+      "description": "Percentage rate (if mode=percentage)"
     },
     "commission_amount": {
-      "type": "number"
+      "type": "number",
+      "description": "Final commission amount in currency"
     },
     "commission_currency": {
       "type": "string"
@@ -55,12 +69,24 @@
       ],
       "default": "pending"
     },
+    "trigger_event": {
+      "type": "string",
+      "enum": [
+        "payment_confirmed",
+        "order_completed",
+        "manual"
+      ],
+      "default": "payment_confirmed",
+      "description": "What event triggered this commission"
+    },
     "notes": {
       "type": "string"
     },
     "paid_date": {
       "type": "string"
+    },
+    "approved_date": {
+      "type": "string"
     }
-  },
-  "type": "object"
+  }
 }
