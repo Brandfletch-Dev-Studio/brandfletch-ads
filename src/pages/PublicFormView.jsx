@@ -48,12 +48,6 @@ export default function PublicFormView() {
         });
       }
     },
-    onSuccess: () => {
-      setSubmitted(true);
-      if (form.redirect_url) {
-        window.location.href = form.redirect_url;
-      }
-    },
   });
 
   const handleSubmit = (e) => {
