@@ -49,13 +49,27 @@ export default function AdminDesigns() {
     queryFn: () => base44.entities.DesignRequest.list(),
   });
 
-  const { data: designers } = useQuery({
+  // Include creative_ops_director — they can also take design work
+  const { data: designers = [] } = useQuery({
     queryKey: ['designers'],
-    queryFn: () => base44.entities.User.filter({ role: 'designer' }),
+    queryFn: async () => {
+      const [designers, directors] = await Promise.all([
+        base44.entities.User.filter({ role: 'designer' }),
+        base44.entities.User.filter({ role: 'creative_ops_director' }),
+      ]);
+      return [...directors, ...designers];
+    },
   });
 
   const updateRequestMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.DesignRequest.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['design-requests'] });
+      toast.success('Design request updated');
+    },
+    onError: (err) => {
+      toast.error(err?.message || 'Failed to save changes');
+    },
   });
 
   const filteredRequests = designRequests?.filter(request => {
@@ -221,9 +235,12 @@ function RequestDetail({ request, designers, onClose, onUpdate }) {
   const [status, setStatus] = useState(request.status);
 
   const handleAssign = () => {
+    if (!designerId) return;
+    const selectedDesigner = designers.find(d => d.id === designerId);
     onUpdate({
       designer_id: designerId,
-      status: designerId && status === 'submitted' ? 'in_progress' : status,
+      designer_name: selectedDesigner?.full_name || selectedDesigner?.email || '',
+      status: status === 'submitted' || status === 'under_review' ? 'assigned' : status,
     });
   };
 
