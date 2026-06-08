@@ -16,6 +16,7 @@ import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { useRoleGuard } from '@/hooks/useRoleGuard';
 import { useAuditLog } from '@/hooks/useAuditLog';
+import { useAuth } from '@/lib/AuthContext';
 import { usePermissions } from '@/hooks/usePermissions';
 import { ROLE_LABELS, ROLE_COLORS, STAFF_ROLES } from '@/lib/permissions';
 
@@ -64,6 +65,8 @@ export default function AdminUsers() {
   useRoleGuard(null, 'users.view');
   const auditLog = useAuditLog();
   const { isSuperAdmin, can } = usePermissions();
+  const { user: currentUser } = useAuth();
+  const isDesignDeptHead = currentUser?.role === 'creative_ops_director';
 
   const [users, setUsers] = useState([]);
   const [search, setSearch] = useState('');
@@ -76,7 +79,14 @@ export default function AdminUsers() {
   const [activeTab, setActiveTab] = useState('staff');
 
   useEffect(() => {
-    base44.entities.User.list().then(u => { setUsers(u); setLoading(false); });
+    base44.entities.User.list().then(u => {
+      // COD can only see design dept members (designers + other CODs) + client accounts
+      const filtered = currentUser?.role === 'creative_ops_director'
+        ? u.filter(x => ['designer', 'creative_ops_director', 'user'].includes(x.role))
+        : u;
+      setUsers(filtered);
+      setLoading(false);
+    });
   }, []);
 
   async function handleInvite(e) {
