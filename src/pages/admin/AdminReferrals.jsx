@@ -19,6 +19,15 @@ import { format } from 'date-fns';
 import { useRoleGuard } from '@/hooks/useRoleGuard';
 import { cn } from '@/lib/utils';
 
+function compactNum(val) {
+  const n = Number(val);
+  if (isNaN(n)) return val;
+  if (Math.abs(n) >= 1_000_000) return (n / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M';
+  if (Math.abs(n) >= 1_000) return (n / 1_000).toFixed(1).replace(/\.0$/, '') + 'k';
+  return n.toLocaleString();
+}
+
+
 const TABS = [
   { id: 'overview',    label: 'Overview',            icon: BarChart3 },
   { id: 'referrals',   label: 'All Referrals',       icon: Users },
@@ -52,27 +61,25 @@ function OverviewTab({ referrals, commissions, payouts }) {
   const pendingPayouts = payouts.filter(p => p.status === 'pending' || p.status === 'processing').reduce((s, p) => s + (p.amount || 0), 0);
 
   const stats = [
-    { label: 'Total Referrals',      value: total,                                         color: 'text-sky-600',    bg: 'bg-sky-50',    icon: Users },
-    { label: 'Converted',            value: converted,                                      color: 'text-green-600',  bg: 'bg-green-50',  icon: CheckCircle },
-    { label: 'Conversion Rate',      value: `${convRate}%`,                                 color: 'text-purple-600', bg: 'bg-purple-50', icon: TrendingUp },
-    { label: 'Total Commissions',    value: `MWK ${totalComm.toLocaleString()}`,            color: 'text-amber-600',  bg: 'bg-amber-50',  icon: DollarSign },
-    { label: 'Pending Commissions',  value: `MWK ${pendingComm.toLocaleString()}`,          color: 'text-orange-600', bg: 'bg-orange-50', icon: Clock },
-    { label: 'Pending Payouts',      value: `MWK ${pendingPayouts.toLocaleString()}`,       color: 'text-rose-600',   bg: 'bg-rose-50',   icon: Wallet },
+    { label: 'Total Referrals',     value: compactNum(total),                              color: 'text-sky-600',    bg: 'bg-sky-50',    icon: Users },
+    { label: 'Converted',           value: compactNum(converted),                          color: 'text-green-600',  bg: 'bg-green-50',  icon: CheckCircle },
+    { label: 'Conversion Rate',     value: `${convRate}%`,                                 color: 'text-purple-600', bg: 'bg-purple-50', icon: TrendingUp },
+    { label: 'Total Commissions',   value: `MWK ${compactNum(totalComm)}`,                 color: 'text-amber-600',  bg: 'bg-amber-50',  icon: DollarSign },
+    { label: 'Pending Commissions', value: `MWK ${compactNum(pendingComm)}`,               color: 'text-orange-600', bg: 'bg-orange-50', icon: Clock },
+    { label: 'Pending Payouts',     value: `MWK ${compactNum(pendingPayouts)}`,            color: 'text-rose-600',   bg: 'bg-rose-50',   icon: Wallet },
   ];
 
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
         {stats.map(({ label, value, color, bg, icon: Icon }) => (
-          <Card key={label}>
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${bg}`}>
+          <Card key={label} className="shadow-sm">
+            <CardContent className="p-4 flex flex-col items-start gap-2">
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${bg}`}>
                 <Icon className={`w-5 h-5 ${color}`} />
               </div>
-              <div>
-                <p className={`text-xl font-bold ${color}`}>{value}</p>
-                <p className="text-xs text-muted-foreground leading-tight">{label}</p>
-              </div>
+              <p className={`text-xl font-bold leading-tight ${color}`}>{value}</p>
+              <p className="text-xs text-muted-foreground leading-tight">{label}</p>
             </CardContent>
           </Card>
         ))}
