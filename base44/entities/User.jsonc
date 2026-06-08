@@ -58,6 +58,32 @@
       "type": "number",
       "default": 10,
       "description": "Max concurrent projects for designer"
+    },
+    "referral_code": {
+      "type": "string",
+      "description": "Unique referral code for the affiliate program"
+    },
+    "is_affiliate": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this user participates in the affiliate program"
+    },
+    "affiliate_payout_method": {
+      "type": "string",
+      "enum": [
+        "airtel_money",
+        "tnm_mpamba",
+        "bank_transfer"
+      ],
+      "description": "Preferred payout method"
+    },
+    "affiliate_payout_number": {
+      "type": "string",
+      "description": "Mobile money number or bank account for payouts"
+    },
+    "affiliate_payout_name": {
+      "type": "string",
+      "description": "Account name for payout verification"
     }
   }
 }
