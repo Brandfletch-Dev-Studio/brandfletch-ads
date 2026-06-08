@@ -57,6 +57,7 @@ const ROLE_PERMISSIONS = {
     'leads.view', 'leads.manage',
     'support.view', 'support.manage',
     'referrals.view',
+    'quotes.view',
   ],
 
   ads_manager: [
