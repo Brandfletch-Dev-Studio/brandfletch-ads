@@ -228,11 +228,6 @@ function RequestDetail({ request, subscription, onClose, onUpdate }) {
 
   const updateMutation = useMutation({
     mutationFn: ({ data }) => base44.entities.DesignRequest.update(request.id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['myDesignRequests'] });
-      onUpdate();
-      toast.success('Updated!');
-    },
   });
 
   const handleApprove = () => {
