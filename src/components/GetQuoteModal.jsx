@@ -98,6 +98,7 @@ export default function GetQuoteModal({ open, onClose }) {
   const [quoteRecord, setQuoteRecord] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [proofFile, setProofFile] = useState(null);
+  const [invoiceNumber, setInvoiceNumber] = useState(() => `BF-Q-${Date.now().toString().slice(-8)}`);
 
   const country = user?.country || 'Malawi';
 
@@ -106,6 +107,7 @@ export default function GetQuoteModal({ open, onClose }) {
     // Reset on open
     setStep(1); setService(null); setSelectedPackage(null);
     setSubmitted(false); setQuoteRecord(null); setProofRef(''); setProofFile(null);
+    setInvoiceNumber(`BF-Q-${Date.now().toString().slice(-8)}`);
     setBusinessForm({ business_name: user?.business_name || '', business_activity: '', description: '' });
   }, [open, user]);
 
@@ -167,12 +169,18 @@ export default function GetQuoteModal({ open, onClose }) {
     return { amount: 0, currency: 'MWK' };
   }
 
-  const invoiceNumber = `BF-Q-${Date.now().toString().slice(-8)}`;
-
   async function handleSubmit() {
+    const { amount, currency } = getAmount();
+    if (!amount || amount === 0) {
+      toast.error('Could not determine quote amount. Please go back and select a package.');
+      return;
+    }
+    if (!service) {
+      toast.error('Please select a service.');
+      return;
+    }
     setSubmitting(true);
     try {
-      const { amount, currency } = getAmount();
       const payMethod = paymentMethods.find(m => m.id === selectedPayMethod);
       const record = await base44.entities.QuoteRequest.create({
         user_id: user.id,
@@ -196,7 +204,8 @@ export default function GetQuoteModal({ open, onClose }) {
       setSubmitted(true);
       setStep(5);
     } catch (err) {
-      toast.error('Failed to submit quote. Please try again.');
+      console.error('Quote submit error:', err);
+      toast.error(err?.message || 'Failed to submit quote. Please try again.');
     } finally {
       setSubmitting(false);
     }
