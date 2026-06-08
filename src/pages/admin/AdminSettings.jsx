@@ -464,74 +464,9 @@ export default function AdminSettings() {
         </CardContent>
       </Card>
 
-      {/* Payment Methods */}
-      <Card className="shadow-sm">
-        <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
-            <Palette className="w-4 h-4" /> Design Pricing by Country
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {Array.from(new Set(designPricing.map(p => p.country))).map(country => (
-            <div key={country}>
-              <h4 className="font-semibold text-sm text-muted-foreground mb-2 uppercase tracking-wide">{country}</h4>
-              <div className="space-y-2">
-                {designPricing.filter(p => p.country === country).map(p => (
-                  <div key={p.id} className="p-3 bg-secondary/50 rounded-xl">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="font-semibold text-sm">{p.pricing_type === 'retainer' ? 'Monthly Retainer' : 'Pay Per Design'}</p>
-                          <Badge variant={p.is_active ? 'default' : 'secondary'} className="text-xs">{p.is_active ? 'Active' : 'Inactive'}</Badge>
-                        </div>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {p.symbol}{p.price.toLocaleString()} {p.currency}
-                          {p.pricing_type === 'retainer' && p.monthly_quota && ` • ${p.monthly_quota} designs/month`}
-                          {p.max_revisions && ` • ${p.max_revisions} revisions`}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        <Switch checked={p.is_active} onCheckedChange={v => updateDesignPricing(p.id, { is_active: v })} />
-                        <Button variant="ghost" size="icon" onClick={() => deleteDesignPricing(p.id)}>
-                          <Trash2 className="w-4 h-4 text-destructive" />
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
-          <div className="p-4 border-2 border-dashed border-border rounded-xl space-y-3">
-            <h4 className="text-sm font-semibold">Add Design Pricing</h4>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <Select value={newDesignPricing.pricing_type} onValueChange={v => setNewDesignPricing(p => ({ ...p, pricing_type: v }))}>
-                <SelectTrigger><SelectValue placeholder="Type" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="per_design">Pay Per Design</SelectItem>
-                  <SelectItem value="retainer">Monthly Retainer</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={newDesignPricing.country} onValueChange={v => setNewDesignPricing(p => ({ ...p, country: v }))}>
-                <SelectTrigger><SelectValue placeholder="Country" /></SelectTrigger>
-                <SelectContent>{COUNTRIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
-              </Select>
-              <Input value={newDesignPricing.currency} onChange={e => setNewDesignPricing(p => ({ ...p, currency: e.target.value.toUpperCase() }))} placeholder="Currency" />
-              <Input value={newDesignPricing.symbol} onChange={e => setNewDesignPricing(p => ({ ...p, symbol: e.target.value }))} placeholder="Symbol" />
-              <Input type="number" value={newDesignPricing.price} onChange={e => setNewDesignPricing(p => ({ ...p, price: parseFloat(e.target.value) }))} placeholder="Price" />
-              {newDesignPricing.pricing_type === 'retainer' && (
-                <Input type="number" value={newDesignPricing.monthly_quota} onChange={e => setNewDesignPricing(p => ({ ...p, monthly_quota: parseInt(e.target.value) }))} placeholder="Quota" />
-              )}
-              <Input type="number" value={newDesignPricing.max_revisions} onChange={e => setNewDesignPricing(p => ({ ...p, max_revisions: parseInt(e.target.value) }))} placeholder="Revisions" />
-            </div>
-            <Button onClick={addDesignPricing} className="gap-2">
-              <Plus className="w-4 h-4" /> Add Pricing
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
 
-      <Card className="shadow-sm">
+      {/* Payment Methods */}
+            <Card className="shadow-sm">
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
             <CreditCard className="w-4 h-4" /> Payment Methods by Country
