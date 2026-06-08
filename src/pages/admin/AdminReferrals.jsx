@@ -130,7 +130,6 @@ function ReferralsTab({ referrals, users, isLoading }) {
 
   const updateMut = useMutation({
     mutationFn: ({ id, data }) => base44.entities.Referral.update(id, data),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['adminReferrals'] }); toast.success('Updated'); },
   });
 
   const getReferrer = (code) => {
@@ -209,7 +208,6 @@ function CommissionsTab({ commissions, isLoading }) {
 
   const updateMut = useMutation({
     mutationFn: ({ id, data }) => base44.entities.AffiliateCommission.update(id, data),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['adminCommissions'] }); toast.success('Updated'); },
   });
 
   const filtered = commissions.filter(c => statusFilter === 'all' || c.status === statusFilter);
@@ -269,7 +267,6 @@ function PayoutsTab({ payouts }) {
 
   const updateMut = useMutation({
     mutationFn: ({ id, data }) => base44.entities.AffiliatePayout.update(id, data),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['adminPayouts'] }); toast.success('Updated'); },
   });
 
   const filtered = payouts.filter(p => statusFilter === 'all' || p.status === statusFilter);
@@ -336,17 +333,14 @@ function MaterialsTab() {
 
   const addMut = useMutation({
     mutationFn: (data) => base44.entities.AffiliateMarketingMaterial.create({ ...data, is_active: true }),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['adminMaterials'] }); toast.success('Material added'); setShowAdd(false); setNewMat({ title: '', description: '', material_type: 'banner', file_url: '', thumbnail_url: '', whatsapp_text: '', dimensions: '', sort_order: 0 }); },
   });
 
   const toggleMut = useMutation({
     mutationFn: ({ id, is_active }) => base44.entities.AffiliateMarketingMaterial.update(id, { is_active }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['adminMaterials'] }),
   });
 
   const deleteMut = useMutation({
     mutationFn: (id) => base44.entities.AffiliateMarketingMaterial.delete(id),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['adminMaterials'] }); toast.success('Deleted'); },
   });
 
   async function handleUpload(e, field) {
