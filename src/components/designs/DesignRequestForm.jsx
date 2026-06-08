@@ -50,20 +50,6 @@ export default function DesignRequestForm({ onSuccess }) {
       });
       return request;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['myDesignRequests'] });
-      setFormData({
-        title: '',
-        description: '',
-        design_type: 'social_media_post',
-        request_type: 'per_design',
-        priority: 'medium',
-        due_date: '',
-        client_notes: '',
-      });
-      if (onSuccess) onSuccess();
-      toast.success('Design request created! You can now add files and submit.');
-    },
   });
 
   const handleSubmit = (e) => {
