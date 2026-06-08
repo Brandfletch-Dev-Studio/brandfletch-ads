@@ -1,0 +1,66 @@
+{
+  "name": "AffiliateCommission",
+  "properties": {
+    "affiliate_id": {
+      "type": "string"
+    },
+    "affiliate_name": {
+      "type": "string"
+    },
+    "referred_user_id": {
+      "type": "string"
+    },
+    "referred_user_name": {
+      "type": "string"
+    },
+    "referred_user_email": {
+      "type": "string"
+    },
+    "referral_code": {
+      "type": "string"
+    },
+    "product_name": {
+      "type": "string"
+    },
+    "product_type": {
+      "type": "string",
+      "enum": [
+        "campaign",
+        "design_retainer",
+        "other"
+      ]
+    },
+    "sale_amount": {
+      "type": "number"
+    },
+    "sale_currency": {
+      "type": "string"
+    },
+    "commission_rate": {
+      "type": "number"
+    },
+    "commission_amount": {
+      "type": "number"
+    },
+    "commission_currency": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "approved",
+        "paid",
+        "rejected"
+      ],
+      "default": "pending"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "paid_date": {
+      "type": "string"
+    }
+  },
+  "type": "object"
+}
