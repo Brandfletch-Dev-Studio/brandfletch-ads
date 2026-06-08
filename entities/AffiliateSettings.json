@@ -1,21 +1,74 @@
 {
   "name": "AffiliateSettings",
+  "type": "object",
   "properties": {
+    "commission_mode": {
+      "type": "string",
+      "enum": [
+        "fixed",
+        "percentage"
+      ],
+      "default": "fixed",
+      "description": "Active commission calculation mode"
+    },
+    "fixed_amount": {
+      "type": "number",
+      "default": 10000,
+      "description": "Fixed commission amount per approved sale (used when mode=fixed)"
+    },
+    "fixed_currency": {
+      "type": "string",
+      "default": "MWK",
+      "description": "Currency for fixed commission amounts"
+    },
+    "fixed_meta_ads": {
+      "type": "number",
+      "description": "Override: fixed commission for Meta Ads sales"
+    },
+    "fixed_graphic_design": {
+      "type": "number",
+      "description": "Override: fixed commission for Graphic Design Retainer sales"
+    },
+    "fixed_web_development": {
+      "type": "number",
+      "description": "Override: fixed commission for Web Development sales"
+    },
+    "fixed_social_media": {
+      "type": "number",
+      "description": "Override: fixed commission for Social Media Management sales"
+    },
     "commission_rate": {
       "type": "number",
-      "description": "Commission percentage e.g. 20 for 20%"
+      "default": 5,
+      "description": "Percentage commission rate e.g. 5 for 5% (used when mode=percentage)"
     },
     "minimum_payout": {
       "type": "number",
+      "default": 5000,
       "description": "Minimum balance required to request payout"
     },
     "minimum_payout_currency": {
       "type": "string",
       "default": "MWK"
     },
+    "payout_cooldown_hours": {
+      "type": "number",
+      "default": 48,
+      "description": "Hours to wait after approval before payout can be processed"
+    },
     "program_enabled": {
       "type": "boolean",
       "default": true
+    },
+    "block_self_referrals": {
+      "type": "boolean",
+      "default": true,
+      "description": "Prevent users from referring themselves"
+    },
+    "one_commission_per_client": {
+      "type": "boolean",
+      "default": true,
+      "description": "Only one commission per first successful purchase per referred client"
     },
     "welcome_message": {
       "type": "string"
@@ -27,6 +80,5 @@
       "type": "number",
       "default": 30
     }
-  },
-  "type": "object"
+  }
 }
