@@ -19,6 +19,15 @@ import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 
+function compactNum(val) {
+  const n = Number(val);
+  if (isNaN(n)) return val;
+  if (Math.abs(n) >= 1_000_000) return (n / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M';
+  if (Math.abs(n) >= 1_000) return (n / 1_000).toFixed(1).replace(/\.0$/, '') + 'k';
+  return n.toLocaleString();
+}
+
+
 const TABS = [
   { id: 'dashboard',   label: 'Dashboard',          icon: LayoutDashboard },
   { id: 'links',       label: 'Referral Links',      icon: Link2 },
@@ -69,12 +78,12 @@ function DashboardTab({ user, affiliateSettings, referrals, commissions, payouts
   const commRate      = affiliateSettings?.commission_rate || 0;
 
   const stats = [
-    { label: 'Total Earnings',        value: `${currency} ${totalEarnings.toLocaleString()}`,     color: 'text-green-600', bg: 'bg-green-50',  icon: TrendingUp },
-    { label: 'Pending Commissions',   value: `${currency} ${pendingComm.toLocaleString()}`,        color: 'text-amber-600', bg: 'bg-amber-50',  icon: Clock },
-    { label: 'Paid Commissions',      value: `${currency} ${paidComm.toLocaleString()}`,           color: 'text-blue-600',  bg: 'bg-blue-50',   icon: CheckCircle },
-    { label: 'Available Balance',     value: `${currency} ${Math.max(0, availableBalance).toLocaleString()}`, color: 'text-purple-600', bg: 'bg-purple-50', icon: Wallet },
-    { label: 'Total Referrals',       value: referrals.length,                                    color: 'text-sky-600',   bg: 'bg-sky-50',    icon: Users },
-    { label: 'Conversion Rate',       value: `${convRate}%`,                                      color: 'text-rose-600',  bg: 'bg-rose-50',   icon: TrendingUp },
+    { label: 'Total Earnings',      value: `${currency} ${compactNum(totalEarnings)}`,          color: 'text-green-600', bg: 'bg-green-50',  icon: TrendingUp },
+    { label: 'Pending Commissions', value: `${currency} ${compactNum(pendingComm)}`,            color: 'text-amber-600', bg: 'bg-amber-50',  icon: Clock },
+    { label: 'Paid Commissions',    value: `${currency} ${compactNum(paidComm)}`,               color: 'text-blue-600',  bg: 'bg-blue-50',   icon: CheckCircle },
+    { label: 'Available Balance',   value: `${currency} ${compactNum(Math.max(0, availableBalance))}`, color: 'text-purple-600', bg: 'bg-purple-50', icon: Wallet },
+    { label: 'Total Referrals',     value: compactNum(referrals.length),                       color: 'text-sky-600',   bg: 'bg-sky-50',    icon: Users },
+    { label: 'Conversion Rate',     value: `${convRate}%`,                                     color: 'text-rose-600',  bg: 'bg-rose-50',   icon: TrendingUp },
   ];
 
   return (
@@ -109,14 +118,12 @@ function DashboardTab({ user, affiliateSettings, referrals, commissions, payouts
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
         {stats.map(({ label, value, color, bg, icon: Icon }) => (
           <Card key={label} className="shadow-sm">
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${bg}`}>
+            <CardContent className="p-4 flex flex-col items-start gap-2">
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${bg}`}>
                 <Icon className={`w-5 h-5 ${color}`} />
               </div>
-              <div>
-                <p className={`text-xl font-bold ${color}`}>{value}</p>
-                <p className="text-xs text-muted-foreground leading-tight">{label}</p>
-              </div>
+              <p className={`text-xl font-bold leading-tight ${color}`}>{value}</p>
+              <p className="text-xs text-muted-foreground leading-tight">{label}</p>
             </CardContent>
           </Card>
         ))}
