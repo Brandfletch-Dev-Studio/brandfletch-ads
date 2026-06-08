@@ -219,24 +219,14 @@ export default function AdminAds() {
     mutationFn: ({ id, data }) => id
       ? base44.entities.AppAd.update(id, data)
       : base44.entities.AppAd.create(data),
-    onSuccess: (_, vars) => {
-      auditLog(vars.id ? 'ad_updated' : 'ad_created', 'AppAd', vars.id || 'new', `Ad "${vars.data.title}" ${vars.id ? 'updated' : 'created'}`);
-      qc.invalidateQueries({ queryKey: ['app-ads'] });
-      setOpen(false);
-    },
   });
 
   const remove = useMutation({
     mutationFn: (id) => base44.entities.AppAd.delete(id),
-    onSuccess: (_, id) => {
-      auditLog('ad_deleted', 'AppAd', id, 'Ad deleted');
-      qc.invalidateQueries({ queryKey: ['app-ads'] });
-    },
   });
 
   const toggle = useMutation({
     mutationFn: ({ id, is_active }) => base44.entities.AppAd.update(id, { is_active }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['app-ads'] }),
   });
 
   function openNew() { setForm(EMPTY_FORM); setEditId(null); setOpen(true); }
