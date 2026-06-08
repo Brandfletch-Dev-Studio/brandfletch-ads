@@ -279,7 +279,7 @@ export default function AdminUsers() {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          {ASSIGNABLE_ROLES.map(r => (
+                          {(isDesignDeptHead ? ASSIGNABLE_ROLES.filter(r => ['designer','creative_ops_director'].includes(r.value)) : ASSIGNABLE_ROLES).map(r => (
                             <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
                           ))}
                         </SelectContent>
