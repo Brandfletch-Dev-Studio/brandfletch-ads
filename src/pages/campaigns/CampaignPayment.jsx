@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import InvoiceDownload from '@/components/InvoiceDownload';
 import { useParams, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { Upload, CheckCircle2, ArrowLeft, Copy, ExternalLink, Loader2 } from 'lucide-react';
@@ -20,10 +21,13 @@ export default function CampaignPayment() {
   const [submitting, setSubmitting] = useState(false);
   const [isMalawi, setIsMalawi] = useState(false);
   const [paychanguLoading, setPaychanguLoading] = useState(false);
+  const [clientUser, setClientUser] = useState(null);
 
   useEffect(() => { init(); }, [id]);
 
   async function init() {
+    const u = await base44.auth.me().catch(() => null);
+    setClientUser(u);
     const c = await base44.entities.Campaign.filter({ id });
     const camp = c[0] || await base44.entities.Campaign.list().then(all => all.find(x => x.id === id));
     setCampaign(camp);
