@@ -476,7 +476,34 @@ function SettingsTab() {
   });
 
   useEffect(() => {
-    if (settingsData?.[0] && !settings) setSettings(settingsData[0]);
+    if (settingsData?.[0] && !settings) {
+      setSettings(settingsData[0]);
+    } else if (settingsData && settingsData.length === 0 && !settings) {
+      setSettings({
+        default_commission_type: 'fixed',
+        default_fixed_amount: 10000,
+        default_percentage: 5,
+        default_currency: 'MWK',
+        meta_ads_commission_type: 'global',
+        graphic_design_commission_type: 'global',
+        social_media_commission_type: 'global',
+        web_dev_commission_type: 'global',
+        recurring_enabled: false,
+        recurring_type: 'fixed',
+        recurring_fixed_amount: 2000,
+        recurring_percentage: 3,
+        recurring_max_months: 12,
+        recurring_applies_to: [],
+        minimum_payout: 5000,
+        minimum_payout_currency: 'MWK',
+        payout_cooldown_hours: 48,
+        program_enabled: true,
+        block_self_referrals: true,
+        one_commission_per_client: true,
+        cookie_duration_days: 30,
+        welcome_message: '',
+      });
+    }
   }, [settingsData]);
 
   async function save() {
@@ -498,54 +525,67 @@ function SettingsTab() {
     }
   }
 
-  const form = settings || { commission_rate: 20, minimum_payout: 5000, minimum_payout_currency: 'MWK', program_enabled: true, welcome_message: '', cookie_duration_days: 30 };
+  const s = settings;
+  if (isLoading || !s) return <div className="p-8 text-center"><Loader2 className="w-5 h-5 animate-spin mx-auto" /></div>;
+
+  const SERVICES = [
+    { key: 'meta_ads',       label: 'Meta Ads' },
+    { key: 'graphic_design', label: 'Graphic Design' },
+    { key: 'social_media',   label: 'Social Media' },
+    { key: 'web_dev',        label: 'Web Development' },
+  ];
 
   return (
-    <div className="space-y-5 max-w-xl">
+    <div className="space-y-5 max-w-2xl">
+      {/* Live warning */}
       <Card className="border-amber-200 bg-amber-50">
         <CardContent className="p-4 flex items-start gap-3">
           <Settings2 className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-          <p className="text-sm text-amber-800">Changes here immediately affect what affiliates see on their dashboard — commission rates, minimum payout, and program status are all live.</p>
+          <p className="text-sm text-amber-800">Changes apply immediately — affiliates see updated rates on their dashboard in real time.</p>
         </CardContent>
       </Card>
 
+      {/* Program status */}
       <Card>
-        <CardHeader className="pb-3"><CardTitle className="text-base">Commission & Payouts</CardTitle></CardHeader>
+        <CardHeader className="pb-3"><CardTitle className="text-base">Program Status</CardTitle></CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <Label className="text-sm font-medium">Program Status</Label>
-              <p className="text-xs text-muted-foreground mt-0.5">Disable to pause all affiliate signups and earnings</p>
+          {[
+            { field: 'program_enabled',        label: 'Affiliate Program Active',     desc: 'Disable to pause all affiliate signups and earnings' },
+            { field: 'block_self_referrals',    label: 'Block Self-Referrals',         desc: 'Prevent users from using their own referral code' },
+            { field: 'one_commission_per_client', label: 'One Commission Per Client',  desc: 'Only the first purchase per referred client earns a one-time commission' },
+          ].map(({ field, label, desc }) => (
+            <div key={field} className="flex items-center justify-between gap-3">
+              <div>
+                <Label className="text-sm font-medium">{label}</Label>
+                <p className="text-xs text-muted-foreground mt-0.5">{desc}</p>
+              </div>
+              <Switch checked={!!s[field]} onCheckedChange={v => setSettings(p => ({ ...p, [field]: v }))} />
             </div>
-            <Switch
-              checked={!!form.program_enabled}
-              onCheckedChange={v => setSettings(s => ({ ...s, program_enabled: v }))}
-            />
-          </div>
-          <hr className="border-border" />
-          <div>
-            <Label className="text-sm">Commission Rate (%)</Label>
-            <p className="text-xs text-muted-foreground mb-1.5">Percentage of each sale paid to the affiliate</p>
-            <Input
-              type="number" min={0} max={100}
-              value={form.commission_rate}
-              onChange={e => setSettings(s => ({ ...s, commission_rate: parseFloat(e.target.value) || 0 }))}
-              className="max-w-[120px]"
-            />
-          </div>
+          ))}
+        </CardContent>
+      </Card>
+
+      {/* Default commission */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">Default Commission</CardTitle>
+          <CardDescription className="text-xs mt-1">Applies to all services unless overridden below</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label className="text-sm">Minimum Payout Amount</Label>
-              <Input
-                type="number" min={0}
-                value={form.minimum_payout}
-                onChange={e => setSettings(s => ({ ...s, minimum_payout: parseFloat(e.target.value) || 0 }))}
-                className="mt-1.5"
-              />
+              <Label className="text-sm">Commission Type</Label>
+              <Select value={s.default_commission_type || 'fixed'} onValueChange={v => setSettings(p => ({ ...p, default_commission_type: v }))}>
+                <SelectTrigger className="mt-1.5"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="fixed">Fixed Amount per Sale</SelectItem>
+                  <SelectItem value="percentage">Percentage of Sale</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div>
-              <Label className="text-sm">Payout Currency</Label>
-              <Select value={form.minimum_payout_currency} onValueChange={v => setSettings(s => ({ ...s, minimum_payout_currency: v }))}>
+              <Label className="text-sm">Currency</Label>
+              <Select value={s.default_currency || 'MWK'} onValueChange={v => setSettings(p => ({ ...p, default_currency: v }))}>
                 <SelectTrigger className="mt-1.5"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {['MWK','USD','KES','ZMW','ZAR','TZS'].map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
@@ -553,28 +593,242 @@ function SettingsTab() {
               </Select>
             </div>
           </div>
-          <div>
-            <Label className="text-sm">Cookie Duration (days)</Label>
-            <p className="text-xs text-muted-foreground mb-1.5">How long a referral cookie stays active after clicking the link</p>
-            <Input
-              type="number" min={1}
-              value={form.cookie_duration_days}
-              onChange={e => setSettings(s => ({ ...s, cookie_duration_days: parseInt(e.target.value) || 30 }))}
-              className="max-w-[120px]"
-            />
+          {s.default_commission_type === 'fixed' ? (
+            <div>
+              <Label className="text-sm">Fixed Amount ({s.default_currency || 'MWK'})</Label>
+              <Input type="number" min={0} className="mt-1.5 max-w-[200px]"
+                value={s.default_fixed_amount ?? 10000}
+                onChange={e => setSettings(p => ({ ...p, default_fixed_amount: parseFloat(e.target.value) || 0 }))}
+              />
+            </div>
+          ) : (
+            <div>
+              <Label className="text-sm">Percentage (%)</Label>
+              <Input type="number" min={0} max={100} className="mt-1.5 max-w-[120px]"
+                value={s.default_percentage ?? 5}
+                onChange={e => setSettings(p => ({ ...p, default_percentage: parseFloat(e.target.value) || 0 }))}
+              />
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Per-service overrides */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">Per-Service Commission Overrides</CardTitle>
+          <CardDescription className="text-xs mt-1">Custom rates per service. "Use Default" inherits the global rate above.</CardDescription>
+        </CardHeader>
+        <CardContent className="divide-y divide-border">
+          {SERVICES.map(({ key, label }) => {
+            const typeField  = `${key}_commission_type`;
+            const fixedField = `${key}_fixed_amount`;
+            const pctField   = `${key}_percentage`;
+            const oType      = s[typeField] || 'global';
+            return (
+              <div key={key} className="py-4 first:pt-0 last:pb-0 space-y-3">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-sm font-semibold">{label}</p>
+                  <Select value={oType} onValueChange={v => setSettings(p => ({ ...p, [typeField]: v }))}>
+                    <SelectTrigger className="w-44 h-8 text-xs"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="global">Use Default</SelectItem>
+                      <SelectItem value="fixed">Fixed Amount</SelectItem>
+                      <SelectItem value="percentage">Percentage</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                {oType === 'fixed' && (
+                  <div>
+                    <Label className="text-xs">Fixed Amount ({s.default_currency || 'MWK'})</Label>
+                    <Input type="number" min={0} className="mt-1 max-w-[180px] h-8 text-sm"
+                      value={s[fixedField] ?? ''}
+                      placeholder={String(s.default_fixed_amount || 10000)}
+                      onChange={e => setSettings(p => ({ ...p, [fixedField]: parseFloat(e.target.value) || 0 }))}
+                    />
+                  </div>
+                )}
+                {oType === 'percentage' && (
+                  <div>
+                    <Label className="text-xs">Percentage (%)</Label>
+                    <Input type="number" min={0} max={100} className="mt-1 max-w-[120px] h-8 text-sm"
+                      value={s[pctField] ?? ''}
+                      placeholder={String(s.default_percentage || 5)}
+                      onChange={e => setSettings(p => ({ ...p, [pctField]: parseFloat(e.target.value) || 0 }))}
+                    />
+                  </div>
+                )}
+                {oType === 'global' && (
+                  <p className="text-xs text-muted-foreground italic">
+                    Earns: {s.default_commission_type === 'fixed'
+                      ? `${s.default_currency || 'MWK'} ${(s.default_fixed_amount || 10000).toLocaleString()} per sale`
+                      : `${s.default_percentage || 5}% of sale amount`}
+                  </p>
+                )}
+              </div>
+            );
+          })}
+        </CardContent>
+      </Card>
+
+      {/* Recurring commissions */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <TrendingUp className="w-4 h-4 text-[hsl(var(--primary))]" />
+            Recurring Commissions
+          </CardTitle>
+          <CardDescription className="text-xs mt-1">Affiliates earn on each renewal/repeat payment, not just the first sale</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <Label className="text-sm font-medium">Enable Recurring Commissions</Label>
+              <p className="text-xs text-muted-foreground mt-0.5">When on, every repeat payment from a referred client earns a commission</p>
+            </div>
+            <Switch checked={!!s.recurring_enabled} onCheckedChange={v => setSettings(p => ({ ...p, recurring_enabled: v }))} />
+          </div>
+
+          {s.recurring_enabled && (
+            <div className="space-y-4 pt-3 border-t border-border">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-sm">Recurring Type</Label>
+                  <Select value={s.recurring_type || 'fixed'} onValueChange={v => setSettings(p => ({ ...p, recurring_type: v }))}>
+                    <SelectTrigger className="mt-1.5"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="fixed">Fixed Amount</SelectItem>
+                      <SelectItem value="percentage">% of Each Payment</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-sm">
+                    {s.recurring_type === 'percentage' ? 'Rate (%)' : `Amount (${s.default_currency || 'MWK'})`}
+                  </Label>
+                  <Input type="number" min={0} max={s.recurring_type === 'percentage' ? 100 : undefined}
+                    className="mt-1.5"
+                    value={s.recurring_type === 'percentage' ? (s.recurring_percentage ?? 3) : (s.recurring_fixed_amount ?? 2000)}
+                    onChange={e => {
+                      const val = parseFloat(e.target.value) || 0;
+                      setSettings(p => s.recurring_type === 'percentage'
+                        ? { ...p, recurring_percentage: val }
+                        : { ...p, recurring_fixed_amount: val });
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label className="text-sm">Max Months</Label>
+                <p className="text-xs text-muted-foreground mb-1.5">Cap recurring commissions to N months. Set 0 for unlimited.</p>
+                <Input type="number" min={0} className="max-w-[120px]"
+                  value={s.recurring_max_months ?? 12}
+                  onChange={e => setSettings(p => ({ ...p, recurring_max_months: parseInt(e.target.value) || 0 }))}
+                />
+              </div>
+
+              <div>
+                <Label className="text-sm">Applies To</Label>
+                <p className="text-xs text-muted-foreground mb-2">Which services earn recurring commissions. Leave all unselected = all services.</p>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { key: 'meta_ads', label: 'Meta Ads' },
+                    { key: 'graphic_design', label: 'Graphic Design' },
+                    { key: 'social_media', label: 'Social Media' },
+                    { key: 'web_development', label: 'Web Dev' },
+                  ].map(({ key, label }) => {
+                    const sel = (s.recurring_applies_to || []).includes(key);
+                    return (
+                      <button key={key} type="button"
+                        onClick={() => setSettings(p => {
+                          const curr = p.recurring_applies_to || [];
+                          return { ...p, recurring_applies_to: sel ? curr.filter(x => x !== key) : [...curr, key] };
+                        })}
+                        className={cn(
+                          "px-3 py-1.5 rounded-full text-xs font-medium border transition-all",
+                          sel ? "bg-[hsl(var(--primary))] text-white border-[hsl(var(--primary))]"
+                              : "bg-background border-border text-muted-foreground hover:border-[hsl(var(--primary))]/50"
+                        )}
+                      >{label}</button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="p-3 rounded-lg bg-secondary text-xs space-y-1">
+                <p className="font-semibold text-foreground">Preview</p>
+                <p>
+                  Affiliates earn{' '}
+                  <strong>
+                    {s.recurring_type === 'percentage'
+                      ? `${s.recurring_percentage || 3}% of each renewal payment`
+                      : `${s.default_currency || 'MWK'} ${(s.recurring_fixed_amount || 2000).toLocaleString()} per renewal`}
+                  </strong>{' '}
+                  {(s.recurring_max_months ?? 12) > 0
+                    ? `for up to ${s.recurring_max_months} months after the initial sale.`
+                    : 'indefinitely after the initial sale.'}
+                </p>
+                {(s.recurring_applies_to || []).length > 0 && (
+                  <p className="text-muted-foreground">Only for: {(s.recurring_applies_to).join(', ').replace(/_/g, ' ')}</p>
+                )}
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Payout settings */}
+      <Card>
+        <CardHeader className="pb-3"><CardTitle className="text-base">Payout & Cookie Settings</CardTitle></CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label className="text-sm">Minimum Payout Amount</Label>
+              <Input type="number" min={0} className="mt-1.5"
+                value={s.minimum_payout ?? 5000}
+                onChange={e => setSettings(p => ({ ...p, minimum_payout: parseFloat(e.target.value) || 0 }))}
+              />
+            </div>
+            <div>
+              <Label className="text-sm">Payout Currency</Label>
+              <Select value={s.minimum_payout_currency || 'MWK'} onValueChange={v => setSettings(p => ({ ...p, minimum_payout_currency: v }))}>
+                <SelectTrigger className="mt-1.5"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {['MWK','USD','KES','ZMW','ZAR','TZS'].map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label className="text-sm">Payout Cooldown (hours)</Label>
+              <p className="text-xs text-muted-foreground mb-1.5">Delay after approval before payout can be released</p>
+              <Input type="number" min={0} className="w-full"
+                value={s.payout_cooldown_hours ?? 48}
+                onChange={e => setSettings(p => ({ ...p, payout_cooldown_hours: parseInt(e.target.value) || 0 }))}
+              />
+            </div>
+            <div>
+              <Label className="text-sm">Cookie Duration (days)</Label>
+              <p className="text-xs text-muted-foreground mb-1.5">How long a referral link click is tracked</p>
+              <Input type="number" min={1} className="w-full"
+                value={s.cookie_duration_days ?? 30}
+                onChange={e => setSettings(p => ({ ...p, cookie_duration_days: parseInt(e.target.value) || 30 }))}
+              />
+            </div>
           </div>
         </CardContent>
       </Card>
 
+      {/* Welcome message */}
       <Card>
         <CardHeader className="pb-3"><CardTitle className="text-base">Welcome Message</CardTitle></CardHeader>
         <CardContent>
-          <Textarea
-            placeholder="Welcome message shown to affiliates on their dashboard..."
-            value={form.welcome_message || ''}
-            onChange={e => setSettings(s => ({ ...s, welcome_message: e.target.value }))}
-            rows={3}
-            className="text-sm"
+          <Textarea placeholder="Shown to affiliates on their dashboard..."
+            value={s.welcome_message || ''}
+            onChange={e => setSettings(p => ({ ...p, welcome_message: e.target.value }))}
+            rows={3} className="text-sm"
           />
         </CardContent>
       </Card>
@@ -587,7 +841,7 @@ function SettingsTab() {
   );
 }
 
-// ─── MAIN ─────────────────────────────────────────────────────────────
+
 export default function AdminReferrals() {
   useRoleGuard(null, 'referrals.view');
   const [activeTab, setActiveTab] = useState('overview');
