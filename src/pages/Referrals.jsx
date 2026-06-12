@@ -28,6 +28,30 @@ function compactNum(val) {
 }
 
 
+
+// Resolve the effective commission for a given service key
+function resolveServiceCommission(settings, serviceKey, currency) {
+  if (!settings) return null;
+  const typeField  = `${serviceKey}_commission_type`;
+  const fixedField = `${serviceKey}_fixed_amount`;
+  const pctField   = `${serviceKey}_percentage`;
+  const type = settings[typeField] || 'global';
+  if (type === 'global') {
+    return settings.default_commission_type === 'fixed'
+      ? `${currency} ${(settings.default_fixed_amount || 0).toLocaleString()} fixed`
+      : `${settings.default_percentage || 0}% of sale`;
+  }
+  if (type === 'fixed') return `${currency} ${(settings[fixedField] || 0).toLocaleString()} fixed`;
+  return `${settings[pctField] || 0}% of sale`;
+}
+
+const SERVICE_LABELS = {
+  meta_ads:        'Meta Ads',
+  graphic_design:  'Graphic Design',
+  social_media:    'Social Media',
+  web_dev:         'Web Development',
+};
+
 const TABS = [
   { id: 'dashboard',   label: 'Dashboard',          icon: LayoutDashboard },
   { id: 'links',       label: 'Referral Links',      icon: Link2 },
@@ -75,7 +99,7 @@ function DashboardTab({ user, affiliateSettings, referrals, commissions, payouts
   const convRate      = referrals.length > 0 ? Math.round((converted / referrals.length) * 100) : 0;
   const minPayout     = affiliateSettings?.minimum_payout || 5000;
   const currency      = affiliateSettings?.minimum_payout_currency || 'MWK';
-  const commRate      = affiliateSettings?.commission_rate || 0;
+  const commRate      = affiliateSettings?.default_percentage || 0;
 
   const stats = [
     { label: 'Total Earnings',      value: `${currency} ${compactNum(totalEarnings)}`,          color: 'text-green-600', bg: 'bg-green-50',  icon: TrendingUp },
@@ -92,16 +116,32 @@ function DashboardTab({ user, affiliateSettings, referrals, commissions, payouts
       {affiliateSettings && (
         <Card className="bg-gradient-to-br from-[hsl(var(--primary))]/10 to-[hsl(var(--accent))]/10 border-[hsl(var(--primary))]/20">
           <CardContent className="p-4 flex flex-col sm:flex-row gap-4 sm:items-center justify-between">
-            <div>
-              <p className="text-sm font-semibold text-[hsl(var(--primary))]">Your Commission</p>
-              {affiliateSettings?.default_commission_type === 'fixed' ? (
-                <p className="text-2xl font-bold mt-0.5">{currency} {(affiliateSettings?.default_fixed_amount || 0).toLocaleString()}</p>
-              ) : (
-                <p className="text-2xl font-bold mt-0.5">{commRate}%</p>
-              )}
-              <p className="text-xs text-muted-foreground mt-1">
-                {affiliateSettings?.default_commission_type === 'fixed' ? 'Fixed amount per referred sale' : 'Of each referred sale'}
-              </p>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-[hsl(var(--primary))] mb-2">Commission Structure</p>
+              <div className="space-y-1">
+                {Object.entries(SERVICE_LABELS).map(([key, label]) => {
+                  const typeField  = `${key}_commission_type`;
+                  const fixedField = `${key}_fixed_amount`;
+                  const pctField   = `${key}_percentage`;
+                  const type = affiliateSettings[typeField] || 'global';
+                  let rate;
+                  if (type === 'global') {
+                    rate = affiliateSettings.default_commission_type === 'fixed'
+                      ? `${currency} ${(affiliateSettings.default_fixed_amount || 0).toLocaleString()}`
+                      : `${affiliateSettings.default_percentage || 0}%`;
+                  } else if (type === 'fixed') {
+                    rate = `${currency} ${(affiliateSettings[fixedField] || 0).toLocaleString()}`;
+                  } else {
+                    rate = `${affiliateSettings[pctField] || 0}%`;
+                  }
+                  return (
+                    <div key={key} className="flex items-center justify-between gap-4 text-sm">
+                      <span className="text-muted-foreground">{label}</span>
+                      <span className="font-semibold tabular-nums">{rate} <span className="text-xs text-muted-foreground font-normal">per sale</span></span>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
             <div className="h-px sm:h-12 sm:w-px bg-border" />
             <div>
@@ -151,6 +191,66 @@ function DashboardTab({ user, affiliateSettings, referrals, commissions, payouts
           </Card>
         ))}
       </div>
+
+      {/* How You Earn */}
+      {affiliateSettings && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2">
+              <DollarSign className="w-4 h-4 text-green-500" /> How You Earn
+            </CardTitle>
+            <CardDescription className="text-xs">Commission rates per service type</CardDescription>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="divide-y divide-border">
+              {Object.entries(SERVICE_LABELS).map(([key, label]) => {
+                const typeField  = `${key}_commission_type`;
+                const fixedField = `${key}_fixed_amount`;
+                const pctField   = `${key}_percentage`;
+                const type = affiliateSettings[typeField] || 'global';
+                let rateLabel, subLabel;
+                if (type === 'global') {
+                  if (affiliateSettings.default_commission_type === 'fixed') {
+                    rateLabel = `${currency} ${(affiliateSettings.default_fixed_amount || 0).toLocaleString()}`;
+                    subLabel  = 'Fixed per sale';
+                  } else {
+                    rateLabel = `${affiliateSettings.default_percentage || 0}%`;
+                    subLabel  = 'Of sale amount';
+                  }
+                } else if (type === 'fixed') {
+                  rateLabel = `${currency} ${(affiliateSettings[fixedField] || 0).toLocaleString()}`;
+                  subLabel  = 'Fixed per sale';
+                } else {
+                  rateLabel = `${affiliateSettings[pctField] || 0}%`;
+                  subLabel  = 'Of sale amount';
+                }
+                // Recurring badge
+                const recurringApplies = !affiliateSettings.recurring_applies_to?.length
+                  || affiliateSettings.recurring_applies_to.includes(key);
+                return (
+                  <div key={key} className="flex items-center justify-between py-3 gap-3">
+                    <div>
+                      <p className="text-sm font-medium">{label}</p>
+                      <p className="text-xs text-muted-foreground">{subLabel}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-bold text-green-600">{rateLabel}</p>
+                      {affiliateSettings.recurring_enabled && recurringApplies && (
+                        <p className="text-xs text-blue-600 mt-0.5">
+                          + {affiliateSettings.recurring_type === 'fixed'
+                            ? `${currency} ${(affiliateSettings.recurring_fixed_amount || 0).toLocaleString()}`
+                            : `${affiliateSettings.recurring_percentage || 0}%`} recurring
+                          {affiliateSettings.recurring_max_months > 0 ? ` (${affiliateSettings.recurring_max_months}mo)` : ''}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Recent referrals */}
       {referrals.length > 0 && (
@@ -430,7 +530,9 @@ function CommissionsTab({ commissions, loading }) {
                             {c.commission_currency || 'MWK'} {(c.commission_amount || 0).toLocaleString()}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            {c.commission_type === 'percentage' && c.commission_rate ? `${c.commission_rate}% of sale` : 'Fixed'}
+                            {c.commission_type === 'percentage'
+                              ? `${c.commission_rate || 0}% of ${c.commission_currency || 'MWK'} ${(c.sale_amount || 0).toLocaleString()}`
+                              : `Fixed amount`}
                           </p>
                         </td>
                         <td className="px-4 py-3">
