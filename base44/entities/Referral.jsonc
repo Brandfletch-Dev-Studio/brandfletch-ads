@@ -1,0 +1,45 @@
+{
+  "name": "Referral",
+  "type": "object",
+  "properties": {
+    "referral_code": {
+      "type": "string",
+      "description": "The referral code used (belongs to the referrer)"
+    },
+    "referrer_id": {
+      "type": "string",
+      "description": "User ID of the affiliate who owns this code"
+    },
+    "referrer_name": {
+      "type": "string"
+    },
+    "referred_user_id": {
+      "type": "string",
+      "description": "User ID of the person who signed up via the referral"
+    },
+    "referred_name": {
+      "type": "string"
+    },
+    "referred_email": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["pending", "converted", "cancelled"],
+      "default": "pending",
+      "description": "pending = signed up, converted = made a purchase"
+    },
+    "converted_date": {
+      "type": "string",
+      "description": "ISO date when referral converted to a paying client"
+    },
+    "reward_amount": {
+      "type": "number",
+      "description": "Commission earned from this referral"
+    },
+    "reward_currency": {
+      "type": "string",
+      "default": "MWK"
+    }
+  }
+}
