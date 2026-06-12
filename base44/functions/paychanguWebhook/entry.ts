@@ -142,6 +142,148 @@ Deno.serve(async (req) => {
       }
     }
     
+
+    // ── Affiliate Commission Auto-Creation ─────────────────────────────
+    // After any successful payment, check if the paying user was referred
+    // and auto-create a commission record for the affiliate
+    try {
+      let payingUserId = null;
+      let serviceType = 'other';
+      let saleAmount = txData.amount || 0;
+      let saleCurrency = txData.currency || 'MWK';
+      let productName = '';
+
+      if (paymentType === 'DESIGN' && parts[2]) {
+        const sub = await base44.asServiceRole.entities.PlatformSubscription.get(parts[2]).catch(() => null);
+        if (sub) {
+          payingUserId = sub.user_id;
+          serviceType = 'graphic_design';
+          productName = 'Design Subscription';
+        }
+      } else if (paymentType === 'CAMP' && parts[2]) {
+        const camp = await base44.asServiceRole.entities.Campaign.get(parts[2]).catch(() => null);
+        if (camp) {
+          payingUserId = camp.user_id;
+          serviceType = 'meta_ads';
+          productName = camp.campaign_name || 'Meta Ads Campaign';
+        }
+      }
+
+      if (payingUserId) {
+        // Get the paying user to check if they were referred
+        const payingUser = await base44.asServiceRole.entities.User.get(payingUserId).catch(() => null);
+        if (payingUser?.referred_by) {
+          // Find the affiliate by referral code
+          const affiliateUsers = await base44.asServiceRole.entities.User.filter({ referral_code: payingUser.referred_by }).catch(() => []);
+          let affiliate = affiliateUsers?.[0];
+
+          // Fallback: match auto-generated code BF-{id.slice(-6)}
+          if (!affiliate) {
+            const allUsers = await base44.asServiceRole.entities.User.list().catch(() => []);
+            affiliate = allUsers.find(u => {
+              const code = u.referral_code || (u.id ? `BF-${u.id.slice(-6).toUpperCase()}` : '');
+              return code === payingUser.referred_by;
+            });
+          }
+
+          if (affiliate) {
+            // Get affiliate settings
+            const settingsList = await base44.asServiceRole.entities.AffiliateSettings.list(null, 1).catch(() => []);
+            const settings = settingsList?.[0];
+
+            if (settings?.program_enabled !== false) {
+              // Check one_commission_per_client rule
+              let alreadyHasCommission = false;
+              if (settings?.one_commission_per_client) {
+                const existing = await base44.asServiceRole.entities.AffiliateCommission.filter({
+                  affiliate_id: affiliate.id,
+                  referred_user_id: payingUserId
+                }).catch(() => []);
+                alreadyHasCommission = (existing || []).some(c => !c.is_recurring);
+              }
+
+              if (!alreadyHasCommission) {
+                // Resolve commission amount for this service
+                const typeField = `${serviceType}_commission_type`;
+                const fixedField = `${serviceType}_fixed_amount`;
+                const pctField = `${serviceType}_percentage`;
+                const svcType = settings?.[typeField] || 'global';
+
+                let commissionType = 'fixed';
+                let commissionAmount = 0;
+                let commissionRate = 0;
+
+                if (svcType === 'fixed') {
+                  commissionType = 'fixed';
+                  commissionAmount = settings[fixedField] || 0;
+                } else if (svcType === 'percentage') {
+                  commissionType = 'percentage';
+                  commissionRate = settings[pctField] || 0;
+                  commissionAmount = Math.round((saleAmount * commissionRate) / 100);
+                } else {
+                  // global
+                  if (settings?.default_commission_type === 'fixed') {
+                    commissionType = 'fixed';
+                    commissionAmount = settings.default_fixed_amount || 0;
+                  } else {
+                    commissionType = 'percentage';
+                    commissionRate = settings.default_percentage || 0;
+                    commissionAmount = Math.round((saleAmount * commissionRate) / 100);
+                  }
+                }
+
+                // Create the commission record
+                await base44.asServiceRole.entities.AffiliateCommission.create({
+                  affiliate_id: affiliate.id,
+                  affiliate_name: affiliate.full_name || affiliate.email || '',
+                  referred_user_id: payingUserId,
+                  referred_user_name: payingUser.full_name || '',
+                  referred_user_email: payingUser.email || '',
+                  referral_code: payingUser.referred_by,
+                  product_name: productName,
+                  service_type: serviceType,
+                  sale_amount: saleAmount,
+                  sale_currency: saleCurrency,
+                  commission_type: commissionType,
+                  commission_rate: commissionRate || null,
+                  commission_amount: commissionAmount,
+                  commission_currency: settings?.default_currency || saleCurrency,
+                  is_recurring: false,
+                  status: 'pending',
+                  trigger_event: 'payment_confirmed',
+                });
+
+                // Update the Referral record to converted
+                const referrals = await base44.asServiceRole.entities.Referral.filter({
+                  referred_user_id: payingUserId
+                }).catch(() => []);
+                if (referrals?.length > 0) {
+                  await base44.asServiceRole.entities.Referral.update(referrals[0].id, {
+                    status: 'converted',
+                    converted_date: new Date().toISOString(),
+                    reward_amount: commissionAmount,
+                    reward_currency: settings?.default_currency || saleCurrency,
+                  });
+                }
+
+                // Notify the affiliate
+                await base44.asServiceRole.entities.Notification.create({
+                  recipient_id: affiliate.id,
+                  title: 'New Commission Earned! 🎉',
+                  message: `You earned ${settings?.default_currency || saleCurrency} ${commissionAmount.toLocaleString()} from a referral (${payingUser.full_name || payingUser.email || 'new client'})`,
+                  type: 'commission_earned',
+                  is_read: false,
+                });
+              }
+            }
+          }
+        }
+      }
+    } catch (commErr) {
+      console.error('Commission creation error (non-fatal):', commErr);
+    }
+    // ── End Affiliate Commission Logic ──────────────────────────────────
+
     return Response.json({ received: true, status: 'processed', tx_ref });
   } catch (error) {
     console.error('Webhook error:', error);
