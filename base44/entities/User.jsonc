@@ -90,7 +90,11 @@
       "type": "string",
       "description": "Referral code used when this user signed up"
     },
-    "payout_details": {
+    "whatsapp_number": {
+      "type": "string",
+      "description": "WhatsApp contact number"
+    },
+        "payout_details": {
       "type": "string",
       "description": "Mobile money number or bank account details for payouts"
     },
