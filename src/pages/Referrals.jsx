@@ -93,9 +93,15 @@ function DashboardTab({ user, affiliateSettings, referrals, commissions, payouts
         <Card className="bg-gradient-to-br from-[hsl(var(--primary))]/10 to-[hsl(var(--accent))]/10 border-[hsl(var(--primary))]/20">
           <CardContent className="p-4 flex flex-col sm:flex-row gap-4 sm:items-center justify-between">
             <div>
-              <p className="text-sm font-semibold text-[hsl(var(--primary))]">Your Commission Rate</p>
-              <p className="text-3xl font-bold mt-0.5">{commRate}%</p>
-              <p className="text-xs text-muted-foreground mt-1">Earned on every successful referral conversion</p>
+              <p className="text-sm font-semibold text-[hsl(var(--primary))]">Your Commission</p>
+              {affiliateSettings?.default_commission_type === 'fixed' ? (
+                <p className="text-2xl font-bold mt-0.5">{currency} {(affiliateSettings?.default_fixed_amount || 0).toLocaleString()}</p>
+              ) : (
+                <p className="text-2xl font-bold mt-0.5">{commRate}%</p>
+              )}
+              <p className="text-xs text-muted-foreground mt-1">
+                {affiliateSettings?.default_commission_type === 'fixed' ? 'Fixed amount per referred sale' : 'Of each referred sale'}
+              </p>
             </div>
             <div className="h-px sm:h-12 sm:w-px bg-border" />
             <div>
@@ -104,6 +110,23 @@ function DashboardTab({ user, affiliateSettings, referrals, commissions, payouts
               <p className="text-xs text-muted-foreground mt-1">Minimum balance needed to request withdrawal</p>
             </div>
             <div className="h-px sm:h-12 sm:w-px bg-border" />
+            {affiliateSettings?.recurring_enabled && (
+              <>
+                <div>
+                  <p className="text-sm font-semibold text-green-600">Recurring Commissions</p>
+                  <p className="text-xl font-bold mt-0.5">
+                    {affiliateSettings.recurring_type === 'fixed'
+                      ? `${currency} ${(affiliateSettings.recurring_fixed_amount || 0).toLocaleString()}`
+                      : `${affiliateSettings.recurring_percentage || 0}%`}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Per renewal payment
+                    {affiliateSettings.recurring_max_months > 0 ? ` · up to ${affiliateSettings.recurring_max_months} months` : ' · unlimited'}
+                  </p>
+                </div>
+                <div className="h-px sm:h-12 sm:w-px bg-border" />
+              </>
+            )}
             <div>
               <p className="text-sm font-semibold">Program Status</p>
               <Badge className={affiliateSettings.program_enabled ? 'bg-green-100 text-green-700 mt-1' : 'bg-red-100 text-red-700 mt-1'}>
@@ -391,9 +414,24 @@ function CommissionsTab({ commissions, loading }) {
                           <p className="font-medium">{c.referred_user_name || '—'}</p>
                           <p className="text-xs text-muted-foreground">{c.referred_user_email || ''}</p>
                         </td>
-                        <td className="px-4 py-3 text-sm">{c.product_name || c.product_type || '—'}</td>
-                        <td className="px-4 py-3 font-semibold text-green-600">
-                          {c.commission_currency || 'MWK'} {(c.commission_amount || 0).toLocaleString()}
+                        <td className="px-4 py-3 text-sm">
+                          <div className="flex items-center gap-1.5">
+                            <span>{c.product_name || (c.service_type || '—').replace(/_/g,' ')}</span>
+                            {c.is_recurring && (
+                              <span className="text-xs bg-green-100 text-green-700 rounded-full px-2 py-0.5 font-medium">Recurring</span>
+                            )}
+                          </div>
+                          {c.is_recurring && c.recurring_month && (
+                            <p className="text-xs text-muted-foreground mt-0.5">Month {c.recurring_month}</p>
+                          )}
+                        </td>
+                        <td className="px-4 py-3">
+                          <p className="font-semibold text-green-600">
+                            {c.commission_currency || 'MWK'} {(c.commission_amount || 0).toLocaleString()}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {c.commission_type === 'percentage' && c.commission_rate ? `${c.commission_rate}% of sale` : 'Fixed'}
+                          </p>
                         </td>
                         <td className="px-4 py-3">
                           <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${cfg.color}`}>{cfg.label}</span>
