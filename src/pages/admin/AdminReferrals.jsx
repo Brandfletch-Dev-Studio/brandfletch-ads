@@ -208,29 +208,171 @@ function ReferralsTab({ referrals, users, isLoading }) {
   );
 }
 
+
+const SERVICES_ADMIN = [
+  { key: 'meta_ads',       label: 'Meta Ads' },
+  { key: 'graphic_design', label: 'Graphic Design' },
+  { key: 'social_media',   label: 'Social Media' },
+  { key: 'web_dev',        label: 'Web Development' },
+];
+
 // ─── Commissions Tab ──────────────────────────────────────────────────
-function CommissionsTab({ commissions, isLoading }) {
+function CommissionsTab({ commissions, users, affiliateSettings, isLoading }) {
   const queryClient = useQueryClient();
   const [statusFilter, setStatusFilter] = useState('all');
 
   const updateMut = useMutation({
     mutationFn: ({ id, data }) => base44.entities.AffiliateCommission.update(id, data),
+    onSuccess: () => queryClient.invalidateQueries(['commissions']),
   });
 
+  const createMut = useMutation({
+    mutationFn: (data) => base44.entities.AffiliateCommission.create(data),
+    onSuccess: () => { queryClient.invalidateQueries(['commissions']); setShowCreate(false); toast.success('Commission created!'); },
+    onError: () => toast.error('Failed to create commission'),
+  });
+
+  const [showCreate, setShowCreate] = useState(false);
+  const [newComm, setNewComm] = useState({
+    affiliate_id: '', referred_user_id: '', service_type: 'meta_ads',
+    product_name: '', sale_amount: '', commission_type: 'fixed',
+    commission_amount: '', commission_rate: '', notes: ''
+  });
+
+  const s = affiliateSettings;
+  const currency = s?.default_currency || 'MWK';
+
+  function resolveCommission(serviceKey, saleAmt) {
+    if (!s) return { type: 'fixed', amount: 0, rate: 0 };
+    const typeField = `${serviceKey}_commission_type`;
+    const fixedField = `${serviceKey}_fixed_amount`;
+    const pctField = `${serviceKey}_percentage`;
+    const svcType = s[typeField] || 'global';
+    if (svcType === 'fixed') return { type: 'fixed', amount: s[fixedField] || 0, rate: 0 };
+    if (svcType === 'percentage') {
+      const rate = s[pctField] || 0;
+      return { type: 'percentage', amount: Math.round((saleAmt * rate) / 100), rate };
+    }
+    if (s.default_commission_type === 'fixed') return { type: 'fixed', amount: s.default_fixed_amount || 0, rate: 0 };
+    const rate = s.default_percentage || 0;
+    return { type: 'percentage', amount: Math.round((saleAmt * rate) / 100), rate };
+  }
+
+  function handleSvcChange(serviceKey) {
+    const sale = parseFloat(newComm.sale_amount) || 0;
+    const r = resolveCommission(serviceKey, sale);
+    setNewComm(p => ({ ...p, service_type: serviceKey, commission_type: r.type, commission_amount: r.amount, commission_rate: r.rate }));
+  }
+
+  function handleSaleAmt(val) {
+    const sale = parseFloat(val) || 0;
+    const r = resolveCommission(newComm.service_type, sale);
+    setNewComm(p => ({ ...p, sale_amount: val, commission_type: r.type, commission_amount: r.amount, commission_rate: r.rate }));
+  }
+
+  async function submitCreate() {
+    const affiliate = (users || []).find(u => u.id === newComm.affiliate_id);
+    const referred  = (users || []).find(u => u.id === newComm.referred_user_id);
+    if (!affiliate) { toast.error('Select an affiliate'); return; }
+    if (!referred)  { toast.error('Select a referred client'); return; }
+    createMut.mutate({
+      affiliate_id: affiliate.id,
+      affiliate_name: affiliate.full_name || affiliate.email,
+      referred_user_id: referred.id,
+      referred_user_name: referred.full_name || '',
+      referred_user_email: referred.email || '',
+      referral_code: affiliate.referral_code || `BF-${affiliate.id.slice(-6).toUpperCase()}`,
+      product_name: newComm.product_name,
+      service_type: newComm.service_type,
+      sale_amount: parseFloat(newComm.sale_amount) || 0,
+      sale_currency: currency,
+      commission_type: newComm.commission_type,
+      commission_rate: parseFloat(newComm.commission_rate) || null,
+      commission_amount: parseFloat(newComm.commission_amount) || 0,
+      commission_currency: currency,
+      is_recurring: false,
+      status: 'pending',
+      trigger_event: 'manual',
+      notes: newComm.notes,
+    });
+  }
+
+  const affiliates = (users || []).filter(u => u.is_affiliate);
   const filtered = commissions.filter(c => statusFilter === 'all' || c.status === statusFilter);
 
   return (
     <div className="space-y-4">
-      <Select value={statusFilter} onValueChange={setStatusFilter}>
-        <SelectTrigger className="w-40 h-9 text-sm"><SelectValue /></SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All Statuses</SelectItem>
-          <SelectItem value="pending">Pending</SelectItem>
-          <SelectItem value="approved">Approved</SelectItem>
-          <SelectItem value="paid">Paid</SelectItem>
-          <SelectItem value="rejected">Rejected</SelectItem>
-        </SelectContent>
-      </Select>
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-40 h-9 text-sm"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Statuses</SelectItem>
+            <SelectItem value="pending">Pending</SelectItem>
+            <SelectItem value="approved">Approved</SelectItem>
+            <SelectItem value="paid">Paid</SelectItem>
+            <SelectItem value="rejected">Rejected</SelectItem>
+          </SelectContent>
+        </Select>
+        <Button size="sm" className="h-9 gap-1.5" onClick={() => setShowCreate(v => !v)}>
+          + Add Manual Commission
+        </Button>
+      </div>
+
+      {showCreate && (
+        <Card className="border-blue-200 bg-blue-50/30">
+          <CardHeader className="pb-2"><CardTitle className="text-sm">Create Commission Manually</CardTitle></CardHeader>
+          <CardContent className="space-y-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs">Affiliate</Label>
+                <Select value={newComm.affiliate_id} onValueChange={v => setNewComm(p => ({ ...p, affiliate_id: v }))}>
+                  <SelectTrigger className="mt-1 h-8 text-xs"><SelectValue placeholder="Select affiliate" /></SelectTrigger>
+                  <SelectContent>{affiliates.map(u => <SelectItem key={u.id} value={u.id}>{u.full_name || u.email}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs">Referred Client</Label>
+                <Select value={newComm.referred_user_id} onValueChange={v => setNewComm(p => ({ ...p, referred_user_id: v }))}>
+                  <SelectTrigger className="mt-1 h-8 text-xs"><SelectValue placeholder="Select client" /></SelectTrigger>
+                  <SelectContent>{(users||[]).map(u => <SelectItem key={u.id} value={u.id}>{u.full_name || u.email}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs">Service Type</Label>
+                <Select value={newComm.service_type} onValueChange={handleSvcChange}>
+                  <SelectTrigger className="mt-1 h-8 text-xs"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {SERVICES_ADMIN.map(sv => <SelectItem key={sv.key} value={sv.key}>{sv.label}</SelectItem>)}
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs">Product / Plan Name</Label>
+                <Input value={newComm.product_name} onChange={e => setNewComm(p => ({ ...p, product_name: e.target.value }))} className="mt-1 h-8 text-xs" placeholder="e.g. Meta Ads Basic" />
+              </div>
+              <div>
+                <Label className="text-xs">Sale Amount ({currency})</Label>
+                <Input type="number" value={newComm.sale_amount} onChange={e => handleSaleAmt(e.target.value)} className="mt-1 h-8 text-xs" placeholder="0" />
+              </div>
+              <div>
+                <Label className="text-xs">Commission Amount ({currency}) <span className="text-muted-foreground text-xs font-normal">auto-calculated</span></Label>
+                <Input type="number" value={newComm.commission_amount} onChange={e => setNewComm(p => ({ ...p, commission_amount: e.target.value }))} className="mt-1 h-8 text-xs" placeholder="0" />
+              </div>
+            </div>
+            <div>
+              <Label className="text-xs">Notes (optional)</Label>
+              <Input value={newComm.notes} onChange={e => setNewComm(p => ({ ...p, notes: e.target.value }))} className="mt-1 h-8 text-xs" />
+            </div>
+            <div className="flex gap-2">
+              <Button size="sm" className="h-8" onClick={submitCreate} disabled={createMut.isPending}>
+                {createMut.isPending ? 'Creating...' : 'Create Commission'}
+              </Button>
+              <Button size="sm" variant="outline" className="h-8" onClick={() => setShowCreate(false)}>Cancel</Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardContent className="p-0 overflow-x-auto">
@@ -862,8 +1004,13 @@ export default function AdminReferrals() {
     queryKey: ['adminPayouts'],
     queryFn: () => base44.entities.AffiliatePayout.list('-created_date', 500).catch(() => []),
   });
+  const { data: settingsList = [] } = useQuery({
+    queryKey: ['affiliateSettings'],
+    queryFn: () => base44.entities.AffiliateSettings.list(null, 1).catch(() => []),
+  });
+  const affiliateSettings = settingsList?.[0] || null;
 
-  const tabProps = { referrals, users, commissions, payouts, isLoading: loadingRefs || loadingComms || loadingPayouts };
+  const tabProps = { referrals, users, commissions, payouts, affiliateSettings, isLoading: loadingRefs || loadingComms || loadingPayouts };
 
   return (
     <div className="min-h-screen bg-background">
