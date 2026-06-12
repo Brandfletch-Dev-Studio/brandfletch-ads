@@ -56,9 +56,29 @@ export default function Register() {
           const me = await base44.auth.me();
           // Store the referral code on the new user's profile
           await base44.auth.updateMe({ referred_by: referralCode });
+          // Look up the referrer user by their referral code
+          let referrerId = '';
+          let referrerName = '';
+          try {
+            // Code format: BF-XXXXXX (last 6 of user ID) OR custom referral_code field
+            const allUsers = await base44.entities.User.filter({ referral_code: referralCode });
+            if (allUsers?.length > 0) {
+              referrerId = allUsers[0].id;
+              referrerName = allUsers[0].full_name || '';
+            } else {
+              // fallback: match generated code BF-{id.slice(-6).toUpperCase()}
+              const codeMatch = referralCode.match(/^BF-([A-Z0-9]{6})$/);
+              if (codeMatch) {
+                // Store code anyway - admin can resolve later
+                referrerId = 'pending_lookup';
+              }
+            }
+          } catch {}
           // Create a Referral record for the referrer to track
           await base44.entities.Referral.create({
             referral_code: referralCode,
+            referrer_id: referrerId,
+            referrer_name: referrerName,
             referred_email: email,
             referred_name: me?.full_name || '',
             referred_user_id: me?.id || '',
