@@ -99,7 +99,6 @@ function DashboardTab({ user, affiliateSettings, referrals, commissions, payouts
   const convRate      = referrals.length > 0 ? Math.round((converted / referrals.length) * 100) : 0;
   const minPayout     = affiliateSettings?.minimum_payout || 5000;
   const currency      = affiliateSettings?.minimum_payout_currency || 'MWK';
-  const commRate      = affiliateSettings?.default_percentage || 0;
 
   const stats = [
     { label: 'Total Earnings',      value: `${currency} ${compactNum(totalEarnings)}`,          color: 'text-green-600', bg: 'bg-green-50',  icon: TrendingUp },
@@ -808,8 +807,9 @@ function ProfileTab({ user }) {
     email: user?.email || '',
     phone: user?.phone || '',
     whatsapp_number: user?.whatsapp_number || '',
-    payout_method: user?.payout_method || 'airtel_money',
-    payout_details: user?.payout_details || '',
+    payout_method: user?.affiliate_payout_method || user?.payout_method || 'airtel_money',
+    payout_details: user?.affiliate_payout_number || user?.payout_details || '',
+    payout_name: user?.affiliate_payout_name || '',
     notify_email: user?.notify_email ?? true,
     notify_inapp: user?.notify_inapp ?? true,
   });
@@ -823,7 +823,10 @@ function ProfileTab({ user }) {
         phone: form.phone,
         whatsapp_number: form.whatsapp_number,
         payout_method: form.payout_method,
+        affiliate_payout_method: form.payout_method,
         payout_details: form.payout_details,
+        affiliate_payout_number: form.payout_details,
+        affiliate_payout_name: form.payout_name,
         notify_email: form.notify_email,
         notify_inapp: form.notify_inapp,
       });
@@ -901,6 +904,15 @@ function ProfileTab({ user }) {
               className="mt-1.5"
             />
           </div>
+          <div>
+            <Label className="text-sm">Account / Full Name <span className="text-xs text-muted-foreground font-normal">(for verification)</span></Label>
+            <Input
+              value={form.payout_name}
+              onChange={e => setForm(f => ({ ...f, payout_name: e.target.value }))}
+              placeholder="e.g. John Banda"
+              className="mt-1.5"
+            />
+          </div>
         </CardContent>
       </Card>
 
@@ -952,7 +964,14 @@ export default function Referrals() {
     if (!user?.id) return;
     try {
       const [refs, comms, pays, settings] = await Promise.all([
-        base44.entities.Referral.filter({ referrer_id: user.id }, '-created_date').catch(() => []),
+        base44.entities.Referral.filter({ referrer_id: user.id }, '-created_date').then(async (byId) => {
+          // Also catch old records that only stored the referral code (pre-fix registrations)
+          const code = user.referral_code || (user.id ? `BF-${user.id.slice(-6).toUpperCase()}` : '');
+          const byCode = code ? await base44.entities.Referral.filter({ referral_code: code }, '-created_date').catch(() => []) : [];
+          // Merge deduplicated
+          const seen = new Set(byId.map(r => r.id));
+          return [...byId, ...byCode.filter(r => !seen.has(r.id))];
+        }).catch(() => []),
         base44.entities.AffiliateCommission.filter({ affiliate_id: user.id }, '-created_date').catch(() => []),
         base44.entities.AffiliatePayout.filter({ affiliate_id: user.id }, '-created_date').catch(() => []),
         base44.entities.AffiliateSettings.list(null, 1).catch(() => []),
