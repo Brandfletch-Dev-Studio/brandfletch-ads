@@ -85,5 +85,24 @@
       "type": "string",
       "description": "Account name for payout verification"
     }
-  }
+  },
+    "referred_by": {
+      "type": "string",
+      "description": "Referral code used when this user signed up"
+    },
+    "payout_details": {
+      "type": "string",
+      "description": "Mobile money number or bank account details for payouts"
+    },
+    "notify_email": {
+      "type": "boolean",
+      "default": true,
+      "description": "Receive email notifications for referrals and commissions"
+    },
+    "notify_inapp": {
+      "type": "boolean",
+      "default": true,
+      "description": "Receive in-app notifications for referrals and commissions"
+    }
+  
 }
