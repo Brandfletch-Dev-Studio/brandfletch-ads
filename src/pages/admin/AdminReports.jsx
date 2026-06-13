@@ -60,8 +60,8 @@ export default function AdminReports() {
 
   useEffect(() => {
     Promise.all([
-      base44.entities.Campaign.list('-created_date', 500),
-      base44.entities.WalletTransaction.list('-created_date', 500),
+      base44.entities.Campaign.list({ sort: '-created_date', limit: 500 }),
+      base44.entities.WalletTransaction.list({ sort: '-created_date', limit: 500 }),
       base44.entities.ExchangeRate.filter({ is_active: true }),
     ]).then(([campaigns, transactions, exchangeRates]) => {
       setAllData({ campaigns, transactions, exchangeRates });
