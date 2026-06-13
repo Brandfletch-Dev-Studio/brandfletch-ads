@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Palette, Clock, CheckCircle2, MessageSquare, Download, Upload, ArrowLeft, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useRoleGuard } from '@/hooks/useRoleGuard';
+import { useAuth } from '@/lib/AuthContext';
 import DesignChatComponent from '@/components/designs/DesignChatComponent';
 import DesignStatusTimeline from '@/components/designs/DesignStatusTimeline';
 
@@ -32,19 +33,21 @@ const STATUS_COLORS = {
 };
 
 export default function DesignerPortal() {
-  useRoleGuard(['admin', 'super_admin', 'ads_manager', 'campaign_manager', 'creative_ops_director', 'designer']);
+  // Bug fix: limit portal to design dept only — ads team shouldn't see design work queue
+  useRoleGuard(['admin', 'super_admin', 'creative_ops_director', 'designer']);
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [showChat, setShowChat] = useState(false);
   const [designerNotes, setDesignerNotes] = useState('');
   const [uploading, setUploading] = useState(false);
   const queryClient = useQueryClient();
 
-  const { data: user } = useQuery({ queryKey: ['currentUser'], queryFn: () => base44.auth.me() });
+  const { user } = useAuth();
 
   const { data: requests, isLoading } = useQuery({
-    queryKey: ['designerRequests'],
-    queryFn: () => base44.entities.DesignRequest.filter({ designer_id: user?.id }, '-created_date'),
-    enabled: !!user,
+    queryKey: ['designerRequests', user?.id],
+    // Bug fix: filter options must be object, not positional args
+    queryFn: () => base44.entities.DesignRequest.filter({ designer_id: user?.id }, { sort: '-created_date' }),
+    enabled: !!user?.id,
     initialData: [],
   });
 
