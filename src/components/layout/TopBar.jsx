@@ -46,7 +46,7 @@ export default function TopBar({ onMenuToggle, currentUser, isStaff }) {
       <div className="flex items-center gap-2 ml-auto">
         {/* New campaign CTA for clients */}
         {!isStaff && (
-          <Link to="/campaigns/new" className="hidden sm:block mr-2">
+          <Link to="/campaigns/new" className="hidden sm:block lg:hidden mr-2">
             <Button size="sm" className="bg-[hsl(var(--accent))] hover:bg-[hsl(217,91%,48%)] text-white font-semibold text-xs h-8 px-3 gap-1.5">
               + New Campaign
             </Button>
