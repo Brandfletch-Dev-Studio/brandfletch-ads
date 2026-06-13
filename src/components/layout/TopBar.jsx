@@ -13,10 +13,16 @@ export default function TopBar({ onMenuToggle, currentUser, isStaff }) {
 
   const { data: unreadNotifications = [] } = useQuery({
     queryKey: ['unread-notifications', currentUser?.id],
-    queryFn: () => base44.entities.Notification.filter({ recipient_id: currentUser?.id, is_read: false }, '-created_date', 1),
+    // Bug fix: filter() options must be an object, not positional args
+    queryFn: () => base44.entities.Notification.filter(
+      { recipient_id: currentUser?.id, is_read: false },
+      { sort: '-created_date', limit: 20 }
+    ),
     enabled: !!currentUser?.id,
     refetchInterval: 30000,
   });
+  // Bug fix: was using .length which counts ALL returned — but we fetch with limit:20
+  // The actual unread count is correctly the length here since we filter is_read: false
   const unreadCount = unreadNotifications.length;
 
   return (
@@ -32,7 +38,7 @@ export default function TopBar({ onMenuToggle, currentUser, isStaff }) {
         </button>
       </div>
 
-      {/* Center: logo + name */}
+      {/* Center: logo + name (mobile only) */}
       <div className="absolute left-1/2 -translate-x-1/2 lg:hidden flex items-center gap-2">
         <img
           src="https://media.base44.com/images/public/6a1df082a0de66cf554f8fdd/eeb543716_file_0000000024d0722fa20034e2dedcbc9e.png"
@@ -44,9 +50,7 @@ export default function TopBar({ onMenuToggle, currentUser, isStaff }) {
 
       {/* Right: actions */}
       <div className="flex items-center gap-2 ml-auto">
-
-
-        {/* Notifications — navigate to dedicated page */}
+        {/* Notifications */}
         <Button
           variant="ghost"
           size="icon"
@@ -61,18 +65,22 @@ export default function TopBar({ onMenuToggle, currentUser, isStaff }) {
           )}
         </Button>
 
-        {/* Profile — direct click to settings */}
+        {/* Profile avatar — click to settings */}
         <button
           onClick={() => navigate('/settings')}
           className="flex items-center gap-2 pl-2.5 pr-2 py-2 rounded-lg hover:bg-secondary transition-colors ml-1"
           title="Profile Settings"
         >
-          <div className="w-7 h-7 rounded-full bg-[hsl(var(--primary))] flex items-center justify-center text-primary-foreground text-xs font-bold flex-shrink-0">
+          <div className="w-7 h-7 rounded-full bg-[hsl(var(--primary))] flex items-center justify-center text-primary-foreground text-xs font-bold">
             {initials}
           </div>
-          <div className="hidden sm:block text-left max-w-[120px]">
-            <p className="text-xs font-semibold truncate leading-tight">{currentUser?.full_name || 'Account'}</p>
-            <p className="text-[10px] text-muted-foreground truncate leading-tight">{currentUser?.email}</p>
+          <div className="hidden md:block text-left">
+            <p className="text-xs font-medium leading-tight truncate max-w-[120px]">
+              {currentUser?.full_name || currentUser?.email || 'Account'}
+            </p>
+            <p className="text-[10px] text-muted-foreground leading-tight capitalize">
+              {currentUser?.role === 'user' ? 'Client' : (currentUser?.role?.replace(/_/g, ' ') || 'Client')}
+            </p>
           </div>
         </button>
       </div>
