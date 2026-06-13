@@ -1,4 +1,4 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Menu, Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { base44 } from '@/api/base44Client';
@@ -44,14 +44,7 @@ export default function TopBar({ onMenuToggle, currentUser, isStaff }) {
 
       {/* Right: actions */}
       <div className="flex items-center gap-2 ml-auto">
-        {/* New campaign CTA for clients */}
-        {!isStaff && (
-          <Link to="/campaigns/new" className="hidden sm:block lg:hidden mr-2">
-            <Button size="sm" className="bg-[hsl(var(--accent))] hover:bg-[hsl(217,91%,48%)] text-white font-semibold text-xs h-8 px-3 gap-1.5">
-              + New Campaign
-            </Button>
-          </Link>
-        )}
+
 
         {/* Notifications — navigate to dedicated page */}
         <Button
