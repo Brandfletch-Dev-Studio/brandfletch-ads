@@ -29,6 +29,7 @@ export default function Onboarding() {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [user, setUser] = useState(null);
+  const [loadingUser, setLoadingUser] = useState(true);
   const [saving, setSaving] = useState(false);
   const [detectingLocation, setDetectingLocation] = useState(false);
 
@@ -46,6 +47,7 @@ export default function Onboarding() {
   useEffect(() => {
     base44.auth.me().then(u => {
       setUser(u);
+      setLoadingUser(false);
       setForm(f => ({ ...f, full_name: u.full_name || '' }));
       detectCountry();
     }).catch(() => navigate('/login'));
@@ -92,6 +94,19 @@ export default function Onboarding() {
     { id: 3, title: 'Your Goal' },
     { id: 4, title: 'Facebook Page' },
   ];
+
+  // Show spinner while auth check is in progress
+  if (loadingUser) {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-10 h-10 border-4 border-[hsl(var(--primary))]/20 border-t-[hsl(var(--primary))] rounded-full animate-spin" />
+          <p className="text-sm text-muted-foreground font-medium">Setting up your account...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <div className="flex items-center justify-between px-6 py-4 border-b border-border">
