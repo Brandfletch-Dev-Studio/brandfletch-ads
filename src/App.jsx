@@ -74,25 +74,28 @@ const AuthenticatedApp = () => {
     );
   }
 
+  // Recalculate isOnSkipRoute here (it's used in the auth block below)
   const isOnSkipRoute = SKIP_ONBOARDING_ROUTES.some(r => window.location.pathname.startsWith(r));
 
   if (!isOnAuthRoute) {
     if (authError) {
       if (authError.type === 'user_not_registered') {
         return <UserNotRegisteredError />;
+      } else if (isOnSkipRoute) {
+        // On /onboarding after fresh registration, auth might not have settled yet.
+        // Let the page render — it handles its own auth check via base44.auth.me().
+        // Don't redirect new users away from onboarding due to a transient auth error.
       } else {
         navigateToLogin();
         return null;
       }
     }
 
-    if (!isLoadingAuth && !currentUser) {
+    if (!isLoadingAuth && !currentUser && !isOnSkipRoute) {
       navigateToLogin();
       return null;
     }
 
-    // Fix #4: Use React Router <Navigate> instead of window.location.href
-    // This avoids a full page reload and preserves React state/context
     if (!isLoadingAuth && currentUser && !currentUser.onboarded && !isOnSkipRoute) {
       return <Navigate to="/onboarding" replace />;
     }
