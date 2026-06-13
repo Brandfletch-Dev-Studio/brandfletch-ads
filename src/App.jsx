@@ -59,6 +59,13 @@ import ResetPassword from '@/pages/ResetPassword';
 const AUTH_ROUTES = ['/login', '/register', '/forgot-password', '/reset-password'];
 const SKIP_ONBOARDING_ROUTES = [...AUTH_ROUTES, '/onboarding'];
 
+// Returns the default auth route based on visit history:
+// - Returning users (bf_visited in localStorage) → /login
+// - New users → /register
+const getDefaultAuthRoute = () => {
+  return localStorage.getItem('bf_visited') ? '/login' : '/register';
+};
+
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin, user: currentUser } = useAuth();
   const isOnAuthRoute = AUTH_ROUTES.some(r => window.location.pathname.startsWith(r));
@@ -74,7 +81,6 @@ const AuthenticatedApp = () => {
     );
   }
 
-  // Recalculate isOnSkipRoute here (it's used in the auth block below)
   const isOnSkipRoute = SKIP_ONBOARDING_ROUTES.some(r => window.location.pathname.startsWith(r));
 
   if (!isOnAuthRoute) {
@@ -82,18 +88,16 @@ const AuthenticatedApp = () => {
       if (authError.type === 'user_not_registered') {
         return <UserNotRegisteredError />;
       } else if (isOnSkipRoute) {
-        // On /onboarding after fresh registration, auth might not have settled yet.
-        // Let the page render — it handles its own auth check via base44.auth.me().
-        // Don't redirect new users away from onboarding due to a transient auth error.
+        // Let the page render — it handles its own auth check
       } else {
-        navigateToLogin();
+        // Redirect to login or register based on visit history
+        window.location.href = getDefaultAuthRoute();
         return null;
       }
     }
 
     if (!isLoadingAuth && !currentUser && !isOnSkipRoute) {
-      navigateToLogin();
-      return null;
+      return <Navigate to={getDefaultAuthRoute()} replace />;
     }
 
     if (!isLoadingAuth && currentUser && !currentUser.onboarded && !isOnSkipRoute) {
@@ -101,7 +105,6 @@ const AuthenticatedApp = () => {
     }
   }
 
-  // Fix #5: Removed unused `isAdmin` variable
   const isStaff = currentUser && ['admin', 'super_admin', 'ads_manager', 'campaign_manager', 'finance', 'sales_manager', 'creative_ops_director', 'designer'].includes(currentUser.role);
 
   return (
