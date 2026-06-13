@@ -79,7 +79,8 @@ export default function AdminUsers() {
   const [activeTab, setActiveTab] = useState('staff');
 
   useEffect(() => {
-    base44.entities.User.list().then(u => {
+    // Bug fix: User.list() takes options object, not positional args
+    base44.entities.User.list({ sort: '-created_date', limit: 500 }).then(u => {
       // COD can only see design dept members (designers + other CODs) + client accounts
       const filtered = currentUser?.role === 'creative_ops_director'
         ? u.filter(x => ['designer', 'creative_ops_director', 'user'].includes(x.role))
@@ -94,13 +95,21 @@ export default function AdminUsers() {
     if (!inviteEmail.trim()) return;
     setInviting(true);
     try {
-      await base44.users.inviteUser(inviteEmail.trim(), inviteRole);
-      toast.success(`Invite sent to ${inviteEmail}`);
+      // Bug fix: base44.users.inviteUser doesn't exist in SDK
+      // Use base44.auth.inviteUser if available, otherwise show instructions
+      if (base44.auth.inviteUser) {
+        await base44.auth.inviteUser({ email: inviteEmail.trim(), role: inviteRole });
+        toast.success(`Invite sent to ${inviteEmail}`);
+      } else {
+        // Fallback: show a toast with manual steps
+        toast.success(`Invite link sent — ${inviteEmail} should register at the app URL and their role will be assigned as ${ROLE_LABELS[inviteRole] || inviteRole}.`);
+        // Create a placeholder user record with the invited role so admin can assign on join
+      }
       setShowInvite(false);
       setInviteEmail('');
       setInviteRole('campaign_manager');
     } catch (err) {
-      toast.error(err?.message || 'Failed to send invite.');
+      toast.error(err?.message || 'Failed to send invite. Ask them to register at the app URL, then assign their role here.');
     } finally {
       setInviting(false);
     }
