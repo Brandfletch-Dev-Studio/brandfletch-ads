@@ -30,7 +30,7 @@ export default function AdminAuditLog() {
 
   const { data: logs = [], isLoading } = useQuery({
     queryKey: ['audit-logs'],
-    queryFn: () => base44.entities.AuditLog.list('-created_date', 200),
+    queryFn: () => base44.entities.AuditLog.list({ sort: '-created_date', limit: 200 }),
     enabled: allowed,
   });
 
