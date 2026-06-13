@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react';
+import { useRoleGuard } from '@/hooks/useRoleGuard';
 import { Card, CardContent } from '@/components/ui/card';
 import { Palette, Users, TrendingUp, Activity, Clock, CheckCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 
 export default function AdminOverview() {
+  // Block designer role — they should be at /designer, not /admin
+  useRoleGuard(null, 'clients.view');
   const [stats, setStats] = useState({
     totalDesigns: null,
     totalLeads: null,
