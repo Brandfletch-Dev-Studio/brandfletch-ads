@@ -48,17 +48,14 @@ export default function Register() {
     setLoading(true);
     try {
       const result = await base44.auth.verifyOtp({ email, otpCode });
-      // SDK sets token internally; also set manually if returned explicitly
       if (result?.access_token) base44.auth.setToken(result.access_token);
 
-      // Record referral (non-blocking — never prevents onboarding)
       if (referralCode) {
         recordReferral(referralCode, email).catch(err =>
           console.warn('Referral tracking failed (non-fatal):', err)
         );
       }
 
-      // Use React Router navigate — no page reload, token is already live
       navigate('/onboarding');
     } catch (err) {
       setError(err.message || "Invalid verification code");
@@ -109,10 +106,6 @@ export default function Register() {
         </>
       }
     >
-      <div className="relative flex justify-center text-xs uppercase">
-        <span className="bg-card px-3 text-muted-foreground">or register with email</span>
-      </div>
-
       {error && <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">{error}</div>}
 
       <form onSubmit={handleSubmit} className="space-y-4">
