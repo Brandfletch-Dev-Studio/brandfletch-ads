@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
+import { useAuth } from '@/lib/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -18,6 +19,7 @@ const BUSINESS_TYPES = [
 
 export default function Onboarding() {
   const navigate = useNavigate();
+  const { checkUserAuth } = useAuth(); // Fix #4: refresh auth context after onboarding
   const [loadingUser, setLoadingUser] = useState(true);
   const [saving, setSaving] = useState(false);
   const [detectingLocation, setDetectingLocation] = useState(false);
@@ -26,7 +28,7 @@ export default function Onboarding() {
   const [form, setForm] = useState({
     full_name: '',
     business_name: '',
-    business_type: '',
+    business_category: '', // Fix #3: was business_type, schema uses business_category
     phone: '',
     country: '',
   });
@@ -40,7 +42,7 @@ export default function Onboarding() {
           phone: u.phone || '',
           country: u.country || '',
           business_name: u.business_name || '',
-          business_type: u.business_type || '',
+          business_category: u.business_category || u.business_type || '', // Fix #3: support both field names
         }));
         setLoadingUser(false);
         detectCountry(u.country);
@@ -49,7 +51,7 @@ export default function Onboarding() {
   }, []);
 
   async function detectCountry(existingCountry) {
-    if (existingCountry) return; // already have one
+    if (existingCountry) return;
     setDetectingLocation(true);
     try {
       const res = await fetch('https://ipapi.co/json/');
@@ -72,14 +74,21 @@ export default function Onboarding() {
     setError('');
     setSaving(true);
     try {
+      // Fix #2: explicitly set role to 'user' (business client) on first onboard
+      // Fix #3: save to business_category (correct field name in User schema)
       await base44.auth.updateMe({
         full_name: form.full_name.trim(),
         phone: form.phone.trim(),
         country: form.country,
         business_name: form.business_name.trim(),
-        business_type: form.business_type,
+        business_category: form.business_category,
+        role: 'user', // Default client role — prevents null role issues
         onboarded: true,
       });
+
+      // Fix #4: re-fetch user in AuthContext so Dashboard sees updated data immediately
+      await checkUserAuth();
+
       navigate('/dashboard');
     } catch (err) {
       setError('Something went wrong. Please try again.');
@@ -87,7 +96,6 @@ export default function Onboarding() {
     }
   }
 
-  // Loading spinner while auth settles
   if (loadingUser) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-background">
@@ -172,10 +180,10 @@ export default function Onboarding() {
               />
             </div>
 
-            {/* Business Type */}
+            {/* Business Category */}
             <div>
               <Label className="mb-1.5 block">Business Type <span className="text-muted-foreground font-normal">(optional)</span></Label>
-              <Select value={form.business_type} onValueChange={v => update('business_type', v)}>
+              <Select value={form.business_category} onValueChange={v => update('business_category', v)}>
                 <SelectTrigger className="h-11">
                   <SelectValue placeholder="Select type..." />
                 </SelectTrigger>
