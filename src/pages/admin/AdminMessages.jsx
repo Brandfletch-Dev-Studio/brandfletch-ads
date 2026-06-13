@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useAuth } from '@/lib/AuthContext';
 import { base44 } from '@/api/base44Client';
 import { Send, MessageCircle, Paperclip, X, Search, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -33,19 +34,20 @@ export default function AdminMessages() {
   const [sending, setSending] = useState(false);
   const [attachment, setAttachment] = useState(null);
   const [uploading, setUploading] = useState(false);
-  const [adminUser, setAdminUser] = useState(null);
+  const [adminUser, // setAdminUser] = useState(null);
   const [search, setSearch] = useState('');
   const [mobileView, setMobileView] = useState('list'); // 'list' | 'chat'
   const bottomRef = useRef(null);
 
+  const { user: adminUser } = useAuth();
+
   useEffect(() => {
-    base44.auth.me().then(u => setAdminUser(u));
     base44.entities.User.list().then(us => {
       const map = {};
       us.forEach(u => { map[u.id] = u; });
       setUsers(map);
     });
-    base44.entities.Message.list('-created_date', 500).then(msgs => {
+    base44.entities.Message.list({ sort: '-created_date', limit: 500 }).then(msgs => {
       setAllMessages(msgs.reverse());
     });
 
