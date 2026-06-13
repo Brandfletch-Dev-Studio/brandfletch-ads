@@ -10,12 +10,10 @@ import StatusBadge from '@/components/ui/StatusBadge';
 import { format } from 'date-fns';
 import AdPlacement from '@/components/ads/AdPlacement';
 
-// Fix #8b: all 8 statuses visible — no more .slice(0,5)
 const STATUSES = ['all', 'draft', 'awaiting_payment', 'pending_review', 'active', 'paused', 'completed', 'rejected'];
 
 export default function CampaignsList() {
-  // Fix #8a: use AuthContext user — no redundant base44.auth.me() call
-  const { user } = useAuth();
+  const { user, isLoadingAuth } = useAuth();
 
   const [campaigns, setCampaigns] = useState([]);
   const [search, setSearch] = useState('');
@@ -23,14 +21,15 @@ export default function CampaignsList() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Bug fix: wait for auth before fetching — same pattern as Dashboard
+    if (isLoadingAuth) return;
     if (!user?.id) return;
-    base44.entities.Campaign.filter({ user_id: user.id }, '-created_date')
+    base44.entities.Campaign.filter({ created_by: user.id }, { sort: '-created_date' })
       .then(data => setCampaigns(data))
       .catch(err => console.error('Failed to load campaigns:', err))
       .finally(() => setLoading(false));
-  }, [user?.id]);
+  }, [user?.id, isLoadingAuth]);
 
-  // Fix #8c: search across campaign_name, page_name, and objective — not just page_name
   const filtered = campaigns.filter(c => {
     const q = search.toLowerCase();
     const matchSearch = !search
@@ -50,10 +49,18 @@ export default function CampaignsList() {
     if (currency === 'ZAR') return `R${cost.toLocaleString()}`;
     if (currency === 'TZS') return `TSh${cost.toLocaleString()}`;
     if (currency === 'USD') return `$${cost.toFixed(2)}`;
-    if (currency === 'EUR') return `€${cost.toFixed(2)}`;
-    if (currency === 'GBP') return `£${cost.toFixed(2)}`;
+    if (currency === 'EUR') return `\u20ac${cost.toFixed(2)}`;
+    if (currency === 'GBP') return `\u00a3${cost.toFixed(2)}`;
     return `${currency} ${cost.toLocaleString()}`;
   };
+
+  if (isLoadingAuth || loading) {
+    return (
+      <div className="p-4 lg:p-8 max-w-4xl mx-auto space-y-3">
+        {[1, 2, 3].map(i => <div key={i} className="h-20 rounded-xl bg-secondary animate-pulse" />)}
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 lg:p-8 max-w-4xl mx-auto space-y-6">
@@ -73,7 +80,6 @@ export default function CampaignsList() {
         </Link>
       </div>
 
-      {/* Search + Status filters */}
       <div className="flex flex-col gap-3">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -84,7 +90,6 @@ export default function CampaignsList() {
             className="pl-9"
           />
         </div>
-        {/* All 8 statuses shown — scrollable on mobile */}
         <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
           {STATUSES.map(s => (
             <button
@@ -102,11 +107,7 @@ export default function CampaignsList() {
         </div>
       </div>
 
-      {loading ? (
-        <div className="space-y-3">
-          {[1, 2, 3].map(i => <div key={i} className="h-20 rounded-xl bg-secondary animate-pulse" />)}
-        </div>
-      ) : filtered.length === 0 ? (
+      {filtered.length === 0 ? (
         <div className="text-center py-16">
           <Megaphone className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
           <h3 className="font-semibold text-lg mb-2">No campaigns found</h3>
