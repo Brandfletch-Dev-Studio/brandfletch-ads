@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useAuth } from '@/lib/AuthContext';
 import { base44 } from '@/api/base44Client';
 import { Plus, Trash2, Save, DollarSign, CreditCard, Pencil, X, Check, Mail, AlertTriangle, ShieldAlert, Palette } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -36,20 +37,25 @@ export default function AdminSettings() {
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
 
+  const { user: authUser } = useAuth();
+
   useEffect(() => {
     Promise.all([
       base44.entities.ExchangeRate.list(),
       base44.entities.PaymentMethod.list(),
-      base44.auth.me(),
       base44.entities.DesignPricing.list(),
-    ]).then(([r, m, u, dp]) => {
+    ]).then(([r, m, dp]) => {
       setRates(r);
       setMethods(m);
       setDesignPricing(dp);
-      if (u?.admin_notification_email) setAdminEmail(u.admin_notification_email);
-      else if (u?.email) setAdminEmail(u.email);
     });
   }, []);
+
+  useEffect(() => {
+    if (!authUser) return;
+    if (authUser.admin_notification_email) setAdminEmail(authUser.admin_notification_email);
+    else if (authUser.email) setAdminEmail(authUser.email);
+  }, [authUser?.id]);
 
   async function saveAdminEmail() {
     setSavingEmail(true);
