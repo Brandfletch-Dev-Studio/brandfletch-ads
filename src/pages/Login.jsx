@@ -1,15 +1,14 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
-import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Mail, Lock, Loader2 } from "lucide-react";
 import AuthLayout from "@/components/AuthLayout";
 
-
 export default function Login() {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -42,9 +41,9 @@ export default function Login() {
       subtitle="Log in to continue growing your business with Brandfletch Ads"
       footer={
         <>
-          Don't have an account?{" "}
+          New here?{" "}
           <Link to="/register" className="text-[hsl(var(--accent))] font-semibold hover:underline">
-            Create one free
+            Create a free account
           </Link>
         </>
       }
