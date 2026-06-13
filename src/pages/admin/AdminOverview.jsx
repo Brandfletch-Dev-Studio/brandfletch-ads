@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Palette, Users, TrendingUp, Activity, Clock, CheckCircle, AlertCircle } from 'lucide-react';
+import { Palette, Users, TrendingUp, Activity, Clock, CheckCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 
@@ -19,23 +19,25 @@ export default function AdminOverview() {
   useEffect(() => {
     async function fetchStats() {
       try {
-        const [designs, leads, campaigns, payments, users, tickets] = await Promise.all([
-          base44.entities.DesignRequest.list('-created_date', 1000).catch(() => []),
-          base44.entities.Lead.list('-created_date', 1000).catch(() => []),
-          base44.entities.Campaign.list('-created_date', 1000).catch(() => []),
-          base44.entities.Payment.list('-created_date', 1000).catch(() => []),
-          base44.entities.User.list('-created_date', 1000).catch(() => []),
-          base44.entities.SupportTicket.list('-created_date', 1000).catch(() => []),
+        // Bug fix: base44.entities.Payment does not exist — use WalletTransaction for revenue
+        // Also fix list() call signature — pass options object, not positional args
+        const [designs, leads, campaigns, walletTxns, users, tickets] = await Promise.all([
+          base44.entities.DesignRequest.list({ sort: '-created_date', limit: 1000 }).catch(() => []),
+          base44.entities.Lead.list({ sort: '-created_date', limit: 1000 }).catch(() => []),
+          base44.entities.Campaign.list({ sort: '-created_date', limit: 1000 }).catch(() => []),
+          base44.entities.WalletTransaction.list({ sort: '-created_date', limit: 1000 }).catch(() => []),
+          base44.entities.User.list({ sort: '-created_date', limit: 1000 }).catch(() => []),
+          base44.entities.SupportTicket.list({ sort: '-created_date', limit: 1000 }).catch(() => []),
         ]);
 
         const activeCampaigns = campaigns.filter(c => c.status === 'active').length;
         const pendingCampaigns = campaigns.filter(c => ['pending_review', 'awaiting_payment'].includes(c.status)).length;
         const openTickets = tickets.filter(t => t.status === 'open' || t.status === 'in_progress').length;
 
-        // Sum revenue from completed/verified payments
-        const totalRevenue = payments
-          .filter(p => p.status === 'completed' || p.status === 'verified')
-          .reduce((sum, p) => sum + (p.amount_usd || p.amount || 0), 0);
+        // Revenue from wallet credit transactions (deposits/payments)
+        const totalRevenue = walletTxns
+          .filter(t => t.type === 'credit' && t.status === 'completed')
+          .reduce((sum, t) => sum + (t.amount_usd || t.amount || 0), 0);
 
         setStats({
           totalDesigns: designs.length,
@@ -43,7 +45,7 @@ export default function AdminOverview() {
           activeCampaigns,
           pendingCampaigns,
           revenue: totalRevenue,
-          totalUsers: users.length,
+          totalUsers: users.filter(u => u.role === 'user').length,
           openTickets,
         });
       } catch (err) {
@@ -56,7 +58,7 @@ export default function AdminOverview() {
     fetchStats();
   }, []);
 
-  const fmt = (val) => (val === null ? '—' : val.toLocaleString());
+  const fmt = (val) => (val === null ? '\u2014' : val.toLocaleString());
 
   const statCards = [
     {
@@ -76,20 +78,36 @@ export default function AdminOverview() {
       link: '/admin/designs',
     },
     {
-      title: 'Total Leads',
-      value: fmt(stats.totalLeads),
+      title: 'Client Accounts',
+      value: fmt(stats.totalUsers),
       sub: '',
       icon: Users,
       color: 'bg-blue-100 text-blue-700',
-      link: '/admin/leads',
+      link: '/admin/users',
     },
     {
-      title: 'Total Revenue (USD)',
-      value: stats.revenue !== null ? `$${stats.revenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '—',
-      sub: '',
+      title: 'Platform Revenue',
+      value: stats.revenue !== null ? `$${stats.revenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '\u2014',
+      sub: 'From wallet top-ups',
       icon: TrendingUp,
       color: 'bg-amber-100 text-amber-700',
       link: '/admin/payments',
+    },
+    {
+      title: 'Open Tickets',
+      value: fmt(stats.openTickets),
+      sub: '',
+      icon: Clock,
+      color: 'bg-red-100 text-red-700',
+      link: '/admin/support',
+    },
+    {
+      title: 'Pending Campaigns',
+      value: fmt(stats.pendingCampaigns),
+      sub: 'Awaiting review',
+      icon: CheckCircle,
+      color: 'bg-orange-100 text-orange-700',
+      link: '/admin/campaigns',
     },
   ];
 
@@ -100,8 +118,7 @@ export default function AdminOverview() {
         <p className="text-muted-foreground">Platform statistics and quick access</p>
       </div>
 
-      {/* Stat Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {statCards.map((stat) => {
           const Icon = stat.icon;
           return (
@@ -113,14 +130,12 @@ export default function AdminOverview() {
                       {loading ? (
                         <div className="h-8 w-16 bg-secondary rounded animate-pulse mb-1" />
                       ) : (
-                        <p className="text-3xl font-bold">{stat.value}</p>
+                        <p className="text-3xl font-bold font-heading">{stat.value}</p>
                       )}
                       <p className="text-sm text-muted-foreground mt-1">{stat.title}</p>
-                      {stat.sub && !loading && (
-                        <p className="text-xs text-muted-foreground mt-0.5">{stat.sub}</p>
-                      )}
+                      {stat.sub && <p className="text-xs text-muted-foreground/70 mt-0.5">{stat.sub}</p>}
                     </div>
-                    <div className={`w-12 h-12 rounded-lg ${stat.color} flex items-center justify-center flex-shrink-0`}>
+                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 ${stat.color}`}>
                       <Icon className="w-6 h-6" />
                     </div>
                   </div>
@@ -129,74 +144,6 @@ export default function AdminOverview() {
             </Link>
           );
         })}
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Quick Actions */}
-        <Card>
-          <CardContent className="p-6">
-            <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
-            <div className="space-y-2">
-              <Link to="/admin/designs" className="block p-3 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors">
-                <p className="font-medium">Manage Design Requests</p>
-                <p className="text-sm text-muted-foreground">Review and assign design tasks</p>
-              </Link>
-              <Link to="/admin/leads" className="block p-3 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors">
-                <p className="font-medium">View All Leads</p>
-                <p className="text-sm text-muted-foreground">Monitor lead pipeline across users</p>
-              </Link>
-              <Link to="/admin/campaigns" className="block p-3 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors">
-                <p className="font-medium">Campaign Management</p>
-                <p className="text-sm text-muted-foreground">Approve and track ad campaigns</p>
-              </Link>
-              <Link to="/admin/users" className="block p-3 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors">
-                <p className="font-medium">User Management</p>
-                <p className="text-sm text-muted-foreground">Manage platform users</p>
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* System Status */}
-        <Card>
-          <CardContent className="p-6">
-            <h2 className="text-lg font-semibold mb-4">System Status</h2>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Platform Status</span>
-                <span className="text-sm font-medium text-green-600">● Online</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Total Users</span>
-                {loading ? (
-                  <div className="h-4 w-8 bg-secondary rounded animate-pulse" />
-                ) : (
-                  <span className="text-sm font-medium">{fmt(stats.totalUsers)}</span>
-                )}
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Open Support Tickets</span>
-                {loading ? (
-                  <div className="h-4 w-8 bg-secondary rounded animate-pulse" />
-                ) : (
-                  <span className={`text-sm font-medium ${stats.openTickets > 0 ? 'text-amber-600' : 'text-green-600'}`}>
-                    {fmt(stats.openTickets)}
-                  </span>
-                )}
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Pending Campaigns</span>
-                {loading ? (
-                  <div className="h-4 w-8 bg-secondary rounded animate-pulse" />
-                ) : (
-                  <span className={`text-sm font-medium ${stats.pendingCampaigns > 0 ? 'text-amber-600' : 'text-green-600'}`}>
-                    {fmt(stats.pendingCampaigns)}
-                  </span>
-                )}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </div>
   );
