@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
+import { useAuth } from '@/lib/AuthContext';
 import { Check, X, ExternalLink, Search } from 'lucide-react';
 import { useRoleGuard } from '@/hooks/useRoleGuard';
 import { useAuditLog } from '@/hooks/useAuditLog';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -12,84 +13,93 @@ import { toast } from 'sonner';
 import { format } from 'date-fns';
 
 export default function AdminPayments() {
-  useRoleGuard(['admin', 'finance']);
+  // Bug fix: use permission-based guard (finance + admin) instead of role array only
+  useRoleGuard(null, 'payments.manage');
   const auditLog = useAuditLog();
+  // Bug fix: use AuthContext user instead of calling base44.auth.me() per verify action
+  const { user: staffUser } = useAuth();
   const [transactions, setTransactions] = useState([]);
   const [filter, setFilter] = useState('pending');
   const [search, setSearch] = useState('');
   const [notes, setNotes] = useState({});
   const [processing, setProcessing] = useState({});
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     load();
   }, []);
 
   async function load() {
-    const data = await base44.entities.WalletTransaction.list('-created_date', 200);
-    setTransactions(data);
+    try {
+      // Bug fix: list() takes options object, not positional sort/limit args
+      const data = await base44.entities.WalletTransaction.list({ sort: '-created_date', limit: 200 });
+      setTransactions(data);
+    } catch (err) {
+      console.error('Failed to load transactions:', err);
+      toast.error('Failed to load transactions');
+    } finally {
+      setLoading(false);
+    }
   }
 
-  const staffUser = async () => base44.auth.me();
-
   async function verify(id, status, txn) {
-    // Guard: only act on pending transactions
     if (txn.status !== 'pending') {
       toast.error('This transaction has already been processed.');
       return;
     }
     setProcessing(p => ({ ...p, [id]: true }));
-    const user = await staffUser();
-    await base44.entities.WalletTransaction.update(id, {
-      status,
-      verified_by: user.id,
-      finance_notes: notes[id] || '',
-    });
-    auditLog(
-      status === 'confirmed' ? 'payment_confirmed' : 'payment_rejected',
-      'WalletTransaction', id,
-      `Payment of ${txn.currency || 'USD'} ${txn.amount} ${status}. Ref: ${txn.payment_reference || '—'}. Notes: ${notes[id] || 'none'}`
-    );
+    try {
+      await base44.entities.WalletTransaction.update(id, {
+        status,
+        verified_by: staffUser?.id,
+        finance_notes: notes[id] || '',
+      });
+      auditLog(
+        status === 'confirmed' ? 'payment_confirmed' : 'payment_rejected',
+        'WalletTransaction', id,
+        `Payment of ${txn.currency || 'USD'} ${txn.amount} ${status}. Ref: ${txn.payment_reference || '\u2014'}. Notes: ${notes[id] || 'none'}`
+      );
 
-    // If confirming a campaign payment, update campaign status
-    if (status === 'confirmed' && txn.campaign_id) {
-      await base44.entities.Campaign.update(txn.campaign_id, { status: 'pending_review' });
-      // Notify client
-      if (txn.user_id) {
+      if (status === 'confirmed' && txn.campaign_id) {
+        await base44.entities.Campaign.update(txn.campaign_id, { status: 'pending_review' });
+        if (txn.user_id) {
+          await base44.entities.Notification.create({
+            recipient_id: txn.user_id,
+            type: 'payment_confirmed',
+            title: '\u2705 Payment Confirmed!',
+            message: 'Your payment has been verified. Your campaign is now under review.',
+            campaign_id: txn.campaign_id,
+            is_read: false,
+          });
+        }
+      }
+
+      if (status === 'rejected' && txn.user_id) {
         await base44.entities.Notification.create({
           recipient_id: txn.user_id,
-          type: 'payment_confirmed',
-          title: '✅ Payment Confirmed!',
-          message: 'Your payment has been verified. Your campaign is now under review.',
+          type: 'payment_rejected',
+          title: '\u274c Payment Rejected',
+          message: `Your payment could not be verified. Reason: ${notes[id] || 'Please contact support.'}`,
           campaign_id: txn.campaign_id,
           is_read: false,
         });
       }
-    }
 
-    if (status === 'rejected' && txn.user_id) {
-      await base44.entities.Notification.create({
-        recipient_id: txn.user_id,
-        type: 'payment_rejected',
-        title: '❌ Payment Rejected',
-        message: `Your payment could not be verified. Reason: ${notes[id] || 'Please contact support.'}`,
-        campaign_id: txn.campaign_id,
-        is_read: false,
-      });
-    }
+      if (txn.campaign_id) {
+        base44.functions.invoke('campaignEmailAlerts', {
+          campaign_id: txn.campaign_id,
+          event_type: status === 'confirmed' ? 'payment_confirmed' : 'payment_rejected',
+          notes: notes[id] || '',
+        }).catch(() => {});
+      }
 
-    // Send email via backend function
-    if (txn.campaign_id) {
-      const emailEvent = status === 'confirmed' ? 'payment_confirmed' : 'payment_rejected';
-      base44.functions.invoke('campaignEmailAlerts', {
-        campaign_id: txn.campaign_id,
-        event_type: emailEvent,
-        notes: notes[id] || '',
-      }).catch(() => {});
+      toast.success(`Payment ${status}`);
+      load();
+    } catch (err) {
+      toast.error('Failed to process payment. Please try again.');
+    } finally {
+      setProcessing(p => ({ ...p, [id]: false }));
     }
-
-    toast.success(`Payment ${status}`);
-    load();
-    setProcessing(p => ({ ...p, [id]: false }));
   }
 
   const FILTERS = ['all', 'pending', 'confirmed', 'rejected'];
@@ -101,9 +111,19 @@ export default function AdminPayments() {
 
   const filtered = transactions.filter(t => {
     const matchFilter = filter === 'all' || t.status === filter;
-    const matchSearch = !search || t.payment_reference?.toLowerCase().includes(search.toLowerCase());
+    const matchSearch = !search ||
+      t.payment_reference?.toLowerCase().includes(search.toLowerCase()) ||
+      t.description?.toLowerCase().includes(search.toLowerCase());
     return matchFilter && matchSearch;
   });
+
+  if (loading) {
+    return (
+      <div className="p-4 lg:p-8 max-w-4xl mx-auto space-y-3">
+        {[1,2,3].map(i => <div key={i} className="h-28 rounded-xl bg-secondary animate-pulse" />)}
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 lg:p-8 max-w-4xl mx-auto space-y-6">
@@ -115,30 +135,37 @@ export default function AdminPayments() {
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by reference..." className="pl-9" />
+          <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by reference or description..." className="pl-9" />
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           {FILTERS.map(f => (
             <button key={f} onClick={() => setFilter(f)}
               className={`px-3 py-1.5 rounded-full text-xs font-semibold capitalize whitespace-nowrap transition-all ${
-                filter === f ? 'bg-[hsl(var(--primary))] text-primary-foreground' : 'bg-secondary text-muted-foreground'
+                filter === f ? 'bg-[hsl(var(--primary))] text-primary-foreground' : 'bg-secondary text-muted-foreground hover:bg-secondary/80'
               }`}>
               {f}
+              {f === 'pending' && transactions.filter(t => t.status === 'pending').length > 0 && (
+                <span className="ml-1 bg-amber-500 text-white rounded-full px-1 text-[10px]">
+                  {transactions.filter(t => t.status === 'pending').length}
+                </span>
+              )}
             </button>
           ))}
         </div>
       </div>
 
       <div className="space-y-4">
-        {filtered.map(t => (
+        {filtered.length === 0 ? (
+          <div className="text-center py-12 text-muted-foreground text-sm">No transactions found</div>
+        ) : filtered.map(t => (
           <Card key={t.id} className={`shadow-sm ${t.status === 'pending' ? 'border-amber-200' : ''}`}>
             <CardContent className="p-5">
               <div className="flex items-start justify-between gap-3 mb-3">
                 <div>
                   <div className="flex items-center gap-2 flex-wrap">
-                    <p className="font-semibold">{t.description || t.type.replace('_', ' ')}</p>
-                    <Badge className={`text-xs ${statusColors[t.status]}`}>{t.status}</Badge>
-                    <Badge variant="outline" className="text-xs capitalize">{t.type.replace('_', ' ')}</Badge>
+                    <p className="font-semibold">{t.description || t.type?.replace(/_/g, ' ')}</p>
+                    <Badge className={`text-xs ${statusColors[t.status] || 'bg-gray-100 text-gray-600'}`}>{t.status}</Badge>
+                    <Badge variant="outline" className="text-xs capitalize">{t.type?.replace(/_/g, ' ')}</Badge>
                   </div>
                   <div className="flex items-center gap-3 mt-1.5 flex-wrap">
                     <span className="text-xl font-bold text-[hsl(var(--primary))]">
@@ -146,13 +173,12 @@ export default function AdminPayments() {
                         ? `${t.currency} ${(t.amount || 0).toLocaleString()}`
                         : `$${(t.amount || 0).toFixed(2)}`}
                     </span>
-
-                    <span className="text-sm text-muted-foreground">{t.payment_method || '—'}</span>
-                    <span className="text-sm text-muted-foreground font-mono text-xs">{t.payment_reference}</span>
+                    <span className="text-sm text-muted-foreground">{t.payment_method || '\u2014'}</span>
+                    <span className="text-xs text-muted-foreground font-mono">{t.payment_reference}</span>
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
                     {t.created_date ? format(new Date(t.created_date), 'MMM d, yyyy HH:mm') : ''}
-                    {t.campaign_id ? ` · Campaign ID: ${t.campaign_id.slice(0, 8)}...` : ''}
+                    {t.campaign_id ? ` \u00b7 Campaign: ${t.campaign_id.slice(0, 8)}...` : ''}
                   </p>
                 </div>
                 {t.payment_proof_url && (
@@ -173,19 +199,12 @@ export default function AdminPayments() {
                     className="text-sm"
                   />
                   <div className="flex gap-2">
-                    <Button
-                      onClick={() => verify(t.id, 'confirmed', t)}
-                      disabled={processing[t.id]}
-                      className="gap-2 bg-green-600 hover:bg-green-700 text-white flex-1"
-                    >
+                    <Button onClick={() => verify(t.id, 'confirmed', t)} disabled={processing[t.id]}
+                      className="gap-2 bg-green-600 hover:bg-green-700 text-white flex-1">
                       <Check className="w-4 h-4" /> Confirm Payment
                     </Button>
-                    <Button
-                      onClick={() => verify(t.id, 'rejected', t)}
-                      disabled={processing[t.id]}
-                      variant="outline"
-                      className="gap-2 border-red-400 text-red-600 hover:bg-red-50 flex-1"
-                    >
+                    <Button onClick={() => verify(t.id, 'rejected', t)} disabled={processing[t.id]}
+                      variant="outline" className="gap-2 border-red-400 text-red-600 hover:bg-red-50 flex-1">
                       <X className="w-4 h-4" /> Reject
                     </Button>
                   </div>
@@ -198,9 +217,6 @@ export default function AdminPayments() {
             </CardContent>
           </Card>
         ))}
-        {filtered.length === 0 && (
-          <div className="text-center py-12 text-muted-foreground text-sm">No transactions found</div>
-        )}
       </div>
     </div>
   );
