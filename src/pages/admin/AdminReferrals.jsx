@@ -52,7 +52,7 @@ const PAYOUT_STATUS_COLORS = {
 };
 
 // ─── Overview Tab ─────────────────────────────────────────────────────
-function OverviewTab({ referrals, commissions, payouts }) {
+function OverviewTab({ referrals = [], commissions = [], payouts = [] }) {
   const total = referrals.length;
   const converted = referrals.filter(r => r.status === 'converted').length;
   const convRate = total > 0 ? Math.round((converted / total) * 100) : 0;
@@ -130,7 +130,7 @@ function OverviewTab({ referrals, commissions, payouts }) {
 }
 
 // ─── Referrals Tab ────────────────────────────────────────────────────
-function ReferralsTab({ referrals, users, isLoading }) {
+function ReferralsTab({ referrals = [], users = [], isLoading }) {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -217,7 +217,7 @@ const SERVICES_ADMIN = [
 ];
 
 // ─── Commissions Tab ──────────────────────────────────────────────────
-function CommissionsTab({ commissions, users, affiliateSettings, isLoading }) {
+function CommissionsTab({ commissions = [], users = [], affiliateSettings, isLoading }) {
   const queryClient = useQueryClient();
   const [statusFilter, setStatusFilter] = useState('all');
 
@@ -410,7 +410,7 @@ function CommissionsTab({ commissions, users, affiliateSettings, isLoading }) {
 }
 
 // ─── Payouts Tab ──────────────────────────────────────────────────────
-function PayoutsTab({ payouts }) {
+function PayoutsTab({ payouts = [] }) {
   const queryClient = useQueryClient();
   const [statusFilter, setStatusFilter] = useState('all');
 
