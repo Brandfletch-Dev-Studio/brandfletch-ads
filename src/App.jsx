@@ -59,15 +59,20 @@ import ResetPassword from '@/pages/ResetPassword';
 const AUTH_ROUTES = ['/login', '/register', '/forgot-password', '/reset-password'];
 const SKIP_ONBOARDING_ROUTES = [...AUTH_ROUTES, '/onboarding'];
 
-// Returns the default auth route based on visit history:
-// - Returning users (bf_visited in localStorage) → /login
-// - New users → /register
 const getDefaultAuthRoute = () => {
   return localStorage.getItem('bf_visited') ? '/login' : '/register';
 };
 
+/** Returns the correct landing path for a logged-in staff member based on role */
+function getStaffLandingPath(role) {
+  // Designers go directly to their portal — they have no admin dashboard
+  if (role === 'designer') return '/designer';
+  // All other staff go to admin overview
+  return '/admin';
+}
+
 const AuthenticatedApp = () => {
-  const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin, user: currentUser } = useAuth();
+  const { isLoadingAuth, isLoadingPublicSettings, authError, user: currentUser } = useAuth();
   const isOnAuthRoute = AUTH_ROUTES.some(r => window.location.pathname.startsWith(r));
 
   if ((isLoadingPublicSettings || isLoadingAuth) && !isOnAuthRoute) {
@@ -90,7 +95,6 @@ const AuthenticatedApp = () => {
       } else if (isOnSkipRoute) {
         // Let the page render — it handles its own auth check
       } else {
-        // Redirect to login or register based on visit history
         window.location.href = getDefaultAuthRoute();
         return null;
       }
@@ -105,16 +109,16 @@ const AuthenticatedApp = () => {
     }
   }
 
-  const isStaff = currentUser && ['admin', 'super_admin', 'ads_manager', 'campaign_manager', 'finance', 'sales_manager', 'creative_ops_director', 'designer'].includes(currentUser.role);
+  const STAFF_ROLES = ['admin', 'super_admin', 'ads_manager', 'campaign_manager', 'finance', 'sales_manager', 'creative_ops_director', 'designer'];
+  const isStaff = currentUser && STAFF_ROLES.includes(currentUser.role);
 
   return (
     <Routes>
-      {/* Auth routes - always accessible */}
+      {/* Auth routes */}
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
-
       <Route path="/onboarding" element={<Onboarding />} />
       <Route path="/about" element={<About />} />
       <Route path="/contact" element={<Contact />} />
@@ -123,8 +127,17 @@ const AuthenticatedApp = () => {
       <Route path="/forms/:formId" element={<PublicFormView />} />
 
       <Route element={<AppLayout />}>
-        {/* Client routes */}
-        <Route path="/" element={<Navigate to={isStaff ? "/admin" : "/dashboard"} replace />} />
+        {/*
+          Root "/" redirect:
+          - designer  → /designer  (their own portal, not /admin)
+          - other staff → /admin
+          - clients   → /dashboard
+        */}
+        <Route path="/" element={
+          <Navigate to={isStaff ? getStaffLandingPath(currentUser?.role) : '/dashboard'} replace />
+        } />
+
+        {/* ── Client routes ── */}
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/pages" element={<FacebookPages />} />
         <Route path="/campaigns" element={<CampaignsList />} />
@@ -137,13 +150,15 @@ const AuthenticatedApp = () => {
         <Route path="/designs/payment" element={<DesignPayment />} />
         <Route path="/leads" element={<LeadsComingSoon />} />
         <Route path="/leads/forms" element={<LeadForms />} />
-        <Route path="/designer" element={<DesignerPortal />} />
         <Route path="/referrals" element={<Referrals />} />
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/support" element={<SupportTickets />} />
         <Route path="/messages" element={<Navigate to="/support" replace />} />
 
-        {/* Admin/Staff routes */}
+        {/* ── Designer portal — accessible to designer + design dept head ── */}
+        <Route path="/designer" element={<DesignerPortal />} />
+
+        {/* ── Admin / staff routes ── */}
         <Route path="/admin" element={<AdminOverview />} />
         <Route path="/admin/campaigns" element={<AdminCampaigns />} />
         <Route path="/admin/campaigns/:id" element={<AdminCampaignDetail />} />
