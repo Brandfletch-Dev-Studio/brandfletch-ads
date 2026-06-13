@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
-import { Bell, CheckCheck, Megaphone, DollarSign, AlertCircle, Info, Filter, Inbox } from 'lucide-react';
+import { useAuth } from '@/lib/AuthContext';
+import { Bell, CheckCheck, Megaphone, DollarSign, AlertCircle, Info, Inbox } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -28,33 +29,36 @@ const FILTERS = [
 ];
 
 export default function Notifications() {
+  // Bug fix: use AuthContext user — no separate base44.auth.me() call
+  const { user, isLoadingAuth } = useAuth();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [userId, setUserId] = useState(null);
   const [filter, setFilter] = useState('all');
   const navigate = useNavigate();
 
   useEffect(() => {
-    base44.auth.me().then(u => {
-      if (!u) return;
-      setUserId(u.id);
-      base44.entities.Notification.filter({ recipient_id: u.id }, '-created_date', 100)
-        .then(data => { setNotifications(data); setLoading(false); });
-    }).catch(() => setLoading(false));
-  }, []);
+    if (isLoadingAuth) return;
+    if (!user?.id) return;
+    base44.entities.Notification.filter({ recipient_id: user.id }, { sort: '-created_date', limit: 100 })
+      .then(data => { setNotifications(data); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, [user?.id, isLoadingAuth]);
 
+  // Real-time subscription
   useEffect(() => {
-    if (!userId) return;
+    if (!user?.id) return;
+    // Guard: only subscribe if the entity supports it
+    if (typeof base44.entities.Notification.subscribe !== 'function') return;
     const unsub = base44.entities.Notification.subscribe(event => {
-      if (event.type === 'create' && event.data?.recipient_id === userId) {
+      if (event.type === 'create' && event.data?.recipient_id === user.id) {
         setNotifications(prev => [event.data, ...prev]);
       }
       if (event.type === 'update') {
         setNotifications(prev => prev.map(n => n.id === event.id ? { ...n, ...event.data } : n));
       }
     });
-    return () => unsub();
-  }, [userId]);
+    return () => unsub?.();
+  }, [user?.id]);
 
   async function markRead(id) {
     await base44.entities.Notification.update(id, { is_read: true });
@@ -86,7 +90,6 @@ export default function Notifications() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b border-border px-4 lg:px-8 py-4">
         <div className="max-w-2xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -109,8 +112,6 @@ export default function Notifications() {
             </Button>
           )}
         </div>
-
-        {/* Filter tabs */}
         <div className="max-w-2xl mx-auto mt-3 flex gap-1 overflow-x-auto pb-0.5 scrollbar-hide">
           {FILTERS.map(f => (
             <button
@@ -132,9 +133,8 @@ export default function Notifications() {
         </div>
       </div>
 
-      {/* Content */}
       <div className="max-w-2xl mx-auto px-4 lg:px-8 py-4 space-y-2">
-        {loading ? (
+        {(loading || isLoadingAuth) ? (
           <div className="space-y-3 pt-2">
             {[1, 2, 3, 4].map(i => (
               <div key={i} className="h-20 rounded-xl bg-secondary animate-pulse" />
@@ -154,7 +154,7 @@ export default function Notifications() {
           </div>
         ) : (
           <>
-            {filtered.map((n, idx) => {
+            {filtered.map(n => {
               const cfg = TYPE_CONFIG[n.type] || { icon: Info, color: 'text-blue-600', bg: 'bg-blue-50', label: '' };
               const Icon = cfg.icon;
               const isClickable = !!(n.campaign_id || n.link);
