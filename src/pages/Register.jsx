@@ -1,7 +1,6 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
-import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,6 +10,7 @@ import AuthLayout from "@/components/AuthLayout";
 import GoogleIcon from "@/components/GoogleIcon";
 
 export default function Register() {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -24,7 +24,7 @@ export default function Register() {
 
   useEffect(() => {
     base44.auth.isAuthenticated().then((authed) => {
-      if (authed) window.location.href = "/onboarding";
+      if (authed) navigate('/onboarding');
     });
   }, []);
 
@@ -49,47 +49,18 @@ export default function Register() {
     setLoading(true);
     try {
       const result = await base44.auth.verifyOtp({ email, otpCode });
+      // SDK sets token internally; also set manually if returned explicitly
       if (result?.access_token) base44.auth.setToken(result.access_token);
-      // If user signed up via a referral link, record it
+
+      // Record referral (non-blocking — never prevents onboarding)
       if (referralCode) {
-        try {
-          const me = await base44.auth.me();
-          // Store the referral code on the new user's profile
-          await base44.auth.updateMe({ referred_by: referralCode });
-          // Look up the referrer user by their referral code
-          let referrerId = '';
-          let referrerName = '';
-          try {
-            // Code format: BF-XXXXXX (last 6 of user ID) OR custom referral_code field
-            const allUsers = await base44.entities.User.filter({ referral_code: referralCode });
-            if (allUsers?.length > 0) {
-              referrerId = allUsers[0].id;
-              referrerName = allUsers[0].full_name || '';
-            } else {
-              // fallback: match generated code BF-{id.slice(-6).toUpperCase()}
-              const codeMatch = referralCode.match(/^BF-([A-Z0-9]{6})$/);
-              if (codeMatch) {
-                // Store code anyway - admin can resolve later
-                referrerId = 'pending_lookup';
-              }
-            }
-          } catch {}
-          // Create a Referral record for the referrer to track
-          await base44.entities.Referral.create({
-            referral_code: referralCode,
-            referrer_id: referrerId,
-            referrer_name: referrerName,
-            referred_email: email,
-            referred_name: me?.full_name || '',
-            referred_user_id: me?.id || '',
-            status: 'pending',
-          });
-        } catch (err) {
-          // Non-blocking — don't prevent onboarding if referral tracking fails
-          console.warn('Referral tracking failed:', err);
-        }
+        recordReferral(referralCode, email).catch(err =>
+          console.warn('Referral tracking failed (non-fatal):', err)
+        );
       }
-      window.location.href = "/onboarding";
+
+      // Use React Router navigate — no page reload, token is already live
+      navigate('/onboarding');
     } catch (err) {
       setError(err.message || "Invalid verification code");
     } finally {
@@ -98,9 +69,7 @@ export default function Register() {
   };
 
   const handleResend = async () => {
-    try {
-      await base44.auth.resendOtp(email);
-    } catch {}
+    try { await base44.auth.resendOtp(email); } catch {}
   };
 
   if (showOtp) {
@@ -114,7 +83,11 @@ export default function Register() {
             </InputOTPGroup>
           </InputOTP>
         </div>
-        <Button className="w-full h-11 font-semibold bg-[hsl(var(--primary))] text-primary-foreground" onClick={handleVerify} disabled={loading || otpCode.length < 6}>
+        <Button
+          className="w-full h-11 font-semibold bg-[hsl(var(--primary))] text-primary-foreground"
+          onClick={handleVerify}
+          disabled={loading || otpCode.length < 6}
+        >
           {loading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Verifying...</> : "Verify & Continue"}
         </Button>
         <p className="text-center text-sm text-muted-foreground mt-4">
@@ -191,4 +164,32 @@ export default function Register() {
       </p>
     </AuthLayout>
   );
+}
+
+// Helper — runs async, non-blocking, never throws to caller
+async function recordReferral(referralCode, email) {
+  const me = await base44.auth.me();
+  await base44.auth.updateMe({ referred_by: referralCode });
+
+  let referrerId = '';
+  let referrerName = '';
+  try {
+    const matches = await base44.entities.User.filter({ referral_code: referralCode });
+    if (matches?.length > 0) {
+      referrerId = matches[0].id;
+      referrerName = matches[0].full_name || '';
+    } else if (/^BF-[A-Z0-9]{6}$/.test(referralCode)) {
+      referrerId = 'pending_lookup';
+    }
+  } catch {}
+
+  await base44.entities.Referral.create({
+    referral_code: referralCode,
+    referrer_id: referrerId,
+    referrer_name: referrerName,
+    referred_email: email,
+    referred_name: me?.full_name || '',
+    referred_user_id: me?.id || '',
+    status: 'pending',
+  });
 }
