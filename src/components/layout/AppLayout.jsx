@@ -55,9 +55,10 @@ export default function AppLayout() {
 
   const { data: unreadMessages = [] } = useQuery({
     queryKey: ['unread-messages', currentUser?.id, isStaff],
+    // Bug fix: Message.filter() options must be object, not positional args
     queryFn: () => isStaff
-      ? base44.entities.Message.filter({ is_read: false, sender_role: 'user' })
-      : base44.entities.Message.filter({ conversation_user_id: currentUser?.id, is_read: false, sender_role: 'admin' }),
+      ? base44.entities.Message.filter({ is_read: false, sender_role: 'user' }, { limit: 100 })
+      : base44.entities.Message.filter({ conversation_user_id: currentUser?.id, is_read: false, sender_role: 'admin' }, { limit: 100 }),
     enabled: !!currentUser?.id,
     refetchInterval: 15000,
   });
