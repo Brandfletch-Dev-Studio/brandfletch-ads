@@ -89,7 +89,7 @@ function useCopyClipboard() {
 }
 
 // ─── TAB: Dashboard ───────────────────────────────────────────────────
-function DashboardTab({ user, affiliateSettings, referrals, commissions, payouts }) {
+function DashboardTab({ user, affiliateSettings, referrals = [], commissions = [], payouts = [] }) {
   const totalEarnings = commissions.filter(c => c.status === 'paid').reduce((s, c) => s + (c.commission_amount || 0), 0);
   const pendingComm   = commissions.filter(c => c.status === 'pending').reduce((s, c) => s + (c.commission_amount || 0), 0);
   const paidComm      = commissions.filter(c => c.status === 'paid').reduce((s, c) => s + (c.commission_amount || 0), 0);
@@ -378,7 +378,7 @@ function LinksTab({ user }) {
 }
 
 // ─── TAB: Referrals ───────────────────────────────────────────────────
-function ReferralsTab({ referrals, loading }) {
+function ReferralsTab({ referrals = [], loading }) {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
@@ -462,7 +462,7 @@ function ReferralsTab({ referrals, loading }) {
 }
 
 // ─── TAB: Commissions ─────────────────────────────────────────────────
-function CommissionsTab({ commissions, loading }) {
+function CommissionsTab({ commissions = [], loading }) {
   const [statusFilter, setStatusFilter] = useState('all');
 
   const filtered = commissions.filter(c => statusFilter === 'all' || c.status === statusFilter);
@@ -551,7 +551,7 @@ function CommissionsTab({ commissions, loading }) {
 }
 
 // ─── TAB: Payouts ──────────────────────────────────────────────────────
-function PayoutsTab({ user, affiliateSettings, commissions, payouts, loading, onPayoutRequested }) {
+function PayoutsTab({ user, affiliateSettings, commissions = [], payouts = [], loading, onPayoutRequested }) {
   const [showRequest, setShowRequest] = useState(false);
   const [method, setMethod] = useState('airtel_money');
   const [details, setDetails] = useState('');
