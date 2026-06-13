@@ -21,7 +21,7 @@ export default function AdminCampaigns() {
   const [bulkLoading, setBulkLoading] = useState(false);
 
   useEffect(() => {
-    base44.entities.Campaign.list('-created_date', 200).then(c => {
+    base44.entities.Campaign.list({ sort: '-created_date', limit: 200 }).then(c => {
       setCampaigns(c);
       setLoading(false);
     });
