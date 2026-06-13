@@ -19,7 +19,7 @@ const BUSINESS_TYPES = [
 
 export default function Onboarding() {
   const navigate = useNavigate();
-  const { checkUserAuth } = useAuth(); // Fix #4: refresh auth context after onboarding
+  const { checkUserAuth } = useAuth();
   const [loadingUser, setLoadingUser] = useState(true);
   const [saving, setSaving] = useState(false);
   const [detectingLocation, setDetectingLocation] = useState(false);
@@ -28,7 +28,7 @@ export default function Onboarding() {
   const [form, setForm] = useState({
     full_name: '',
     business_name: '',
-    business_category: '', // Fix #3: was business_type, schema uses business_category
+    business_category: '',
     phone: '',
     country: '',
   });
@@ -42,7 +42,7 @@ export default function Onboarding() {
           phone: u.phone || '',
           country: u.country || '',
           business_name: u.business_name || '',
-          business_category: u.business_category || u.business_type || '', // Fix #3: support both field names
+          business_category: u.business_category || u.business_type || '',
         }));
         setLoadingUser(false);
         detectCountry(u.country);
@@ -66,6 +66,15 @@ export default function Onboarding() {
 
   function update(key, val) { setForm(f => ({ ...f, [key]: val })); }
 
+  async function handleSkip() {
+    // Bug fix: even when skipping, set role so they don't end up with null role
+    try {
+      await base44.auth.updateMe({ role: 'user', onboarded: true });
+      await checkUserAuth(); // refresh AuthContext
+    } catch {}
+    navigate('/dashboard');
+  }
+
   async function finish() {
     if (!form.full_name.trim()) { setError('Please enter your full name.'); return; }
     if (!form.country) { setError('Please select your country.'); return; }
@@ -74,21 +83,16 @@ export default function Onboarding() {
     setError('');
     setSaving(true);
     try {
-      // Fix #2: explicitly set role to 'user' (business client) on first onboard
-      // Fix #3: save to business_category (correct field name in User schema)
       await base44.auth.updateMe({
         full_name: form.full_name.trim(),
         phone: form.phone.trim(),
         country: form.country,
         business_name: form.business_name.trim(),
         business_category: form.business_category,
-        role: 'user', // Default client role — prevents null role issues
+        role: 'user',
         onboarded: true,
       });
-
-      // Fix #4: re-fetch user in AuthContext so Dashboard sees updated data immediately
       await checkUserAuth();
-
       navigate('/dashboard');
     } catch (err) {
       setError('Something went wrong. Please try again.');
@@ -109,28 +113,24 @@ export default function Onboarding() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Header */}
       <div className="flex items-center justify-between px-6 py-4 border-b border-border">
         <BrandLogo size="md" dark />
         <button
-          onClick={() => navigate('/dashboard')}
+          onClick={handleSkip}
           className="text-xs text-muted-foreground hover:text-foreground transition-colors"
         >
-          Skip for now →
+          Skip for now \u2192
         </button>
       </div>
 
-      {/* Form */}
       <div className="flex-1 flex items-center justify-center px-4 py-10">
         <div className="w-full max-w-md">
           <div className="mb-8 text-center">
-            <h1 className="text-2xl font-bold font-heading text-foreground">Welcome to Brandfletch Ads 🎉</h1>
+            <h1 className="text-2xl font-bold font-heading text-foreground">Welcome to Brandfletch Ads \U0001f389</h1>
             <p className="text-muted-foreground mt-2 text-sm">Just a few quick details to personalise your experience</p>
           </div>
 
           <div className="bg-card rounded-2xl border border-border shadow-sm p-7 space-y-5">
-
-            {/* Full Name */}
             <div>
               <Label className="mb-1.5 block">Your Name *</Label>
               <Input
@@ -142,7 +142,6 @@ export default function Onboarding() {
               />
             </div>
 
-            {/* Phone */}
             <div>
               <Label className="mb-1.5 block">Phone Number <span className="text-muted-foreground font-normal">(optional)</span></Label>
               <Input
@@ -153,7 +152,6 @@ export default function Onboarding() {
               />
             </div>
 
-            {/* Country */}
             <div>
               <Label className="mb-1.5 block">
                 Country *
@@ -169,7 +167,6 @@ export default function Onboarding() {
               </Select>
             </div>
 
-            {/* Business Name */}
             <div>
               <Label className="mb-1.5 block">Business / Brand Name *</Label>
               <Input
@@ -180,7 +177,6 @@ export default function Onboarding() {
               />
             </div>
 
-            {/* Business Category */}
             <div>
               <Label className="mb-1.5 block">Business Type <span className="text-muted-foreground font-normal">(optional)</span></Label>
               <Select value={form.business_category} onValueChange={v => update('business_category', v)}>
@@ -193,14 +189,12 @@ export default function Onboarding() {
               </Select>
             </div>
 
-            {/* Error */}
             {error && (
               <div className="p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
                 {error}
               </div>
             )}
 
-            {/* Submit */}
             <Button
               onClick={finish}
               disabled={saving}
@@ -208,7 +202,7 @@ export default function Onboarding() {
             >
               {saving
                 ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Saving...</>
-                : 'Go to Dashboard →'
+                : 'Go to Dashboard \u2192'
               }
             </Button>
           </div>
