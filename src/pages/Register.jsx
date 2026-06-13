@@ -109,9 +109,8 @@ export default function Register() {
         </>
       }
     >
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-card px-3 text-muted-foreground">or register with email</span>
-        </div>
+      <div className="relative flex justify-center text-xs uppercase">
+        <span className="bg-card px-3 text-muted-foreground">or register with email</span>
       </div>
 
       {error && <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">{error}</div>}
