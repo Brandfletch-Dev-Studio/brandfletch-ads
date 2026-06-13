@@ -7,7 +7,6 @@ import { Label } from "@/components/ui/label";
 import { Mail, Lock, Loader2 } from "lucide-react";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import AuthLayout from "@/components/AuthLayout";
-import GoogleIcon from "@/components/GoogleIcon";
 
 export default function Register() {
   const navigate = useNavigate();
@@ -110,16 +109,6 @@ export default function Register() {
         </>
       }
     >
-      {/* OAuth */}
-      <div className="space-y-3 mb-6">
-        <Button variant="outline" className="w-full h-11 text-sm font-medium gap-2.5"
-          onClick={() => base44.auth.loginWithProvider("google", "/onboarding")}>
-          <GoogleIcon className="w-4 h-4" /> Continue with Google
-        </Button>
-      </div>
-
-      <div className="relative mb-6">
-        <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border" /></div>
         <div className="relative flex justify-center text-xs uppercase">
           <span className="bg-card px-3 text-muted-foreground">or register with email</span>
         </div>
