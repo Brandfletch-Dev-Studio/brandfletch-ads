@@ -20,8 +20,7 @@ Deno.serve(async (req) => {
         { field_name: 'subject', field_type: 'text', label: 'Subject', placeholder: 'What is this regarding?', required: true, options: [] },
         { field_name: 'message', field_type: 'textarea', label: 'Message', placeholder: 'How can we help you?', required: true, options: [] }
       ],
-      quote_request: [
-        { field_name: 'full_name', field_type: 'text', label: 'Full Name', placeholder: 'John Doe', required: true, options: [] },
+ },
         { field_name: 'email', field_type: 'email', label: 'Email Address', placeholder: 'john@example.com', required: true, options: [] },
         { field_name: 'company', field_type: 'text', label: 'Company Name', placeholder: 'Your Company Ltd', required: false, options: [] },
         { field_name: 'phone', field_type: 'phone', label: 'Phone Number', placeholder: '+1 (555) 123-4567', required: true, options: [] },
