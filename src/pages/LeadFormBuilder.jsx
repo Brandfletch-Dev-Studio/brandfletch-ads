@@ -23,7 +23,6 @@ const FIELD_TYPES = [
 
 const FORM_TYPES = [
   { value: 'contact', label: 'Contact Form' },
-  { value: 'quote_request', label: 'Quote Request' },
   { value: 'consultation', label: 'Consultation Booking' },
   { value: 'lead_generation', label: 'Lead Generation' },
   { value: 'custom', label: 'Custom' },
