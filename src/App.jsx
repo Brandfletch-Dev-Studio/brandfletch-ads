@@ -25,6 +25,7 @@ import DesignPayment from '@/pages/DesignPayment';
 import LeadsComingSoon from '@/pages/LeadsComingSoon';
 import LeadForms from '@/pages/LeadForms';
 import DesignerPortal from '@/pages/DesignerPortal';
+import CreativeOpsDashboard from '@/pages/CreativeOpsDashboard';
 import Referrals from '@/pages/Referrals';
 import About from '@/pages/About';
 import Pricing from '@/pages/Pricing';
@@ -65,9 +66,8 @@ const getDefaultAuthRoute = () => {
 
 /** Returns the correct landing path for a logged-in staff member based on role */
 function getStaffLandingPath(role) {
-  // Designers go directly to their portal — they have no admin dashboard
   if (role === 'designer') return '/designer';
-  // All other staff go to admin overview
+  if (role === 'creative_ops_director') return '/creative-ops';
   return '/admin';
 }
 
@@ -158,6 +158,7 @@ const AuthenticatedApp = () => {
 
         {/* ── Designer portal — accessible to designer + design dept head ── */}
         <Route path="/designer" element={<DesignerPortal />} />
+        <Route path="/creative-ops" element={<CreativeOpsDashboard />} />
 
         {/* ── Admin / staff routes ── */}
         <Route path="/admin" element={<AdminOverview />} />
