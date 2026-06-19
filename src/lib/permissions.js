@@ -123,7 +123,7 @@ const ROLE_PERMISSIONS = {
   // ── DESIGN DEPARTMENT ─────────────────────────────────────────────────────
 
   // Creative Ops Director — design dept head
-  // Sees: design admin, design team users, design revenue/payments, reports, quotes, support
+  // Sees: design admin, design team users, design revenue/payments, reports, support
   // Does NOT see: campaigns, ads, referrals, audit log, platform settings
   creative_ops_director: [
     'designs.view', 'designs.manage', 'designs.work',
@@ -203,7 +203,6 @@ export function getAllowedAdminNavKeys(role) {
     'payments',
     'reports',
     'support',
-    'quotes',
   ];
 
   const always = ['overview'];
