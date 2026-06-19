@@ -6,15 +6,22 @@ import { formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
 
 const TYPE_CONFIG = {
-  campaign_approved:    { icon: Megaphone,     color: 'text-green-600',  bg: 'bg-green-50' },
-  campaign_rejected:    { icon: Megaphone,     color: 'text-red-600',    bg: 'bg-red-50' },
-  campaign_submitted:   { icon: Megaphone,     color: 'text-blue-600',   bg: 'bg-blue-50' },
-  campaign_completed:   { icon: CheckCheck,    color: 'text-green-600',  bg: 'bg-green-50' },
-  payment_confirmed:    { icon: DollarSign,    color: 'text-green-600',  bg: 'bg-green-50' },
-  payment_rejected:     { icon: DollarSign,    color: 'text-red-600',    bg: 'bg-red-50' },
-  changes_requested:    { icon: AlertCircle,   color: 'text-amber-600',  bg: 'bg-amber-50' },
-  page_connected:       { icon: Info,          color: 'text-blue-600',   bg: 'bg-blue-50' },
-  page_rejected:        { icon: Info,          color: 'text-red-600',    bg: 'bg-red-50' },
+  campaign_approved:          { icon: Megaphone,     color: 'text-green-600',  bg: 'bg-green-50' },
+  campaign_rejected:          { icon: Megaphone,     color: 'text-red-600',    bg: 'bg-red-50' },
+  campaign_submitted:         { icon: Megaphone,     color: 'text-blue-600',   bg: 'bg-blue-50' },
+  campaign_completed:         { icon: CheckCheck,    color: 'text-green-600',  bg: 'bg-green-50' },
+  payment_confirmed:          { icon: DollarSign,    color: 'text-green-600',  bg: 'bg-green-50' },
+  payment_rejected:           { icon: DollarSign,    color: 'text-red-600',    bg: 'bg-red-50' },
+  changes_requested:          { icon: AlertCircle,   color: 'text-amber-600',  bg: 'bg-amber-50' },
+  page_connected:             { icon: Info,          color: 'text-blue-600',   bg: 'bg-blue-50' },
+  page_rejected:              { icon: Info,          color: 'text-red-600',    bg: 'bg-red-50' },
+  design_submitted:           { icon: Info,          color: 'text-blue-600',   bg: 'bg-blue-50' },
+  design_in_progress:         { icon: Info,          color: 'text-blue-600',   bg: 'bg-blue-50' },
+  design_awaiting_feedback:   { icon: AlertCircle,   color: 'text-purple-600', bg: 'bg-purple-50' },
+  design_revision_requested:  { icon: AlertCircle,   color: 'text-orange-600', bg: 'bg-orange-50' },
+  design_delivered:           { icon: CheckCheck,    color: 'text-green-600',  bg: 'bg-green-50' },
+  design_completed:           { icon: CheckCheck,    color: 'text-green-600',  bg: 'bg-green-50' },
+  welcome:                    { icon: Info,          color: 'text-blue-600',   bg: 'bg-blue-50' },
 };
 
 function LiveTime({ date }) {
