@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { Save, RefreshCw, Plus, Trash2 } from 'lucide-react';
 import { LOCAL_PRICES } from '@/lib/pricing';
+import AdminServicePricingTab from '@/components/settings/AdminServicePricingTab';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const COUNTRIES = ['Malawi', 'Zambia', 'South Africa', 'Kenya', 'Tanzania'];
@@ -45,6 +46,7 @@ export default function AdminPricing() {
   const [pricing, setPricing] = useState([]);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [pricingTab, setPricingTab] = useState('ads');
   const [activeCountry, setActiveCountry] = useState('Malawi');
   const [newPkg, setNewPkg] = useState({ package: '', daily: '', weekly: '', monthly: '' });
 
@@ -154,10 +156,19 @@ export default function AdminPricing() {
 
   return (
     <div className="p-4 lg:p-8 max-w-5xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold font-heading">Package Pricing</h1>
-        <p className="text-muted-foreground text-sm mt-1">Manage ad packages per country. These are the packages clients see when creating campaigns.</p>
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div>
+          <h1 className="text-2xl font-bold font-heading">Pricing Management</h1>
+          <p className="text-muted-foreground text-sm mt-1">Manage all service pricing per country.</p>
+        </div>
+        <div className="flex gap-2">
+          <button onClick={() => setPricingTab('ads')} className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${pricingTab === 'ads' ? 'bg-[hsl(var(--primary))] text-primary-foreground' : 'bg-secondary text-muted-foreground hover:bg-secondary/80'}`}>📢 Ads Packages</button>
+          <button onClick={() => setPricingTab('services')} className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${pricingTab === 'services' ? 'bg-[hsl(var(--primary))] text-primary-foreground' : 'bg-secondary text-muted-foreground hover:bg-secondary/80'}`}>🎯 Other Services</button>
+        </div>
       </div>
+
+      {pricingTab === 'services' && <AdminServicePricingTab />}
+      {pricingTab !== 'services' && <>
 
       {/* Country tabs */}
       <div className="flex gap-2 flex-wrap">
@@ -288,5 +299,6 @@ export default function AdminPricing() {
         </div>
       </div>
     </div>
+    </> }
   );
 }
