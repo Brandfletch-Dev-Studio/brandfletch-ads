@@ -9,15 +9,22 @@ import { formatDistanceToNow } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 
 const TYPE_CONFIG = {
-  campaign_approved:  { icon: Megaphone,   color: 'text-green-600',  bg: 'bg-green-50',  label: 'Campaign' },
-  campaign_rejected:  { icon: Megaphone,   color: 'text-red-600',    bg: 'bg-red-50',    label: 'Campaign' },
-  campaign_submitted: { icon: Megaphone,   color: 'text-blue-600',   bg: 'bg-blue-50',   label: 'Campaign' },
-  campaign_completed: { icon: CheckCheck,  color: 'text-green-600',  bg: 'bg-green-50',  label: 'Campaign' },
-  payment_confirmed:  { icon: DollarSign,  color: 'text-green-600',  bg: 'bg-green-50',  label: 'Payment' },
-  payment_rejected:   { icon: DollarSign,  color: 'text-red-600',    bg: 'bg-red-50',    label: 'Payment' },
-  changes_requested:  { icon: AlertCircle, color: 'text-amber-600',  bg: 'bg-amber-50',  label: 'Action' },
-  page_connected:     { icon: Info,        color: 'text-blue-600',   bg: 'bg-blue-50',   label: 'Page' },
-  page_rejected:      { icon: Info,        color: 'text-red-600',    bg: 'bg-red-50',    label: 'Page' },
+  campaign_approved:          { icon: Megaphone,   color: 'text-green-600',  bg: 'bg-green-50',   label: 'Campaign' },
+  campaign_rejected:          { icon: Megaphone,   color: 'text-red-600',    bg: 'bg-red-50',     label: 'Campaign' },
+  campaign_submitted:         { icon: Megaphone,   color: 'text-blue-600',   bg: 'bg-blue-50',    label: 'Campaign' },
+  campaign_completed:         { icon: CheckCheck,  color: 'text-green-600',  bg: 'bg-green-50',   label: 'Campaign' },
+  payment_confirmed:          { icon: DollarSign,  color: 'text-green-600',  bg: 'bg-green-50',   label: 'Payment' },
+  payment_rejected:           { icon: DollarSign,  color: 'text-red-600',    bg: 'bg-red-50',     label: 'Payment' },
+  changes_requested:          { icon: AlertCircle, color: 'text-amber-600',  bg: 'bg-amber-50',   label: 'Action' },
+  page_connected:             { icon: Info,        color: 'text-blue-600',   bg: 'bg-blue-50',    label: 'Page' },
+  page_rejected:              { icon: Info,        color: 'text-red-600',    bg: 'bg-red-50',     label: 'Page' },
+  design_submitted:           { icon: Info,        color: 'text-blue-600',   bg: 'bg-blue-50',    label: 'Design' },
+  design_in_progress:         { icon: Info,        color: 'text-blue-600',   bg: 'bg-blue-50',    label: 'Design' },
+  design_awaiting_feedback:   { icon: AlertCircle, color: 'text-purple-600', bg: 'bg-purple-50',  label: 'Action' },
+  design_revision_requested:  { icon: AlertCircle, color: 'text-orange-600', bg: 'bg-orange-50',  label: 'Design' },
+  design_delivered:           { icon: CheckCheck,  color: 'text-green-600',  bg: 'bg-green-50',   label: 'Design' },
+  design_completed:           { icon: CheckCheck,  color: 'text-green-600',  bg: 'bg-green-50',   label: 'Design' },
+  welcome:                    { icon: Info,        color: 'text-blue-600',   bg: 'bg-blue-50',    label: 'Welcome' },
 };
 
 const FILTERS = [
