@@ -13,7 +13,6 @@ import AIFormSuggestions from './AIFormSuggestions';
 
 const FORM_CATEGORIES = [
   { value: 'contact', label: 'Contact Form' },
-  { value: 'quote_request', label: 'Quote Request' },
   { value: 'consultation', label: 'Consultation Booking' },
   { value: 'lead_generation', label: 'Lead Generation' },
   { value: 'newsletter', label: 'Newsletter Signup' },
