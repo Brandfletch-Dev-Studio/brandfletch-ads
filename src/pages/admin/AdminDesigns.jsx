@@ -61,9 +61,20 @@ export default function AdminDesigns() {
     },
   });
 
+  const EMAIL_ALERT_STATUSES = ['submitted','in_progress','awaiting_feedback','revision_requested','delivered','completed'];
+
   const updateRequestMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.DesignRequest.update(id, data),
+    mutationFn: async ({ id, data, prevStatus }) => {
+      const updated = await base44.entities.DesignRequest.update(id, data);
+      // Fire email alert if status changed to an alertable status
+      if (data.status && data.status !== prevStatus && EMAIL_ALERT_STATUSES.includes(data.status)) {
+        base44.functions.designEmailAlerts({ design_id: id, event_type: data.status })
+          .catch((e) => console.error('Design email alert failed:', e));
+      }
+      return updated;
+    },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['adminDesignRequests'] });
       queryClient.invalidateQueries({ queryKey: ['design-requests'] });
       toast.success('Design request updated');
     },
@@ -92,7 +103,7 @@ export default function AdminDesigns() {
         request={selectedRequest}
         designers={designers || []}
         onClose={() => setSelectedRequest(null)}
-        onUpdate={(data) => updateRequestMutation.mutate({ id: selectedRequest.id, data })}
+        onUpdate={(data) => updateRequestMutation.mutate({ id: selectedRequest.id, data, prevStatus: selectedRequest.status })}
       />
     );
   }
