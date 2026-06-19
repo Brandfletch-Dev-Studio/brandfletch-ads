@@ -298,7 +298,7 @@ export default function AdminPricing() {
           })}
         </div>
       </div>
+      </> }
     </div>
-    </> }
   );
 }
