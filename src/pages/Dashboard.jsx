@@ -11,7 +11,6 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import OnboardingChecklist from '@/components/dashboard/OnboardingChecklist';
-import GetQuoteModal from '@/components/GetQuoteModal';
 
 export default function Dashboard() {
   const { user, isLoadingAuth } = useAuth();
@@ -22,7 +21,6 @@ export default function Dashboard() {
   const [campaigns, setCampaigns] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showLandingPageOrder, setShowLandingPageOrder] = useState(false);
-  const [showQuote, setShowQuote] = useState(false);
   const [landingForm, setLandingForm] = useState({ name: '', description: '', url: '' });
   const [submittingOrder, setSubmittingOrder] = useState(false);
 
@@ -212,29 +210,6 @@ export default function Dashboard() {
           </Card>
         </Link>
       </div>
-
-      {/* Get a Quote CTA */}
-      <div className="rounded-2xl border-2 border-dashed border-[hsl(var(--primary))]/30 bg-gradient-to-br from-[hsl(var(--primary))]/5 to-[hsl(var(--accent))]/5 p-6 text-center">
-        <div className="w-12 h-12 rounded-xl bg-[hsl(var(--primary))]/10 flex items-center justify-center mx-auto mb-3">
-          <FileText className="w-6 h-6 text-[hsl(var(--primary))]" />
-        </div>
-        <h2 className="text-lg font-bold font-heading">Need a Different Service?</h2>
-        <p className="text-sm text-muted-foreground mt-1 mb-4 max-w-sm mx-auto">
-          Get a professional quote for Graphic Design, Social Media Management, or Web Development — tailored to your business.
-        </p>
-        <Button
-          variant="outline"
-          className="border-[hsl(var(--primary))]/40 hover:bg-[hsl(var(--primary))]/5 gap-2"
-          onClick={() => setShowQuote(true)}
-        >
-          <FileText className="w-4 h-4" />
-          Get a Quote
-        </Button>
-      </div>
-
-      {/* Get Quote Modal */}
-      <GetQuoteModal open={showQuote} onClose={() => setShowQuote(false)} />
-
-    </div>
+</div>
   );
 }
