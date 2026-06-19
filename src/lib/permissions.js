@@ -86,7 +86,6 @@ const ROLE_PERMISSIONS = {
     'leads.view', 'leads.manage',
     'support.view', 'support.manage',
     'referrals.view',
-    'quotes.view',
   ],
 
   // ── ADS DEPARTMENT ────────────────────────────────────────────────────────
@@ -107,7 +106,6 @@ const ROLE_PERMISSIONS = {
     'leads.view',
     'support.view',
     'referrals.view',
-    'quotes.view',
   ],
 
   campaign_manager: [
@@ -139,7 +137,6 @@ const ROLE_PERMISSIONS = {
     'messages.view', 'messages.send',
     'notifications.view', 'notifications.send',
     'support.view', 'support.manage',
-    'quotes.view',
   ],
 
   // Designer — NO admin access. Uses /designer portal only.
@@ -159,7 +156,6 @@ const ROLE_PERMISSIONS = {
     'settings.view',
     'pricing.view', 'pricing.edit',
     'support.view',
-    'quotes.view',
   ],
 
   sales_manager: [
@@ -170,7 +166,6 @@ const ROLE_PERMISSIONS = {
     'messages.view', 'messages.send',
     'leads.view', 'leads.manage',
     'support.view',
-    'quotes.view',
   ],
 };
 
@@ -227,7 +222,7 @@ export function getAllowedAdminNavKeys(role) {
     support:       'support.view',
     referrals:     'referrals.view',
     settings:      'settings.view',
-    quotes:        'quotes.view',
+    quotes:
   };
 
   return [
