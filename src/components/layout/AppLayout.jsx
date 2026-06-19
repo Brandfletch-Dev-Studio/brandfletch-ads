@@ -37,7 +37,19 @@ const designerNav = [
   { path: '/settings',  label: 'Settings',         icon: Settings },
 ];
 
-// ── Admin nav (all staff except designer) ────────────────────────────────────
+// ── Creative Ops Director nav ─────────────────────────────────────────────────
+// COD has their own dashboard + focused admin access
+const codNav = [
+  { path: '/creative-ops',    label: 'My Dashboard',       icon: LayoutDashboard },
+  { path: '/admin/designs',   label: 'Design Requests',    icon: Palette },
+  { path: '/admin/users',     label: 'Design Team',        icon: Users },
+  { path: '/admin/payments',  label: 'Payments',           icon: WalletIcon },
+  { path: '/admin/reports',   label: 'Reports',            icon: BarChart3 },
+  { path: '/admin/support',   label: 'Support',            icon: LifeBuoy },
+  { path: '/settings',        label: 'Settings',           icon: Settings },
+];
+
+// ── Admin nav (all staff except designer/COD) ────────────────────────────────
 const ALL_ADMIN_NAV = [
   { key: 'overview',      path: '/admin',                label: 'Overview',          icon: LayoutDashboard, permission: null },
   { key: 'campaigns',     path: '/admin/campaigns',      label: 'All Campaigns',     icon: Megaphone,       permission: 'campaigns.view' },
