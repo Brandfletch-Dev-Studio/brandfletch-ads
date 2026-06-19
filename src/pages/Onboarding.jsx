@@ -128,14 +128,14 @@ export default function Onboarding() {
           onClick={handleSkip}
           className="text-xs text-muted-foreground hover:text-foreground transition-colors"
         >
-          Skip for now \u2192
+          Skip for now →
         </button>
       </div>
 
       <div className="flex-1 flex items-center justify-center px-4 py-10">
         <div className="w-full max-w-md">
           <div className="mb-8 text-center">
-            <h1 className="text-2xl font-bold font-heading text-foreground">Welcome to Brandfletch Ads \U0001f389</h1>
+            <h1 className="text-2xl font-bold font-heading text-foreground">Welcome to Brandfletch Ads 🎉</h1>
             <p className="text-muted-foreground mt-2 text-sm">Just a few quick details to personalise your experience</p>
           </div>
 
@@ -211,7 +211,7 @@ export default function Onboarding() {
             >
               {saving
                 ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Saving...</>
-                : 'Go to Dashboard \u2192'
+                : 'Go to Dashboard →'
               }
             </Button>
           </div>
