@@ -93,6 +93,15 @@ export default function Onboarding() {
         onboarded: true,
       });
       await checkUserAuth();
+
+      // Send welcome email in background (non-blocking)
+      try {
+        const me = await base44.auth.me();
+        if (me?.id) {
+          base44.functions.sendWelcomeEmail({ user_id: me.id }).catch(() => {});
+        }
+      } catch (_) {}
+
       navigate('/dashboard');
     } catch (err) {
       setError('Something went wrong. Please try again.');
