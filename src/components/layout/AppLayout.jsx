@@ -75,15 +75,19 @@ export default function AppLayout() {
   const { isStaff, isSuperAdmin, can } = usePermissions();
 
   const isDesigner = currentUser?.role === 'designer';
-  const isAdminView = location.pathname.startsWith('/admin');
+  const isCOD = currentUser?.role === 'creative_ops_director';
+  const isAdminView = location.pathname.startsWith('/admin') || location.pathname.startsWith('/creative-ops');
 
   // Determine which nav to show:
   // - designer → dedicated designer nav (portal + messages + settings)
+  // - creative_ops_director → focused COD nav (their dashboard + design tools)
   // - other staff on /admin/* → filtered admin nav
   // - clients (or staff on client routes) → client nav
   let navItems;
   if (isDesigner) {
     navItems = designerNav;
+  } else if (isCOD) {
+    navItems = codNav;
   } else if (isStaff && isAdminView) {
     navItems = ALL_ADMIN_NAV.filter(item => !item.permission || can(item.permission));
   } else {
