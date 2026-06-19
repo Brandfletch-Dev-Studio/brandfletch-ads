@@ -210,6 +210,20 @@ export default function Dashboard() {
           </Card>
         </Link>
       </div>
+
+      {/* Explore Services CTA */}
+      <div className="rounded-2xl border border-primary/20 bg-gradient-to-r from-primary/5 to-primary/10 p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <p className="font-semibold text-foreground mb-1">Explore all Brandfletch services</p>
+          <p className="text-sm text-muted-foreground">Ads, designs, websites, UGC content and social media management — transparent pricing, no surprises.</p>
+        </div>
+        <Link to="/pricing">
+          <Button variant="default" size="sm" className="shrink-0 gap-2 whitespace-nowrap">
+            View Pricing →
+          </Button>
+        </Link>
+      </div>
+
 </div>
   );
 }
