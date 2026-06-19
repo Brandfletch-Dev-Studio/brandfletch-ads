@@ -12,7 +12,6 @@
       "type": "string",
       "enum": [
         "contact",
-        "quote_request",
         "consultation",
         "lead_generation",
         "custom"
