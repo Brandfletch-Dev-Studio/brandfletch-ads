@@ -221,7 +221,6 @@ export function getAllowedAdminNavKeys(role) {
     support:       'support.view',
     referrals:     'referrals.view',
     settings:      'settings.view',
-    quotes:
   };
 
   return [
