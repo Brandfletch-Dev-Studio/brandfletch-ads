@@ -41,9 +41,9 @@ export default function AdminSettings() {
 
   useEffect(() => {
     Promise.all([
-      base44.entities.ExchangeRate.list(),
-      base44.entities.PaymentMethod.list(),
-      base44.entities.DesignPricing.list(),
+      base44.entities.ExchangeRate.list({}),
+      base44.entities.PaymentMethod.list({}),
+      base44.entities.DesignPricing.list({}),
     ]).then(([r, m, dp]) => {
       setRates(r);
       setMethods(m);
@@ -78,7 +78,7 @@ export default function AdminSettings() {
     await base44.entities.ExchangeRate.create({ ...newRate, is_active: true });
     toast.success('Exchange rate added');
     setNewRate({ currency_code: '', currency_name: '', country: '', rate_to_usd: '', use_fixed_pricing: false });
-    const r = await base44.entities.ExchangeRate.list();
+    const r = await base44.entities.ExchangeRate.list({});
     setRates(r);
   }
 
@@ -93,7 +93,7 @@ export default function AdminSettings() {
     await base44.entities.PaymentMethod.create({ ...newMethod, is_active: true });
     toast.success('Payment method added');
     setNewMethod({ country: '', method_name: '', method_type: 'mobile_money', account_number: '', account_name: '', instructions: '' });
-    const m = await base44.entities.PaymentMethod.list();
+    const m = await base44.entities.PaymentMethod.list({});
     setMethods(m);
   }
 
@@ -114,21 +114,21 @@ export default function AdminSettings() {
     await base44.entities.DesignPricing.create({ ...newDesignPricing, is_active: true });
     toast.success('Design pricing added');
     setNewDesignPricing({ pricing_type: 'per_design', country: '', currency: '', symbol: '', price: '', monthly_quota: null, max_revisions: 2 });
-    const dp = await base44.entities.DesignPricing.list();
+    const dp = await base44.entities.DesignPricing.list({});
     setDesignPricing(dp);
   }
 
   async function updateDesignPricing(id, data) {
     await base44.entities.DesignPricing.update(id, data);
     toast.success('Saved!', { duration: 1500 });
-    const dp = await base44.entities.DesignPricing.list();
+    const dp = await base44.entities.DesignPricing.list({});
     setDesignPricing(dp);
   }
 
   async function deleteDesignPricing(id) {
     await base44.entities.DesignPricing.delete(id);
     toast.success('Design pricing deleted');
-    const dp = await base44.entities.DesignPricing.list();
+    const dp = await base44.entities.DesignPricing.list({});
     setDesignPricing(dp);
   }
 
