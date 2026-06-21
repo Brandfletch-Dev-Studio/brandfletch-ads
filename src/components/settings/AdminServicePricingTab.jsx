@@ -46,7 +46,7 @@ export default function AdminServicePricing() {
   async function load() {
     setLoading(true);
     try {
-      const data = await base44.entities.ServicePricing.list();
+      const data = await base44.entities.ServicePricing.list({});
       setPlans(data);
     } catch (e) { toast.error('Failed to load service pricing'); }
     setLoading(false);
