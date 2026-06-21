@@ -31,7 +31,7 @@ function fmt(n, symbol='') {
   return `${symbol}${Number(n).toLocaleString()}`;
 }
 
-function PricingCard({ name, price, period, currency, features, recommended, ctaLabel, onCta, description, badge, credits }) {
+function PricingCard({ name, price, period, currency, features, recommended, ctaLabel, onCta, description, badge, credits, loading }) {
   return (
     <div className={cn(
       'relative flex flex-col rounded-2xl border bg-card transition-all duration-200',
@@ -76,7 +76,7 @@ function PricingCard({ name, price, period, currency, features, recommended, cta
       <div className="p-6 pt-2">
         <Button
           onClick={onCta}
-          className={cn('w-full font-semibold', recommended ? '' : 'variant-outline')}
+          className='w-full font-semibold'
           variant={recommended ? 'default' : 'outline'}
           size="lg"
         >
@@ -88,7 +88,7 @@ function PricingCard({ name, price, period, currency, features, recommended, cta
 }
 
 // ── ADS TAB ─────────────────────────────────────────────────────────────────
-function AdsTab({ country, dbPricing, onCta }) {
+function AdsTab({ country, dbPricing, onCta, ordering }) {
   const localP = LOCAL_PRICES[country] || LOCAL_PRICES['Malawi'];
   const sym = localP.symbol;
   const pkgRows = dbPricing.length > 0 ? dbPricing : null;
@@ -134,7 +134,7 @@ function AdsTab({ country, dbPricing, onCta }) {
 }
 
 // ── UGC TAB ─────────────────────────────────────────────────────────────────
-function UGCTab({ country, servicePricing, onCta }) {
+function UGCTab({ country, servicePricing, onCta, ordering }) {
   const sym = CURRENCY_MAP[country]?.symbol || 'MK ';
   const dbPlans = servicePricing.filter(p => p.service_type === 'ugc_ads' && p.country === country && p.is_active !== false);
 
@@ -164,6 +164,7 @@ function UGCTab({ country, servicePricing, onCta }) {
             features={plan.features || []}
             ctaLabel="Buy UGC Credits"
             onCta={() => onCta('ugc', plan)}
+            loading={ordering}
           />
         ))}
       </div>
@@ -172,7 +173,7 @@ function UGCTab({ country, servicePricing, onCta }) {
 }
 
 // ── DESIGNS TAB ──────────────────────────────────────────────────────────────
-function DesignsTab({ country, designPricing, onCta }) {
+function DesignsTab({ country, designPricing, onCta, ordering }) {
   const sym = CURRENCY_MAP[country]?.symbol || 'MK ';
   const active = designPricing.filter(p => p.country === country && p.is_active !== false);
 
@@ -213,6 +214,7 @@ function DesignsTab({ country, designPricing, onCta }) {
             ]}
             ctaLabel="Order Design"
             onCta={() => onCta('design')}
+            loading={ordering}
           />
         ))}
       </div>
@@ -221,7 +223,7 @@ function DesignsTab({ country, designPricing, onCta }) {
 }
 
 // ── WEB DEV TAB ──────────────────────────────────────────────────────────────
-function WebDevTab({ country, servicePricing, onCta }) {
+function WebDevTab({ country, servicePricing, onCta, ordering }) {
   const sym = CURRENCY_MAP[country]?.symbol || 'MK ';
   const dbPlans = servicePricing.filter(p => p.service_type === 'web_development' && p.country === country && p.is_active !== false);
 
@@ -249,6 +251,7 @@ function WebDevTab({ country, servicePricing, onCta }) {
             features={plan.features || []}
             ctaLabel="Get Website"
             onCta={() => onCta('web', plan)}
+            loading={ordering}
           />
         ))}
       </div>
@@ -257,7 +260,7 @@ function WebDevTab({ country, servicePricing, onCta }) {
 }
 
 // ── SOCIAL MEDIA TAB ─────────────────────────────────────────────────────────
-function SocialMediaTab({ country, servicePricing, onCta }) {
+function SocialMediaTab({ country, servicePricing, onCta, ordering }) {
   const sym = CURRENCY_MAP[country]?.symbol || 'MK ';
   const dbPlans = servicePricing.filter(p => p.service_type === 'social_media_management' && p.country === country && p.is_active !== false);
 
@@ -285,6 +288,7 @@ function SocialMediaTab({ country, servicePricing, onCta }) {
             features={plan.features || []}
             ctaLabel={plan.cta_label || 'Get Started'}
             onCta={() => onCta('social', plan)}
+            loading={ordering}
           />
         ))}
       </div>
@@ -333,7 +337,11 @@ export default function Pricing() {
   }
 
   async function handleCta(serviceType, planData) {
-    if (!user) { navigate('/register'); return; }
+    if (!user) {
+      toast.info('Please log in or sign up to continue.');
+      navigate('/login');
+      return;
+    }
 
     // Campaigns have their own creation wizard
     if (serviceType === 'campaign') { navigate('/campaigns/new'); return; }
@@ -403,6 +411,7 @@ export default function Pricing() {
         category: 'general',
         status: 'open',
         priority: 'medium',
+        messages: [],
       });
       toast.success('Order request sent! We will be in touch shortly.');
       navigate('/support');
@@ -483,11 +492,11 @@ export default function Pricing() {
               </h2>
             </div>
 
-            {activeTab === 'ads'     && <AdsTab     country={country} dbPricing={dbPricing}       onCta={handleCta} />}
-            {activeTab === 'ugc'     && <UGCTab     country={country} servicePricing={servicePricing} onCta={handleCta} />}
-            {activeTab === 'designs' && <DesignsTab country={country} designPricing={designPricing}   onCta={handleCta} />}
-            {activeTab === 'web'     && <WebDevTab  country={country} servicePricing={servicePricing} onCta={handleCta} />}
-            {activeTab === 'social'  && <SocialMediaTab country={country} servicePricing={servicePricing} onCta={handleCta} />}
+            {activeTab === 'ads'     && <AdsTab     country={country} dbPricing={dbPricing}       onCta={handleCta} ordering={ordering} />}
+            {activeTab === 'ugc'     && <UGCTab     country={country} servicePricing={servicePricing} onCta={handleCta} ordering={ordering} />}
+            {activeTab === 'designs' && <DesignsTab country={country} designPricing={designPricing}   onCta={handleCta} ordering={ordering} />}
+            {activeTab === 'web'     && <WebDevTab  country={country} servicePricing={servicePricing} onCta={handleCta} ordering={ordering} />}
+            {activeTab === 'social'  && <SocialMediaTab country={country} servicePricing={servicePricing} onCta={handleCta} ordering={ordering} />}
           </>
         )}
       </div>
