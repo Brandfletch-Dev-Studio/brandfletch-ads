@@ -58,7 +58,7 @@ import Register from '@/pages/Register';
 import ForgotPassword from '@/pages/ForgotPassword';
 import ResetPassword from '@/pages/ResetPassword';
 
-const AUTH_ROUTES = ['/login', '/register', '/forgot-password', '/reset-password'];
+const AUTH_ROUTES = ['/login', '/register', '/forgot-password', '/reset-password', '/auth/callback'];
 const SKIP_ONBOARDING_ROUTES = [...AUTH_ROUTES, '/onboarding'];
 
 const getDefaultAuthRoute = () => {
@@ -119,6 +119,7 @@ const AuthenticatedApp = () => {
       {/* Auth routes */}
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/auth/callback" element={<AuthCallback />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/onboarding" element={<Onboarding />} />

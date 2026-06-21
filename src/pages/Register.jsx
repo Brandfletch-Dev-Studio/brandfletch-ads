@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { base44 } from "@/api/base44Client";
+import { base44, supabase } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Mail, Lock, Loader2 } from "lucide-react";
-import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+import { Mail, Lock, Loader2, CheckCircle } from "lucide-react";
 import AuthLayout from "@/components/AuthLayout";
 
 export default function Register() {
@@ -15,10 +14,9 @@ export default function Register() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [showOtp, setShowOtp] = useState(false);
-  const [otpCode, setOtpCode] = useState("");
+  const [showCheckEmail, setShowCheckEmail] = useState(false);
+  const [resent, setResent] = useState(false);
 
-  // Capture referral code from URL ?ref=BF-XXXXXX
   const referralCode = new URLSearchParams(window.location.search).get('ref') || '';
 
   useEffect(() => {
@@ -34,8 +32,22 @@ export default function Register() {
     if (password.length < 8) { setError("Password must be at least 8 characters"); return; }
     setLoading(true);
     try {
-      await base44.auth.register({ email, password });
-      setShowOtp(true);
+      // Register — Supabase will send an email verification link
+      const { error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          data: {
+            full_name: email.split('@')[0],
+            role: 'user',
+            referred_by: referralCode || null,
+          },
+        },
+      });
+
+      if (signUpError) throw signUpError;
+      setShowCheckEmail(true);
     } catch (err) {
       setError(err.message || "Registration failed");
     } finally {
@@ -43,57 +55,65 @@ export default function Register() {
     }
   };
 
-  const handleVerify = async () => {
-    setError("");
-    setLoading(true);
-    try {
-      const result = await base44.auth.verifyOtp({ email, otpCode });
-      if (result?.access_token) base44.auth.setToken(result.access_token);
-
-      if (referralCode) {
-        recordReferral(referralCode, email).catch(err =>
-          console.warn('Referral tracking failed (non-fatal):', err)
-        );
-      }
-
-      navigate('/onboarding');
-    } catch (err) {
-      setError(err.message || "Invalid verification code");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleResend = async () => {
-    try { await base44.auth.resendOtp(email); } catch {}
+    setResent(false);
+    try {
+      await supabase.auth.resend({
+        type: 'signup',
+        email,
+        options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+      });
+      setResent(true);
+      setTimeout(() => setResent(false), 4000);
+    } catch {}
   };
 
-  if (showOtp) {
+  // ── Check-your-email screen ──────────────────────────────────────────────
+  if (showCheckEmail) {
     return (
-      <AuthLayout title="Verify your email" subtitle={`We sent a 6-digit code to ${email}`}>
-        {error && <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">{error}</div>}
-        <div className="flex justify-center mb-6">
-          <InputOTP maxLength={6} value={otpCode} onChange={setOtpCode} autoFocus autoComplete="one-time-code">
-            <InputOTPGroup>
-              {[0,1,2,3,4,5].map(i => <InputOTPSlot key={i} index={i} />)}
-            </InputOTPGroup>
-          </InputOTP>
+      <AuthLayout title="Check your email" subtitle={`We sent a verification link to ${email}`}>
+        <div className="flex flex-col items-center gap-5 py-4">
+          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+            <Mail className="w-8 h-8 text-primary" />
+          </div>
+          <div className="text-center space-y-2">
+            <p className="text-sm text-muted-foreground">
+              Click the link in the email to verify your account and get started.
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Can't find it? Check your spam folder.
+            </p>
+          </div>
+
+          {resent && (
+            <div className="flex items-center gap-2 text-sm text-green-600">
+              <CheckCircle className="w-4 h-4" /> Email resent!
+            </div>
+          )}
+
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={handleResend}
+          >
+            Resend verification email
+          </Button>
+
+          <p className="text-sm text-muted-foreground">
+            Wrong email?{" "}
+            <button
+              onClick={() => setShowCheckEmail(false)}
+              className="text-primary font-medium hover:underline"
+            >
+              Go back
+            </button>
+          </p>
         </div>
-        <Button
-          className="w-full h-11 font-semibold bg-[hsl(var(--primary))] text-primary-foreground"
-          onClick={handleVerify}
-          disabled={loading || otpCode.length < 6}
-        >
-          {loading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Verifying...</> : "Verify & Continue"}
-        </Button>
-        <p className="text-center text-sm text-muted-foreground mt-4">
-          Didn't receive the code?{" "}
-          <button onClick={handleResend} className="text-[hsl(var(--accent))] font-medium hover:underline">Resend</button>
-        </p>
       </AuthLayout>
     );
   }
 
+  // ── Registration form ────────────────────────────────────────────────────
   return (
     <AuthLayout
       title="Start advertising your business"
@@ -106,7 +126,9 @@ export default function Register() {
         </>
       }
     >
-      {error && <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">{error}</div>}
+      {error && (
+        <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">{error}</div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-1.5">
@@ -133,44 +155,46 @@ export default function Register() {
               value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="pl-10 h-11" required />
           </div>
         </div>
-        <Button type="submit" className="w-full h-11 font-semibold bg-[hsl(var(--primary))] text-primary-foreground" disabled={loading}>
-          {loading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Creating account...</> : "Create account"}
+        <Button
+          type="submit"
+          className="w-full h-11 font-semibold bg-[hsl(var(--primary))] text-primary-foreground"
+          disabled={loading}
+        >
+          {loading
+            ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Creating account…</>
+            : "Create account"}
         </Button>
       </form>
 
       <p className="text-xs text-muted-foreground text-center mt-4">
         By creating an account you agree to our{" "}
-        <a href="#" className="underline">Terms of Service</a> and{" "}
-        <a href="#" className="underline">Privacy Policy</a>.
+        <a href="/terms" className="underline">Terms of Service</a> and{" "}
+        <a href="/privacy-policy" className="underline">Privacy Policy</a>.
       </p>
     </AuthLayout>
   );
 }
 
-// Helper — runs async, non-blocking, never throws to caller
-async function recordReferral(referralCode, email) {
-  const me = await base44.auth.me();
-  await base44.auth.updateMe({ referred_by: referralCode });
-
-  let referrerId = '';
-  let referrerName = '';
+// Helper — records referral in background, never throws
+async function recordReferral(referralCode, userId, email) {
   try {
-    const matches = await base44.entities.User.filter({ referral_code: referralCode });
-    if (matches?.length > 0) {
-      referrerId = matches[0].id;
-      referrerName = matches[0].full_name || '';
-    } else if (/^BF-[A-Z0-9]{6}$/.test(referralCode)) {
-      referrerId = 'pending_lookup';
-    }
-  } catch {}
+    const { supabase } = await import('@/api/base44Client');
+    const { data: referrers } = await supabase
+      .from('User')
+      .select('id, full_name')
+      .eq('referral_code', referralCode)
+      .limit(1);
 
-  await base44.entities.Referral.create({
-    referral_code: referralCode,
-    referrer_id: referrerId,
-    referrer_name: referrerName,
-    referred_email: email,
-    referred_name: me?.full_name || '',
-    referred_user_id: me?.id || '',
-    status: 'pending',
-  });
+    const referrer = referrers?.[0];
+    await supabase.from('Referral').insert({
+      referral_code: referralCode,
+      referrer_id: referrer?.id || null,
+      referrer_name: referrer?.full_name || '',
+      referred_email: email,
+      referred_user_id: userId,
+      status: 'pending',
+    });
+  } catch (err) {
+    console.warn('Referral tracking failed (non-fatal):', err);
+  }
 }

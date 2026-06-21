@@ -20,7 +20,7 @@ export const AuthProvider = ({ children }) => {
       if (event === 'SIGNED_OUT') {
         setUser(null);
         setIsAuthenticated(false);
-      } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+      } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'EMAIL_CONFIRMED' || event === 'USER_UPDATED') {
         if (session?.user) {
           loadUserProfile(session.user);
         }
