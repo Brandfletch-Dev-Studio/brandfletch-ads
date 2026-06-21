@@ -90,7 +90,7 @@ export default function AdminCampaignDetail() {
         is_read: false,
       });
       // Email the client
-      const clientUsers = await base44.entities.User.list();
+      const clientUsers = await base44.entities.User.list({});
       const clientUser = clientUsers.find(u => u.id === campaign.user_id);
       if (clientUser?.email) {
         base44.integrations.Core.SendEmail({
