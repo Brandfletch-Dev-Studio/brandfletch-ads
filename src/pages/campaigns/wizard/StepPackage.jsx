@@ -15,7 +15,7 @@ export default function StepPackage({ data, update }) {
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    base44.entities.PackagePricing.list().then(list => setDbPricing(list || [])).catch(() => {});
+    base44.entities.PackagePricing.list({}).then(list => setDbPricing(list || [])).catch(() => {});
     base44.auth.me().then(u => {
       if (u?.role === 'admin') setIsAdmin(true);
       if (!selectedCountry && u?.country) {
