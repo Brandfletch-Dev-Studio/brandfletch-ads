@@ -82,8 +82,11 @@ export default function AdminUsers() {
     let cancelled = false;
     async function fetchUsers() {
       try {
-        const u = await base44.entities.User.list({ sort: '-created_date', limit: 500 });
+        // User.list() only returns the current user's own record due to RLS.
+        // Use the getAllUsers backend function which runs as service role.
+        const result = await base44.functions.getAllUsers({});
         if (cancelled) return;
+        const u = result?.users || [];
         // COD can only see design dept members (designers + other CODs) + client accounts
         const filtered = currentUser?.role === 'creative_ops_director'
           ? u.filter(x => ['designer', 'creative_ops_director', 'user'].includes(x.role))
@@ -177,8 +180,9 @@ export default function AdminUsers() {
         <div className="flex items-center gap-2 flex-shrink-0">
           <Button variant="outline" size="sm" onClick={() => {
             setLoading(true);
-            base44.entities.User.list({ sort: '-created_date', limit: 500 })
-              .then(u => {
+            base44.functions.getAllUsers({})
+              .then(result => {
+                const u = result?.users || [];
                 const filtered = currentUser?.role === 'creative_ops_director'
                   ? u.filter(x => ['designer', 'creative_ops_director', 'user'].includes(x.role))
                   : u;
