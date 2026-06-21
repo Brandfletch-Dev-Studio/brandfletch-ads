@@ -59,6 +59,8 @@ import ForgotPassword from '@/pages/ForgotPassword';
 import ResetPassword from '@/pages/ResetPassword';
 
 const AUTH_ROUTES = ['/login', '/register', '/forgot-password', '/reset-password', '/auth/callback'];
+// Public routes — accessible without authentication (marketing pages, legal, public forms)
+const PUBLIC_ROUTES = ['/about', '/pricing', '/contact', '/privacy-policy', '/terms', '/forms'];
 const SKIP_ONBOARDING_ROUTES = [...AUTH_ROUTES, '/onboarding'];
 
 const getDefaultAuthRoute = () => {
@@ -90,7 +92,9 @@ const AuthenticatedApp = () => {
 
   const isOnSkipRoute = SKIP_ONBOARDING_ROUTES.some(r => window.location.pathname.startsWith(r));
 
-  if (!isOnAuthRoute) {
+  const isOnPublicRoute = PUBLIC_ROUTES.some(r => window.location.pathname.startsWith(r));
+
+  if (!isOnAuthRoute && !isOnPublicRoute) {
     if (authError) {
       if (authError.type === 'user_not_registered') {
         return <UserNotRegisteredError />;
