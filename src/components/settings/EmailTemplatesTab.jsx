@@ -44,7 +44,7 @@ export default function EmailTemplatesTab() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    base44.entities.EmailTemplate.list().then(list => {
+    base44.entities.EmailTemplate.list({}).then(list => {
       const map = {};
       list.forEach(t => { map[t.event_type] = t; });
       setTemplates(map);
