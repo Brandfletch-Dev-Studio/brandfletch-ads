@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Check, Megaphone, Video, Palette, Globe, Smartphone, ChevronRight, Star, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 const TABS = [
   { id: 'ads',     label: 'Ads',                icon: Megaphone,   emoji: '📢' },
@@ -162,7 +163,7 @@ function UGCTab({ country, servicePricing, onCta }) {
             recommended={plan.is_popular}
             features={plan.features || []}
             ctaLabel="Buy UGC Credits"
-            onCta={() => onCta('ugc')}
+            onCta={() => onCta('ugc', plan)}
           />
         ))}
       </div>
@@ -247,7 +248,7 @@ function WebDevTab({ country, servicePricing, onCta }) {
             recommended={plan.is_popular}
             features={plan.features || []}
             ctaLabel="Get Website"
-            onCta={() => onCta('web')}
+            onCta={() => onCta('web', plan)}
           />
         ))}
       </div>
@@ -283,7 +284,7 @@ function SocialMediaTab({ country, servicePricing, onCta }) {
             recommended={plan.is_popular}
             features={plan.features || []}
             ctaLabel={plan.cta_label || 'Get Started'}
-            onCta={() => onCta('social')}
+            onCta={() => onCta('social', plan)}
           />
         ))}
       </div>
