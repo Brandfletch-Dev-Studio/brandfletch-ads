@@ -46,7 +46,7 @@ export default function AdminDesigns() {
 
   const { data: designRequests, isLoading } = useQuery({
     queryKey: ['adminDesignRequests'],
-    queryFn: () => base44.entities.DesignRequest.list(),
+    queryFn: () => base44.entities.DesignRequest.list({}),
   });
 
   // Include creative_ops_director — they can also take design work
