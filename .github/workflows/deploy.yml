@@ -30,22 +30,6 @@ jobs:
           node-version: 20
           cache: npm
 
-      - name: Verify Vercel secrets
-        run: |
-          if [ -z "${{ secrets.VERCEL_TOKEN }}" ]; then
-            echo "::error::VERCEL_TOKEN is not set"
-            exit 1
-          fi
-          if [ -z "${{ secrets.VERCEL_ORG_ID }}" ]; then
-            echo "::error::VERCEL_ORG_ID is not set"
-            exit 1
-          fi
-          if [ -z "${{ secrets.VERCEL_PROJECT_ID }}" ]; then
-            echo "::error::VERCEL_PROJECT_ID is not set"
-            exit 1
-          fi
-          echo "✅ All Vercel secrets present"
-
       - name: Pull Vercel Environment (production)
         run: npx vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
 
@@ -58,21 +42,24 @@ jobs:
       - name: Verify build output
         run: |
           if [ ! -d ".vercel/output" ]; then
-            echo "::error::Vercel build did not produce output in .vercel/output"
+            echo "::error::Vercel build did not produce output"
             exit 1
           fi
-          echo "Build output exists"
-          ls -la .vercel/output/ | head -10
+          echo "✅ Build output exists"
 
       - name: Deploy to Vercel (production)
         run: |
-          echo "Deploying with org=$VERCEL_ORG_ID project=$VERCEL_PROJECT_ID"
-          npx vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }} --yes 2>&1 | tee deploy.log
-          echo "Deploy command finished"
+          # Deploy and capture the URL, then exit immediately
+          DEPLOY_URL=$(npx vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }} --yes 2>&1 | grep -oP 'https://[a-zA-Z0-9-]+\.vercel\.app' | head -1)
+          
+          if [ -z "$DEPLOY_URL" ]; then
+            echo "::error::No deployment URL received"
+            exit 1
+          fi
+          
+          echo "✅ Deployed to: $DEPLOY_URL"
+          echo "::$DEPLOY_URL"
         timeout-minutes: 5
 
-      - name: Output deployment URL
-        if: always()
-        run: |
-          echo "=== Deploy log ==="
-          cat deploy.log 2>/dev/null || echo "No deploy log found"
+      - name: Done
+        run: echo "🚀 Production deploy complete"
