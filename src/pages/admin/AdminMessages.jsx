@@ -42,7 +42,7 @@ export default function AdminMessages() {
   const { user: adminUser } = useAuth();
 
   useEffect(() => {
-    base44.entities.User.list().then(us => {
+    base44.entities.User.list({}).then(us => {
       const map = {};
       us.forEach(u => { map[u.id] = u; });
       setUsers(map);
