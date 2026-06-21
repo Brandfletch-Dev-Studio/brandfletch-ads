@@ -326,16 +326,92 @@ export default function Pricing() {
     }
   }, [user?.country]);
 
-  function handleCta(serviceType) {
+  const [ordering, setOrdering] = useState(false);
+
+  function getSym() {
+    return CURRENCY_MAP[country]?.symbol || 'MK ';
+  }
+
+  async function handleCta(serviceType, planData) {
     if (!user) { navigate('/register'); return; }
-    const routes = {
-      campaign: '/campaigns/new',
-      ugc: '/dashboard',
-      design: '/designs',
-      web: '/support-tickets',
-      social: '/support-tickets',
+
+    // Campaigns have their own creation wizard
+    if (serviceType === 'campaign') { navigate('/campaigns/new'); return; }
+
+    // Designs have their own request flow
+    if (serviceType === 'design') { navigate('/designs'); return; }
+
+    // For UGC, Web Dev, and Social Media — create a support ticket with the
+    // full plan details to start the conversation with Brandfletch.
+    const SERVICE_INFO = {
+      ugc: {
+        subject: 'UGC Ad Credits — New Order',
+        buildDescription: (plan) => [
+          'I would like to order UGC Ad Credits.',
+          '',
+          `Plan: ${plan?.plan_name || 'UGC Credits'}`,
+          `Price: ${getSym()}${(plan?.monthly_price || 0).toLocaleString()}`,
+          plan?.credits ? `Credits: ${plan.credits} (never expire)` : '',
+          '',
+          'Included features:',
+          ...(plan?.features || []).map(f => `  • ${f}`),
+          '',
+          'Please confirm availability and next steps to get started.',
+        ].filter(Boolean).join('\n'),
+      },
+      web: {
+        subject: 'Website Development — New Order',
+        buildDescription: (plan) => [
+          'I would like to order a website development plan.',
+          '',
+          `Plan: ${plan?.plan_name || 'Website Plan'}`,
+          `Price: ${getSym()}${(plan?.annual_price > 0 ? plan.annual_price : plan?.monthly_price || 0).toLocaleString()} / ${plan?.annual_price > 0 ? 'year' : 'month'}`,
+          '',
+          'Included features:',
+          ...(plan?.features || []).map(f => `  • ${f}`),
+          '',
+          'Please confirm availability and next steps to get started.',
+        ].filter(Boolean).join('\n'),
+      },
+      social: {
+        subject: 'Social Media Management — New Order',
+        buildDescription: (plan) => [
+          'I would like to order Social Media Management.',
+          '',
+          `Plan: ${plan?.plan_name || 'Social Media Plan'}`,
+          `Price: ${getSym()}${(plan?.monthly_price || 0).toLocaleString()} / month`,
+          '',
+          'Included features:',
+          ...(plan?.features || []).map(f => `  • ${f}`),
+          '',
+          'Please confirm availability and next steps to get started.',
+        ].filter(Boolean).join('\n'),
+      },
     };
-    navigate(routes[serviceType] || '/dashboard');
+
+    const info = SERVICE_INFO[serviceType];
+    if (!info) { navigate('/support'); return; }
+
+    setOrdering(true);
+    try {
+      await base44.entities.SupportTicket.create({
+        user_id: user.id,
+        user_name: user.full_name || user.email,
+        user_email: user.email,
+        subject: info.subject,
+        description: info.buildDescription(planData),
+        category: 'general',
+        status: 'open',
+        priority: 'medium',
+      });
+      toast.success('Order request sent! We will be in touch shortly.');
+      navigate('/support');
+    } catch (err) {
+      toast.error(err?.message || 'Could not submit your request. Please try again.');
+      navigate('/support');
+    } finally {
+      setOrdering(false);
+    }
   }
 
   const activeTabMeta = TABS.find(t => t.id === activeTab);
