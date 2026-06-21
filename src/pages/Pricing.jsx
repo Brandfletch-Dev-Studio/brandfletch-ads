@@ -305,9 +305,9 @@ export default function Pricing() {
 
   useEffect(() => {
     Promise.all([
-      base44.entities.PackagePricing.list().catch(() => []),
-      base44.entities.DesignPricing.list().catch(() => []),
-      base44.entities.ServicePricing.list().catch(() => []),
+      base44.entities.PackagePricing.list({}).catch(() => []),
+      base44.entities.DesignPricing.list({}).catch(() => []),
+      base44.entities.ServicePricing.list({}).catch(() => []),
     ]).then(([pkg, des, svc]) => {
       setDbPricing(pkg);
       setDesignPricing(des);
