@@ -974,7 +974,7 @@ export default function Referrals() {
         }).catch(() => []),
         base44.entities.AffiliateCommission.filter({ affiliate_id: user.id }, '-created_date').catch(() => []),
         base44.entities.AffiliatePayout.filter({ affiliate_id: user.id }, '-created_date').catch(() => []),
-        base44.entities.AffiliateSettings.list(null, 1).catch(() => []),
+        base44.entities.AffiliateSettings.list({ limit: 1 }).catch(() => []),
       ]);
       setReferrals(refs);
       setCommissions(comms);
