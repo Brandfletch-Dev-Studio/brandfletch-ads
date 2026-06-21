@@ -76,11 +76,21 @@ function PricingCard({ name, price, period, currency, features, recommended, cta
       <div className="p-6 pt-2">
         <Button
           onClick={onCta}
-          className='w-full font-semibold'
+          className="w-full font-semibold"
           variant={recommended ? 'default' : 'outline'}
           size="lg"
+          disabled={loading}
         >
-          {ctaLabel || 'Get Started'} <ChevronRight className="w-4 h-4 ml-1" />
+          {loading ? (
+            <span className="flex items-center gap-2">
+              <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+              Submitting...
+            </span>
+          ) : (
+            <span className="flex items-center gap-1">
+              {ctaLabel || 'Get Started'} <ChevronRight className="w-4 h-4" />
+            </span>
+          )}
         </Button>
       </div>
     </div>
