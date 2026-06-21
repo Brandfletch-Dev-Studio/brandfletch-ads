@@ -26,7 +26,7 @@ export default function AdminLeads() {
 
   const { data: leads, isLoading } = useQuery({
     queryKey: ['adminLeads'],
-    queryFn: () => base44.entities.Lead.list(),
+    queryFn: () => base44.entities.Lead.list({}),
   });
 
   const updateLeadMutation = useMutation({
