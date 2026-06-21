@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { base44 } from '@/api/base44Client';
+import { supabase, base44 } from '@/api/base44Client';
 import { useAuth } from '@/lib/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,11 +19,11 @@ const BUSINESS_TYPES = [
 
 export default function Onboarding() {
   const navigate = useNavigate();
-  const { checkUserAuth } = useAuth();
-  const [loadingUser, setLoadingUser] = useState(true);
+  const { checkAppState } = useAuth();
   const [saving, setSaving] = useState(false);
   const [detectingLocation, setDetectingLocation] = useState(false);
   const [error, setError] = useState('');
+  const [userId, setUserId] = useState(null);
 
   const [form, setForm] = useState({
     full_name: '',
@@ -34,20 +34,24 @@ export default function Onboarding() {
   });
 
   useEffect(() => {
-    base44.auth.me()
-      .then(u => {
-        setForm(f => ({
-          ...f,
-          full_name: u.full_name || '',
-          phone: u.phone || '',
-          country: u.country || '',
-          business_name: u.business_name || '',
-          business_category: u.business_category || u.business_type || '',
-        }));
-        setLoadingUser(false);
-        detectCountry(u.country);
-      })
-      .catch(() => navigate('/login'));
+    // Get session — if none, go to login
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session?.user) {
+        navigate('/login');
+        return;
+      }
+      const u = session.user;
+      setUserId(u.id);
+      setForm(f => ({
+        ...f,
+        full_name: u.user_metadata?.full_name || u.email?.split('@')[0] || '',
+        phone: u.user_metadata?.phone || '',
+        country: u.user_metadata?.country || '',
+        business_name: u.user_metadata?.business_name || '',
+        business_category: u.user_metadata?.business_category || '',
+      }));
+      detectCountry(u.user_metadata?.country);
+    });
   }, []);
 
   async function detectCountry(existingCountry) {
@@ -66,13 +70,40 @@ export default function Onboarding() {
 
   function update(key, val) { setForm(f => ({ ...f, [key]: val })); }
 
-  async function handleSkip() {
-    // Bug fix: even when skipping, set role so they don't end up with null role
+  async function saveAndNavigate(payload) {
+    setSaving(true);
+    setError('');
     try {
-      await base44.auth.updateMe({ role: 'user', onboarded: true });
-      await checkUserAuth(); // refresh AuthContext
-    } catch {}
-    navigate('/dashboard');
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      // Upsert profile row
+      const { error: dbErr } = await supabase
+        .from('User')
+        .upsert(
+          { id: user.id, email: user.email, ...payload },
+          { onConflict: 'id' }
+        );
+      if (dbErr) throw dbErr;
+
+      // Update auth metadata
+      await supabase.auth.updateUser({
+        data: { full_name: payload.full_name, role: payload.role },
+      });
+
+      // Send welcome email (non-blocking)
+      try {
+        base44.functions.invoke('sendWelcomeEmail', { user_id: user.id }).catch(() => {});
+      } catch (_) {}
+
+      // Refresh AuthContext then navigate
+      if (checkAppState) await checkAppState();
+      navigate('/dashboard');
+    } catch (err) {
+      console.error('Onboarding save error:', err);
+      setError('Something went wrong: ' + (err.message || 'Please try again.'));
+      setSaving(false);
+    }
   }
 
   async function finish() {
@@ -80,53 +111,34 @@ export default function Onboarding() {
     if (!form.country) { setError('Please select your country.'); return; }
     if (!form.business_name.trim()) { setError('Please enter your business name.'); return; }
 
-    setError('');
-    setSaving(true);
-    try {
-      await base44.auth.updateMe({
-        full_name: form.full_name.trim(),
-        phone: form.phone.trim(),
-        country: form.country,
-        business_name: form.business_name.trim(),
-        business_category: form.business_category,
-        role: 'user',
-        onboarded: true,
-      });
-      await checkUserAuth();
-
-      // Send welcome email in background (non-blocking)
-      try {
-        const me = await base44.auth.me();
-        if (me?.id) {
-          base44.functions.sendWelcomeEmail({ user_id: me.id }).catch(() => {});
-        }
-      } catch (_) {}
-
-      navigate('/dashboard');
-    } catch (err) {
-      setError('Something went wrong. Please try again.');
-      setSaving(false);
-    }
+    await saveAndNavigate({
+      full_name: form.full_name.trim(),
+      phone: form.phone.trim(),
+      country: form.country,
+      business_name: form.business_name.trim(),
+      business_category: form.business_category,
+      role: 'user',
+      onboarded: true,
+    });
   }
 
-  if (loadingUser) {
-    return (
-      <div className="fixed inset-0 flex items-center justify-center bg-background">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-10 h-10 border-4 border-[hsl(var(--primary))]/20 border-t-[hsl(var(--primary))] rounded-full animate-spin" />
-          <p className="text-sm text-muted-foreground font-medium">Setting up your account...</p>
-        </div>
-      </div>
-    );
+  async function handleSkip() {
+    await saveAndNavigate({
+      full_name: form.full_name.trim() || form.full_name,
+      role: 'user',
+      onboarded: true,
+    });
   }
 
+  // Always render the form — no blocking white screen
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <div className="flex items-center justify-between px-6 py-4 border-b border-border">
         <BrandLogo size="md" dark />
         <button
           onClick={handleSkip}
-          className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+          disabled={saving}
+          className="text-xs text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
         >
           Skip for now →
         </button>
@@ -210,7 +222,7 @@ export default function Onboarding() {
               className="w-full h-11 font-semibold bg-[hsl(var(--primary))] text-primary-foreground"
             >
               {saving
-                ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Saving...</>
+                ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Saving…</>
                 : 'Go to Dashboard →'
               }
             </Button>

@@ -269,14 +269,16 @@ const authWrapper = {
       });
     }
 
-    // Update User table
+    // Upsert User table — works whether the row exists yet or not
     const { data: result, error } = await supabase
       .from('User')
-      .update(data)
-      .eq('id', user.id)
+      .upsert({ id: user.id, email: user.email, ...data }, { onConflict: 'id' })
       .select()
       .single();
-    if (error) throw error;
+    if (error) {
+      console.error('updateMe error:', error);
+      throw error;
+    }
     return result;
   },
 

@@ -5,17 +5,12 @@ import { Loader2, CheckCircle, XCircle } from "lucide-react";
 
 /**
  * AuthCallback — handles Supabase email verification links.
- *
- * Supabase sends an email with a link like:
- *   https://yourapp.vercel.app/auth/callback#access_token=...&type=signup
- * or (PKCE flow):
- *   https://yourapp.vercel.app/auth/callback?token_hash=...&type=signup
- *
- * This page detects both flows and signs the user in.
+ * Supports both PKCE (token_hash) and implicit (hash fragment) flows.
+ * After verifying, signs the user in and redirects — no second login needed.
  */
 export default function AuthCallback() {
   const navigate = useNavigate();
-  const [status, setStatus] = useState("verifying"); // verifying | success | error
+  const [status, setStatus] = useState("verifying");
   const [errorMsg, setErrorMsg] = useState("");
 
   useEffect(() => {
@@ -24,53 +19,46 @@ export default function AuthCallback() {
 
   const handleCallback = async () => {
     try {
-      // --- Flow 1: PKCE (token_hash in query params) ---
+      // --- Flow 1: PKCE — token_hash in query string ---
       const params = new URLSearchParams(window.location.search);
       const tokenHash = params.get("token_hash");
-      const type = params.get("type"); // signup | recovery | email_change
+      const type = params.get("type") || "signup";
 
-      if (tokenHash && type) {
+      if (tokenHash) {
         const { data, error } = await supabase.auth.verifyOtp({
           token_hash: tokenHash,
           type,
         });
         if (error) throw error;
+        // Session is now active — ensure it's persisted
+        await ensureSession();
         setStatus("success");
-        redirectAfterVerify(data?.session, type);
+        redirectAfterVerify(type);
         return;
       }
 
-      // --- Flow 2: Implicit (access_token in hash fragment) ---
-      const hash = window.location.hash;
-      if (hash && hash.includes("access_token")) {
-        // Supabase's onAuthStateChange picks this up automatically
-        const { data: { session }, error } = await supabase.auth.getSession();
-        if (error) throw error;
-        if (session) {
+      // --- Flow 2: Implicit — access_token in URL hash ---
+      if (window.location.hash?.includes("access_token")) {
+        // Supabase SDK parses the hash automatically on getSession()
+        // Give it a moment to process
+        await new Promise(res => setTimeout(res, 800));
+        const ok = await ensureSession();
+        if (ok) {
           setStatus("success");
-          redirectAfterVerify(session, "signup");
-          return;
-        }
-        // Wait briefly for the session to settle
-        await new Promise(res => setTimeout(res, 1500));
-        const { data: { session: session2 } } = await supabase.auth.getSession();
-        if (session2) {
-          setStatus("success");
-          redirectAfterVerify(session2, "signup");
+          redirectAfterVerify("signup");
           return;
         }
       }
 
-      // --- No recognised params ---
-      // Maybe user is already logged in
-      const { data: { session: existing } } = await supabase.auth.getSession();
-      if (existing) {
+      // --- Flow 3: Already authenticated (e.g. user clicked link twice) ---
+      const ok = await ensureSession();
+      if (ok) {
         setStatus("success");
         navigate("/dashboard", { replace: true });
         return;
       }
 
-      throw new Error("No verification token found. The link may have expired.");
+      throw new Error("Verification link is invalid or has expired. Please sign up again.");
     } catch (err) {
       console.error("Auth callback error:", err);
       setStatus("error");
@@ -78,13 +66,22 @@ export default function AuthCallback() {
     }
   };
 
-  const redirectAfterVerify = (session, type) => {
+  // Waits up to 4s for a valid session, returns true if found
+  const ensureSession = async () => {
+    for (let i = 0; i < 4; i++) {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) return true;
+      await new Promise(res => setTimeout(res, 1000));
+    }
+    return false;
+  };
+
+  const redirectAfterVerify = (type) => {
     if (type === "recovery") {
       navigate("/reset-password", { replace: true });
     } else {
-      // New signup → onboarding; existing login → dashboard
-      const isNewUser = session?.user?.created_at === session?.user?.last_sign_in_at;
-      navigate(isNewUser ? "/onboarding" : "/dashboard", { replace: true });
+      // New users go to onboarding
+      navigate("/onboarding", { replace: true });
     }
   };
 
@@ -93,23 +90,27 @@ export default function AuthCallback() {
       {status === "verifying" && (
         <>
           <Loader2 className="w-10 h-10 animate-spin text-primary" />
-          <p className="text-muted-foreground text-sm">Verifying your email…</p>
+          <p className="text-muted-foreground text-sm font-medium">Verifying your email…</p>
+          <p className="text-xs text-muted-foreground">Just a second, signing you in automatically.</p>
         </>
       )}
       {status === "success" && (
         <>
           <CheckCircle className="w-10 h-10 text-green-500" />
-          <p className="text-sm text-muted-foreground">Verified! Redirecting…</p>
+          <p className="font-medium">Email verified!</p>
+          <p className="text-sm text-muted-foreground">Signing you in…</p>
         </>
       )}
       {status === "error" && (
         <>
           <XCircle className="w-10 h-10 text-destructive" />
-          <p className="font-medium">Verification failed</p>
-          <p className="text-sm text-muted-foreground text-center max-w-xs">{errorMsg}</p>
-          <a href="/register" className="text-sm text-primary underline mt-2">
-            Back to sign up
-          </a>
+          <p className="font-semibold text-foreground">Verification failed</p>
+          <p className="text-sm text-muted-foreground text-center max-w-xs px-4">{errorMsg}</p>
+          <div className="flex gap-3 mt-2">
+            <a href="/register" className="text-sm text-primary underline">Sign up again</a>
+            <span className="text-muted-foreground">·</span>
+            <a href="/login" className="text-sm text-primary underline">Log in</a>
+          </div>
         </>
       )}
     </div>
