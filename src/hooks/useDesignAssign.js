@@ -17,7 +17,7 @@ export function useDesignAssign() {
 
   async function getAdminPhone() {
     try {
-      const settings = await base44.entities.PublicSettings.list(null, 1);
+      const settings = await base44.entities.PublicSettings.list({ limit: 1 });
       return settings?.[0]?.admin_whatsapp || settings?.[0]?.admin_phone || null;
     } catch { return null; }
   }
