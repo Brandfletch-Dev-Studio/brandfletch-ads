@@ -20,7 +20,7 @@ export default function AdminPageRequests() {
   useEffect(() => { load(); }, []);
 
   async function load() {
-    const data = await base44.entities.FacebookPage.list('-created_date', 100);
+    const data = await base44.entities.FacebookPage.list({ sort: '-created_date', limit: 100 });
     setPages(data);
   }
 
