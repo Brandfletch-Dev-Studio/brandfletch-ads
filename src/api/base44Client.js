@@ -34,6 +34,8 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
 function createEntityWrapper(entityName) {
   return {
     async list(params = {}) {
+      // Backward compat: if first arg is a string, treat it as sort
+      if (typeof params === 'string') params = { sort: params };
       const { limit = 100, skip = 0, sort, ...filters } = params;
       let query = supabase.from(entityName).select('*');
 
@@ -101,6 +103,8 @@ function createEntityWrapper(entityName) {
     },
 
     async filter(queryObj = {}, options = {}) {
+      // Backward compat: if second arg is a string, treat it as sort
+      if (typeof options === 'string') options = { sort: options };
       const { limit = 100, skip = 0, sort } = options;
       let query = supabase.from(entityName).select('*');
 
