@@ -29,7 +29,7 @@ export default function CampaignPayment() {
     const u = await base44.auth.me().catch(() => null);
     setClientUser(u);
     const c = await base44.entities.Campaign.filter({ id });
-    const camp = c[0] || await base44.entities.Campaign.list().then(all => all.find(x => x.id === id));
+    const camp = c[0] || await base44.entities.Campaign.list({}).then(all => all.find(x => x.id === id));
     setCampaign(camp);
 
     // Detect Malawi by country name, code, or currency
