@@ -48,7 +48,7 @@ export default function LeadForms() {
 
   const { data: forms, isLoading } = useQuery({
     queryKey: ['myLeadForms'],
-    queryFn: () => base44.entities.LeadForm.list(),
+    queryFn: () => base44.entities.LeadForm.list({}),
   });
 
   const { data: user } = useQuery({
