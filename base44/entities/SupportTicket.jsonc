@@ -56,6 +56,13 @@
     "resolved_date": {
       "type": "string",
       "format": "date-time"
+    },
+    "messages": {
+      "type": "array",
+      "description": "Conversation thread — each item: { id, sender_id, sender_name, sender_role, text, created_at }",
+      "items": {
+        "type": "object"
+      }
     }
   },
   "required": [
