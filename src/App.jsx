@@ -26,6 +26,7 @@ import LeadsComingSoon from '@/pages/LeadsComingSoon';
 import LeadForms from '@/pages/LeadForms';
 import DesignerPortal from '@/pages/DesignerPortal';
 import CreativeOpsDashboard from '@/pages/CreativeOpsDashboard';
+import AdsManagerDashboard from '@/pages/AdsManagerDashboard';
 import Referrals from '@/pages/Referrals';
 import About from '@/pages/About';
 import Pricing from '@/pages/Pricing';
@@ -68,6 +69,7 @@ const getDefaultAuthRoute = () => {
 function getStaffLandingPath(role) {
   if (role === 'designer') return '/designer';
   if (role === 'creative_ops_director') return '/creative-ops';
+  if (role === 'ads_manager') return '/ads-manager';
   return '/admin';
 }
 
@@ -159,6 +161,7 @@ const AuthenticatedApp = () => {
         {/* ── Designer portal — accessible to designer + design dept head ── */}
         <Route path="/designer" element={<DesignerPortal />} />
         <Route path="/creative-ops" element={<CreativeOpsDashboard />} />
+        <Route path="/ads-manager" element={<AdsManagerDashboard />} />
 
         {/* ── Admin / staff routes ── */}
         <Route path="/admin" element={<AdminOverview />} />
