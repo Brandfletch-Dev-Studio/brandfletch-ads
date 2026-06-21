@@ -22,7 +22,7 @@ export default function AdminSupportTickets() {
 
   async function loadTickets() {
     try {
-      const all = await base44.entities.SupportTicket.list('-created_date', 200);
+      const all = await base44.entities.SupportTicket.list({ sort: '-created_date', limit: 200 });
       setTickets(all);
     } catch (error) {
       toast.error('Failed to load tickets');
