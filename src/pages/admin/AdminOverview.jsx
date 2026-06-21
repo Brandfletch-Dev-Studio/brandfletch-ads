@@ -29,7 +29,7 @@ export default function AdminOverview() {
           base44.entities.Lead.list({ sort: '-created_date', limit: 1000 }).catch(() => []),
           base44.entities.Campaign.list({ sort: '-created_date', limit: 1000 }).catch(() => []),
           base44.entities.WalletTransaction.list({ sort: '-created_date', limit: 1000 }).catch(() => []),
-          base44.entities.User.list({ sort: '-created_date', limit: 1000 }).catch(() => []),
+          base44.functions.getAllUsers({}).then(r => r?.users || []).catch(() => []),
           base44.entities.SupportTicket.list({ sort: '-created_date', limit: 1000 }).catch(() => []),
         ]);
 
