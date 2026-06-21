@@ -207,12 +207,12 @@ export default function AdminAds() {
 
   const { data: ads = [] } = useQuery({
     queryKey: ['app-ads'],
-    queryFn: () => base44.entities.AppAd.list('-created_date'),
+    queryFn: () => base44.entities.AppAd.list({ sort: '-created_date' }),
   });
 
   const { data: events = [] } = useQuery({
     queryKey: ['ad-events'],
-    queryFn: () => base44.entities.AdEvent.list(),
+    queryFn: () => base44.entities.AdEvent.list({}),
   });
 
   const save = useMutation({
