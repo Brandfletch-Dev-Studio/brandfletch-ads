@@ -216,7 +216,7 @@ export default function AdsManagerDashboard() {
 
   const { data: allUsers = [] } = useQuery({
     queryKey: ['am-all-users'],
-    queryFn: () => base44.entities.User.list({ limit: 500 }).catch(() => []),
+    queryFn: () => base44.functions.getAllUsers({}).then(r => r?.users || []).catch(() => []),
   });
 
   const { data: walletTxns = [] } = useQuery({
