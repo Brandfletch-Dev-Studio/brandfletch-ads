@@ -1,0 +1,6 @@
+.github
+.gitignore
+*.md
+env_example.txt
+supabase_*.sql
+.supabase
