@@ -134,7 +134,7 @@ export default function AdminSettings() {
 
   async function deleteAllEntity(entityKey) {
     setDeleting(true);
-    const records = await base44.entities[entityKey].list();
+    const records = await base44.entities[entityKey].list({});
     for (const r of records) {
       await base44.entities[entityKey].delete(r.id);
     }
