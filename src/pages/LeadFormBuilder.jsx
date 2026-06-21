@@ -35,7 +35,7 @@ export default function LeadFormBuilder() {
 
   const { data: forms, isLoading } = useQuery({
     queryKey: ['myLeadForms'],
-    queryFn: () => base44.entities.LeadForm.list(),
+    queryFn: () => base44.entities.LeadForm.list({}),
   });
 
   const createFormMutation = useMutation({
