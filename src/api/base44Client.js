@@ -33,22 +33,18 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
 
 function createEntityWrapper(entityName) {
   return {
-    // list({ limit, skip, sort, ...filters }) → array
     async list(params = {}) {
       const { limit = 100, skip = 0, sort, ...filters } = params;
       let query = supabase.from(entityName).select('*');
 
-      // Apply filters (exact match)
       for (const [key, value] of Object.entries(filters)) {
         if (value !== undefined && value !== null) {
           query = query.eq(key, value);
         }
       }
 
-      // Pagination
       if (limit) query = query.range(skip, skip + limit - 1);
 
-      // Sorting — Base44 sort format: "-created_date" or "name"
       if (sort) {
         if (sort.startsWith('-')) {
           query = query.order(sort.slice(1), { ascending: false });
@@ -64,7 +60,6 @@ function createEntityWrapper(entityName) {
       return data || [];
     },
 
-    // get(id) → single record
     async get(id) {
       const { data, error } = await supabase
         .from(entityName)
@@ -75,7 +70,6 @@ function createEntityWrapper(entityName) {
       return data;
     },
 
-    // create(data) → created record
     async create(data) {
       const { data: result, error } = await supabase
         .from(entityName)
@@ -86,10 +80,7 @@ function createEntityWrapper(entityName) {
       return result;
     },
 
-    // update(id, data) → updated record
     async update(id, data) {
-      // Base44 PATCH drops null values — Supabase preserves them.
-      // This is actually better behavior, but we keep the interface identical.
       const { data: result, error } = await supabase
         .from(entityName)
         .update(data)
@@ -100,7 +91,6 @@ function createEntityWrapper(entityName) {
       return result;
     },
 
-    // delete(id)
     async delete(id) {
       const { error } = await supabase
         .from(entityName)
@@ -110,8 +100,6 @@ function createEntityWrapper(entityName) {
       return true;
     },
 
-    // filter(queryObj, options) → array
-    // Supports: exact match, { filter_type: 'in'/'not_in'/'like'/'gt'/'gte'/'lt'/'lte' }
     async filter(queryObj = {}, options = {}) {
       const { limit = 100, skip = 0, sort } = options;
       let query = supabase.from(entityName).select('*');
@@ -119,8 +107,6 @@ function createEntityWrapper(entityName) {
       for (const [key, value] of Object.entries(queryObj)) {
         if (value === undefined || value === null) continue;
 
-        // Check if the value has a filter_type wrapper
-        // Base44 format: { field: { filter_type: 'gt', value: 100 } }
         if (typeof value === 'object' && value !== null && value.filter_type) {
           const { filter_type, value: filterValue } = value;
           switch (filter_type) {
@@ -173,7 +159,6 @@ function createEntityWrapper(entityName) {
 }
 
 // ── Build entities proxy ──────────────────────────────────────────────────────
-// Any base44.entities.SomeEntity call will auto-create a wrapper
 
 const entitiesProxy = new Proxy({}, {
   get(target, prop) {
@@ -185,33 +170,144 @@ const entitiesProxy = new Proxy({}, {
 });
 
 // ── Auth wrapper ──────────────────────────────────────────────────────────────
-// Mimics base44.auth.me(), base44.auth.logout(), base44.auth.redirectToLogin(), base44.auth.inviteUser()
+// Full auth API surface matching all Base44 auth calls used in the app
 
 const authWrapper = {
-  // Get current user (with profile data from User table)
+  // Get current user with profile from User table
   async me() {
     const { data: { user }, error } = await supabase.auth.getUser();
     if (error || !user) throw { status: 401, message: 'Not authenticated' };
 
-    // Fetch profile from User table
-    const { data: profile, error: profileError } = await supabase
+    const { data: profile } = await supabase
       .from('User')
       .select('*')
       .eq('id', user.id)
       .single();
 
-    if (profileError || !profile) {
-      // Return basic auth user if no profile exists yet
-      return {
-        id: user.id,
-        email: user.email,
-        full_name: user.user_metadata?.full_name || user.email,
-        role: user.user_metadata?.role || 'user',
-        ...user.user_metadata,
-      };
+    if (profile) return profile;
+
+    return {
+      id: user.id,
+      email: user.email,
+      full_name: user.user_metadata?.full_name || user.email,
+      role: user.user_metadata?.role || 'user',
+      ...user.user_metadata,
+    };
+  },
+
+  // Check if user is authenticated
+  async isAuthenticated() {
+    const { data: { session } } = await supabase.auth.getSession();
+    return !!session;
+  },
+
+  // Login with email + password
+  async loginViaEmailPassword(email, password) {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    if (error) throw error;
+    return data;
+  },
+
+  // Register new user
+  async register({ email, password, full_name, ...metadata }) {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { full_name, ...metadata },
+      },
+    });
+    if (error) throw error;
+
+    // Create profile in User table
+    if (data.user) {
+      await supabase.from('User').upsert({
+        id: data.user.id,
+        email,
+        full_name: full_name || email,
+        role: 'user',
+        ...metadata,
+      });
     }
 
-    return profile;
+    return data;
+  },
+
+  // Verify OTP (for email verification flow)
+  async verifyOtp({ email, otpCode }) {
+    const { data, error } = await supabase.auth.verifyOtp({
+      email,
+      token: otpCode,
+      type: 'signup',
+    });
+    if (error) throw error;
+    return data;
+  },
+
+  // Resend OTP
+  async resendOtp(email) {
+    const { data, error } = await supabase.auth.resend({
+      type: 'signup',
+      email,
+    });
+    if (error) throw error;
+    return data;
+  },
+
+  // Update current user profile
+  async updateMe(data) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw { status: 401, message: 'Not authenticated' };
+
+    // Update auth metadata
+    if (data.full_name || data.role) {
+      await supabase.auth.updateUser({
+        data: { full_name: data.full_name, role: data.role },
+      });
+    }
+
+    // Update User table
+    const { data: result, error } = await supabase
+      .from('User')
+      .update(data)
+      .eq('id', user.id)
+      .select()
+      .single();
+    if (error) throw error;
+    return result;
+  },
+
+  // Set token (for manual token management — used by Register page)
+  async setToken(token) {
+    if (token) {
+      await supabase.auth.setSession({
+        access_token: token,
+        refresh_token: token,
+      });
+    }
+  },
+
+  // Request password reset
+  async resetPasswordRequest(email) {
+    const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    if (error) throw error;
+    return data;
+  },
+
+  // Reset password with token
+  async resetPassword({ resetToken, newPassword }) {
+    // Supabase handles this via the recovery link flow
+    // The token is already consumed by the URL redirect
+    const { data, error } = await supabase.auth.updateUser({
+      password: newPassword,
+    });
+    if (error) throw error;
+    return data;
   },
 
   // Logout
@@ -225,11 +321,10 @@ const authWrapper = {
   // Redirect to login
   redirectToLogin(returnUrl) {
     const redirectTo = returnUrl || window.location.href;
-    // For Supabase, we redirect to our own login page which uses supabase.auth.signInWithPassword
     window.location.href = `/login?redirect=${encodeURIComponent(redirectTo)}`;
   },
 
-  // Invite user (admin function)
+  // Invite user (admin)
   async inviteUser(email, metadata = {}) {
     const { data, error } = await supabase.auth.admin.inviteUserByEmail(email, {
       data: metadata,
@@ -240,19 +335,16 @@ const authWrapper = {
 };
 
 // ── Functions wrapper ─────────────────────────────────────────────────────────
-// Mimics base44.functions.functionName() and base44.functions.invoke()
 
 const functionsProxy = new Proxy({}, {
   get(target, prop) {
     if (prop === 'invoke') {
-      // base44.functions.invoke(functionName, payload)
       return async (functionName, payload = {}) => {
         const { data, error } = await supabase.rpc(functionName, payload);
         if (error) throw error;
         return data;
       };
     }
-    // Direct call: base44.functions.functionName(payload)
     return async (payload = {}) => {
       const { data, error } = await supabase.rpc(prop, payload);
       if (error) throw error;
@@ -261,13 +353,13 @@ const functionsProxy = new Proxy({}, {
   },
 });
 
-// ── Export the base44-compatible client ─────────────────────────────────────────
+// ── Export ────────────────────────────────────────────────────────────────────
 
 export const base44 = {
   entities: entitiesProxy,
   auth: authWrapper,
   functions: functionsProxy,
-  supabase, // Expose raw supabase client for direct access when needed
+  supabase,
 };
 
 export default base44;
