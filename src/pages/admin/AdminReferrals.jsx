@@ -477,7 +477,7 @@ function MaterialsTab() {
 
   const { data: materials = [], isLoading } = useQuery({
     queryKey: ['adminMaterials'],
-    queryFn: () => base44.entities.AffiliateMarketingMaterial.list('sort_order'),
+    queryFn: () => base44.entities.AffiliateMarketingMaterial.list({ sort: 'sort_order' }),
   });
 
   const addMut = useMutation({
@@ -614,7 +614,7 @@ function SettingsTab() {
 
   const { data: settingsData, isLoading } = useQuery({
     queryKey: ['affiliateSettings'],
-    queryFn: () => base44.entities.AffiliateSettings.list(null, 1),
+    queryFn: () => base44.entities.AffiliateSettings.list({ limit: 1 }),
   });
 
   useEffect(() => {
@@ -990,23 +990,23 @@ export default function AdminReferrals() {
 
   const { data: referrals = [], isLoading: loadingRefs } = useQuery({
     queryKey: ['adminReferrals'],
-    queryFn: () => base44.entities.Referral.list('-created_date', 500).catch(() => []),
+    queryFn: () => base44.entities.Referral.list({ sort: '-created_date', limit: 500 }).catch(() => []),
   });
   const { data: users = [] } = useQuery({
     queryKey: ['allUsers'],
-    queryFn: () => base44.entities.User.list().catch(() => []),
+    queryFn: () => base44.entities.User.list({}).catch(() => []),
   });
   const { data: commissions = [], isLoading: loadingComms } = useQuery({
     queryKey: ['adminCommissions'],
-    queryFn: () => base44.entities.AffiliateCommission.list('-created_date', 500).catch(() => []),
+    queryFn: () => base44.entities.AffiliateCommission.list({ sort: '-created_date', limit: 500 }).catch(() => []),
   });
   const { data: payouts = [], isLoading: loadingPayouts } = useQuery({
     queryKey: ['adminPayouts'],
-    queryFn: () => base44.entities.AffiliatePayout.list('-created_date', 500).catch(() => []),
+    queryFn: () => base44.entities.AffiliatePayout.list({ sort: '-created_date', limit: 500 }).catch(() => []),
   });
   const { data: settingsList = [] } = useQuery({
     queryKey: ['affiliateSettings'],
-    queryFn: () => base44.entities.AffiliateSettings.list(null, 1).catch(() => []),
+    queryFn: () => base44.entities.AffiliateSettings.list({ limit: 1 }).catch(() => []),
   });
   const affiliateSettings = settingsList?.[0] || null;
 
