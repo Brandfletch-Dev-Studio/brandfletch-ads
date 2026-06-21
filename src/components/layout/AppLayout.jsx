@@ -49,7 +49,20 @@ const codNav = [
   { path: '/settings',        label: 'Settings',           icon: Settings },
 ];
 
-// ── Admin nav (all staff except designer/COD) ────────────────────────────────
+// ── Ads Manager nav ───────────────────────────────────────────────────────────
+// Ads Manager has their own dashboard + focused admin access
+const adsManagerNav = [
+  { path: '/ads-manager',          label: 'My Dashboard',      icon: LayoutDashboard },
+  { path: '/admin/campaigns',      label: 'All Campaigns',     icon: Megaphone },
+  { path: '/admin/pages',          label: 'Page Requests',     icon: Facebook },
+  { path: '/admin/users',          label: 'Clients',           icon: Users },
+  { path: '/admin/payments',       label: 'Payments',          icon: WalletIcon },
+  { path: '/admin/reports',        label: 'Reports',           icon: BarChart3 },
+  { path: '/admin/support',        label: 'Support',           icon: LifeBuoy },
+  { path: '/settings',             label: 'Settings',          icon: Settings },
+];
+
+// ── Admin nav (all staff except designer/COD/Ads Manager) ────────────────────
 const ALL_ADMIN_NAV = [
   { key: 'overview',      path: '/admin',                label: 'Overview',          icon: LayoutDashboard, permission: null },
   { key: 'campaigns',     path: '/admin/campaigns',      label: 'All Campaigns',     icon: Megaphone,       permission: 'campaigns.view' },
@@ -76,11 +89,13 @@ export default function AppLayout() {
 
   const isDesigner = currentUser?.role === 'designer';
   const isCOD = currentUser?.role === 'creative_ops_director';
-  const isAdminView = location.pathname.startsWith('/admin') || location.pathname.startsWith('/creative-ops');
+  const isAdsManager = currentUser?.role === 'ads_manager';
+  const isAdminView = location.pathname.startsWith('/admin') || location.pathname.startsWith('/creative-ops') || location.pathname.startsWith('/ads-manager');
 
   // Determine which nav to show:
   // - designer → dedicated designer nav (portal + messages + settings)
   // - creative_ops_director → focused COD nav (their dashboard + design tools)
+  // - ads_manager → focused Ads Manager nav (their dashboard + ads tools)
   // - other staff on /admin/* → filtered admin nav
   // - clients (or staff on client routes) → client nav
   let navItems;
@@ -88,6 +103,8 @@ export default function AppLayout() {
     navItems = designerNav;
   } else if (isCOD) {
     navItems = codNav;
+  } else if (isAdsManager) {
+    navItems = adsManagerNav;
   } else if (isStaff && isAdminView) {
     navItems = ALL_ADMIN_NAV.filter(item => !item.permission || can(item.permission));
   } else {
