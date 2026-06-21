@@ -15,20 +15,27 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     checkAppState();
     
-    // Listen to Supabase auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_OUT') {
-        setUser(null);
-        setIsAuthenticated(false);
-      } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'EMAIL_CONFIRMED' || event === 'USER_UPDATED') {
-        if (session?.user) {
-          loadUserProfile(session.user);
+    // Listen to Supabase auth state changes — wrapped in try/catch to prevent
+    // white-screen crash if Supabase client is misconfigured or env vars missing
+    let subscription = null;
+    try {
+      const { data } = supabase.auth.onAuthStateChange((event, session) => {
+        if (event === 'SIGNED_OUT') {
+          setUser(null);
+          setIsAuthenticated(false);
+        } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'EMAIL_CONFIRMED' || event === 'USER_UPDATED') {
+          if (session?.user) {
+            loadUserProfile(session.user);
+          }
         }
-      }
-    });
+      });
+      subscription = data?.subscription;
+    } catch (err) {
+      console.error('[AuthContext] onAuthStateChange failed:', err);
+    }
 
     return () => {
-      subscription?.unsubscribe();
+      try { subscription?.unsubscribe(); } catch {}
     };
   }, []);
 
@@ -77,13 +84,9 @@ export const AuthProvider = ({ children }) => {
       
       if (session?.user) {
         await loadUserProfile(session.user);
-      } else {
-        // No session — user is not authenticated
-        setAuthError({
-          type: 'auth_required',
-          message: 'Authentication required'
-        });
       }
+      // No session = normal unauthenticated state, NOT an error
+      // Don't set authError here — auth routes (/login, /register) need to render freely
       
       // App public settings — we can store these in a Supabase table or hardcode
       // For now, set a basic config (can be moved to a Settings table later)
