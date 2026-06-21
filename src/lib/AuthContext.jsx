@@ -1,7 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
-import { appParams } from '@/lib/app-params';
-import { createAxiosClient } from '@base44/sdk/dist/utils/axios-client';
+import { base44, supabase } from '@/api/base44Client';
 
 const AuthContext = createContext();
 
@@ -12,118 +10,118 @@ export const AuthProvider = ({ children }) => {
   const [isLoadingPublicSettings, setIsLoadingPublicSettings] = useState(true);
   const [authError, setAuthError] = useState(null);
   const [authChecked, setAuthChecked] = useState(false);
-  const [appPublicSettings, setAppPublicSettings] = useState(null); // Contains only { id, public_settings }
+  const [appPublicSettings, setAppPublicSettings] = useState(null);
 
   useEffect(() => {
     checkAppState();
+    
+    // Listen to Supabase auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT') {
+        setUser(null);
+        setIsAuthenticated(false);
+      } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        if (session?.user) {
+          loadUserProfile(session.user);
+        }
+      }
+    });
+
+    return () => {
+      subscription?.unsubscribe();
+    };
   }, []);
+
+  const loadUserProfile = async (authUser) => {
+    try {
+      const { data: profile, error } = await supabase
+        .from('User')
+        .select('*')
+        .eq('id', authUser.id)
+        .single();
+
+      if (profile) {
+        setUser(profile);
+        setIsAuthenticated(true);
+      } else {
+        // No profile yet — use auth user basics
+        setUser({
+          id: authUser.id,
+          email: authUser.email,
+          full_name: authUser.user_metadata?.full_name || authUser.email,
+          role: authUser.user_metadata?.role || 'user',
+          ...authUser.user_metadata,
+        });
+        setIsAuthenticated(true);
+      }
+    } catch (err) {
+      console.error('Profile load failed:', err);
+      // Still set basic user from auth
+      setUser({
+        id: authUser.id,
+        email: authUser.email,
+        full_name: authUser.user_metadata?.full_name || authUser.email,
+        role: authUser.user_metadata?.role || 'user',
+      });
+      setIsAuthenticated(true);
+    }
+  };
 
   const checkAppState = async () => {
     try {
       setIsLoadingPublicSettings(true);
       setAuthError(null);
       
-      // First, check app public settings (with token if available)
-      // This will tell us if auth is required, user not registered, etc.
-      const appClient = createAxiosClient({
-        baseURL: `/api/apps/public`,
-        headers: {
-          'X-App-Id': appParams.appId
-        },
-        token: appParams.token, // Include token if available
-        interceptResponses: true
-      });
+      // Check if user has an active Supabase session
+      const { data: { session }, error } = await supabase.auth.getSession();
       
-      try {
-        const publicSettings = await appClient.get(`/prod/public-settings/by-id/${appParams.appId}`);
-        setAppPublicSettings(publicSettings);
-        
-        // Always check user auth (enforce login even on public apps)
-        await checkUserAuth();
-        setIsLoadingPublicSettings(false);
-      } catch (appError) {
-        console.error('App state check failed:', appError);
-        
-        // Handle app-level errors
-        if (appError.status === 403 && appError.data?.extra_data?.reason) {
-          const reason = appError.data.extra_data.reason;
-          if (reason === 'auth_required') {
-            setAuthError({
-              type: 'auth_required',
-              message: 'Authentication required'
-            });
-          } else if (reason === 'user_not_registered') {
-            setAuthError({
-              type: 'user_not_registered',
-              message: 'User not registered for this app'
-            });
-          } else {
-            setAuthError({
-              type: reason,
-              message: appError.message
-            });
-          }
-        } else {
-          setAuthError({
-            type: 'unknown',
-            message: appError.message || 'Failed to load app'
-          });
-        }
-        setIsLoadingPublicSettings(false);
-        setIsLoadingAuth(false);
-      }
-    } catch (error) {
-      console.error('Unexpected error:', error);
-      setAuthError({
-        type: 'unknown',
-        message: error.message || 'An unexpected error occurred'
-      });
-      setIsLoadingPublicSettings(false);
-      setIsLoadingAuth(false);
-    }
-  };
-
-  const checkUserAuth = async () => {
-    try {
-      // Now check if the user is authenticated
-      setIsLoadingAuth(true);
-      const currentUser = await base44.auth.me();
-      setUser(currentUser);
-      setIsAuthenticated(true);
-      setIsLoadingAuth(false);
-      setAuthChecked(true);
-    } catch (error) {
-      console.error('User auth check failed:', error);
-      setIsLoadingAuth(false);
-      setIsAuthenticated(false);
-      setAuthChecked(true);
-      
-      // If user auth fails, it might be an expired token
-      if (error.status === 401 || error.status === 403) {
+      if (session?.user) {
+        await loadUserProfile(session.user);
+      } else {
+        // No session — user is not authenticated
         setAuthError({
           type: 'auth_required',
           message: 'Authentication required'
         });
       }
+      
+      // App public settings — we can store these in a Supabase table or hardcode
+      // For now, set a basic config (can be moved to a Settings table later)
+      setAppPublicSettings({
+        id: 'app',
+        public_settings: {
+          app_name: 'Brandfletch Ads',
+          requires_auth: true,
+        }
+      });
+      
+      setIsLoadingPublicSettings(false);
+      setIsLoadingAuth(false);
+      setAuthChecked(true);
+    } catch (error) {
+      console.error('App state check failed:', error);
+      setAuthError({
+        type: 'unknown',
+        message: error.message || 'Failed to load app'
+      });
+      setIsLoadingPublicSettings(false);
+      setIsLoadingAuth(false);
+      setAuthChecked(true);
     }
   };
 
   const logout = (shouldRedirect = true) => {
+    supabase.auth.signOut();
     setUser(null);
     setIsAuthenticated(false);
     
     if (shouldRedirect) {
-      // Use the SDK's logout method which handles token cleanup and redirect
-      base44.auth.logout(window.location.href);
-    } else {
-      // Just remove the token without redirect
-      base44.auth.logout();
+      window.location.href = '/login';
     }
   };
 
   const navigateToLogin = () => {
-    // Use the SDK's redirectToLogin method
-    base44.auth.redirectToLogin(window.location.href);
+    window.location.href = '/login';
   };
 
   return (
@@ -137,7 +135,6 @@ export const AuthProvider = ({ children }) => {
       authChecked,
       logout,
       navigateToLogin,
-      checkUserAuth,
       checkAppState
     }}>
       {children}
