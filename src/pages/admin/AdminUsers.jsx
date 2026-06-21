@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import {
   Search, Shield, UserPlus, Mail, MoreVertical,
-  UserX, UserCheck, Key, Users
+  UserX, UserCheck, Key, Users, RefreshCw
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -79,15 +79,25 @@ export default function AdminUsers() {
   const [activeTab, setActiveTab] = useState('staff');
 
   useEffect(() => {
-    // Bug fix: User.list() takes options object, not positional args
-    base44.entities.User.list({ sort: '-created_date', limit: 500 }).then(u => {
-      // COD can only see design dept members (designers + other CODs) + client accounts
-      const filtered = currentUser?.role === 'creative_ops_director'
-        ? u.filter(x => ['designer', 'creative_ops_director', 'user'].includes(x.role))
-        : u;
-      setUsers(filtered);
-      setLoading(false);
-    });
+    let cancelled = false;
+    async function fetchUsers() {
+      try {
+        const u = await base44.entities.User.list({ sort: '-created_date', limit: 500 });
+        if (cancelled) return;
+        // COD can only see design dept members (designers + other CODs) + client accounts
+        const filtered = currentUser?.role === 'creative_ops_director'
+          ? u.filter(x => ['designer', 'creative_ops_director', 'user'].includes(x.role))
+          : u;
+        setUsers(filtered);
+      } catch (err) {
+        console.error('AdminUsers: Failed to load users:', err);
+        if (!cancelled) toast.error('Could not load users — ' + (err?.message || 'try refreshing'));
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+    fetchUsers();
+    return () => { cancelled = true; };
   }, []);
 
   async function handleInvite(e) {
@@ -117,18 +127,28 @@ export default function AdminUsers() {
 
   async function updateRole(userId, newRole) {
     const target = users.find(u => u.id === userId);
-    await base44.entities.User.update(userId, { role: newRole });
-    auditLog('user_role_changed', 'User', userId,
-      `${target?.full_name || target?.email} role changed to "${ROLE_LABELS[newRole] || newRole}"`);
-    setUsers(us => us.map(u => u.id === userId ? { ...u, role: newRole } : u));
-    toast.success('Role updated');
+    try {
+      await base44.entities.User.update(userId, { role: newRole });
+      auditLog('user_role_changed', 'User', userId,
+        `${target?.full_name || target?.email} role changed to "${ROLE_LABELS[newRole] || newRole}"`);
+      setUsers(us => us.map(u => u.id === userId ? { ...u, role: newRole } : u));
+      toast.success('Role updated');
+    } catch (err) {
+      console.error('updateRole error:', err);
+      toast.error('Failed to update role — ' + (err?.message || 'try again'));
+    }
   }
 
   async function toggleSuspend(userId, suspend) {
     const target = users.find(u => u.id === userId);
-    await base44.entities.User.update(userId, { is_suspended: suspend });
-    setUsers(us => us.map(u => u.id === userId ? { ...u, is_suspended: suspend } : u));
-    toast.success(suspend ? `${target?.full_name || 'User'} suspended` : `${target?.full_name || 'User'} reinstated`);
+    try {
+      await base44.entities.User.update(userId, { is_suspended: suspend });
+      setUsers(us => us.map(u => u.id === userId ? { ...u, is_suspended: suspend } : u));
+      toast.success(suspend ? `${target?.full_name || 'User'} suspended` : `${target?.full_name || 'User'} reinstated`);
+    } catch (err) {
+      console.error('toggleSuspend error:', err);
+      toast.error('Failed to update user — ' + (err?.message || 'try again'));
+    }
   }
 
   const staffUsers = users.filter(u => STAFF_ROLES.includes(u.role));
@@ -154,11 +174,28 @@ export default function AdminUsers() {
             Brandfletch Media — {staffUsers.length} staff · {clientUsers.length} clients
           </p>
         </div>
-        {can('users.create') && (
-          <Button onClick={() => setShowInvite(true)} size="sm" className="flex-shrink-0 gap-1.5">
-            <UserPlus className="w-4 h-4" /> Invite Member
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <Button variant="outline" size="sm" onClick={() => {
+            setLoading(true);
+            base44.entities.User.list({ sort: '-created_date', limit: 500 })
+              .then(u => {
+                const filtered = currentUser?.role === 'creative_ops_director'
+                  ? u.filter(x => ['designer', 'creative_ops_director', 'user'].includes(x.role))
+                  : u;
+                setUsers(filtered);
+                toast.success('User list refreshed');
+              })
+              .catch(err => toast.error('Refresh failed — ' + (err?.message || 'try again')))
+              .finally(() => setLoading(false));
+          }} className="gap-1.5">
+            <RefreshCw className="w-4 h-4" /> Refresh
           </Button>
-        )}
+          {can('users.create') && (
+            <Button onClick={() => setShowInvite(true)} size="sm" className="gap-1.5">
+              <UserPlus className="w-4 h-4" /> Invite Member
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Tabs */}
