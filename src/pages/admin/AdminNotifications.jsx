@@ -42,7 +42,7 @@ export default function AdminNotifications() {
       const [notifs, us] = await Promise.all([
         // Bug fix: list() options must be object, not positional args
         base44.entities.Notification.list({ sort: '-created_date', limit: 100 }),
-        base44.entities.User.list(),
+        base44.entities.User.list({}),
       ]);
       setNotifications(notifs);
       setUsers(us);
