@@ -91,7 +91,7 @@ export default function CampaignWizard() {
     toast.success('Campaign created! Proceed to payment.');
     // Notify admin via WhatsApp (non-blocking)
     try {
-      const settings = await base44.entities.PublicSettings.list(null, 1).catch(() => []);
+      const settings = await base44.entities.PublicSettings.list({ limit: 1 }).catch(() => []);
       const adminPhone = settings?.[0]?.admin_whatsapp || settings?.[0]?.admin_phone;
       if (adminPhone) {
         base44.functions.invoke('sendWhatsApp', {
