@@ -55,7 +55,7 @@ export default function AdminPricing() {
   async function load() {
     setLoading(true);
     try {
-      const data = await base44.entities.PackagePricing.list();
+      const data = await base44.entities.PackagePricing.list({});
       if (data.length === 0) {
         setPricing(buildDefaults());
       } else {
