@@ -8,6 +8,10 @@
     "designer_id": {
       "type": "string"
     },
+    "designer_name": {
+      "type": "string",
+      "description": "Full name or email of the assigned designer (denormalized for display)"
+    },
     "title": {
       "type": "string"
     },
