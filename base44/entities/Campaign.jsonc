@@ -54,8 +54,11 @@
       "type": "string",
       "enum": [
         "upload",
-        "link"
-      ]
+        "link",
+        "existing_post",
+        "new_creative"
+      ],
+      "description": "upload/new_creative = assets uploaded; link/existing_post = post URL provided"
     },
     "creative_assets": {
       "type": "array",
@@ -141,7 +144,8 @@
         "growth",
         "business",
         "premium",
-        "enterprise"
+        "enterprise",
+        "custom"
       ]
     },
     "duration": {
@@ -251,6 +255,13 @@
     },
     "estimated_reach": {
       "type": "number"
+    },
+    "save_audience": {
+      "type": "boolean",
+      "default": false
+    },
+    "audience_name": {
+      "type": "string"
     }
   },
   "required": [
