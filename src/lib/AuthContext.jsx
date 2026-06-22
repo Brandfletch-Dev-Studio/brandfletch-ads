@@ -64,8 +64,8 @@ export const AuthProvider = ({ children }) => {
           referred_by: authUser.user_metadata?.referred_by || null,
           onboarded: !isNewAccount, // returning users skip onboarding
         };
-        // Upsert so duplicate calls don't fail
-        supabase.from('User').upsert(newProfile).then(() => {});
+        // Insert only — never overwrite an existing row (preserves onboarded=true)
+        supabase.from('User').insert(newProfile).then(() => {});
         setUser(newProfile);
         setIsAuthenticated(true);
       }
