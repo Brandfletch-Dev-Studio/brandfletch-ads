@@ -221,6 +221,7 @@ const authWrapper = {
       email,
       password,
       options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
         data: { full_name, ...metadata },
       },
     });
@@ -319,9 +320,7 @@ const authWrapper = {
   // Logout
   async logout(returnUrl) {
     await supabase.auth.signOut();
-    if (returnUrl) {
-      window.location.href = returnUrl;
-    }
+    window.location.href = returnUrl || '/';
   },
 
   // Redirect to login

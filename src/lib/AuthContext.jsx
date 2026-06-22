@@ -51,14 +51,17 @@ export const AuthProvider = ({ children }) => {
         setUser(profile);
         setIsAuthenticated(true);
       } else {
-        // No profile yet — use auth user basics
-        setUser({
+        // No profile yet — create it now so onboarding has a real record
+        const newProfile = {
           id: authUser.id,
           email: authUser.email,
-          full_name: authUser.user_metadata?.full_name || authUser.email,
+          full_name: authUser.user_metadata?.full_name || authUser.email.split('@')[0],
           role: authUser.user_metadata?.role || 'user',
-          ...authUser.user_metadata,
-        });
+          referred_by: authUser.user_metadata?.referred_by || null,
+        };
+        // Upsert so duplicate calls don't fail
+        supabase.from('User').upsert(newProfile).then(() => {});
+        setUser(newProfile);
         setIsAuthenticated(true);
       }
     } catch (err) {
@@ -119,7 +122,7 @@ export const AuthProvider = ({ children }) => {
     setIsAuthenticated(false);
     
     if (shouldRedirect) {
-      window.location.href = '/login';
+      window.location.href = '/';
     }
   };
 
