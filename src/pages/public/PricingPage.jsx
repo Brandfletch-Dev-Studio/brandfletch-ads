@@ -1,85 +1,28 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Check, ArrowRight, MessageSquare, Calculator, ChevronDown, ChevronUp } from 'lucide-react';
+import { Check, ArrowRight, MessageSquare, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/api/base44Client';
+import { LOCAL_PRICES } from '@/lib/pricing';
 
-// ── MWK/USD rate (default MK 5,000 per USD) ─────────────────────────────────
 const DEFAULT_RATE = 5000;
 
-// ── Pricing data ─────────────────────────────────────────────────────────────
 const TABS = [
-  { key: 'meta-ads',       label: 'Meta Ads' },
-  { key: 'ugc-ads',        label: 'UGC Ads' },
-  { key: 'graphic-design', label: 'Graphic Design' },
-  { key: 'web-design',     label: 'Web Design' },
-  { key: 'social-media',   label: 'Social Media' },
-  { key: 'online-payments',label: 'Online Payments' },
+  { key: 'meta-ads',        label: 'Meta Ads' },
+  { key: 'ugc-ads',         label: 'UGC Ads' },
+  { key: 'graphic-design',  label: 'Graphic Design' },
+  { key: 'web-design',      label: 'Web Design' },
+  { key: 'social-media',    label: 'Social Media' },
+  { key: 'online-payments', label: 'Online Payments' },
 ];
 
-const PLANS = {
-  'meta-ads': {
-    title: 'Meta Ads Management',
-    desc: 'Professionally managed Facebook & Instagram advertising campaigns designed to generate qualified leads for your business.',
-    billing: 'monthly',
-    packages: [
-      {
-        name: 'Starter',
-        price: 'Contact us',
-        priceNote: 'Based on ad budget',
-        badge: null,
-        features: [
-          '1 active campaign',
-          'Basic audience targeting',
-          '3 ad creatives/month',
-          'Monthly performance report',
-          'Email support',
-          'Campaign setup & launch',
-        ],
-        cta: 'Get started',
-        ctaLink: '/register',
-      },
-      {
-        name: 'Growth',
-        price: 'Contact us',
-        priceNote: 'Based on ad budget',
-        badge: 'Popular',
-        features: [
-          '3 active campaigns',
-          'Advanced audience targeting',
-          '8 ad creatives/month',
-          'Weekly performance reports',
-          'Priority support',
-          'Audience insights & A/B testing',
-          'Retargeting campaigns',
-        ],
-        cta: 'Get started',
-        ctaLink: '/register',
-      },
-      {
-        name: 'Brand Campaign',
-        price: 'Contact us',
-        priceNote: 'Based on ad budget',
-        badge: null,
-        features: [
-          '10 active campaigns',
-          'Lookalike & custom audiences',
-          'Unlimited ad creatives',
-          'Real-time performance dashboard',
-          'Dedicated account manager',
-          '24/7 priority support',
-          'Monthly strategy call',
-          'Full funnel campaign management',
-        ],
-        cta: 'Talk to us',
-        ctaLink: '/contact',
-      },
-    ],
-  },
+// ── Static plans (non-Meta-Ads services) ─────────────────────────────────────
+const STATIC_PLANS = {
   'ugc-ads': {
     title: 'UGC Ads — Brandfletch Studios',
-    desc: 'We don\'t just create videos. We create UGC ads designed to help businesses attract customers. Every creative is built Meta Ads-ready.',
+    desc: "We don't just create videos. We create UGC ads designed to help businesses attract customers. Every creative is built Meta Ads-ready.",
     billing: 'one-off',
     included: [
       'Content creator matching',
@@ -93,54 +36,26 @@ const PLANS = {
       {
         name: 'Starter',
         price: 'MK 100,000',
-        priceNote: 'Per campaign',
+        priceNote: 'per campaign',
         badge: null,
-        features: [
-          '1 UGC ad creative',
-          'Creator matching',
-          'Brand story development',
-          'Offer packaging session',
-          'Meta Ads-ready format',
-          'Creator social media feature',
-        ],
-        cta: 'Place order',
-        ctaLink: '/register',
+        features: ['1 UGC ad creative','Creator matching','Brand story development','Offer packaging session','Meta Ads-ready format','Creator social media feature'],
+        cta: 'Place order', ctaLink: '/register',
       },
       {
         name: 'Growth',
         price: 'MK 250,000',
-        priceNote: 'Per campaign',
+        priceNote: 'per campaign',
         badge: 'Best value',
-        features: [
-          '3 UGC ad creatives',
-          'Multiple message angles',
-          'Creator matching',
-          'Full brand story development',
-          'Offer packaging session',
-          'Meta Ads-ready formats',
-          'Creator social media feature',
-          'A/B testing angles',
-        ],
-        cta: 'Place order',
-        ctaLink: '/register',
+        features: ['3 UGC ad creatives','Multiple message angles','Creator matching','Full brand story development','Offer packaging session','Meta Ads-ready formats','Creator social media feature','A/B testing angles'],
+        cta: 'Place order', ctaLink: '/register',
       },
       {
         name: 'Brand Campaign',
         price: 'MK 750,000',
-        priceNote: 'Per campaign',
+        priceNote: 'per campaign',
         badge: 'Scaling brands',
-        features: [
-          '10 UGC ad creatives',
-          'Full advertising content library',
-          'Multiple creators',
-          'Complete brand story development',
-          'Offer packaging session',
-          'Meta Ads-ready formats',
-          'Creator social media features',
-          'Designed for scaling campaigns',
-        ],
-        cta: 'Place order',
-        ctaLink: '/register',
+        features: ['10 UGC ad creatives','Full advertising content library','Multiple creators','Complete brand story development','Offer packaging session','Meta Ads-ready formats','Creator social media features','Designed for scaling campaigns'],
+        cta: 'Place order', ctaLink: '/register',
       },
     ],
   },
@@ -151,53 +66,21 @@ const PLANS = {
     packages: [
       {
         name: 'Starter',
-        price: 'MK 100,000',
-        priceNote: '/month',
-        badge: null,
-        features: [
-          '10 design requests/month',
-          'Static designs only',
-          'Posters, flyers, social posts, banners',
-          '1 concurrent request',
-          '24–48 hour turnaround',
-          'Revisions included',
-        ],
-        cta: 'Get started',
-        ctaLink: '/register',
+        price: 'MK 100,000', priceNote: '/month', badge: null,
+        features: ['10 design requests/month','Static designs only','Posters, flyers, social posts, banners','1 concurrent request','24–48 hour turnaround','Revisions included'],
+        cta: 'Get started', ctaLink: '/register',
       },
       {
         name: 'Growth',
-        price: 'MK 180,000',
-        priceNote: '/month',
-        badge: 'Most popular',
-        features: [
-          '15 design requests/month',
-          'Static designs + motion graphics',
-          'Animated posts, simple GIFs',
-          '2 concurrent requests',
-          '12–24 hour turnaround',
-          '1–2 short video edits/month',
-          'Priority queue',
-        ],
-        cta: 'Get started',
-        ctaLink: '/register',
+        price: 'MK 180,000', priceNote: '/month', badge: 'Most popular',
+        features: ['15 design requests/month','Static designs + motion graphics','Animated posts, simple GIFs','2 concurrent requests','12–24 hour turnaround','1–2 short video edits/month','Priority queue'],
+        cta: 'Get started', ctaLink: '/register',
       },
       {
         name: 'Premium',
-        price: 'MK 280,000',
-        priceNote: '/month',
-        badge: null,
-        features: [
-          '20 design requests/month',
-          'Full suite: static, motion & video',
-          '3 concurrent requests',
-          '6–12 hour priority turnaround',
-          'Unlimited video content (within cap)',
-          'Brand consistency management',
-          'Dedicated designer',
-        ],
-        cta: 'Get started',
-        ctaLink: '/register',
+        price: 'MK 280,000', priceNote: '/month', badge: null,
+        features: ['20 design requests/month','Full suite: static, motion & video','3 concurrent requests','6–12 hour priority turnaround','Unlimited video content (within cap)','Brand consistency management','Dedicated designer'],
+        cta: 'Get started', ctaLink: '/register',
       },
     ],
   },
@@ -208,68 +91,29 @@ const PLANS = {
     packages: [
       {
         name: 'Starter Website',
-        price: 'MK 150,000',
-        priceNote: 'One-off',
-        badge: null,
-        features: [
-          'Up to 5 pages',
-          'Professional business website',
-          'Mobile responsive design',
-          'Contact form',
-          'WhatsApp integration',
-          'Basic SEO setup',
-          'Social media links',
-          'Website launch support',
-        ],
-        cta: 'Place order',
-        ctaLink: '/register',
+        price: 'MK 150,000', priceNote: 'one-off', badge: null,
+        features: ['Up to 5 pages','Professional business website','Mobile responsive design','Contact form','WhatsApp integration','Basic SEO setup','Social media links','Website launch support'],
+        cta: 'Place order', ctaLink: '/register',
         ideal: 'Small businesses, personal brands & startups',
       },
       {
         name: 'Growth Website',
-        price: 'MK 350,000',
-        priceNote: 'One-off',
-        badge: 'Most popular',
-        features: [
-          'Up to 10 pages',
-          'Custom website design',
-          'Modern UI/UX',
-          'Lead capture forms',
-          'WhatsApp/business integrations',
-          'Blog/news section',
-          'SEO optimisation',
-          'Analytics setup',
-          'Conversion-focused structure',
-        ],
-        cta: 'Place order',
-        ctaLink: '/register',
+        price: 'MK 350,000', priceNote: 'one-off', badge: 'Most popular',
+        features: ['Up to 10 pages','Custom website design','Modern UI/UX','Lead capture forms','WhatsApp/business integrations','Blog/news section','SEO optimisation','Analytics setup','Conversion-focused structure'],
+        cta: 'Place order', ctaLink: '/register',
         ideal: 'Growing businesses that need more than just a website',
       },
       {
         name: 'Business Pro',
-        price: 'MK 750,000',
-        priceNote: 'One-off',
-        badge: 'Serious brands',
-        features: [
-          'Unlimited pages',
-          'Fully custom design',
-          'Advanced UI/UX',
-          'Booking systems / custom features',
-          'E-commerce functionality',
-          'Payment integrations',
-          'Advanced SEO',
-          'Speed optimisation',
-          'Analytics + tracking',
-          'Priority support',
-        ],
-        cta: 'Place order',
-        ctaLink: '/register',
+        price: 'MK 750,000', priceNote: 'one-off', badge: 'Serious brands',
+        features: ['Unlimited pages','Fully custom design','Advanced UI/UX','Booking systems / custom features','E-commerce functionality','Payment integrations','Advanced SEO','Speed optimisation','Analytics + tracking','Priority support'],
+        cta: 'Place order', ctaLink: '/register',
         ideal: 'Established businesses & brands',
       },
     ],
     customNote: {
       title: 'Need a web app, LMS, marketplace, or complex system?',
-      desc: 'These go far beyond standard website pricing. We build them — let\'s talk scope and pricing.',
+      desc: "These go far beyond standard website pricing. We build them — let's talk scope and pricing.",
       cta: 'Request a custom quote',
       link: '/contact',
     },
@@ -281,71 +125,40 @@ const PLANS = {
     packages: [
       {
         name: 'Starter',
-        price: 'MK 150,000',
-        priceNote: '/month',
-        badge: null,
-        features: [
-          '16 branded posts/month',
-          'Social media page management',
-          'Content planning',
-          'Caption writing',
-          'Content scheduling',
-          'Basic community management',
-          'Monthly performance insights',
-        ],
-        cta: 'Get started',
-        ctaLink: '/register',
+        price: 'MK 150,000', priceNote: '/month', badge: null,
+        features: ['16 branded posts/month','Social media page management','Content planning','Caption writing','Content scheduling','Basic community management','Monthly performance insights'],
+        cta: 'Get started', ctaLink: '/register',
         ideal: 'Businesses that need consistency and a professional presence',
       },
       {
         name: 'Growth',
-        price: 'MK 300,000',
-        priceNote: '/month',
-        badge: 'Popular',
-        features: [
-          '32 branded posts/month',
-          'Full social media management',
-          'Content strategy',
-          'Short-form content / Reels',
-          'Caption & CTA optimisation',
-          'Audience engagement',
-          'Monthly content calendar',
-          'Performance report',
-        ],
-        cta: 'Get started',
-        ctaLink: '/register',
+        price: 'MK 300,000', priceNote: '/month', badge: 'Popular',
+        features: ['32 branded posts/month','Full social media management','Content strategy','Short-form content / Reels','Caption & CTA optimisation','Audience engagement','Monthly content calendar','Performance report'],
+        cta: 'Get started', ctaLink: '/register',
         ideal: 'Businesses actively growing their online presence',
       },
       {
         name: 'Brand Growth',
-        price: 'MK 450,000',
-        priceNote: '/month',
-        badge: 'Full service',
-        features: [
-          '60+ monthly content pieces',
-          'Full social media management',
-          'Reels/short-form videos',
-          'Brand storytelling',
-          'Content campaigns',
-          'Community management',
-          'Growth strategy',
-          'Analytics & optimisation',
-        ],
-        cta: 'Get started',
-        ctaLink: '/register',
+        price: 'MK 450,000', priceNote: '/month', badge: 'Full service',
+        features: ['60+ monthly content pieces','Full social media management','Reels/short-form videos','Brand storytelling','Content campaigns','Community management','Growth strategy','Analytics & optimisation'],
+        cta: 'Get started', ctaLink: '/register',
         ideal: 'Brands that want social media as a marketing channel',
       },
     ],
   },
-  'online-payments': {
-    title: 'Online Payments — Dollar to MWK Calculator',
-    desc: 'Simple, reliable access to online payment solutions — including dollar-based options. Use the calculator below to see your MWK equivalent.',
-    billing: 'calculator',
-    packages: [],
-  },
 };
 
-// ── Package card ──────────────────────────────────────────────────────────────
+// ── Pkg features (static descriptions for Meta Ads) ─────────────────────────
+const META_PKG_FEATURES = {
+  starter:  ['1 active campaign','Basic audience targeting','3 ad creatives/month','Monthly performance report','Email support','Campaign setup & launch'],
+  growth:   ['3 active campaigns','Advanced audience targeting','8 ad creatives/month','Weekly performance reports','Priority support','Audience insights & A/B testing','Retargeting campaigns'],
+  business: ['5 active campaigns','Custom audiences','15 ad creatives/month','Daily reports','Dedicated account manager','A/B testing','Lookalike audiences'],
+  premium:  ['10 active campaigns','Lookalike & custom audiences','Unlimited ad creatives','Real-time performance dashboard','Dedicated account manager','24/7 priority support','Monthly strategy call','Full funnel campaign management'],
+};
+
+const META_PKG_BADGES = { starter: null, growth: 'Popular', business: 'Most Popular', premium: null };
+
+// ── Plan card ─────────────────────────────────────────────────────────────────
 function PlanCard({ plan, popular }) {
   return (
     <div className={cn(
@@ -377,7 +190,7 @@ function PlanCard({ plan, popular }) {
             </li>
           ))}
         </ul>
-        <Link to={plan.ctaLink}>
+        <Link to={plan.ctaLink || '/register'}>
           <Button className={cn('w-full font-semibold', popular
             ? 'bg-[hsl(var(--accent))] text-white hover:bg-[hsl(var(--accent))]/90'
             : 'bg-[hsl(var(--primary))] text-white hover:bg-[hsl(var(--primary))]/90'
@@ -390,53 +203,42 @@ function PlanCard({ plan, popular }) {
   );
 }
 
-// ── Dollar calculator ─────────────────────────────────────────────────────────
-function DollarCalculator() {
+// ── USD → MWK calculator ──────────────────────────────────────────────────────
+function DollarCalculator({ defaultRate }) {
   const [usd, setUsd] = useState('');
-  const [rate, setRate] = useState(DEFAULT_RATE);
+  const [rate, setRate] = useState(defaultRate || DEFAULT_RATE);
   const mwk = usd ? Math.round(parseFloat(usd) * rate) : null;
+
+  useEffect(() => { if (defaultRate) setRate(defaultRate); }, [defaultRate]);
 
   return (
     <div className="max-w-xl mx-auto">
       <div className="bg-card border border-border rounded-2xl p-8 shadow-sm">
         <h3 className="font-display font-bold text-xl text-foreground mb-2">Dollar → MWK Calculator</h3>
-        <p className="text-sm text-muted-foreground mb-6">Enter the USD amount to see how much you'll pay in Malawi Kwacha at our current rate.</p>
+        <p className="text-sm text-muted-foreground mb-6">Enter a USD amount to see the MWK equivalent at our current rate.</p>
         <div className="space-y-4">
           <div>
             <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Amount (USD)</label>
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold text-sm">$</span>
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                value={usd}
-                onChange={e => setUsd(e.target.value)}
+              <input type="number" min="0" step="0.01" value={usd} onChange={e => setUsd(e.target.value)}
                 placeholder="e.g. 50"
-                className="w-full pl-8 pr-4 py-3 border border-input rounded-lg bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(var(--accent))]/40"
-              />
+                className="w-full pl-8 pr-4 py-3 border border-input rounded-lg bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(var(--accent))]/40" />
             </div>
           </div>
           <div>
             <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Exchange rate (MK per $1)</label>
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold text-sm">MK</span>
-              <input
-                type="number"
-                min="1"
-                value={rate}
-                onChange={e => setRate(parseFloat(e.target.value) || DEFAULT_RATE)}
-                className="w-full pl-9 pr-4 py-3 border border-input rounded-lg bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(var(--accent))]/40"
-              />
+              <input type="number" min="1" value={rate} onChange={e => setRate(parseFloat(e.target.value) || DEFAULT_RATE)}
+                className="w-full pl-9 pr-4 py-3 border border-input rounded-lg bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(var(--accent))]/40" />
             </div>
-            <p className="text-xs text-muted-foreground mt-1">Default rate: MK {DEFAULT_RATE.toLocaleString()} per $1. Updated in admin settings.</p>
+            <p className="text-xs text-muted-foreground mt-1">Rate managed in admin settings.</p>
           </div>
           {mwk !== null && !isNaN(mwk) && (
             <div className="bg-[hsl(var(--accent))]/10 border border-[hsl(var(--accent))]/20 rounded-xl p-5 text-center">
               <p className="text-xs text-muted-foreground mb-1">You will pay approximately</p>
-              <p className="text-3xl font-display font-extrabold text-[hsl(var(--accent))]">
-                MK {mwk.toLocaleString()}
-              </p>
+              <p className="text-3xl font-display font-extrabold text-[hsl(var(--accent))]">MK {mwk.toLocaleString()}</p>
               <p className="text-xs text-muted-foreground mt-1">for ${parseFloat(usd).toFixed(2)} USD at MK {rate.toLocaleString()}/USD</p>
             </div>
           )}
@@ -454,9 +256,142 @@ function DollarCalculator() {
   );
 }
 
+// ── Meta Ads section — pulls from DB ─────────────────────────────────────────
+function MetaAdsPricing({ dbRows, loading, country, onCountryChange }) {
+  const COUNTRIES = ['Malawi', 'Zambia', 'South Africa', 'Kenya', 'Tanzania'];
+  const PKG_ORDER = ['starter', 'growth', 'business', 'premium'];
+  const DURATION_OPTS = [
+    { key: 'monthly', label: 'Monthly' },
+    { key: 'weekly',  label: 'Weekly' },
+    { key: 'daily',   label: 'Daily'  },
+  ];
+  const [duration, setDuration] = useState('monthly');
+
+  // Get rows for current country
+  const countryRows = dbRows.filter(r => r.country === country);
+  const symbol = countryRows[0]?.symbol || LOCAL_PRICES[country]?.symbol || 'MK';
+
+  // Build packages — DB rows take priority, fall back to LOCAL_PRICES
+  const packages = PKG_ORDER.map(pkg => {
+    const dbRow = countryRows.find(r => r.package === pkg);
+    const local  = LOCAL_PRICES[country]?.[pkg];
+    const price  = dbRow?.[duration] ?? local?.[duration];
+    const formatted = price ? `${symbol}${Number(price).toLocaleString()}` : 'Contact us';
+
+    return {
+      name:      pkg.charAt(0).toUpperCase() + pkg.slice(1),
+      price:     formatted,
+      priceNote: `/${duration}`,
+      badge:     META_PKG_BADGES[pkg] || null,
+      features:  META_PKG_FEATURES[pkg] || [],
+      cta:       pkg === 'premium' ? 'Talk to us' : 'Get started',
+      ctaLink:   pkg === 'premium' ? '/contact' : '/register',
+    };
+  });
+
+  return (
+    <div>
+      {/* Country + Duration selectors */}
+      <div className="flex flex-wrap items-center gap-3 mb-8">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-semibold text-muted-foreground">Country:</span>
+          <div className="flex flex-wrap gap-1">
+            {COUNTRIES.map(c => (
+              <button key={c} onClick={() => onCountryChange(c)}
+                className={cn('px-3 py-1.5 rounded-lg text-xs font-medium transition-all border',
+                  country === c
+                    ? 'bg-[hsl(var(--primary))] text-white border-[hsl(var(--primary))]'
+                    : 'border-border text-muted-foreground hover:text-foreground hover:bg-muted'
+                )}
+              >{c}</button>
+            ))}
+          </div>
+        </div>
+        <div className="flex items-center gap-2 ml-auto">
+          <span className="text-xs font-semibold text-muted-foreground">Billing:</span>
+          <div className="flex gap-1">
+            {DURATION_OPTS.map(d => (
+              <button key={d.key} onClick={() => setDuration(d.key)}
+                className={cn('px-3 py-1.5 rounded-lg text-xs font-medium transition-all border',
+                  duration === d.key
+                    ? 'bg-[hsl(var(--accent))] text-white border-[hsl(var(--accent))]'
+                    : 'border-border text-muted-foreground hover:text-foreground hover:bg-muted'
+                )}
+              >{d.label}</button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="flex items-center justify-center py-16 gap-3 text-muted-foreground">
+          <Loader2 className="w-5 h-5 animate-spin" />
+          <span className="text-sm">Loading prices…</span>
+        </div>
+      ) : (
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          {packages.map((p, i) => (
+            <PlanCard key={p.name} plan={p} popular={p.badge?.toLowerCase().includes('pop') ?? false} />
+          ))}
+        </div>
+      )}
+
+      {/* Source notice */}
+      {!loading && countryRows.length > 0 && (
+        <p className="text-xs text-muted-foreground text-center mt-4">
+          Prices are managed by our team and updated in real time.
+        </p>
+      )}
+      {!loading && countryRows.length === 0 && (
+        <p className="text-xs text-muted-foreground text-center mt-4">
+          Showing standard pricing. <Link to="/contact" className="text-[hsl(var(--accent))] underline">Contact us</Link> for a custom quote.
+        </p>
+      )}
+    </div>
+  );
+}
+
+// ── Main component ────────────────────────────────────────────────────────────
 export default function PricingPage() {
-  const [activeTab, setActiveTab] = useState('meta-ads');
-  const service = PLANS[activeTab];
+  const [activeTab,  setActiveTab]  = useState('meta-ads');
+  const [country,    setCountry]    = useState('Malawi');
+  const [dbRows,     setDbRows]     = useState([]);
+  const [loading,    setLoading]    = useState(true);
+  const [mwkRate,    setMwkRate]    = useState(DEFAULT_RATE);
+
+  // Fetch Meta Ads prices + MWK exchange rate from DB
+  useEffect(() => {
+    async function fetchData() {
+      setLoading(true);
+      try {
+        // PackagePricing rows
+        const { data: prices } = await supabase
+          .from('PackagePricing')
+          .select('*')
+          .order('package');
+        if (prices?.length) setDbRows(prices);
+
+        // ExchangeRate — look for MWK
+        const { data: rates } = await supabase
+          .from('ExchangeRate')
+          .select('*')
+          .eq('currency_code', 'MWK')
+          .eq('is_active', true)
+          .limit(1);
+        if (rates?.[0]?.rate_to_usd) {
+          // rate_to_usd means how many MWK = 1 USD
+          setMwkRate(parseFloat(rates[0].rate_to_usd));
+        }
+      } catch (e) {
+        console.warn('Pricing fetch failed, using defaults', e);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, []);
+
+  const service = STATIC_PLANS[activeTab];
 
   return (
     <div className="min-h-screen bg-background">
@@ -471,66 +406,92 @@ export default function PricingPage() {
         </p>
       </section>
 
-      {/* Tab selector */}
+      {/* Sticky tab bar */}
       <div className="sticky top-16 z-30 bg-background/95 backdrop-blur border-b border-border">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 overflow-x-auto">
           <div className="flex gap-1 py-2 min-w-max">
             {TABS.map(t => (
-              <button
-                key={t.key}
-                onClick={() => setActiveTab(t.key)}
-                className={cn(
-                  'px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all',
+              <button key={t.key} onClick={() => setActiveTab(t.key)}
+                className={cn('px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all',
                   activeTab === t.key
                     ? 'bg-[hsl(var(--primary))] text-white shadow'
                     : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                 )}
-              >
-                {t.label}
-              </button>
+              >{t.label}</button>
             ))}
           </div>
         </div>
       </div>
 
-      {/* Service content */}
+      {/* Content */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
-        <div className="mb-10">
-          <h2 className="text-2xl sm:text-3xl font-display font-extrabold text-foreground mb-2">{service.title}</h2>
-          <p className="text-muted-foreground max-w-2xl text-sm leading-relaxed">{service.desc}</p>
-          {service.billing !== 'calculator' && (
-            <Badge className="mt-3 text-[10px] bg-muted text-muted-foreground border-border capitalize">
-              {service.billing === 'monthly' ? '📅 Monthly retainer' : service.billing === 'one-off' ? '✅ One-off payment' : ''}
-            </Badge>
-          )}
-        </div>
 
-        {/* UGC included features */}
-        {service.included && (
-          <div className="mb-10 bg-[hsl(var(--accent))]/5 border border-[hsl(var(--accent))]/20 rounded-2xl p-6">
-            <p className="text-sm font-bold text-foreground mb-4">Every UGC package includes:</p>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {service.included.map(f => (
-                <div key={f} className="flex items-start gap-2">
-                  <Check className="w-4 h-4 text-[hsl(var(--accent))] flex-shrink-0 mt-0.5" />
-                  <span className="text-sm text-foreground">{f}</span>
-                </div>
-              ))}
+        {/* ── META ADS (DB-driven) ── */}
+        {activeTab === 'meta-ads' && (
+          <>
+            <div className="mb-10">
+              <h2 className="text-2xl sm:text-3xl font-display font-extrabold text-foreground mb-2">Meta Ads Management</h2>
+              <p className="text-muted-foreground max-w-2xl text-sm leading-relaxed">
+                Professionally managed Facebook & Instagram campaigns designed to generate qualified leads. Prices shown per country — select yours below.
+              </p>
+              <Badge className="mt-3 text-[10px] bg-muted text-muted-foreground border-border">📅 Monthly, weekly, or daily billing</Badge>
             </div>
-          </div>
+            <MetaAdsPricing
+              dbRows={dbRows}
+              loading={loading}
+              country={country}
+              onCountryChange={setCountry}
+            />
+          </>
         )}
 
-        {/* Calculator */}
-        {service.billing === 'calculator' ? (
-          <DollarCalculator />
-        ) : (
+        {/* ── ONLINE PAYMENTS (calculator) ── */}
+        {activeTab === 'online-payments' && (
           <>
-            <div className={cn('grid gap-6', service.packages.length === 3 ? 'md:grid-cols-3' : 'md:grid-cols-2 lg:grid-cols-4')}>
-              {service.packages.map((plan, i) => (
-                <PlanCard key={plan.name} plan={plan} popular={!!plan.badge && plan.badge.toLowerCase().includes('pop')} />
+            <div className="mb-10">
+              <h2 className="text-2xl sm:text-3xl font-display font-extrabold text-foreground mb-2">Online Payments</h2>
+              <p className="text-muted-foreground max-w-2xl text-sm leading-relaxed">
+                Simple, reliable access to online payment solutions — including dollar-based options. Use the calculator to see your MWK equivalent.
+              </p>
+            </div>
+            <DollarCalculator defaultRate={mwkRate} />
+          </>
+        )}
+
+        {/* ── STATIC SERVICES ── */}
+        {service && (
+          <>
+            <div className="mb-10">
+              <h2 className="text-2xl sm:text-3xl font-display font-extrabold text-foreground mb-2">{service.title}</h2>
+              <p className="text-muted-foreground max-w-2xl text-sm leading-relaxed">{service.desc}</p>
+              {service.billing && (
+                <Badge className="mt-3 text-[10px] bg-muted text-muted-foreground border-border capitalize">
+                  {service.billing === 'monthly' ? '📅 Monthly retainer' : '✅ One-off payment'}
+                </Badge>
+              )}
+            </div>
+
+            {/* UGC included list */}
+            {service.included && (
+              <div className="mb-10 bg-[hsl(var(--accent))]/5 border border-[hsl(var(--accent))]/20 rounded-2xl p-6">
+                <p className="text-sm font-bold text-foreground mb-4">Every UGC package includes:</p>
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {service.included.map(f => (
+                    <div key={f} className="flex items-start gap-2">
+                      <Check className="w-4 h-4 text-[hsl(var(--accent))] flex-shrink-0 mt-0.5" />
+                      <span className="text-sm text-foreground">{f}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {service.packages.map(plan => (
+                <PlanCard key={plan.name} plan={plan} popular={plan.badge?.toLowerCase().includes('pop') ?? false} />
               ))}
             </div>
-            {/* Custom quote block for web */}
+
             {service.customNote && (
               <div className="mt-8 bg-muted border border-border rounded-2xl p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div>
