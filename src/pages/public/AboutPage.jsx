@@ -22,7 +22,7 @@ export default function AboutPage() {
             <span className="text-[hsl(var(--accent))]">Powered by ambition.</span>
           </h1>
           <p className="text-lg text-white/70 max-w-2xl mx-auto leading-relaxed">
-            Brandfletch Ads was born from a simple frustration — African businesses deserve the same advertising power as global enterprises, at a price that makes sense.
+            Brandfletch Media was born from a simple frustration — African businesses deserve the same advertising power as global enterprises, at a price that makes sense.
           </p>
         </div>
       </section>
@@ -37,7 +37,7 @@ export default function AboutPage() {
               We started in Malawi, frustrated by how hard it was for local businesses to run effective Facebook campaigns without a big agency. Everything was either too expensive, too complex, or not built for our currencies and realities.
             </p>
             <p className="text-muted-foreground leading-relaxed mb-6">
-              So we built Brandfletch Ads — a full-stack advertising platform that handles campaign creation, creative design, payment, and reporting in one place. Today we serve businesses in Malawi, Zambia, Kenya, South Africa, and Tanzania.
+              So we built Brandfletch Media — a full-stack advertising platform that handles campaign creation, creative design, payment, and reporting in one place. Today we serve businesses in Malawi, Zambia, Kenya, South Africa, and Tanzania.
             </p>
             <Link to="/register">
               <Button className="bg-[hsl(var(--accent))] hover:bg-[hsl(var(--accent))]/90 text-white">

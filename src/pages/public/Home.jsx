@@ -145,7 +145,7 @@ export default function Home() {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
               <Badge className="mb-4 bg-[hsl(var(--accent))]/10 text-[hsl(var(--accent))] border-[hsl(var(--accent))]/20 text-xs">
-                Why Brandfletch Ads
+                Why Brandfletch Media
               </Badge>
               <h2 className="text-3xl sm:text-4xl font-display font-extrabold text-foreground leading-tight mb-5">
                 Lead generation isn't just ads.<br />

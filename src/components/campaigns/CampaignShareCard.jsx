@@ -24,7 +24,7 @@ export default function CampaignShareCard({ campaign }) {
     return n.toLocaleString();
   };
 
-  const shareText = `🚀 My Facebook Ad campaign just went live with Brandfletch Ads!\n\n📊 Results:\n👁️ ${formatNum(impressions)} Impressions\n👥 ${formatNum(reach)} Reach${clicks > 0 ? `\n🔗 ${formatNum(clicks)} Clicks` : ''}\n\nReady to grow your business? 👉 ${window.location.origin}`;
+  const shareText = `🚀 My Facebook Ad campaign just went live with Brandfletch Media!\n\n📊 Results:\n👁️ ${formatNum(impressions)} Impressions\n👥 ${formatNum(reach)} Reach${clicks > 0 ? `\n🔗 ${formatNum(clicks)} Clicks` : ''}\n\nReady to grow your business? 👉 ${window.location.origin}`;
 
   function shareWhatsApp() {
     window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, '_blank');
@@ -85,7 +85,7 @@ export default function CampaignShareCard({ campaign }) {
                 </div>
               ))}
             </div>
-            <p className="text-white/60 text-[10px] text-right">Powered by Brandfletch Ads</p>
+            <p className="text-white/60 text-[10px] text-right">Powered by Brandfletch Media</p>
           </div>
 
           <div className="flex flex-col gap-2">

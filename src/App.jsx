@@ -29,6 +29,7 @@ import ForgotPassword from '@/pages/ForgotPassword';
 import ResetPassword from '@/pages/ResetPassword';
 import AuthCallback from '@/pages/AuthCallback';
 import Onboarding from '@/pages/Onboarding';
+import ScrollToTop from '@/components/ScrollToTop';
 
 // ── App pages (lazy loaded — only fetched when user is logged in) ──
 const Dashboard          = lazy(() => import('@/pages/Dashboard'));
@@ -102,6 +103,7 @@ const AuthenticatedApp = () => {
   if (isOnPublicRoute || isOnAuthRoute) {
     return (
       <Suspense fallback={<PageSpinner />}>
+        <ScrollToTop />
         <Routes>
           {/* Auth */}
           <Route path="/login"            element={<Login />} />

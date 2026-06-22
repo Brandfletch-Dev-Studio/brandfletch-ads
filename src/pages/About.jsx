@@ -54,7 +54,7 @@ export default function About() {
       {/* Hero Section */}
       <div className="text-center space-y-4 py-8">
         <h1 className="text-4xl lg:text-5xl font-bold font-heading text-foreground">
-          About Brandfletch Ads
+          About Brandfletch Media
         </h1>
         <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
           Empowering African businesses with world-class advertising technology
@@ -69,13 +69,13 @@ export default function About() {
           </CardHeader>
           <CardContent className="space-y-4 text-muted-foreground">
             <p>
-              Brandfletch Ads is a comprehensive advertising management platform designed to help businesses of all sizes create, manage, and optimize their Facebook advertising campaigns with ease. Whether you're a small local business looking to reach customers in your community, or a growing enterprise seeking to expand your digital presence, Brandfletch Ads provides the tools and expertise you need to succeed.
+              Brandfletch Media is a comprehensive advertising management platform designed to help businesses of all sizes create, manage, and optimize their Facebook advertising campaigns with ease. Whether you're a small local business looking to reach customers in your community, or a growing enterprise seeking to expand your digital presence, Brandfletch Media provides the tools and expertise you need to succeed.
             </p>
             <p>
               Our platform simplifies the complex process of running Facebook ad campaigns by offering pre-built campaign packages, intuitive audience targeting tools, and seamless payment integration tailored to African markets. We understand the unique challenges faced by businesses in Malawi, Kenya, Zambia, and across the continent.
             </p>
             <p>
-              Brandfletch Ads is built for entrepreneurs, marketing managers, and business owners who want professional advertising results without the complexity of navigating Facebook's Ads Manager on their own. Our guided campaign wizard walks you through every step of the process.
+              Brandfletch Media is built for entrepreneurs, marketing managers, and business owners who want professional advertising results without the complexity of navigating Facebook's Ads Manager on their own. Our guided campaign wizard walks you through every step of the process.
             </p>
           </CardContent>
         </Card>
@@ -104,7 +104,7 @@ export default function About() {
         <CardContent className="p-8 text-center space-y-4">
           <h2 className="text-2xl font-bold font-heading">Ready to Get Started?</h2>
           <p className="text-sm opacity-90 max-w-xl mx-auto">
-            Join hundreds of African businesses already using Brandfletch Ads to grow their brand and reach more customers.
+            Join hundreds of African businesses already using Brandfletch Media to grow their brand and reach more customers.
           </p>
           <div className="flex flex-wrap justify-center gap-4 pt-4">
             <Link to="/campaigns/new">

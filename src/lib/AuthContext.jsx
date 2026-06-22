@@ -96,7 +96,7 @@ export const AuthProvider = ({ children }) => {
       setAppPublicSettings({
         id: 'app',
         public_settings: {
-          app_name: 'Brandfletch Ads',
+          app_name: 'Brandfletch Media',
           requires_auth: true,
         }
       });

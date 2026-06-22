@@ -97,7 +97,7 @@ export default function CampaignWizard() {
         base44.functions.invoke('sendWhatsApp', {
           to: adminPhone,
           message: [
-            '📢 *New Campaign Submitted — Brandfletch Ads*',
+            '📢 *New Campaign Submitted — Brandfletch Media*',
             '',
             `*Client:* ${user?.full_name || user?.email}`,
             `*Campaign:* ${data.campaign_name || data.page_name || 'Untitled'}`,

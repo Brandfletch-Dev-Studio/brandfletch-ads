@@ -42,10 +42,10 @@ export default function TopBar({ onMenuToggle, currentUser, isStaff }) {
       <div className="absolute left-1/2 -translate-x-1/2 lg:hidden flex items-center gap-2">
         <img
           src="https://media.base44.com/images/public/6a1df082a0de66cf554f8fdd/eeb543716_file_0000000024d0722fa20034e2dedcbc9e.png"
-          alt="Brandfletch Ads"
+          alt="Brandfletch Media"
           className="w-7 h-7 rounded-xl object-contain"
         />
-        <span className="font-display font-bold text-sm text-foreground leading-none">Brandfletch</span>
+        <span className="font-display font-bold text-sm text-foreground leading-none">Brandfletch Media</span>
       </div>
 
       {/* Right: actions */}

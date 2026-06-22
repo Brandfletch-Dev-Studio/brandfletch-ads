@@ -16,12 +16,12 @@ export default function BrandLogo({ size = 'md', dark = false, black = false }) 
     <div className={`flex items-center gap-2.5 ${size === 'lg' ? 'flex-col' : ''}`}>
       <img
         src="https://media.base44.com/images/public/6a1df082a0de66cf554f8fdd/eeb543716_file_0000000024d0722fa20034e2dedcbc9e.png"
-        alt="Brandfletch Ads"
+        alt="Brandfletch Media"
         className={`${s.img} rounded-xl object-contain flex-shrink-0`}
       />
       <div className={size === 'lg' ? 'text-center' : ''}>
         <span className={`font-display font-bold ${s.text} ${textColor} leading-none`}>Brandfletch</span>
-        <span className={`font-display font-bold ${s.text} ${accentColor} leading-none`}> Ads</span>
+        <span className={`font-display font-bold ${s.text} ${accentColor} leading-none`}> Media</span>
       </div>
     </div>
   );

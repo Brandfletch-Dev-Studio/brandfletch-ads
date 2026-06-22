@@ -73,7 +73,7 @@ export function useDesignAssign() {
       // 5. Notify the designer via WhatsApp
       const designType = (designRequest.design_type || 'design').replace(/_/g, ' ');
       const designerMsg = [
-        `🎨 *New Design Job Assigned — Brandfletch Ads*`,
+        `🎨 *New Design Job Assigned — Brandfletch Media*`,
         ``,
         `Hi ${assigned.full_name?.split(' ')[0] || 'Designer'}, you have a new job!`,
         ``,
@@ -94,7 +94,7 @@ export function useDesignAssign() {
       const adminPhone = await getAdminPhone();
       if (adminPhone) {
         const adminMsg = [
-          `✅ *Design Auto-Assigned — Brandfletch Ads*`,
+          `✅ *Design Auto-Assigned — Brandfletch Media*`,
           ``,
           `*Request:* ${designRequest.title || designType}`,
           `*Client:* ${clientName || designRequest.user_name || '—'}`,

@@ -55,7 +55,7 @@ export default function Login() {
   return (
     <AuthLayout hideBrand
       title="Welcome back"
-      subtitle="Log in to continue growing your business with Brandfletch Ads"
+      subtitle="Log in to continue growing your business with Brandfletch Media"
       footer={
         <>
           New here?{" "}

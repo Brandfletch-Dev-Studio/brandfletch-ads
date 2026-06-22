@@ -10,7 +10,7 @@ export default function Terms() {
       title: '1. Acceptance of Terms',
       icon: FileText,
       content: [
-        'By accessing and using Brandfletch Ads, you accept and agree to be bound by these Terms and Conditions.',
+        'By accessing and using Brandfletch Media, you accept and agree to be bound by these Terms and Conditions.',
         'If you do not agree to these terms, please do not use our services.',
         'We reserve the right to modify these terms at any time. Continued use of the platform constitutes acceptance of the modified terms.'
       ]
@@ -19,7 +19,7 @@ export default function Terms() {
       title: '2. Description of Service',
       icon: FileText,
       content: [
-        'Brandfletch Ads provides a platform for creating, managing, and optimizing Facebook advertising campaigns.',
+        'Brandfletch Media provides a platform for creating, managing, and optimizing Facebook advertising campaigns.',
         'We offer campaign packages, audience targeting tools, payment processing, and performance analytics.',
         'We do not guarantee specific advertising results, impressions, reach, or conversions.',
         'All advertising campaigns are subject to Facebook\'s advertising policies and approval process.'
@@ -73,7 +73,7 @@ export default function Terms() {
       title: '7. Intellectual Property',
       icon: Scale,
       content: [
-        'Brandfletch Ads and its content, features, and functionality are owned by Brandfletch Media and protected by intellectual property laws.',
+        'Brandfletch Media and its content, features, and functionality are owned by Brandfletch Media and protected by intellectual property laws.',
         'You retain ownership of the content you create for your campaigns.',
         'By using our platform, you grant us a license to use your content solely for the purpose of providing our services.',
         'You may not copy, modify, distribute, or create derivative works from our platform without permission.'
@@ -175,7 +175,7 @@ export default function Terms() {
         <CardContent className="p-6 text-center space-y-4">
           <h2 className="text-xl font-bold font-heading">Ready to Get Started?</h2>
           <p className="text-sm opacity-90">
-            By using Brandfletch Ads, you agree to these terms and conditions.
+            By using Brandfletch Media, you agree to these terms and conditions.
           </p>
           <div className="flex justify-center gap-4">
             <Link to="/register">

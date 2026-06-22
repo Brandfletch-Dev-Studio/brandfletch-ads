@@ -95,9 +95,9 @@ export default function AdminCampaignDetail() {
       if (clientUser?.email) {
         base44.integrations.Core.SendEmail({
           to: clientUser.email,
-          from_name: 'Brandfletch Ads',
+          from_name: 'Brandfletch Media',
           subject: notif.title.replace(/[^\w\s\-!]/g, '').trim(),
-          body: `Hi ${clientUser.full_name || 'there'},\n\n${notif.msg}\n\nLog in to your dashboard to view your campaign details.\n\nhttps://brandfletchads.base44.app/campaigns/${id}\n\n— Brandfletch Ads Team`,
+          body: `Hi ${clientUser.full_name || 'there'},\n\n${notif.msg}\n\nLog in to your dashboard to view your campaign details.\n\nhttps://brandfletchads.base44.app/campaigns/${id}\n\n— Brandfletch Media Team`,
         }).catch(() => {});
       }
     }

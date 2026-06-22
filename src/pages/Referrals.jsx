@@ -292,7 +292,7 @@ function LinksTab({ user }) {
 
   function shareWA(url) {
     const msg = encodeURIComponent(
-      `🚀 Grow your business with professionally managed Facebook Ads!\n\nJoin Brandfletch Ads today:\n${url}`
+      `🚀 Grow your business with professionally managed Facebook Ads!\n\nJoin Brandfletch Media today:\n${url}`
     );
     window.open(`https://wa.me/?text=${msg}`, '_blank');
   }
