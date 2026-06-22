@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,8 +15,12 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    base44.auth.isAuthenticated().then((authed) => {
-      if (authed) window.location.href = "/";
+    // If already logged in, redirect away
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        localStorage.setItem('bf_visited', '1');
+        window.location.href = "/dashboard";
+      }
     });
   }, []);
 
@@ -25,11 +29,24 @@ export default function Login() {
     setError("");
     setLoading(true);
     try {
-      await base44.auth.loginViaEmailPassword(email, password);
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+      
+      if (signInError) {
+        // Map common Supabase error messages to friendly ones
+        if (signInError.message?.toLowerCase().includes('invalid login') || 
+            signInError.message?.toLowerCase().includes('invalid credentials')) {
+          throw new Error("Incorrect email or password. Please try again.");
+        }
+        if (signInError.message?.toLowerCase().includes('email not confirmed')) {
+          throw new Error("Please verify your email first. Check your inbox for a verification link.");
+        }
+        throw signInError;
+      }
+
       localStorage.setItem('bf_visited', '1');
-      window.location.href = "/";
+      window.location.href = "/dashboard";
     } catch (err) {
-      setError(err.message || "Invalid email or password");
+      setError(err.message || "Login failed. Please try again.");
     } finally {
       setLoading(false);
     }
