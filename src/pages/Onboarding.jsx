@@ -77,7 +77,7 @@ export default function Onboarding() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      // Upsert profile row
+      // Upsert profile row — wait for confirmation before navigating
       const { error: dbErr } = await supabase
         .from('User')
         .upsert(
@@ -96,9 +96,10 @@ export default function Onboarding() {
         base44.functions.invoke('sendWelcomeEmail', { user_id: user.id }).catch(() => {});
       } catch (_) {}
 
-      // Refresh AuthContext then navigate
-      if (checkAppState) await checkAppState();
-      navigate('/dashboard');
+      // Refresh AuthContext — but don't block navigate on it to avoid race condition.
+      // checkAppState re-reads from DB which may still be mid-commit.
+      // Instead, hard-navigate so the app re-boots with a fresh session read.
+      window.location.href = '/dashboard';
     } catch (err) {
       console.error('Onboarding save error:', err);
       setError('Something went wrong: ' + (err.message || 'Please try again.'));
