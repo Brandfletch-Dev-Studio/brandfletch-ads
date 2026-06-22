@@ -57,6 +57,7 @@ import Login from '@/pages/Login';
 import Register from '@/pages/Register';
 import ForgotPassword from '@/pages/ForgotPassword';
 import ResetPassword from '@/pages/ResetPassword';
+import AuthCallback from '@/pages/AuthCallback';
 
 const AUTH_ROUTES = ['/login', '/register', '/forgot-password', '/reset-password', '/auth/callback'];
 // Public routes — accessible without authentication (marketing pages, legal, public forms)
