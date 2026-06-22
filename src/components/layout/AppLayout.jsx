@@ -78,6 +78,7 @@ const ALL_ADMIN_NAV = [
   { key: 'pricing',       path: '/admin/pricing',        label: 'Pricing',           icon: Tags,            permission: 'pricing.view' },
   { key: 'support',       path: '/admin/support',        label: 'Support Tickets',   icon: LifeBuoy,        permission: 'support.view' },
   { key: 'referrals',     path: '/admin/referrals',      label: 'Referrals',         icon: Gift,            permission: 'referrals.view' },
+  { key: 'blog',          path: '/admin/blog',           label: 'Blog',              icon: FileText,        permission: null },
   { key: 'settings',      path: '/admin/settings',       label: 'Settings',          icon: Settings,        permission: 'settings.view' },
 ];
 

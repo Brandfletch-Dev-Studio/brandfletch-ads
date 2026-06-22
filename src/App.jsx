@@ -2,6 +2,7 @@ import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import { lazy, Suspense } from 'react';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
@@ -9,66 +10,71 @@ import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 // Layout
 import AppLayout from '@/components/layout/AppLayout';
 
-// Client pages
-import Dashboard from '@/pages/Dashboard';
-import FacebookPages from '@/pages/FacebookPages';
-import CampaignsList from '@/pages/campaigns/CampaignsList';
-import CampaignWizard from '@/pages/campaigns/CampaignWizard';
-import CampaignDetail from '@/pages/campaigns/CampaignDetail';
-import CampaignPayment from '@/pages/campaigns/CampaignPayment';
-import SavedAudiences from '@/pages/SavedAudiences';
-import ProfileSettings from '@/pages/ProfileSettings';
-import Notifications from '@/pages/Notifications';
-import SupportTickets from '@/pages/SupportTickets';
-import Designs from '@/pages/Designs';
-import DesignPayment from '@/pages/DesignPayment';
-import LeadsComingSoon from '@/pages/LeadsComingSoon';
-import LeadForms from '@/pages/LeadForms';
-import DesignerPortal from '@/pages/DesignerPortal';
-import CreativeOpsDashboard from '@/pages/CreativeOpsDashboard';
-import AdsManagerDashboard from '@/pages/AdsManagerDashboard';
-import Referrals from '@/pages/Referrals';
-import About from '@/pages/About';
-import Pricing from '@/pages/Pricing';
-import Contact from '@/pages/Contact';
+// ── Public / marketing pages (eagerly loaded — no auth needed) ──
+import PublicLayout from '@/components/layout/PublicLayout';
+import Home from '@/pages/public/Home';
+import AboutPage from '@/pages/public/AboutPage';
+import PricingPage from '@/pages/public/PricingPage';
+import ContactPage from '@/pages/public/ContactPage';
+import BlogIndex from '@/pages/public/BlogIndex';
+import BlogPost from '@/pages/public/BlogPost';
 import PrivacyPolicy from '@/pages/PrivacyPolicy';
 import Terms from '@/pages/Terms';
 import PublicFormView from '@/pages/PublicFormView';
 
-// Admin pages
-import AdminOverview from '@/pages/admin/AdminOverview';
-import AdminCampaigns from '@/pages/admin/AdminCampaigns';
-import AdminCampaignDetail from '@/pages/admin/AdminCampaignDetail';
-import AdminPayments from '@/pages/admin/AdminPayments';
-import AdminSettings from '@/pages/admin/AdminSettings';
-import AdminUsers from '@/pages/admin/AdminUsers';
-import AdminPageRequests from '@/pages/admin/AdminPageRequests';
-import AdminReports from '@/pages/admin/AdminReports';
-import AdminNotifications from '@/pages/admin/AdminNotifications';
-import AdminAds from '@/pages/admin/AdminAds';
-import AdminAuditLog from '@/pages/admin/AdminAuditLog';
-import AdminPricing from '@/pages/admin/AdminPricing';
-import AdminSupportTickets from '@/pages/admin/AdminSupportTickets';
-import AdminReferrals from '@/pages/admin/AdminReferrals';
-import AdminDesigns from '@/pages/admin/AdminDesigns';
-import AdminLeads from '@/pages/admin/AdminLeads';
-import Onboarding from '@/pages/Onboarding';
+// ── Auth pages ──
 import Login from '@/pages/Login';
 import Register from '@/pages/Register';
 import ForgotPassword from '@/pages/ForgotPassword';
 import ResetPassword from '@/pages/ResetPassword';
 import AuthCallback from '@/pages/AuthCallback';
+import Onboarding from '@/pages/Onboarding';
 
-const AUTH_ROUTES = ['/login', '/register', '/forgot-password', '/reset-password', '/auth/callback'];
-// Public routes — accessible without authentication (marketing pages, legal, public forms)
-const PUBLIC_ROUTES = ['/about', '/pricing', '/contact', '/privacy-policy', '/terms', '/forms'];
-const SKIP_ONBOARDING_ROUTES = [...AUTH_ROUTES, '/onboarding'];
+// ── App pages (lazy loaded — only fetched when user is logged in) ──
+const Dashboard          = lazy(() => import('@/pages/Dashboard'));
+const FacebookPages      = lazy(() => import('@/pages/FacebookPages'));
+const CampaignsList      = lazy(() => import('@/pages/campaigns/CampaignsList'));
+const CampaignWizard     = lazy(() => import('@/pages/campaigns/CampaignWizard'));
+const CampaignDetail     = lazy(() => import('@/pages/campaigns/CampaignDetail'));
+const CampaignPayment    = lazy(() => import('@/pages/campaigns/CampaignPayment'));
+const SavedAudiences     = lazy(() => import('@/pages/SavedAudiences'));
+const ProfileSettings    = lazy(() => import('@/pages/ProfileSettings'));
+const Notifications      = lazy(() => import('@/pages/Notifications'));
+const SupportTickets     = lazy(() => import('@/pages/SupportTickets'));
+const Designs            = lazy(() => import('@/pages/Designs'));
+const DesignPayment      = lazy(() => import('@/pages/DesignPayment'));
+const LeadsComingSoon    = lazy(() => import('@/pages/LeadsComingSoon'));
+const LeadForms          = lazy(() => import('@/pages/LeadForms'));
+const DesignerPortal     = lazy(() => import('@/pages/DesignerPortal'));
+const CreativeOpsDashboard = lazy(() => import('@/pages/CreativeOpsDashboard'));
+const AdsManagerDashboard  = lazy(() => import('@/pages/AdsManagerDashboard'));
+const Referrals          = lazy(() => import('@/pages/Referrals'));
+const AdminOverview      = lazy(() => import('@/pages/admin/AdminOverview'));
+const AdminCampaigns     = lazy(() => import('@/pages/admin/AdminCampaigns'));
+const AdminCampaignDetail = lazy(() => import('@/pages/admin/AdminCampaignDetail'));
+const AdminPayments      = lazy(() => import('@/pages/admin/AdminPayments'));
+const AdminSettings      = lazy(() => import('@/pages/admin/AdminSettings'));
+const AdminUsers         = lazy(() => import('@/pages/admin/AdminUsers'));
+const AdminPageRequests  = lazy(() => import('@/pages/admin/AdminPageRequests'));
+const AdminReports       = lazy(() => import('@/pages/admin/AdminReports'));
+const AdminNotifications = lazy(() => import('@/pages/admin/AdminNotifications'));
+const AdminAds           = lazy(() => import('@/pages/admin/AdminAds'));
+const AdminAuditLog      = lazy(() => import('@/pages/admin/AdminAuditLog'));
+const AdminPricing       = lazy(() => import('@/pages/admin/AdminPricing'));
+const AdminSupportTickets = lazy(() => import('@/pages/admin/AdminSupportTickets'));
+const AdminReferrals     = lazy(() => import('@/pages/admin/AdminReferrals'));
+const AdminDesigns       = lazy(() => import('@/pages/admin/AdminDesigns'));
+const AdminLeads       = lazy(() => import('@/pages/admin/AdminLeads'));
+const AdminBlog        = lazy(() => import('@/pages/admin/AdminBlog'));
 
-const getDefaultAuthRoute = () => {
-  return localStorage.getItem('bf_visited') ? '/login' : '/register';
-};
+// ── Route constants ──
+const AUTH_ROUTES         = ['/login', '/register', '/forgot-password', '/reset-password', '/auth/callback'];
+const PUBLIC_MARKETING_ROUTES = ['/', '/about', '/pricing', '/contact', '/blog', '/privacy-policy', '/terms', '/forms'];
+const SKIP_ONBOARDING_ROUTES  = [...AUTH_ROUTES, '/onboarding'];
 
-/** Returns the correct landing path for a logged-in staff member based on role */
+const getDefaultAuthRoute = () =>
+  localStorage.getItem('bf_visited') ? '/login' : '/register';
+
 function getStaffLandingPath(role) {
   if (role === 'designer') return '/designer';
   if (role === 'creative_ops_director') return '/creative-ops';
@@ -76,121 +82,143 @@ function getStaffLandingPath(role) {
   return '/admin';
 }
 
-const AuthenticatedApp = () => {
-  const { isLoadingAuth, isLoadingPublicSettings, authError, user: currentUser } = useAuth();
-  const isOnAuthRoute = AUTH_ROUTES.some(r => window.location.pathname.startsWith(r));
+// Thin spinner used inside Suspense for lazy-loaded app pages
+const PageSpinner = () => (
+  <div className="fixed inset-0 flex items-center justify-center bg-background">
+    <div className="w-8 h-8 border-4 border-[hsl(var(--primary))]/20 border-t-[hsl(var(--primary))] rounded-full animate-spin" />
+  </div>
+);
 
-  if ((isLoadingPublicSettings || isLoadingAuth) && !isOnAuthRoute) {
+// ── Authenticated section of the app ──
+const AuthenticatedApp = () => {
+  const { isLoadingAuth, authError, user: currentUser } = useAuth();
+  const path = window.location.pathname;
+
+  const isOnAuthRoute    = AUTH_ROUTES.some(r => path.startsWith(r));
+  const isOnPublicRoute  = PUBLIC_MARKETING_ROUTES.some(r => path === r || path.startsWith(r + '/'));
+  const isOnSkipRoute    = SKIP_ONBOARDING_ROUTES.some(r => path.startsWith(r));
+
+  // ── Public marketing & auth routes render immediately — no auth gate ──
+  if (isOnPublicRoute || isOnAuthRoute) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center bg-background">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-10 h-10 border-4 border-[hsl(var(--primary))]/20 border-t-[hsl(var(--primary))] rounded-full animate-spin" />
-          <p className="text-sm text-muted-foreground font-medium">Loading Brandfletch Ads...</p>
-        </div>
-      </div>
+      <Suspense fallback={<PageSpinner />}>
+        <Routes>
+          {/* Auth */}
+          <Route path="/login"            element={<Login />} />
+          <Route path="/register"         element={<Register />} />
+          <Route path="/auth/callback"    element={<AuthCallback />} />
+          <Route path="/forgot-password"  element={<ForgotPassword />} />
+          <Route path="/reset-password"   element={<ResetPassword />} />
+          <Route path="/onboarding"       element={<Onboarding />} />
+
+          {/* Marketing */}
+          <Route element={<PublicLayout />}>
+            <Route path="/"               element={<Home />} />
+            <Route path="/about"          element={<AboutPage />} />
+            <Route path="/pricing"        element={<PricingPage />} />
+            <Route path="/contact"        element={<ContactPage />} />
+            <Route path="/blog"           element={<BlogIndex />} />
+            <Route path="/blog/:slug"     element={<BlogPost />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/terms"          element={<Terms />} />
+          </Route>
+          <Route path="/forms/:formId"    element={<PublicFormView />} />
+          <Route path="*"                 element={<Navigate to="/" replace />} />
+        </Routes>
+      </Suspense>
     );
   }
 
-  const isOnSkipRoute = SKIP_ONBOARDING_ROUTES.some(r => window.location.pathname.startsWith(r));
+  // ── Protected app routes — wait for auth check ──
+  if (isLoadingAuth) return <PageSpinner />;
 
-  const isOnPublicRoute = PUBLIC_ROUTES.some(r => window.location.pathname.startsWith(r));
-
-  if (!isOnAuthRoute && !isOnPublicRoute) {
-    if (authError) {
-      if (authError.type === 'user_not_registered') {
-        return <UserNotRegisteredError />;
-      } else if (isOnSkipRoute) {
-        // Let the page render — it handles its own auth check
-      } else {
-        window.location.href = getDefaultAuthRoute();
-        return null;
-      }
-    }
-
-    if (!isLoadingAuth && !currentUser && !isOnSkipRoute) {
-      return <Navigate to={getDefaultAuthRoute()} replace />;
-    }
-
-    if (!isLoadingAuth && currentUser && !currentUser.onboarded && !isOnSkipRoute) {
-      return <Navigate to="/onboarding" replace />;
-    }
+  if (authError) {
+    if (authError.type === 'user_not_registered') return <UserNotRegisteredError />;
+    window.location.href = getDefaultAuthRoute();
+    return null;
   }
 
-  const STAFF_ROLES = ['admin', 'super_admin', 'ads_manager', 'campaign_manager', 'finance', 'sales_manager', 'creative_ops_director', 'designer'];
+  if (!currentUser && !isOnSkipRoute) {
+    return <Navigate to={getDefaultAuthRoute()} replace />;
+  }
+
+  if (currentUser && !currentUser.onboarded && !isOnSkipRoute) {
+    return <Navigate to="/onboarding" replace />;
+  }
+
+  const STAFF_ROLES = ['admin','super_admin','ads_manager','campaign_manager','finance','sales_manager','creative_ops_director','designer'];
   const isStaff = currentUser && STAFF_ROLES.includes(currentUser.role);
 
   return (
-    <Routes>
-      {/* Auth routes */}
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
-      <Route path="/auth/callback" element={<AuthCallback />} />
-      <Route path="/forgot-password" element={<ForgotPassword />} />
-      <Route path="/reset-password" element={<ResetPassword />} />
-      <Route path="/onboarding" element={<Onboarding />} />
-      <Route path="/about" element={<About />} />
-            <Route path="/pricing" element={<Pricing />} />
-      <Route path="/contact" element={<Contact />} />
-      <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-      <Route path="/terms" element={<Terms />} />
-      <Route path="/forms/:formId" element={<PublicFormView />} />
+    <Suspense fallback={<PageSpinner />}>
+      <Routes>
+        <Route path="/login"           element={<Login />} />
+        <Route path="/register"        element={<Register />} />
+        <Route path="/auth/callback"   element={<AuthCallback />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password"  element={<ResetPassword />} />
+        <Route path="/onboarding"      element={<Onboarding />} />
 
-      <Route element={<AppLayout />}>
-        {/*
-          Root "/" redirect:
-          - designer  → /designer  (their own portal, not /admin)
-          - other staff → /admin
-          - clients   → /dashboard
-        */}
-        <Route path="/" element={
-          <Navigate to={isStaff ? getStaffLandingPath(currentUser?.role) : '/dashboard'} replace />
-        } />
+        {/* Marketing (accessible even when logged in) */}
+        <Route element={<PublicLayout />}>
+          <Route path="/"              element={
+            isStaff
+              ? <Navigate to={getStaffLandingPath(currentUser?.role)} replace />
+              : <Navigate to="/dashboard" replace />
+          } />
+          <Route path="/about"         element={<AboutPage />} />
+          <Route path="/pricing"       element={<PricingPage />} />
+          <Route path="/contact"       element={<ContactPage />} />
+          <Route path="/blog"          element={<BlogIndex />} />
+          <Route path="/blog/:slug"    element={<BlogPost />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/terms"         element={<Terms />} />
+        </Route>
+        <Route path="/forms/:formId"   element={<PublicFormView />} />
 
-        {/* ── Client routes ── */}
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/pages" element={<FacebookPages />} />
-        <Route path="/campaigns" element={<CampaignsList />} />
-        <Route path="/campaigns/new" element={<CampaignWizard />} />
-        <Route path="/campaigns/:id" element={<CampaignDetail />} />
-        <Route path="/campaigns/:id/payment" element={<CampaignPayment />} />
-        <Route path="/audiences" element={<SavedAudiences />} />
-        <Route path="/settings" element={<ProfileSettings />} />
-        <Route path="/designs" element={<Designs />} />
-        <Route path="/designs/payment" element={<DesignPayment />} />
-        <Route path="/leads" element={<LeadsComingSoon />} />
-        <Route path="/leads/forms" element={<LeadForms />} />
-        <Route path="/referrals" element={<Referrals />} />
-        <Route path="/notifications" element={<Notifications />} />
-        <Route path="/support" element={<SupportTickets />} />
-        <Route path="/messages" element={<Navigate to="/support" replace />} />
+        <Route element={<AppLayout />}>
+          <Route path="/dashboard"            element={<Dashboard />} />
+          <Route path="/pages"                element={<FacebookPages />} />
+          <Route path="/campaigns"            element={<CampaignsList />} />
+          <Route path="/campaigns/new"        element={<CampaignWizard />} />
+          <Route path="/campaigns/:id"        element={<CampaignDetail />} />
+          <Route path="/campaigns/:id/payment" element={<CampaignPayment />} />
+          <Route path="/audiences"            element={<SavedAudiences />} />
+          <Route path="/settings"             element={<ProfileSettings />} />
+          <Route path="/designs"              element={<Designs />} />
+          <Route path="/designs/payment"      element={<DesignPayment />} />
+          <Route path="/leads"                element={<LeadsComingSoon />} />
+          <Route path="/leads/forms"          element={<LeadForms />} />
+          <Route path="/referrals"            element={<Referrals />} />
+          <Route path="/notifications"        element={<Notifications />} />
+          <Route path="/support"              element={<SupportTickets />} />
+          <Route path="/messages"             element={<Navigate to="/support" replace />} />
+          <Route path="/designer"             element={<DesignerPortal />} />
+          <Route path="/creative-ops"         element={<CreativeOpsDashboard />} />
+          <Route path="/ads-manager"          element={<AdsManagerDashboard />} />
+          <Route path="/admin"                element={<AdminOverview />} />
+          <Route path="/admin/campaigns"      element={<AdminCampaigns />} />
+          <Route path="/admin/campaigns/:id"  element={<AdminCampaignDetail />} />
+          <Route path="/admin/payments"       element={<AdminPayments />} />
+          <Route path="/admin/pages"          element={<AdminPageRequests />} />
+          <Route path="/admin/users"          element={<AdminUsers />} />
+          <Route path="/admin/reports"        element={<AdminReports />} />
+          <Route path="/admin/notifications"  element={<AdminNotifications />} />
+          <Route path="/admin/settings"       element={<AdminSettings />} />
+          <Route path="/admin/ads"            element={<AdminAds />} />
+          <Route path="/admin/designs"        element={<AdminDesigns />} />
+          <Route path="/admin/leads"          element={<AdminLeads />} />
+          <Route path="/admin/audit-log"      element={<AdminAuditLog />} />
+          <Route path="/admin/pricing"        element={<AdminPricing />} />
+          <Route path="/admin/support"        element={<AdminSupportTickets />} />
+          <Route path="/admin/referrals"      element={<AdminReferrals />} />
+          <Route path="/admin/messages"       element={<Navigate to="/admin/support" replace />} />
+          <Route path="/admin/blog"           element={<AdminBlog />} />
+        </Route>
 
-        {/* ── Designer portal — accessible to designer + design dept head ── */}
-        <Route path="/designer" element={<DesignerPortal />} />
-        <Route path="/creative-ops" element={<CreativeOpsDashboard />} />
-        <Route path="/ads-manager" element={<AdsManagerDashboard />} />
-
-        {/* ── Admin / staff routes ── */}
-        <Route path="/admin" element={<AdminOverview />} />
-        <Route path="/admin/campaigns" element={<AdminCampaigns />} />
-        <Route path="/admin/campaigns/:id" element={<AdminCampaignDetail />} />
-        <Route path="/admin/payments" element={<AdminPayments />} />
-        <Route path="/admin/pages" element={<AdminPageRequests />} />
-        <Route path="/admin/users" element={<AdminUsers />} />
-        <Route path="/admin/reports" element={<AdminReports />} />
-        <Route path="/admin/notifications" element={<AdminNotifications />} />
-        <Route path="/admin/settings" element={<AdminSettings />} />
-        <Route path="/admin/ads" element={<AdminAds />} />
-        <Route path="/admin/designs" element={<AdminDesigns />} />
-        <Route path="/admin/leads" element={<LeadsComingSoon />} />
-        <Route path="/admin/audit-log" element={<AdminAuditLog />} />
-        <Route path="/admin/pricing" element={<AdminPricing />} />
-        <Route path="/admin/support" element={<AdminSupportTickets />} />
-        <Route path="/admin/referrals" element={<AdminReferrals />} />
-        <Route path="/admin/messages" element={<Navigate to="/admin/support" replace />} />
-      </Route>
-
-      <Route path="*" element={<PageNotFound />} />
-    </Routes>
+        <Route path="*" element={<PageNotFound />} />
+      </Routes>
+    </Suspense>
   );
 };
 
