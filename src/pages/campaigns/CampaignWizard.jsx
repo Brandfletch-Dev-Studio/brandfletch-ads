@@ -72,11 +72,59 @@ export default function CampaignWizard() {
   async function handleSubmit() {
     setSubmitting(true);
     let campaign;
-    try { campaign = await base44.entities.Campaign.create({
-      ...data,
-      user_id: user.id,
-      status: 'awaiting_payment',
-    }); } catch(e) { toast.error('Failed to create campaign'); setSubmitting(false); return; }
+    try {
+      // Map wizard-internal creative_type values to Campaign schema enum values
+      const creativeTypeMap = {
+        'existing_post': 'link',    // user pastes a post URL = link type
+        'new_creative':  'upload',  // user uploads assets = upload type
+        'upload':        'upload',
+        'link':          'link',
+      };
+      const mappedCreativeType = creativeTypeMap[data.creative_type] || 'link';
+
+      // Strip any fields that don't belong in the schema or have invalid enum values
+      const payload = {
+        campaign_name:        data.campaign_name,
+        user_id:              user.id,
+        page_id:              data.page_id || '',
+        page_name:            data.page_name || '',
+        goal:                 data.goal || undefined,
+        messaging_platforms:  data.messaging_platforms || [],
+        whatsapp_number:      data.whatsapp_number || '',
+        phone_number:         data.phone_number || '',
+        post_url:             data.post_url || '',
+        website_url:          data.website_url || '',
+        creative_type:        mappedCreativeType,
+        creative_assets:      data.creative_assets || [],
+        creative_link:        data.creative_link || '',
+        description:          data.description || '',
+        // Only include promote_type / objective if they are non-empty valid values
+        ...(data.promote_type ? { promote_type: data.promote_type } : {}),
+        ...(data.objective    ? { objective:    data.objective }    : {}),
+        audience_countries:   data.audience_countries || [],
+        audience_regions:     data.audience_regions   || [],
+        audience_cities:      data.audience_cities    || [],
+        audience_worldwide:   data.audience_worldwide || false,
+        audience_age_min:     data.audience_age_min   || 18,
+        audience_age_max:     data.audience_age_max   || 65,
+        audience_gender:      data.audience_gender    || 'all',
+        package:              data.package,
+        duration:             data.duration           || 'weekly',
+        currency:             data.currency           || 'MWK',
+        total_cost:           data.total_cost         || 0,
+        country:              data.country            || '',
+        estimated_impressions: data.estimated_impressions || 0,
+        estimated_reach:      data.estimated_reach    || 0,
+        status:               'awaiting_payment',
+      };
+
+      campaign = await base44.entities.Campaign.create(payload);
+    } catch(e) {
+      console.error('Campaign create error:', e);
+      toast.error('Failed to create campaign — ' + (e?.message || 'please try again'));
+      setSubmitting(false);
+      return;
+    }
 
     if (data.save_audience && data.audience_name) {
       await base44.entities.SavedAudience.create({
