@@ -19,8 +19,7 @@
       "description": "Platform role. 'user' = business client (default for all new sign-ups)"
     },
     "onboarded": {
-      "type": "boolean",
-      "default": false
+      "type": "boolean"
     },
     "country": {
       "type": "string"
