@@ -65,10 +65,10 @@ export default function CampaignPayment() {
 
     setPaychanguLoading(false);
 
-    if (res.data?.checkout_url) {
-      window.location.href = res.data.checkout_url;
+    if (res?.checkout_url) {
+      window.location.href = res.checkout_url;
     } else {
-      toast.error(res.data?.error || 'Failed to initiate payment');
+      toast.error(res?.error || 'Failed to initiate payment. Please try again.');
     }
   }
 

@@ -345,14 +345,20 @@ const authWrapper = {
 const functionsProxy = new Proxy({}, {
   get(target, prop) {
     if (prop === 'invoke') {
+      // base44.functions.invoke('fnName', payload) → Supabase Edge Function
       return async (functionName, payload = {}) => {
-        const { data, error } = await supabase.rpc(functionName, payload);
+        const { data, error } = await supabase.functions.invoke(functionName, {
+          body: payload,
+        });
         if (error) throw error;
         return data;
       };
     }
+    // base44.functions.someFunction(payload) shorthand
     return async (payload = {}) => {
-      const { data, error } = await supabase.rpc(prop, payload);
+      const { data, error } = await supabase.functions.invoke(prop, {
+        body: payload,
+      });
       if (error) throw error;
       return data;
     };
