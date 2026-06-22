@@ -144,7 +144,9 @@ const AuthenticatedApp = () => {
     return <Navigate to={getDefaultAuthRoute()} replace />;
   }
 
-  if (currentUser && !currentUser.onboarded && !isOnSkipRoute) {
+  // Only redirect to onboarding if onboarded is explicitly false.
+  // null/undefined means the field hasn't loaded yet or is a legacy account — do NOT redirect.
+  if (currentUser && currentUser.onboarded === false && !isOnSkipRoute) {
     return <Navigate to="/onboarding" replace />;
   }
 
