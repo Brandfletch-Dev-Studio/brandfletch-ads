@@ -101,34 +101,35 @@ export default function PublicLayout() {
 
       {/* ── Footer ── */}
       <footer className="bg-[hsl(var(--primary))] text-white/70 border-t border-white/10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 grid grid-cols-1 md:grid-cols-4 gap-8">
-          <div className="md:col-span-1">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 grid grid-cols-2 sm:grid-cols-4 gap-8">
+          <div className="col-span-2 sm:col-span-1">
             <BrandLogo size="sidebar" />
             <p className="mt-3 text-sm leading-relaxed text-white/50">
-              Professional Facebook & Instagram advertising for African businesses.
+              We build digital systems that help businesses attract customers, build trust, and grow. 🔥
             </p>
           </div>
           <div>
-            <p className="text-white font-semibold text-sm mb-3">Product</p>
+            <p className="text-white font-semibold text-sm mb-3">Services</p>
             <ul className="space-y-2 text-sm">
-              {[['Pricing','/pricing'],['Blog','/blog'],['Contact','/contact']].map(([l,h])=>(
-                <li key={h}><Link to={h} className="hover:text-white transition-colors">{l}</Link></li>
+              {[['Meta Ads','/pricing'],['UGC Ads','/pricing'],['Graphic Design','/pricing'],['Web Development','/pricing'],['Social Media','/pricing']].map(([l,h])=>(
+                <li key={l}><Link to={h} className="hover:text-white transition-colors">{l}</Link></li>
               ))}
             </ul>
           </div>
           <div>
             <p className="text-white font-semibold text-sm mb-3">Company</p>
             <ul className="space-y-2 text-sm">
-              {[['About','/about'],['Privacy Policy','/privacy-policy'],['Terms','/terms']].map(([l,h])=>(
-                <li key={h}><Link to={h} className="hover:text-white transition-colors">{l}</Link></li>
+              {[['About','/about'],['Blog','/blog'],['Contact','/contact'],['Privacy Policy','/privacy-policy'],['Terms','/terms']].map(([l,h])=>(
+                <li key={l}><Link to={h} className="hover:text-white transition-colors">{l}</Link></li>
               ))}
             </ul>
           </div>
           <div>
             <p className="text-white font-semibold text-sm mb-3">Get started</p>
-            <Link to="/register">
-              <Button size="sm" className="bg-[hsl(var(--accent))] text-white hover:bg-[hsl(var(--accent))]/90 font-semibold">
-                Create free account
+            <p className="text-white/50 text-xs mb-3 leading-relaxed">Start with a discovery conversation — we'll create a strategy built around your goals.</p>
+            <Link to="/contact">
+              <Button size="sm" className="bg-[hsl(var(--accent))] text-white hover:bg-[hsl(var(--accent))]/90 font-semibold w-full">
+                Book a discovery call
               </Button>
             </Link>
           </div>
