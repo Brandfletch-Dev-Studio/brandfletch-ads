@@ -1,7 +1,7 @@
 import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
-import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate, useLocation } from 'react-router-dom';
 import { lazy, Suspense } from 'react';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
@@ -93,7 +93,7 @@ const PageSpinner = () => (
 // ── Authenticated section of the app ──
 const AuthenticatedApp = () => {
   const { isLoadingAuth, authError, user: currentUser } = useAuth();
-  const path = window.location.pathname;
+  const { pathname: path } = useLocation();
 
   const isOnAuthRoute    = AUTH_ROUTES.some(r => path.startsWith(r));
   const isOnPublicRoute  = PUBLIC_MARKETING_ROUTES.some(r => path === r || path.startsWith(r + '/'));
