@@ -131,7 +131,16 @@ export default function AdminUsers() {
   async function updateRole(userId, newRole) {
     const target = users.find(u => u.id === userId);
     try {
+      // 1. Update User table — source of truth for role checks in the app
       await base44.entities.User.update(userId, { role: newRole });
+
+      // 2. Sync to Supabase auth metadata so role persists across sessions
+      try {
+        await base44.functions.invoke('setAdminRole', { userId, role: newRole });
+      } catch (metaErr) {
+        console.warn('setAdminRole metadata sync failed (non-fatal):', metaErr);
+      }
+
       auditLog('user_role_changed', 'User', userId,
         `${target?.full_name || target?.email} role changed to "${ROLE_LABELS[newRole] || newRole}"`);
       setUsers(us => us.map(u => u.id === userId ? { ...u, role: newRole } : u));
