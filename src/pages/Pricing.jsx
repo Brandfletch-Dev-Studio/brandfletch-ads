@@ -134,7 +134,7 @@ function AdsTab({ country, dbPricing, onCta, ordering }) {
                 pkg === 'premium' ? 'Dedicated campaign manager' : null,
               ].filter(Boolean)}
               ctaLabel="Start Campaign"
-              onCta={() => onCta('campaign')}
+              onCta={() => onCta('campaign', { package: pkg, country })}
             />
           );
         })}
@@ -354,7 +354,12 @@ export default function Pricing() {
     }
 
     // Campaigns have their own creation wizard
-    if (serviceType === 'campaign') { navigate('/campaigns/new'); return; }
+    if (serviceType === 'campaign') {
+      // Pass selected package slug as URL param so the wizard pre-selects it
+      const params = planData?.package ? `?package=${planData.package}` : '';
+      navigate(`/campaigns/new${params}`);
+      return;
+    }
 
     // Designs have their own request flow
     if (serviceType === 'design') { navigate('/designs'); return; }
