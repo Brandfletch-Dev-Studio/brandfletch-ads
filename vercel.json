@@ -3,6 +3,16 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "installCommand": "npm install",
+  "redirects": [
+    {
+      "source": "/auth/callback",
+      "destination": "https://brandfletch.com/auth/callback",
+      "permanent": false,
+      "has": [
+        { "type": "host", "value": "(?!brandfletch\\.com).*" }
+      ]
+    }
+  ],
   "rewrites": [
     { "source": "/(.*)", "destination": "/" }
   ]
