@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { ChevronRight, ChevronLeft, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -28,6 +28,7 @@ const STEPS = [
 export default function CampaignWizard() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
   const [step, setStep] = useState(1);
   const [data, setData] = useState({
     campaign_name: '',
@@ -50,12 +51,15 @@ export default function CampaignWizard() {
       const country = user?.country || 'Malawi';
       const exchangeRates = await base44.entities.ExchangeRate.filter({ country, is_active: true });
       const currency = exchangeRates?.[0]?.currency_code || 'MWK';
+      const preselectedPackage = searchParams.get('package') || '';
       setData(d => ({
         ...d,
         country: country,
         currency: currency,
         page_name: user?.fb_page_name || d.page_name,
         page_url: user?.fb_page_url || d.page_url,
+        // Pre-select package from pricing page if provided
+        ...(preselectedPackage ? { package: preselectedPackage } : {}),
       }));
     }
     init();
