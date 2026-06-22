@@ -2,7 +2,6 @@ import { Link } from 'react-router-dom';
 import { FileText, Scale, AlertCircle, CheckCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import BrandLogo from '@/components/BrandLogo';
 
 export default function Terms() {
   const sections = [
@@ -22,7 +21,7 @@ export default function Terms() {
         'Brandfletch Media provides a platform for creating, managing, and optimizing Facebook advertising campaigns.',
         'We offer campaign packages, audience targeting tools, payment processing, and performance analytics.',
         'We do not guarantee specific advertising results, impressions, reach, or conversions.',
-        'All advertising campaigns are subject to Facebook\'s advertising policies and approval process.'
+        "All advertising campaigns are subject to Facebook's advertising policies and approval process."
       ]
     },
     {
@@ -51,7 +50,7 @@ export default function Terms() {
       title: '5. Campaign Submission and Approval',
       icon: CheckCircle,
       content: [
-        'All campaigns must comply with Facebook\'s advertising policies and local regulations.',
+        "All campaigns must comply with Facebook's advertising policies and local regulations.",
         'Campaigns are subject to review and approval by our team before launch.',
         'We may request changes to your campaign content, creative, or targeting.',
         'We reserve the right to reject campaigns that violate policies or are inappropriate.',
@@ -64,8 +63,8 @@ export default function Terms() {
       content: [
         'You are responsible for the content of your advertisements and ensuring they comply with applicable laws.',
         'You must not use our platform for illegal, fraudulent, or misleading purposes.',
-        'You must not interfere with the platform\'s functionality or security.',
-        'You must not attempt to access other users\' accounts or data.',
+        "You must not interfere with the platform's functionality or security.",
+        "You must not attempt to access other users' accounts or data.",
         'You must comply with all applicable laws and regulations in your jurisdiction.'
       ]
     },
@@ -123,7 +122,7 @@ export default function Terms() {
       icon: FileText,
       content: [
         'For questions about these Terms and Conditions, please contact us at support@brandfletch.com',
-        'You may also submit a support ticket through your dashboard.',
+        'You may also reach us through the support ticket system available in your dashboard.',
         'We will respond to all inquiries within 30 days.'
       ]
     }
@@ -131,22 +130,11 @@ export default function Terms() {
 
   return (
     <div className="p-4 lg:p-8 max-w-4xl mx-auto space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <Link to="/">
-          <BrandLogo size="sidebar" black />
-        </Link>
-        <nav className="flex gap-4">
-          <Link to="/about" className="text-sm font-medium text-muted-foreground hover:text-foreground">About</Link>
-          <Link to="/contact" className="text-sm font-medium text-muted-foreground hover:text-foreground">Contact</Link>
-        </nav>
-      </div>
-
       {/* Title */}
       <div className="text-center space-y-4 py-8">
         <Scale className="w-16 h-16 text-primary mx-auto" />
         <h1 className="text-4xl font-bold font-heading text-foreground">Terms & Conditions</h1>
-        <p className="text-lg text-muted-foreground">Effective Date: January 2025</p>
+        <p className="text-lg text-muted-foreground">Last updated: January 2025</p>
       </div>
 
       {/* Sections */}
@@ -161,46 +149,32 @@ export default function Terms() {
             </CardHeader>
             <CardContent className="space-y-3 text-muted-foreground">
               {section.content.map((paragraph, idx) => (
-                <p key={idx} className="text-sm leading-relaxed">
-                  {paragraph}
-                </p>
+                <p key={idx} className="text-sm leading-relaxed">{paragraph}</p>
               ))}
             </CardContent>
           </Card>
         ))}
       </div>
 
-      {/* Acceptance CTA */}
+      {/* CTA */}
       <Card className="bg-gradient-to-br from-primary to-primary/80 text-primary-foreground border-0">
-        <CardContent className="p-6 text-center space-y-4">
-          <h2 className="text-xl font-bold font-heading">Ready to Get Started?</h2>
-          <p className="text-sm opacity-90">
-            By using Brandfletch Media, you agree to these terms and conditions.
+        <CardContent className="p-6 text-center">
+          <h2 className="text-xl font-bold font-heading mb-2">Questions About Our Terms?</h2>
+          <p className="text-sm opacity-90 mb-4">
+            Contact us at support@brandfletch.com or submit a support ticket.
           </p>
-          <div className="flex justify-center gap-4">
-            <Link to="/register">
-              <Button variant="secondary" size="lg">Create Account</Button>
-            </Link>
-            <Link to="/contact">
-              <Button variant="outline" size="lg" className="bg-transparent border-primary-foreground text-primary-foreground hover:bg-primary-foreground/20">
-                Contact Us
-              </Button>
-            </Link>
-          </div>
+          <Link to="/contact">
+            <Button variant="secondary" size="sm">Contact Us</Button>
+          </Link>
         </CardContent>
       </Card>
 
-      {/* Footer */}
-      <div className="border-t pt-6 mt-8">
-        <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-          <BrandLogo size="sidebar" black />
-          <p className="text-sm text-muted-foreground">
-            © {new Date().getFullYear()} Brandfletch Media. All rights reserved.
-          </p>
-          <div className="flex gap-4">
-            <Link to="/privacy-policy" className="text-sm text-muted-foreground hover:text-foreground">Privacy Policy</Link>
-            <Link to="/terms" className="text-sm text-primary">Terms & Conditions</Link>
-          </div>
+      {/* Footer links */}
+      <div className="border-t pt-6 mt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+        <p className="text-sm text-muted-foreground">© {new Date().getFullYear()} Brandfletch Media. All rights reserved.</p>
+        <div className="flex gap-4">
+          <Link to="/privacy-policy" className="text-sm text-muted-foreground hover:text-foreground">Privacy Policy</Link>
+          <Link to="/terms" className="text-sm text-primary">Terms & Conditions</Link>
         </div>
       </div>
     </div>
