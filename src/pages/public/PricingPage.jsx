@@ -1,238 +1,564 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Check, ArrowRight, Zap, MessageSquare } from 'lucide-react';
+import { Check, ArrowRight, MessageSquare, Calculator, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { supabase } from '@/api/base44Client';
-import { LOCAL_PRICES, PACKAGES, DURATIONS } from '@/lib/pricing';
 import { cn } from '@/lib/utils';
 
-const COUNTRIES    = ['Malawi', 'Zambia', 'South Africa', 'Kenya', 'Tanzania'];
-const CURRENCY_MAP = {
-  Malawi:         { currency: 'MWK', symbol: 'MK' },
-  Zambia:         { currency: 'ZMW', symbol: 'ZK' },
-  'South Africa': { currency: 'ZAR', symbol: 'R' },
-  Kenya:          { currency: 'KES', symbol: 'KSh' },
-  Tanzania:       { currency: 'TZS', symbol: 'TSh' },
-};
+// ── MWK/USD rate (default MK 5,000 per USD) ─────────────────────────────────
+const DEFAULT_RATE = 5000;
 
-const PKG_ORDER    = ['starter', 'growth', 'business', 'premium'];
-const DURATION_OPTS = [
-  { key: 'monthly', label: 'Monthly' },
-  { key: 'weekly',  label: 'Weekly' },
-  { key: 'daily',   label: 'Daily' },
+// ── Pricing data ─────────────────────────────────────────────────────────────
+const TABS = [
+  { key: 'meta-ads',       label: 'Meta Ads' },
+  { key: 'ugc-ads',        label: 'UGC Ads' },
+  { key: 'graphic-design', label: 'Graphic Design' },
+  { key: 'web-design',     label: 'Web Design' },
+  { key: 'social-media',   label: 'Social Media' },
+  { key: 'online-payments',label: 'Online Payments' },
 ];
 
-const PKG_FEATURES = {
-  starter:    ['1 active campaign', 'Basic targeting', '3 ad creatives', 'Monthly performance report', 'Email support'],
-  growth:     ['3 active campaigns', 'Advanced targeting', '8 ad creatives', 'Weekly reports', 'Priority email support', 'Audience insights'],
-  business:   ['5 active campaigns', 'Custom audiences', '15 ad creatives', 'Daily reports', 'Dedicated account manager', 'A/B testing'],
-  premium:    ['10 active campaigns', 'Lookalike audiences', 'Unlimited creatives', 'Real-time dashboard', '24/7 support', 'Monthly strategy call'],
+const PLANS = {
+  'meta-ads': {
+    title: 'Meta Ads Management',
+    desc: 'Professionally managed Facebook & Instagram advertising campaigns designed to generate qualified leads for your business.',
+    billing: 'monthly',
+    packages: [
+      {
+        name: 'Starter',
+        price: 'Contact us',
+        priceNote: 'Based on ad budget',
+        badge: null,
+        features: [
+          '1 active campaign',
+          'Basic audience targeting',
+          '3 ad creatives/month',
+          'Monthly performance report',
+          'Email support',
+          'Campaign setup & launch',
+        ],
+        cta: 'Get started',
+        ctaLink: '/register',
+      },
+      {
+        name: 'Growth',
+        price: 'Contact us',
+        priceNote: 'Based on ad budget',
+        badge: 'Popular',
+        features: [
+          '3 active campaigns',
+          'Advanced audience targeting',
+          '8 ad creatives/month',
+          'Weekly performance reports',
+          'Priority support',
+          'Audience insights & A/B testing',
+          'Retargeting campaigns',
+        ],
+        cta: 'Get started',
+        ctaLink: '/register',
+      },
+      {
+        name: 'Brand Campaign',
+        price: 'Contact us',
+        priceNote: 'Based on ad budget',
+        badge: null,
+        features: [
+          '10 active campaigns',
+          'Lookalike & custom audiences',
+          'Unlimited ad creatives',
+          'Real-time performance dashboard',
+          'Dedicated account manager',
+          '24/7 priority support',
+          'Monthly strategy call',
+          'Full funnel campaign management',
+        ],
+        cta: 'Talk to us',
+        ctaLink: '/contact',
+      },
+    ],
+  },
+  'ugc-ads': {
+    title: 'UGC Ads — Brandfletch Studios',
+    desc: 'We don\'t just create videos. We create UGC ads designed to help businesses attract customers. Every creative is built Meta Ads-ready.',
+    billing: 'one-off',
+    included: [
+      'Content creator matching',
+      'Feature on Brandfletch Studios network',
+      'Creator social media feature',
+      'Brand story development',
+      'Offer packaging',
+      'Meta Ads-ready creatives (hooks, messaging, conversion structure)',
+    ],
+    packages: [
+      {
+        name: 'Starter',
+        price: 'MK 100,000',
+        priceNote: 'Per campaign',
+        badge: null,
+        features: [
+          '1 UGC ad creative',
+          'Creator matching',
+          'Brand story development',
+          'Offer packaging session',
+          'Meta Ads-ready format',
+          'Creator social media feature',
+        ],
+        cta: 'Place order',
+        ctaLink: '/register',
+      },
+      {
+        name: 'Growth',
+        price: 'MK 250,000',
+        priceNote: 'Per campaign',
+        badge: 'Best value',
+        features: [
+          '3 UGC ad creatives',
+          'Multiple message angles',
+          'Creator matching',
+          'Full brand story development',
+          'Offer packaging session',
+          'Meta Ads-ready formats',
+          'Creator social media feature',
+          'A/B testing angles',
+        ],
+        cta: 'Place order',
+        ctaLink: '/register',
+      },
+      {
+        name: 'Brand Campaign',
+        price: 'MK 750,000',
+        priceNote: 'Per campaign',
+        badge: 'Scaling brands',
+        features: [
+          '10 UGC ad creatives',
+          'Full advertising content library',
+          'Multiple creators',
+          'Complete brand story development',
+          'Offer packaging session',
+          'Meta Ads-ready formats',
+          'Creator social media features',
+          'Designed for scaling campaigns',
+        ],
+        cta: 'Place order',
+        ctaLink: '/register',
+      },
+    ],
+  },
+  'graphic-design': {
+    title: 'Graphic Design — Retainer Packages',
+    desc: 'Consistent, professional design output on a monthly retainer. One-off projects also available — contact us for a quote.',
+    billing: 'monthly',
+    packages: [
+      {
+        name: 'Starter',
+        price: 'MK 100,000',
+        priceNote: '/month',
+        badge: null,
+        features: [
+          '10 design requests/month',
+          'Static designs only',
+          'Posters, flyers, social posts, banners',
+          '1 concurrent request',
+          '24–48 hour turnaround',
+          'Revisions included',
+        ],
+        cta: 'Get started',
+        ctaLink: '/register',
+      },
+      {
+        name: 'Growth',
+        price: 'MK 180,000',
+        priceNote: '/month',
+        badge: 'Most popular',
+        features: [
+          '15 design requests/month',
+          'Static designs + motion graphics',
+          'Animated posts, simple GIFs',
+          '2 concurrent requests',
+          '12–24 hour turnaround',
+          '1–2 short video edits/month',
+          'Priority queue',
+        ],
+        cta: 'Get started',
+        ctaLink: '/register',
+      },
+      {
+        name: 'Premium',
+        price: 'MK 280,000',
+        priceNote: '/month',
+        badge: null,
+        features: [
+          '20 design requests/month',
+          'Full suite: static, motion & video',
+          '3 concurrent requests',
+          '6–12 hour priority turnaround',
+          'Unlimited video content (within cap)',
+          'Brand consistency management',
+          'Dedicated designer',
+        ],
+        cta: 'Get started',
+        ctaLink: '/register',
+      },
+    ],
+  },
+  'web-design': {
+    title: 'Web Design & Development — Brandfletch Designs',
+    desc: 'Websites designed around business growth — not just being online. Every package is built to attract and convert visitors into customers.',
+    billing: 'one-off',
+    packages: [
+      {
+        name: 'Starter Website',
+        price: 'MK 150,000',
+        priceNote: 'One-off',
+        badge: null,
+        features: [
+          'Up to 5 pages',
+          'Professional business website',
+          'Mobile responsive design',
+          'Contact form',
+          'WhatsApp integration',
+          'Basic SEO setup',
+          'Social media links',
+          'Website launch support',
+        ],
+        cta: 'Place order',
+        ctaLink: '/register',
+        ideal: 'Small businesses, personal brands & startups',
+      },
+      {
+        name: 'Growth Website',
+        price: 'MK 350,000',
+        priceNote: 'One-off',
+        badge: 'Most popular',
+        features: [
+          'Up to 10 pages',
+          'Custom website design',
+          'Modern UI/UX',
+          'Lead capture forms',
+          'WhatsApp/business integrations',
+          'Blog/news section',
+          'SEO optimisation',
+          'Analytics setup',
+          'Conversion-focused structure',
+        ],
+        cta: 'Place order',
+        ctaLink: '/register',
+        ideal: 'Growing businesses that need more than just a website',
+      },
+      {
+        name: 'Business Pro',
+        price: 'MK 750,000',
+        priceNote: 'One-off',
+        badge: 'Serious brands',
+        features: [
+          'Unlimited pages',
+          'Fully custom design',
+          'Advanced UI/UX',
+          'Booking systems / custom features',
+          'E-commerce functionality',
+          'Payment integrations',
+          'Advanced SEO',
+          'Speed optimisation',
+          'Analytics + tracking',
+          'Priority support',
+        ],
+        cta: 'Place order',
+        ctaLink: '/register',
+        ideal: 'Established businesses & brands',
+      },
+    ],
+    customNote: {
+      title: 'Need a web app, LMS, marketplace, or complex system?',
+      desc: 'These go far beyond standard website pricing. We build them — let\'s talk scope and pricing.',
+      cta: 'Request a custom quote',
+      link: '/contact',
+    },
+  },
+  'social-media': {
+    title: 'Social Media Management — Brandfletch Media',
+    desc: 'We help businesses stay visible, build trust, and turn social media into a real growth channel.',
+    billing: 'monthly',
+    packages: [
+      {
+        name: 'Starter',
+        price: 'MK 150,000',
+        priceNote: '/month',
+        badge: null,
+        features: [
+          '16 branded posts/month',
+          'Social media page management',
+          'Content planning',
+          'Caption writing',
+          'Content scheduling',
+          'Basic community management',
+          'Monthly performance insights',
+        ],
+        cta: 'Get started',
+        ctaLink: '/register',
+        ideal: 'Businesses that need consistency and a professional presence',
+      },
+      {
+        name: 'Growth',
+        price: 'MK 300,000',
+        priceNote: '/month',
+        badge: 'Popular',
+        features: [
+          '32 branded posts/month',
+          'Full social media management',
+          'Content strategy',
+          'Short-form content / Reels',
+          'Caption & CTA optimisation',
+          'Audience engagement',
+          'Monthly content calendar',
+          'Performance report',
+        ],
+        cta: 'Get started',
+        ctaLink: '/register',
+        ideal: 'Businesses actively growing their online presence',
+      },
+      {
+        name: 'Brand Growth',
+        price: 'MK 450,000',
+        priceNote: '/month',
+        badge: 'Full service',
+        features: [
+          '60+ monthly content pieces',
+          'Full social media management',
+          'Reels/short-form videos',
+          'Brand storytelling',
+          'Content campaigns',
+          'Community management',
+          'Growth strategy',
+          'Analytics & optimisation',
+        ],
+        cta: 'Get started',
+        ctaLink: '/register',
+        ideal: 'Brands that want social media as a marketing channel',
+      },
+    ],
+  },
+  'online-payments': {
+    title: 'Online Payments — Dollar to MWK Calculator',
+    desc: 'Simple, reliable access to online payment solutions — including dollar-based options. Use the calculator below to see your MWK equivalent.',
+    billing: 'calculator',
+    packages: [],
+  },
 };
 
-const PKG_BADGE = {
-  starter:  null,
-  growth:   null,
-  business: 'Most Popular',
-  premium:  null,
-};
-
-const SERVICES = [
-  { emoji: '🎬', title: 'UGC Ads',               desc: 'Content creator campaigns that build social proof and authentic brand connection.',           cta: 'Get a quote' },
-  { emoji: '🎨', title: 'Graphic Design',         desc: 'Promotional posters, social creatives, flyers, and ad designs built for conversion.',        cta: 'Get a quote' },
-  { emoji: '💻', title: 'Web Development',        desc: 'Websites that build trust, showcase your products, and unlock digital marketing.',            cta: 'Get a quote' },
-  { emoji: '💳', title: 'Online Payments',        desc: 'Simple, reliable payment solutions including dollar-based options for your business.',        cta: 'Get a quote' },
-  { emoji: '📱', title: 'Social Media Management',desc: 'Content strategy, planning, and consistency — so you stay visible while running your business.', cta: 'Get a quote' },
-];
-
-function fmt(n, symbol) {
-  if (!n && n !== 0) return '—';
-  return `${symbol}${Number(n).toLocaleString()}`;
+// ── Package card ──────────────────────────────────────────────────────────────
+function PlanCard({ plan, popular }) {
+  return (
+    <div className={cn(
+      'relative flex flex-col bg-card border rounded-2xl overflow-hidden transition-all duration-200 hover:shadow-lg',
+      popular ? 'border-[hsl(var(--accent))] shadow-md ring-1 ring-[hsl(var(--accent))]/30' : 'border-border'
+    )}>
+      {plan.badge && (
+        <div className="absolute top-0 right-0">
+          <Badge className="rounded-tl-none rounded-br-none rounded-tr-xl rounded-bl-xl bg-[hsl(var(--accent))] text-white text-[10px] font-bold px-3 py-1">
+            {plan.badge}
+          </Badge>
+        </div>
+      )}
+      <div className={cn('h-1', popular ? 'bg-[hsl(var(--accent))]' : 'bg-muted')} />
+      <div className="p-6 flex flex-col flex-1">
+        <h3 className="font-display font-bold text-lg text-foreground mb-1">{plan.name}</h3>
+        <div className="mb-4">
+          <span className="text-2xl font-extrabold text-foreground">{plan.price}</span>
+          {plan.priceNote && <span className="text-sm text-muted-foreground ml-1">{plan.priceNote}</span>}
+        </div>
+        {plan.ideal && (
+          <p className="text-xs text-muted-foreground italic mb-4 pb-4 border-b border-border">{plan.ideal}</p>
+        )}
+        <ul className="space-y-2.5 flex-1 mb-6">
+          {plan.features.map(f => (
+            <li key={f} className="flex items-start gap-2.5 text-sm text-foreground">
+              <Check className="w-4 h-4 text-[hsl(var(--accent))] flex-shrink-0 mt-0.5" />
+              {f}
+            </li>
+          ))}
+        </ul>
+        <Link to={plan.ctaLink}>
+          <Button className={cn('w-full font-semibold', popular
+            ? 'bg-[hsl(var(--accent))] text-white hover:bg-[hsl(var(--accent))]/90'
+            : 'bg-[hsl(var(--primary))] text-white hover:bg-[hsl(var(--primary))]/90'
+          )}>
+            {plan.cta} <ArrowRight className="ml-1.5 w-4 h-4" />
+          </Button>
+        </Link>
+      </div>
+    </div>
+  );
 }
 
-export default function PricingPage() {
-  const [country,  setCountry]  = useState('Malawi');
-  const [duration, setDuration] = useState('monthly');
-  const [dbPrices, setDbPrices] = useState([]);
-  const [loading,  setLoading]  = useState(true);
-
-  useEffect(() => {
-    supabase
-      .from('PackagePricing')
-      .select('*')
-      .then(({ data }) => { setDbPrices(data || []); setLoading(false); })
-      .catch(() => setLoading(false));
-  }, []);
-
-  const getPrice = (pkg) => {
-    // Try DB first
-    const row = dbPrices.find(r => r.country === country && r.package === pkg);
-    if (row && row[duration] != null && row[duration] > 0) {
-      return { amount: row[duration], symbol: row.symbol || CURRENCY_MAP[country]?.symbol || '$' };
-    }
-    // Fallback to hardcoded
-    const local = LOCAL_PRICES[country];
-    if (local?.[pkg]?.[duration]) {
-      return { amount: local[pkg][duration], symbol: local.symbol };
-    }
-    return null;
-  };
-
-  const { symbol } = CURRENCY_MAP[country] || { symbol: '$' };
+// ── Dollar calculator ─────────────────────────────────────────────────────────
+function DollarCalculator() {
+  const [usd, setUsd] = useState('');
+  const [rate, setRate] = useState(DEFAULT_RATE);
+  const mwk = usd ? Math.round(parseFloat(usd) * rate) : null;
 
   return (
-    <div>
-      {/* ── Hero ─────────────────────────────────────────────────────────────── */}
-      <section className="bg-[hsl(var(--primary))] text-white py-20 text-center relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-[hsl(var(--primary))] to-[hsl(222,70%,6%)]" />
-        <div className="relative max-w-3xl mx-auto px-4">
-          <Badge className="mb-5 bg-white/10 text-white/80 border-white/20">Simple pricing</Badge>
-          <h1 className="text-4xl sm:text-5xl font-bold font-display mb-4">
-            Transparent prices.<br />
-            <span className="text-[hsl(var(--accent))]">Real value.</span>
-          </h1>
-          <p className="text-white/70 text-lg mb-8">No hidden fees. Pay in your local currency. Start and stop anytime.</p>
-
-          {/* Controls */}
-          <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
-            {/* Country */}
-            <div className="inline-flex items-center gap-2 bg-white/10 rounded-xl px-4 py-2.5 border border-white/20">
-              <span className="text-white/60 text-sm">Country:</span>
-              <select
-                value={country}
-                onChange={e => setCountry(e.target.value)}
-                className="bg-transparent text-white text-sm font-medium outline-none cursor-pointer"
-              >
-                {COUNTRIES.map(c => <option key={c} value={c} className="text-black">{c}</option>)}
-              </select>
-            </div>
-            {/* Duration */}
-            <div className="flex bg-white/10 rounded-xl border border-white/20 overflow-hidden">
-              {DURATION_OPTS.map(d => (
-                <button
-                  key={d.key}
-                  onClick={() => setDuration(d.key)}
-                  className={cn(
-                    'px-4 py-2 text-sm font-medium transition-colors',
-                    duration === d.key ? 'bg-[hsl(var(--accent))] text-white' : 'text-white/70 hover:text-white'
-                  )}
-                >
-                  {d.label}
-                </button>
-              ))}
+    <div className="max-w-xl mx-auto">
+      <div className="bg-card border border-border rounded-2xl p-8 shadow-sm">
+        <h3 className="font-display font-bold text-xl text-foreground mb-2">Dollar → MWK Calculator</h3>
+        <p className="text-sm text-muted-foreground mb-6">Enter the USD amount to see how much you'll pay in Malawi Kwacha at our current rate.</p>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Amount (USD)</label>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold text-sm">$</span>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={usd}
+                onChange={e => setUsd(e.target.value)}
+                placeholder="e.g. 50"
+                className="w-full pl-8 pr-4 py-3 border border-input rounded-lg bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(var(--accent))]/40"
+              />
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* ── Meta Ads Packages ────────────────────────────────────────────────── */}
-      <section className="py-20 bg-background">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-10">
-            <Badge variant="outline" className="mb-3 text-[hsl(var(--accent))] border-[hsl(var(--accent))]/30">📣 Meta Ads Management</Badge>
-            <h2 className="text-2xl sm:text-3xl font-bold font-display">Facebook & Instagram Advertising Packages</h2>
-            <p className="text-muted-foreground mt-2 text-sm">Prices shown in {CURRENCY_MAP[country]?.currency || 'USD'} · {DURATION_OPTS.find(d=>d.key===duration)?.label} billing</p>
-          </div>
-
-          {loading ? (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {[1,2,3,4].map(i => <div key={i} className="h-80 rounded-2xl bg-muted animate-pulse" />)}
+          <div>
+            <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Exchange rate (MK per $1)</label>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold text-sm">MK</span>
+              <input
+                type="number"
+                min="1"
+                value={rate}
+                onChange={e => setRate(parseFloat(e.target.value) || DEFAULT_RATE)}
+                className="w-full pl-9 pr-4 py-3 border border-input rounded-lg bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(var(--accent))]/40"
+              />
             </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {PKG_ORDER.map(pkg => {
-                const price = getPrice(pkg);
-                const isPopular = PKG_BADGE[pkg];
-                const info = PACKAGES[pkg];
-                return (
-                  <div key={pkg} className={cn(
-                    'relative rounded-2xl border p-6 flex flex-col bg-card transition-all hover:shadow-lg',
-                    isPopular
-                      ? 'border-[hsl(var(--accent))] shadow-xl shadow-[hsl(var(--accent))]/10 ring-2 ring-[hsl(var(--accent))]/20'
-                      : 'border-border hover:border-[hsl(var(--accent))]/30'
-                  )}>
-                    {isPopular && (
-                      <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[hsl(var(--accent))] text-white text-xs px-3 whitespace-nowrap">
-                        ⭐ {isPopular}
-                      </Badge>
-                    )}
-                    <h3 className="font-bold text-lg font-display capitalize mb-1">{info?.label || pkg}</h3>
-                    <p className="text-xs text-muted-foreground mb-4">{info?.description}</p>
-                    {price ? (
-                      <div className="mb-5">
-                        <span className="text-2xl font-bold font-display">{fmt(price.amount, price.symbol)}</span>
-                        <span className="text-muted-foreground text-sm"> /{duration === 'daily' ? 'day' : duration === 'weekly' ? 'week' : 'month'}</span>
-                      </div>
-                    ) : (
-                      <div className="mb-5">
-                        <span className="text-lg font-semibold text-muted-foreground">Contact us</span>
-                      </div>
-                    )}
-                    <ul className="space-y-2 mb-6 flex-1">
-                      {(PKG_FEATURES[pkg] || []).map(f => (
-                        <li key={f} className="flex items-start gap-2 text-sm">
-                          <Check className="w-4 h-4 text-[hsl(var(--accent))] mt-0.5 shrink-0" />
-                          <span className="text-muted-foreground">{f}</span>
-                        </li>
-                      ))}
-                    </ul>
-                    <Link to="/register">
-                      <Button
-                        className={cn('w-full font-semibold', isPopular ? 'bg-[hsl(var(--accent))] text-white hover:bg-[hsl(var(--accent))]/90' : '')}
-                        variant={isPopular ? 'default' : 'outline'}
-                      >
-                        Get started
-                      </Button>
-                    </Link>
-                  </div>
-                );
-              })}
+            <p className="text-xs text-muted-foreground mt-1">Default rate: MK {DEFAULT_RATE.toLocaleString()} per $1. Updated in admin settings.</p>
+          </div>
+          {mwk !== null && !isNaN(mwk) && (
+            <div className="bg-[hsl(var(--accent))]/10 border border-[hsl(var(--accent))]/20 rounded-xl p-5 text-center">
+              <p className="text-xs text-muted-foreground mb-1">You will pay approximately</p>
+              <p className="text-3xl font-display font-extrabold text-[hsl(var(--accent))]">
+                MK {mwk.toLocaleString()}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">for ${parseFloat(usd).toFixed(2)} USD at MK {rate.toLocaleString()}/USD</p>
             </div>
           )}
         </div>
-      </section>
-
-      {/* ── Other Services ───────────────────────────────────────────────────── */}
-      <section className="py-16 bg-secondary/30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-10">
-            <Badge variant="outline" className="mb-3 text-[hsl(var(--accent))] border-[hsl(var(--accent))]/30">Other services</Badge>
-            <h2 className="text-2xl sm:text-3xl font-bold font-display">Custom-quoted solutions</h2>
-            <p className="text-muted-foreground mt-2">These are tailored to your business needs. We'll discuss scope and provide a personalised quote.</p>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {SERVICES.map(s => (
-              <div key={s.title} className="bg-card border border-border rounded-2xl p-5 flex flex-col hover:border-[hsl(var(--accent))]/30 hover:shadow-md transition-all">
-                <div className="flex items-center gap-3 mb-3">
-                  <span className="text-2xl">{s.emoji}</span>
-                  <h3 className="font-bold text-foreground">{s.title}</h3>
-                </div>
-                <p className="text-sm text-muted-foreground leading-relaxed flex-1">{s.desc}</p>
-                <Link to="/contact" className="mt-4">
-                  <Button variant="outline" size="sm" className="w-full">
-                    {s.cta} <ArrowRight className="ml-1.5 w-3.5 h-3.5" />
-                  </Button>
-                </Link>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── CTA ──────────────────────────────────────────────────────────────── */}
-      <section className="py-16 bg-[hsl(var(--primary))] text-white text-center">
-        <div className="max-w-2xl mx-auto px-4">
-          <MessageSquare className="w-10 h-10 mx-auto mb-4 text-[hsl(var(--accent))]" />
-          <h2 className="text-3xl font-bold font-display mb-4">Not sure which package?</h2>
-          <p className="text-white/70 mb-7 leading-relaxed">
-            Start with a discovery conversation. We'll understand your goals and recommend exactly what makes sense for your business.
-          </p>
+        <div className="mt-6 pt-5 border-t border-border">
+          <p className="text-xs text-muted-foreground mb-3">Need to make a payment or set up online payment access?</p>
           <Link to="/contact">
-            <Button className="bg-[hsl(var(--accent))] hover:bg-[hsl(var(--accent))]/90 text-white font-bold px-8 h-11">
-              Book a discovery call <ArrowRight className="ml-2 w-4 h-4" />
+            <Button variant="outline" size="sm" className="w-full gap-2">
+              <MessageSquare className="w-4 h-4" /> Start a discussion
             </Button>
           </Link>
         </div>
+      </div>
+    </div>
+  );
+}
+
+export default function PricingPage() {
+  const [activeTab, setActiveTab] = useState('meta-ads');
+  const service = PLANS[activeTab];
+
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Hero */}
+      <section className="bg-[hsl(var(--primary))] text-white py-16 px-4 text-center">
+        <Badge className="mb-4 bg-white/10 text-white border-white/20 text-xs">Transparent pricing</Badge>
+        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-display font-extrabold mb-4 leading-tight">
+          Simple, honest pricing
+        </h1>
+        <p className="text-white/60 max-w-xl mx-auto text-base">
+          Every service priced clearly. Pick the tab for the service you need — or mix and match to build your complete growth package.
+        </p>
+      </section>
+
+      {/* Tab selector */}
+      <div className="sticky top-16 z-30 bg-background/95 backdrop-blur border-b border-border">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 overflow-x-auto">
+          <div className="flex gap-1 py-2 min-w-max">
+            {TABS.map(t => (
+              <button
+                key={t.key}
+                onClick={() => setActiveTab(t.key)}
+                className={cn(
+                  'px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all',
+                  activeTab === t.key
+                    ? 'bg-[hsl(var(--primary))] text-white shadow'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                )}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Service content */}
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
+        <div className="mb-10">
+          <h2 className="text-2xl sm:text-3xl font-display font-extrabold text-foreground mb-2">{service.title}</h2>
+          <p className="text-muted-foreground max-w-2xl text-sm leading-relaxed">{service.desc}</p>
+          {service.billing !== 'calculator' && (
+            <Badge className="mt-3 text-[10px] bg-muted text-muted-foreground border-border capitalize">
+              {service.billing === 'monthly' ? '📅 Monthly retainer' : service.billing === 'one-off' ? '✅ One-off payment' : ''}
+            </Badge>
+          )}
+        </div>
+
+        {/* UGC included features */}
+        {service.included && (
+          <div className="mb-10 bg-[hsl(var(--accent))]/5 border border-[hsl(var(--accent))]/20 rounded-2xl p-6">
+            <p className="text-sm font-bold text-foreground mb-4">Every UGC package includes:</p>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {service.included.map(f => (
+                <div key={f} className="flex items-start gap-2">
+                  <Check className="w-4 h-4 text-[hsl(var(--accent))] flex-shrink-0 mt-0.5" />
+                  <span className="text-sm text-foreground">{f}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Calculator */}
+        {service.billing === 'calculator' ? (
+          <DollarCalculator />
+        ) : (
+          <>
+            <div className={cn('grid gap-6', service.packages.length === 3 ? 'md:grid-cols-3' : 'md:grid-cols-2 lg:grid-cols-4')}>
+              {service.packages.map((plan, i) => (
+                <PlanCard key={plan.name} plan={plan} popular={!!plan.badge && plan.badge.toLowerCase().includes('pop')} />
+              ))}
+            </div>
+            {/* Custom quote block for web */}
+            {service.customNote && (
+              <div className="mt-8 bg-muted border border-border rounded-2xl p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div>
+                  <p className="font-bold text-foreground text-sm mb-1">{service.customNote.title}</p>
+                  <p className="text-xs text-muted-foreground">{service.customNote.desc}</p>
+                </div>
+                <Link to={service.customNote.link} className="flex-shrink-0">
+                  <Button variant="outline" size="sm" className="gap-2 whitespace-nowrap">
+                    <MessageSquare className="w-4 h-4" /> {service.customNote.cta}
+                  </Button>
+                </Link>
+              </div>
+            )}
+          </>
+        )}
+      </section>
+
+      {/* Bottom CTA */}
+      <section className="bg-muted/40 border-t border-border py-14 text-center px-4">
+        <h2 className="text-2xl font-display font-extrabold text-foreground mb-3">Not sure which package is right?</h2>
+        <p className="text-muted-foreground text-sm mb-6 max-w-md mx-auto">
+          Start a conversation. We'll look at your goals and recommend exactly what you need — nothing more.
+        </p>
+        <Link to="/contact">
+          <Button size="lg" className="bg-[hsl(var(--primary))] text-white hover:bg-[hsl(var(--primary))]/90 font-semibold gap-2">
+            <MessageSquare className="w-4 h-4" /> Start a discussion
+          </Button>
+        </Link>
       </section>
     </div>
   );

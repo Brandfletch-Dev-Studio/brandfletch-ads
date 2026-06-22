@@ -129,7 +129,7 @@ export default function PublicLayout() {
             <p className="text-white/50 text-xs mb-3 leading-relaxed">Start with a discovery conversation — we'll create a strategy built around your goals.</p>
             <Link to="/contact">
               <Button size="sm" className="bg-[hsl(var(--accent))] text-white hover:bg-[hsl(var(--accent))]/90 font-semibold w-full">
-                Book a discovery call
+                Start a discussion
               </Button>
             </Link>
           </div>
