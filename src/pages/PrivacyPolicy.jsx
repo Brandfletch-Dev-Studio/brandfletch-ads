@@ -1,8 +1,7 @@
 import { Link } from 'react-router-dom';
-import { Shield, Lock, Eye, Database, ArrowRight } from 'lucide-react';
+import { Shield, Lock, Eye, Database } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import BrandLogo from '@/components/BrandLogo';
 
 export default function PrivacyPolicy() {
   const sections = [
@@ -75,7 +74,7 @@ export default function PrivacyPolicy() {
       ]
     },
     {
-      title: '8. Children\'s Privacy',
+      title: "8. Children's Privacy",
       icon: Shield,
       content: [
         'Our services are not intended for individuals under the age of 18.',
@@ -105,17 +104,6 @@ export default function PrivacyPolicy() {
 
   return (
     <div className="p-4 lg:p-8 max-w-4xl mx-auto space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <Link to="/">
-          <BrandLogo size="sidebar" black />
-        </Link>
-        <nav className="flex gap-4">
-          <Link to="/about" className="text-sm font-medium text-muted-foreground hover:text-foreground">About</Link>
-          <Link to="/contact" className="text-sm font-medium text-muted-foreground hover:text-foreground">Contact</Link>
-        </nav>
-      </div>
-
       {/* Title */}
       <div className="text-center space-y-4 py-8">
         <Shield className="w-16 h-16 text-primary mx-auto" />
@@ -135,9 +123,7 @@ export default function PrivacyPolicy() {
             </CardHeader>
             <CardContent className="space-y-3 text-muted-foreground">
               {section.content.map((paragraph, idx) => (
-                <p key={idx} className="text-sm leading-relaxed">
-                  {paragraph.startsWith('•') || paragraph.startsWith('-') ? paragraph : paragraph}
-                </p>
+                <p key={idx} className="text-sm leading-relaxed">{paragraph}</p>
               ))}
             </CardContent>
           </Card>
@@ -157,17 +143,12 @@ export default function PrivacyPolicy() {
         </CardContent>
       </Card>
 
-      {/* Footer */}
-      <div className="border-t pt-6 mt-8">
-        <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-          <BrandLogo size="sidebar" black />
-          <p className="text-sm text-muted-foreground">
-            © {new Date().getFullYear()} Brandfletch Media. All rights reserved.
-          </p>
-          <div className="flex gap-4">
-            <Link to="/privacy-policy" className="text-sm text-primary">Privacy Policy</Link>
-            <Link to="/terms" className="text-sm text-muted-foreground hover:text-foreground">Terms & Conditions</Link>
-          </div>
+      {/* Footer links */}
+      <div className="border-t pt-6 mt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+        <p className="text-sm text-muted-foreground">© {new Date().getFullYear()} Brandfletch Media. All rights reserved.</p>
+        <div className="flex gap-4">
+          <Link to="/privacy-policy" className="text-sm text-primary">Privacy Policy</Link>
+          <Link to="/terms" className="text-sm text-muted-foreground hover:text-foreground">Terms & Conditions</Link>
         </div>
       </div>
     </div>
