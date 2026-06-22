@@ -13,7 +13,6 @@ export default function TopBar({ onMenuToggle, currentUser, isStaff }) {
 
   const { data: unreadNotifications = [] } = useQuery({
     queryKey: ['unread-notifications', currentUser?.id],
-    // Bug fix: filter() options must be an object, not positional args
     queryFn: () => base44.entities.Notification.filter(
       { recipient_id: currentUser?.id, is_read: false },
       { sort: '-created_date', limit: 20 }
@@ -21,8 +20,6 @@ export default function TopBar({ onMenuToggle, currentUser, isStaff }) {
     enabled: !!currentUser?.id,
     refetchInterval: 30000,
   });
-  // Bug fix: was using .length which counts ALL returned — but we fetch with limit:20
-  // The actual unread count is correctly the length here since we filter is_read: false
   const unreadCount = unreadNotifications.length;
 
   return (
@@ -42,10 +39,10 @@ export default function TopBar({ onMenuToggle, currentUser, isStaff }) {
       <div className="absolute left-1/2 -translate-x-1/2 lg:hidden flex items-center gap-2">
         <img
           src="https://media.base44.com/images/public/6a1df082a0de66cf554f8fdd/eeb543716_file_0000000024d0722fa20034e2dedcbc9e.png"
-          alt="Brandfletch Media"
+          alt="Brandfletch"
           className="w-7 h-7 rounded-xl object-contain"
         />
-        <span className="font-display font-bold text-sm text-foreground leading-none">Brandfletch Media</span>
+        <span className="font-display font-bold text-sm text-foreground leading-none">Brandfletch</span>
       </div>
 
       {/* Right: actions */}
