@@ -708,7 +708,7 @@ function MaterialsTab({ user }) {
   const refLink = `${window.location.origin}/register?ref=${code}`;
 
   useEffect(() => {
-    base44.entities.AffiliateMarketingMaterial.filter({ is_active: true }, 'sort_order')
+    base44.entities.AffiliateMarketingMaterial.filter({ is_active: true }, { sort: 'sort_order' })
       .then(setMaterials).catch(() => setMaterials([]))
       .finally(() => setLoading(false));
   }, []);
@@ -964,16 +964,16 @@ export default function Referrals() {
     if (!user?.id) return;
     try {
       const [refs, comms, pays, settings] = await Promise.all([
-        base44.entities.Referral.filter({ referrer_id: user.id }, '-created_date').then(async (byId) => {
+        base44.entities.Referral.filter({ referrer_id: user.id }, { sort: '-created_date' }).then(async (byId) => {
           // Also catch old records that only stored the referral code (pre-fix registrations)
           const code = user.referral_code || (user.id ? `BF-${user.id.slice(-6).toUpperCase()}` : '');
-          const byCode = code ? await base44.entities.Referral.filter({ referral_code: code }, '-created_date').catch(() => []) : [];
+          const byCode = code ? await base44.entities.Referral.filter({ referral_code: code }, { sort: '-created_date' }).catch(() => []) : [];
           // Merge deduplicated
           const seen = new Set(byId.map(r => r.id));
           return [...byId, ...byCode.filter(r => !seen.has(r.id))];
         }).catch(() => []),
-        base44.entities.AffiliateCommission.filter({ affiliate_id: user.id }, '-created_date').catch(() => []),
-        base44.entities.AffiliatePayout.filter({ affiliate_id: user.id }, '-created_date').catch(() => []),
+        base44.entities.AffiliateCommission.filter({ affiliate_id: user.id }, { sort: '-created_date' }).catch(() => []),
+        base44.entities.AffiliatePayout.filter({ affiliate_id: user.id }, { sort: '-created_date' }).catch(() => []),
         base44.entities.AffiliateSettings.list({ limit: 1 }).catch(() => []),
       ]);
       setReferrals(refs);
