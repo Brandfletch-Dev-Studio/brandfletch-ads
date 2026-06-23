@@ -48,7 +48,8 @@ export const AuthProvider = ({ children }) => {
         .single();
 
       if (profile) {
-        setUser(profile);
+        // Treat null/undefined onboarded as true — onboarding flow is removed
+        setUser({ ...profile, onboarded: profile.onboarded !== false ? true : true });
         setIsAuthenticated(true);
       } else {
         // No profile row yet — create a stub. Always onboarded=true.
@@ -68,12 +69,13 @@ export const AuthProvider = ({ children }) => {
       }
     } catch (err) {
       console.error('Profile load failed:', err);
-      // Still set basic user from auth
+      // Still set basic user from auth — always onboarded:true so no redirect loop
       setUser({
         id: authUser.id,
         email: authUser.email,
         full_name: authUser.user_metadata?.full_name || authUser.email,
         role: authUser.user_metadata?.role || 'user',
+        onboarded: true,
       });
       setIsAuthenticated(true);
     }
@@ -157,3 +159,4 @@ export const useAuth = () => {
   }
   return context;
 };
+
