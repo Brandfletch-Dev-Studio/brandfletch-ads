@@ -1,0 +1,63 @@
+{
+  "name": "UgcOrder",
+  "type": "object",
+  "properties": {
+    "order_ref": { "type": "string", "description": "Human-readable ref e.g. BF-UGC-00042" },
+    "user_id":   { "type": "string" },
+    "user_name": { "type": "string" },
+    "user_email":{ "type": "string" },
+
+    "package": {
+      "type": "string",
+      "enum": ["starter","growth","brand_campaign"],
+      "description": "Starter=1 video, Growth=3 videos, Brand Campaign=10 videos"
+    },
+    "num_videos": { "type": "number" },
+    "amount":    { "type": "number",  "description": "Amount charged in local currency" },
+    "currency":  { "type": "string",  "description": "e.g. MWK, ZMW, KES" },
+    "amount_usd":{ "type": "number",  "description": "USD equivalent for admin reference" },
+
+    "status": {
+      "type": "string",
+      "enum": ["pending_payment","awaiting_brief","in_production","review","revision_requested","completed","cancelled"],
+      "default": "pending_payment"
+    },
+
+    "payment_status": {
+      "type": "string",
+      "enum": ["unpaid","pending_verification","paid","refunded"],
+      "default": "unpaid"
+    },
+    "payment_method":   { "type": "string" },
+    "payment_reference":{ "type": "string" },
+    "payment_proof_url":{ "type": "string" },
+    "paychangu_tx_ref": { "type": "string" },
+
+    "brand_name":       { "type": "string" },
+    "product_service":  { "type": "string",  "description": "What is being advertised" },
+    "target_audience":  { "type": "string" },
+    "campaign_goal": {
+      "type": "string",
+      "enum": ["brand_awareness","product_launch","sales_conversion","engagement","testimonial","other"]
+    },
+    "key_messages":     { "type": "string",  "description": "Main messages / talking points" },
+    "tone_style":       { "type": "string",  "description": "e.g. energetic, professional, humorous, emotional" },
+    "reference_links":  { "type": "string",  "description": "URLs to reference videos or inspiration" },
+    "special_requirements": { "type": "string" },
+    "brand_assets_url": { "type": "string",  "description": "Link to uploaded brand assets (logo, fonts, colors)" },
+    "script_provided":  { "type": "boolean", "default": false },
+    "script_content":   { "type": "string" },
+
+    "assigned_creator_id":   { "type": "string" },
+    "assigned_creator_name": { "type": "string" },
+    "admin_notes":           { "type": "string" },
+    "deliverables_url":      { "type": "string", "description": "Link to final delivered videos" },
+    "revision_notes":        { "type": "string" },
+    "revision_count":        { "type": "number", "default": 0 },
+
+    "brief_submitted_at":  { "type": "string", "format": "date-time" },
+    "production_started_at":{ "type": "string", "format": "date-time" },
+    "completed_at":        { "type": "string", "format": "date-time" }
+  },
+  "required": ["user_id","package","amount","currency"]
+}
