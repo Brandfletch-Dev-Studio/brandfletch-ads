@@ -1,6 +1,6 @@
 import { useLocation } from 'react-router-dom';
 import { Link } from 'react-router-dom';
-import { Home, Palette, Megaphone, Gift, LifeBuoy } from 'lucide-react';
+import { Home, Video, Megaphone, Gift, LifeBuoy } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/AuthContext';
 
@@ -13,7 +13,7 @@ export default function BottomNav({ isStaff, unreadCount }) {
   const navItems = [
     { path: '/dashboard',  label: 'Home',      icon: Home },
     { path: '/campaigns',  label: 'Campaigns', icon: Megaphone },
-    { path: '/designs',    label: 'Designs',   icon: Palette },
+    { path: '/ugc-ads',    label: 'UGC Ads',   icon: Video },
     { path: '/referrals',  label: 'Refer',     icon: Gift },
     { path: '/support',    label: 'Support',   icon: LifeBuoy },
   ];
