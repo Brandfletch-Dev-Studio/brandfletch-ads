@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import RichTextEditor from '@/components/RichTextEditor';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/api/base44Client';
 import { toast } from 'sonner';
@@ -193,7 +194,7 @@ export default function AdminBlog() {
       {/* Edit/Create dialog */}
       {editing !== null && (
         <Dialog open onOpenChange={() => setEditing(null)}>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{editing.id ? 'Edit Post' : 'New Blog Post'}</DialogTitle>
             </DialogHeader>
@@ -245,8 +246,14 @@ export default function AdminBlog() {
                 <Input value={editing.cover_image} onChange={e=>setEditing(p=>({...p,cover_image:e.target.value}))} placeholder="https://…" className="mt-1" />
               </div>
               <div>
-                <Label>Content <span className="text-xs text-muted-foreground">(Markdown supported)</span></Label>
-                <Textarea value={editing.content} onChange={e=>setEditing(p=>({...p,content:e.target.value}))} rows={14} className="mt-1 font-mono text-sm resize-none" placeholder="Write your post in Markdown…" />
+                <Label>Content</Label>
+                <div className="mt-1">
+                  <RichTextEditor
+                    value={editing.content}
+                    onChange={(val) => setEditing(p => ({ ...p, content: val }))}
+                    placeholder="Write your post content here — use the toolbar to add headings, links, images, buttons and more…"
+                  />
+                </div>
               </div>
               <div>
                 <Label>Author Name</Label>
