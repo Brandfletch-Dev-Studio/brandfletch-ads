@@ -28,7 +28,6 @@ import Register from '@/pages/Register';
 import ForgotPassword from '@/pages/ForgotPassword';
 import ResetPassword from '@/pages/ResetPassword';
 import AuthCallback from '@/pages/AuthCallback';
-import Onboarding from '@/pages/Onboarding';
 import ScrollToTop from '@/components/ScrollToTop';
 
 // ── App pages (lazy) ──
@@ -134,11 +133,6 @@ function AuthGuard({ children }) {
     return <Navigate to={defaultAuthRoute()} replace />;
   }
 
-  // Onboarding gate (only if explicitly false — not null/undefined = legacy)
-  if (user.onboarded === false && pathname !== '/onboarding') {
-    return <Navigate to="/onboarding" replace />;
-  }
-
   return children;
 }
 
@@ -153,7 +147,6 @@ const AppRoutes = () => (
         <Route path="/auth/callback"   element={<AuthCallback />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password"  element={<ResetPassword />} />
-        <Route path="/onboarding"      element={<Onboarding />} />
         <Route path="/login"    element={<AuthPageRoute><Login /></AuthPageRoute>} />
         <Route path="/register" element={<AuthPageRoute><Register /></AuthPageRoute>} />
 
@@ -247,3 +240,4 @@ function App() {
 }
 
 export default App;
+
