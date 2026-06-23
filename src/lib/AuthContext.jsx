@@ -51,20 +51,17 @@ export const AuthProvider = ({ children }) => {
         setUser(profile);
         setIsAuthenticated(true);
       } else {
-        // No profile yet — create stub. Mark as onboarded=false only if truly new
-        // (created_at within last 60s). Older accounts without a profile row get
-        // onboarded:true so they skip onboarding and land on dashboard.
-        const createdAt = authUser.created_at ? new Date(authUser.created_at) : null;
-        const isNewAccount = createdAt && (Date.now() - createdAt.getTime()) < 60_000;
+        // No profile row yet — create a stub. Always onboarded=true.
+        // Profile completion happens via the dashboard checklist.
         const newProfile = {
           id: authUser.id,
           email: authUser.email,
           full_name: authUser.user_metadata?.full_name || authUser.email.split('@')[0],
           role: authUser.user_metadata?.role || 'user',
           referred_by: authUser.user_metadata?.referred_by || null,
-          onboarded: !isNewAccount, // returning users skip onboarding
+          onboarded: true,
         };
-        // Insert only — never overwrite an existing row (preserves onboarded=true)
+        // Insert only — never overwrite an existing row
         supabase.from('User').insert(newProfile).then(() => {});
         setUser(newProfile);
         setIsAuthenticated(true);
