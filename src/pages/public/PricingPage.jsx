@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/api/base44Client';
 import { LOCAL_PRICES } from '@/lib/pricing';
+import { useAuth } from '@/lib/AuthContext';
 
 const DEFAULT_RATE = 5000;
 
