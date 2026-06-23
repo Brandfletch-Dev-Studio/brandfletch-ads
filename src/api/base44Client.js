@@ -13,8 +13,8 @@ import { createClient } from '@supabase/supabase-js';
 
 // ── Supabase client ───────────────────────────────────────────────────────────
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://placeholder.supabase.co';
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'placeholder-anon-key';
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://cxfebvtsuzcbkpzezqom.supabase.co';
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN4ZmVidnRzdXpjYmtwemV6cW9tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIwMTk2NzQsImV4cCI6MjA5NzU5NTY3NH0.sGKXAZJayUx4IQ8pwnEPANA3rWW1NJa1x-pbRLgU5IQ';
 
 if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
   console.error('[Supabase] Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY env vars — auth and data calls will fail');
@@ -374,3 +374,5 @@ export const base44 = {
 };
 
 export default base44;
+
+
