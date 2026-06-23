@@ -20,8 +20,9 @@ export default function Register() {
   const referralCode = new URLSearchParams(window.location.search).get('ref') || '';
 
   useEffect(() => {
+    // Already logged in — send to dashboard, not onboarding (flow removed)
     base44.auth.isAuthenticated().then((authed) => {
-      if (authed) navigate('/onboarding');
+      if (authed) navigate('/dashboard', { replace: true });
     });
   }, []);
 
