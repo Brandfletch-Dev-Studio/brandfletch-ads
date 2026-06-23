@@ -97,7 +97,7 @@ export default function RichTextEditor({ value, onChange, placeholder }) {
           '[&_blockquote]:border-l-4 [&_blockquote]:border-primary [&_blockquote]:pl-4 [&_blockquote]:text-muted-foreground',
         )}
         data-placeholder={placeholder || 'Write your blog post here…'}
-        style={{ WebkitUserModify: 'read-write-plaintext-only' } as any}
+        style={{ WebkitUserModify: 'read-write-plaintext-only' }}
       />
       <style>{`
         [contenteditable]:empty:before {
@@ -112,3 +112,4 @@ export default function RichTextEditor({ value, onChange, placeholder }) {
     </div>
   );
 }
+
