@@ -154,10 +154,47 @@ export default function BlogPost() {
 
       {/* Content */}
       <div className="max-w-3xl mx-auto px-4 py-12">
+        {/* Inline article styles — no @tailwindcss/typography plugin needed */}
+        <style>{`
+          .bf-article { color: hsl(var(--foreground)); line-height: 1.8; font-size: 1.0625rem; }
+          .bf-article h1,.bf-article h2,.bf-article h3,.bf-article h4 {
+            font-weight: 700; color: hsl(var(--foreground)); margin: 1.5em 0 0.5em; line-height: 1.3;
+          }
+          .bf-article h1 { font-size: 2em; }
+          .bf-article h2 { font-size: 1.4em; border-bottom: 1px solid hsl(var(--border)); padding-bottom: 0.3em; }
+          .bf-article h3 { font-size: 1.15em; }
+          .bf-article p  { margin: 0 0 1em; color: hsl(var(--foreground) / 0.9); }
+          .bf-article a  { color: hsl(var(--primary)); text-decoration: underline; }
+          .bf-article strong { font-weight: 700; color: hsl(var(--foreground)); }
+          .bf-article em { font-style: italic; }
+          .bf-article ul,.bf-article ol { padding-left: 1.5em; margin: 0 0 1em; }
+          .bf-article ul { list-style: disc; }
+          .bf-article ol { list-style: decimal; }
+          .bf-article li { margin-bottom: 0.4em; color: hsl(var(--foreground) / 0.9); }
+          .bf-article blockquote {
+            border-left: 4px solid hsl(var(--primary)); background: hsl(var(--muted));
+            padding: 1em 1.25em; margin: 1.5em 0; border-radius: 0 8px 8px 0;
+            color: hsl(var(--muted-foreground)); font-style: italic;
+          }
+          .bf-article code {
+            background: hsl(var(--muted)); color: hsl(var(--primary));
+            padding: 0.15em 0.4em; border-radius: 4px; font-size: 0.875em;
+          }
+          .bf-article pre {
+            background: hsl(var(--muted)); border: 1px solid hsl(var(--border));
+            border-radius: 8px; padding: 1em; overflow-x: auto; margin: 1.5em 0;
+          }
+          .bf-article pre code { background: none; padding: 0; color: hsl(var(--foreground)); }
+          .bf-article img { max-width: 100%; border-radius: 12px; margin: 1.5em 0; }
+          .bf-article hr { border: none; border-top: 1px solid hsl(var(--border)); margin: 2em 0; }
+          .bf-article table { width: 100%; border-collapse: collapse; margin: 1.5em 0; }
+          .bf-article th,.bf-article td { border: 1px solid hsl(var(--border)); padding: 0.6em 1em; }
+          .bf-article th { background: hsl(var(--muted)); font-weight: 600; }
+        `}</style>
         <div
           id="blog-content"
-          className="prose prose-lg max-w-none text-foreground prose-headings:text-foreground prose-headings:font-bold prose-p:text-foreground/90 prose-p:leading-relaxed prose-a:text-primary prose-a:underline prose-strong:text-foreground prose-blockquote:border-primary prose-blockquote:text-muted-foreground prose-code:text-primary prose-code:bg-muted prose-code:px-1 prose-code:rounded prose-pre:bg-muted prose-pre:border prose-pre:border-border prose-img:rounded-xl prose-li:text-foreground/90"
-          dangerouslySetInnerHTML={{ __html: htmlContent }}
+          className="bf-article"
+          dangerouslySetInnerHTML={{ __html: htmlContent || '<p>This post has no content yet.</p>' }}
         />
 
         <div className="mt-10 pt-8 border-t border-border flex items-center justify-between">
@@ -207,3 +244,4 @@ export default function BlogPost() {
     </div>
   );
 }
+
