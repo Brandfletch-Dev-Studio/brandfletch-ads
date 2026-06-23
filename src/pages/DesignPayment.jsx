@@ -29,10 +29,10 @@ export default function DesignPayment() {
     setUser(u);
 
     const subscriptions = await base44.entities.PlatformSubscription.filter({
-      user_id: u.id,
+      user_id: u?.id,
       subscription_type: 'design_retainer',
       status: 'pending',
-    }, '-created_date');
+    }, { sort: '-created_date' });
 
     const sub = subscriptions[0] || null;
     if (sub) setSubscription(sub);
@@ -44,11 +44,11 @@ export default function DesignPayment() {
     setIsMalawi(isMW);
 
     if (!isMW && userCountry) {
-      const methods = await base44.entities.PaymentMethod.filter({ is_active: true, country: userCountry }, 'sort_order');
+      const methods = await base44.entities.PaymentMethod.filter({ is_active: true, country: userCountry }, { sort: 'sort_order' });
       setPaymentMethods(methods);
     } else if (!isMW) {
       // Try fetching generic payment methods
-      const methods = await base44.entities.PaymentMethod.filter({ is_active: true }, 'sort_order');
+      const methods = await base44.entities.PaymentMethod.filter({ is_active: true }, { sort: 'sort_order' });
       setPaymentMethods(methods);
     }
   }
