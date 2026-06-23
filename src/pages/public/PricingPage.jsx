@@ -424,6 +424,12 @@ export default function PricingPage() {
       return;
     }
 
+    // UGC Ads — dedicated ordering page
+    if (serviceType === 'ugc-ads') {
+      navigate(isLoggedIn ? '/ugc-ads' : '/register?service=ugc-ads');
+      return;
+    }
+
     // All other services — logged-in users go to support to place order
     if (isLoggedIn) {
       navigate('/support');
