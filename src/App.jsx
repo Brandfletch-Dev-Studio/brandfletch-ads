@@ -65,6 +65,7 @@ const AdminPricing       = lazy(() => import('@/pages/admin/AdminPricing'));
 const AdminSupportTickets = lazy(() => import('@/pages/admin/AdminSupportTickets'));
 const AdminReferrals     = lazy(() => import('@/pages/admin/AdminReferrals'));
 const AdminDesigns       = lazy(() => import('@/pages/admin/AdminDesigns'));
+const AdminUgcAds        = lazy(() => import('@/pages/admin/AdminUgcAds'));
 const AdminLeads       = lazy(() => import('@/pages/admin/AdminLeads'));
 const AdminBlog        = lazy(() => import('@/pages/admin/AdminBlog'));
 
@@ -144,9 +145,11 @@ const AuthenticatedApp = () => {
     return <Navigate to={getDefaultAuthRoute()} replace />;
   }
 
-  // Onboarding flow removed — profile completion is now done via dashboard checklist.
-  // Legacy guard kept commented out to avoid redirect loops.
-  // if (currentUser && currentUser.onboarded === false && !isOnSkipRoute) { ... }
+  // Only redirect to onboarding if onboarded is explicitly false.
+  // null/undefined means the field hasn't loaded yet or is a legacy account — do NOT redirect.
+  if (currentUser && currentUser.onboarded === false && !isOnSkipRoute) {
+    return <Navigate to="/onboarding" replace />;
+  }
 
   const STAFF_ROLES = ['admin','super_admin','ads_manager','campaign_manager','finance','sales_manager','creative_ops_director','designer'];
   const isStaff = currentUser && STAFF_ROLES.includes(currentUser.role);
@@ -189,6 +192,7 @@ const AuthenticatedApp = () => {
           <Route path="/settings"             element={<ProfileSettings />} />
           <Route path="/designs"              element={<Designs />} />
           <Route path="/designs/payment"      element={<DesignPayment />} />
+          <Route path="/ugc-ads"              element={<UgcAds />} />
           <Route path="/leads"                element={<LeadsComingSoon />} />
           <Route path="/leads/forms"          element={<LeadForms />} />
           <Route path="/referrals"            element={<Referrals />} />
@@ -209,6 +213,7 @@ const AuthenticatedApp = () => {
           <Route path="/admin/settings"       element={<AdminSettings />} />
           <Route path="/admin/ads"            element={<AdminAds />} />
           <Route path="/admin/designs"        element={<AdminDesigns />} />
+          <Route path="/admin/ugc-ads"        element={<AdminUgcAds />} />
           <Route path="/admin/leads"          element={<AdminLeads />} />
           <Route path="/admin/audit-log"      element={<AdminAuditLog />} />
           <Route path="/admin/pricing"        element={<AdminPricing />} />
