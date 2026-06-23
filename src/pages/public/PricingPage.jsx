@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Check, ArrowRight, MessageSquare, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -159,8 +159,8 @@ const META_PKG_FEATURES = {
 const META_PKG_BADGES = { starter: null, growth: 'Popular', business: 'Most Popular', premium: null };
 
 // ── Plan card ─────────────────────────────────────────────────────────────────
-function PlanCard({ plan, popular }) {
-  return (
+function PlanCard({ plan, popular, onCta }) {
+  const content = (
     <div className={cn(
       'relative flex flex-col bg-card border rounded-2xl overflow-hidden transition-all duration-200 hover:shadow-lg',
       popular ? 'border-[hsl(var(--accent))] shadow-md ring-1 ring-[hsl(var(--accent))]/30' : 'border-border'
@@ -190,17 +190,19 @@ function PlanCard({ plan, popular }) {
             </li>
           ))}
         </ul>
-        <Link to={plan.ctaLink || '/register'}>
-          <Button className={cn('w-full font-semibold', popular
+        <Button
+          onClick={onCta}
+          className={cn('w-full font-semibold', popular
             ? 'bg-[hsl(var(--accent))] text-white hover:bg-[hsl(var(--accent))]/90'
             : 'bg-[hsl(var(--primary))] text-white hover:bg-[hsl(var(--primary))]/90'
-          )}>
-            {plan.cta} <ArrowRight className="ml-1.5 w-4 h-4" />
-          </Button>
-        </Link>
+          )}
+        >
+          {plan.cta} <ArrowRight className="ml-1.5 w-4 h-4" />
+        </Button>
       </div>
     </div>
   );
+  return content;
 }
 
 // ── USD → MWK calculator ──────────────────────────────────────────────────────
@@ -257,7 +259,7 @@ function DollarCalculator({ defaultRate }) {
 }
 
 // ── Meta Ads section — pulls from DB ─────────────────────────────────────────
-function MetaAdsPricing({ dbRows, loading, country, onCountryChange }) {
+function MetaAdsPricing({ dbRows, loading, country, onCountryChange, onPlanSelect }) {
   const COUNTRIES = ['Malawi', 'Zambia', 'South Africa', 'Kenya', 'Tanzania'];
   const PKG_ORDER = ['starter', 'growth', 'business', 'premium'];
   const DURATION_OPTS = [
@@ -285,7 +287,8 @@ function MetaAdsPricing({ dbRows, loading, country, onCountryChange }) {
       badge:     META_PKG_BADGES[pkg] || null,
       features:  META_PKG_FEATURES[pkg] || [],
       cta:       pkg === 'premium' ? 'Talk to us' : 'Get started',
-      ctaLink:   pkg === 'premium' ? '/contact' : '/register',
+      ctaLink:   pkg === 'premium' ? '/contact' : `/register?service=meta-ads&package=${pkg}&duration=${duration}`,
+      pkgSlug:   pkg,
     };
   });
 
@@ -331,7 +334,12 @@ function MetaAdsPricing({ dbRows, loading, country, onCountryChange }) {
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
           {packages.map((p, i) => (
-            <PlanCard key={p.name} plan={p} popular={p.badge?.toLowerCase().includes('pop') ?? false} />
+            <PlanCard
+              key={p.name}
+              plan={p}
+              popular={p.badge?.toLowerCase().includes('pop') ?? false}
+              onCta={() => onPlanSelect && onPlanSelect(p)}
+            />
           ))}
         </div>
       )}
@@ -353,11 +361,13 @@ function MetaAdsPricing({ dbRows, loading, country, onCountryChange }) {
 
 // ── Main component ────────────────────────────────────────────────────────────
 export default function PricingPage() {
+  const navigate = useNavigate();
   const [activeTab,  setActiveTab]  = useState('meta-ads');
   const [country,    setCountry]    = useState('Malawi');
   const [dbRows,     setDbRows]     = useState([]);
   const [loading,    setLoading]    = useState(true);
   const [mwkRate,    setMwkRate]    = useState(DEFAULT_RATE);
+  const [authedUser, setAuthedUser] = useState(null); // null = unknown, false = guest, object = logged in
 
   // Fetch Meta Ads prices + MWK exchange rate from DB
   useEffect(() => {
@@ -389,7 +399,38 @@ export default function PricingPage() {
       }
     }
     fetchData();
+
+    // Check if user is already logged in — affects CTA destinations
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setAuthedUser(session?.user || false);
+    });
   }, []);
+
+  // Smart CTA handler — auth-aware routing for all plan types
+  function handlePlanCta(serviceType, plan) {
+    const isLoggedIn = !!authedUser;
+
+    if (serviceType === 'meta-ads') {
+      if (isLoggedIn) {
+        // Pre-select package + duration in the campaign wizard
+        const params = new URLSearchParams();
+        if (plan.pkgSlug) params.set('package', plan.pkgSlug);
+        navigate(`/campaigns/new${params.toString() ? '?' + params.toString() : ''}`);
+      } else {
+        // Guest — send to register, preserve package intent
+        const slug = plan.pkgSlug || '';
+        navigate(`/register${slug ? '?service=meta-ads&package=' + slug : ''}`);
+      }
+      return;
+    }
+
+    // All other services — logged-in users go to support to place order
+    if (isLoggedIn) {
+      navigate('/support');
+    } else {
+      navigate('/register');
+    }
+  }
 
   const service = STATIC_PLANS[activeTab];
 
@@ -441,6 +482,7 @@ export default function PricingPage() {
               loading={loading}
               country={country}
               onCountryChange={setCountry}
+              onPlanSelect={(plan) => handlePlanCta('meta-ads', plan)}
             />
           </>
         )}
@@ -488,7 +530,12 @@ export default function PricingPage() {
 
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {service.packages.map(plan => (
-                <PlanCard key={plan.name} plan={plan} popular={plan.badge?.toLowerCase().includes('pop') ?? false} />
+                <PlanCard
+                  key={plan.name}
+                  plan={plan}
+                  popular={plan.badge?.toLowerCase().includes('pop') ?? false}
+                  onCta={() => handlePlanCta(activeTab, plan)}
+                />
               ))}
             </div>
 
