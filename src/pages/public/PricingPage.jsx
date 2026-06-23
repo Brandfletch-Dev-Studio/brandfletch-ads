@@ -363,54 +363,18 @@ function MetaAdsPricing({ dbRows, loading, country, onCountryChange, onPlanSelec
 export default function PricingPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const navigate = useNavigate();
   const [activeTab,  setActiveTab]  = useState('meta-ads');
   const [country,    setCountry]    = useState('Malawi');
   const [dbRows,     setDbRows]     = useState([]);
   const [loading,    setLoading]    = useState(true);
   const [mwkRate,    setMwkRate]    = useState(DEFAULT_RATE);
-  const [authedUser, setAuthedUser] = useState(null); // null = unknown, false = guest, object = logged in
 
   // Fetch Meta Ads prices + MWK exchange rate from DB
-  useEffect(() => {
-    async function fetchData() {
-      setLoading(true);
-      try {
-        // PackagePricing rows
-        const { data: prices } = await supabase
-          .from('PackagePricing')
-          .select('*')
-          .order('package');
-        if (prices?.length) setDbRows(prices);
-
-        // ExchangeRate — look for MWK
-        const { data: rates } = await supabase
-          .from('ExchangeRate')
-          .select('*')
-          .eq('currency_code', 'MWK')
-          .eq('is_active', true)
-          .limit(1);
-        if (rates?.[0]?.rate_to_usd) {
-          // rate_to_usd means how many MWK = 1 USD
-          setMwkRate(parseFloat(rates[0].rate_to_usd));
-        }
-      } catch (e) {
-        console.warn('Pricing fetch failed, using defaults', e);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchData();
-
-    // Check if user is already logged in — affects CTA destinations
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setAuthedUser(session?.user || false);
-    });
-  }, []);
+  
 
   // Smart CTA handler — auth-aware routing for all plan types
   function handlePlanCta(serviceType, plan) {
-    const isLoggedIn = !!authedUser;
+    const isLoggedIn = !!user;
 
     if (serviceType === 'meta-ads') {
       if (isLoggedIn) {
