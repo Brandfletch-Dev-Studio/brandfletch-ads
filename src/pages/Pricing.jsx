@@ -315,29 +315,48 @@ export default function Pricing() {
   const [dbPricing, setDbPricing] = useState([]);
   const [designPricing, setDesignPricing] = useState([]);
   const [servicePricing, setServicePricing] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // No loading gate — page renders instantly with local fallback prices.
+  // DB data loads in the background and silently enriches the cards.
 
   useEffect(() => {
+    // ── 1. Fetch DB pricing in background (no loading spinner) ──────────────
     Promise.all([
       base44.entities.PackagePricing.list({}).catch(() => []),
       base44.entities.DesignPricing.list({}).catch(() => []),
       base44.entities.ServicePricing.list({}).catch(() => []),
     ]).then(([pkg, des, svc]) => {
-      setDbPricing(pkg);
-      setDesignPricing(des);
-      setServicePricing(svc);
-      setLoading(false);
-    });
-    // Auto-detect country from profile or IP
+      if (pkg.length)  setDbPricing(pkg);
+      if (des.length)  setDesignPricing(des);
+      if (svc.length)  setServicePricing(svc);
+    }).catch(() => {/* fail silently — local prices are already shown */});
+
+    // ── 2. Country detection — profile first, then cached IP, then live IP ──
     if (user?.country) {
       const match = COUNTRIES_LIST.find(c => c.toLowerCase() === user.country.toLowerCase());
-      if (match) setCountry(match);
-    } else {
-      fetch('https://ipapi.co/json/').then(r => r.json()).then(d => {
-        const match = COUNTRIES_LIST.find(c => c.toLowerCase() === (d.country_name || '').toLowerCase());
-        if (match) setCountry(match);
-      }).catch(() => {});
+      if (match) { setCountry(match); return; }
     }
+
+    // Check localStorage cache (valid for 24h)
+    try {
+      const cached = JSON.parse(localStorage.getItem('bf_ip_country') || 'null');
+      if (cached?.country && cached.expires > Date.now()) {
+        const match = COUNTRIES_LIST.find(c => c.toLowerCase() === cached.country.toLowerCase());
+        if (match) { setCountry(match); return; }
+      }
+    } catch {}
+
+    // Live IP lookup — only if no cache
+    const ctrl = new AbortController();
+    fetch('https://ipapi.co/json/', { signal: ctrl.signal })
+      .then(r => r.json())
+      .then(d => {
+        const name = d.country_name || '';
+        localStorage.setItem('bf_ip_country', JSON.stringify({ country: name, expires: Date.now() + 86_400_000 }));
+        const match = COUNTRIES_LIST.find(c => c.toLowerCase() === name.toLowerCase());
+        if (match) setCountry(match);
+      })
+      .catch(() => {});
+    return () => ctrl.abort();
   }, [user?.country]);
 
   const [ordering, setOrdering] = useState(false);
@@ -495,25 +514,17 @@ export default function Pricing() {
 
       {/* CONTENT */}
       <div className="max-w-5xl mx-auto px-4 py-12">
-        {loading ? (
-          <div className="flex justify-center py-20">
-            <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+        <div className="text-center mb-10">
+            <h2 className="text-2xl font-bold text-foreground flex items-center justify-center gap-2">
+              <span>{activeTabMeta?.emoji}</span> {activeTabMeta?.label}
+            </h2>
           </div>
-        ) : (
-          <>
-            <div className="text-center mb-10">
-              <h2 className="text-2xl font-bold text-foreground flex items-center justify-center gap-2">
-                <span>{activeTabMeta?.emoji}</span> {activeTabMeta?.label}
-              </h2>
-            </div>
 
-            {activeTab === 'ads'     && <AdsTab     country={country} dbPricing={dbPricing}       onCta={handleCta} ordering={ordering} />}
-            {activeTab === 'ugc'     && <UGCTab     country={country} servicePricing={servicePricing} onCta={handleCta} ordering={ordering} />}
-            {activeTab === 'designs' && <DesignsTab country={country} designPricing={designPricing}   onCta={handleCta} ordering={ordering} />}
-            {activeTab === 'web'     && <WebDevTab  country={country} servicePricing={servicePricing} onCta={handleCta} ordering={ordering} />}
-            {activeTab === 'social'  && <SocialMediaTab country={country} servicePricing={servicePricing} onCta={handleCta} ordering={ordering} />}
-          </>
-        )}
+          {activeTab === 'ads'     && <AdsTab     country={country} dbPricing={dbPricing}       onCta={handleCta} ordering={ordering} />}
+          {activeTab === 'ugc'     && <UGCTab     country={country} servicePricing={servicePricing} onCta={handleCta} ordering={ordering} />}
+          {activeTab === 'designs' && <DesignsTab country={country} designPricing={designPricing}   onCta={handleCta} ordering={ordering} />}
+          {activeTab === 'web'     && <WebDevTab  country={country} servicePricing={servicePricing} onCta={handleCta} ordering={ordering} />}
+          {activeTab === 'social'  && <SocialMediaTab country={country} servicePricing={servicePricing} onCta={handleCta} ordering={ordering} />}
       </div>
 
       {/* BOTTOM CTA STRIP */}
@@ -534,3 +545,4 @@ export default function Pricing() {
     </div>
   );
 }
+
