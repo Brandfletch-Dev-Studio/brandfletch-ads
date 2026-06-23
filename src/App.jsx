@@ -70,9 +70,9 @@ const AdminLeads       = lazy(() => import('@/pages/admin/AdminLeads'));
 const AdminBlog        = lazy(() => import('@/pages/admin/AdminBlog'));
 
 // ── Route constants ──
-const AUTH_ROUTES         = ['/login', '/register', '/forgot-password', '/reset-password', '/auth/callback'];
-const PUBLIC_MARKETING_ROUTES = ['/', '/about', '/pricing', '/contact', '/blog', '/privacy-policy', '/terms', '/forms'];
-const SKIP_ONBOARDING_ROUTES  = [...AUTH_ROUTES, '/onboarding'];
+const AUTH_ROUTES         = ['/forgot-password', '/reset-password', '/auth/callback'];
+const PUBLIC_MARKETING_ROUTES = ['/about', '/pricing', '/contact', '/blog', '/privacy-policy', '/terms', '/forms'];
+const SKIP_ONBOARDING_ROUTES  = [...AUTH_ROUTES, '/login', '/register', '/onboarding'];
 
 const getDefaultAuthRoute = () =>
   localStorage.getItem('bf_visited') ? '/login' : '/register';
@@ -106,13 +106,10 @@ const AuthenticatedApp = () => {
       <Suspense fallback={<PageSpinner />}>
         <ScrollToTop />
         <Routes>
-          {/* Auth */}
-          <Route path="/login"            element={<Login />} />
-          <Route path="/register"         element={<Register />} />
+          {/* Auth — only true bypass routes land here */}
           <Route path="/auth/callback"    element={<AuthCallback />} />
           <Route path="/forgot-password"  element={<ForgotPassword />} />
           <Route path="/reset-password"   element={<ResetPassword />} />
-          <Route path="/onboarding"       element={<Onboarding />} />
 
           {/* Marketing */}
           <Route element={<PublicLayout />}>
@@ -142,6 +139,20 @@ const AuthenticatedApp = () => {
   }
 
   if (!currentUser && !isOnSkipRoute) {
+    // "/" always shows the marketing home page for unauthenticated visitors
+    if (path === '/') {
+      return (
+        <Suspense fallback={<PageSpinner />}>
+          <ScrollToTop />
+          <Routes>
+            <Route element={<PublicLayout />}>
+              <Route path="/" element={<Home />} />
+            </Route>
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Suspense>
+      );
+    }
     return <Navigate to={getDefaultAuthRoute()} replace />;
   }
 
@@ -157,8 +168,16 @@ const AuthenticatedApp = () => {
   return (
     <Suspense fallback={<PageSpinner />}>
       <Routes>
-        <Route path="/login"           element={<Login />} />
-        <Route path="/register"        element={<Register />} />
+        <Route path="/login"           element={
+          currentUser
+            ? <Navigate to={isStaff ? getStaffLandingPath(currentUser?.role) : '/dashboard'} replace />
+            : <Login />
+        } />
+        <Route path="/register"        element={
+          currentUser
+            ? <Navigate to={isStaff ? getStaffLandingPath(currentUser?.role) : '/dashboard'} replace />
+            : <Register />
+        } />
         <Route path="/auth/callback"   element={<AuthCallback />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password"  element={<ResetPassword />} />

@@ -361,6 +361,8 @@ function MetaAdsPricing({ dbRows, loading, country, onCountryChange, onPlanSelec
 
 // ── Main component ────────────────────────────────────────────────────────────
 export default function PricingPage() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const navigate = useNavigate();
   const [activeTab,  setActiveTab]  = useState('meta-ads');
   const [country,    setCountry]    = useState('Malawi');

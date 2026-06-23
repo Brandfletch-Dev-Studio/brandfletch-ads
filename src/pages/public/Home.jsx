@@ -1,4 +1,5 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/lib/AuthContext';
 import {
   ArrowRight, Megaphone, Video, Palette, Globe, CreditCard,
   Smartphone, CheckCircle, TrendingUp, Target, Users, Zap, Star
@@ -84,6 +85,11 @@ const HOW = [
 ];
 
 export default function Home() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const ctaTo   = user ? '/dashboard' : '/register';
+  const ctaLabel = user ? 'Go to dashboard' : 'Start a conversation';
+
   return (
     <div className="flex flex-col">
 

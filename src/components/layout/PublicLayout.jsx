@@ -1,5 +1,6 @@
-import { Outlet, Link, useLocation } from 'react-router-dom';
+import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
+import { useAuth } from '@/lib/AuthContext';
 import { Menu, X, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import BrandLogo from '@/components/BrandLogo';
@@ -15,6 +16,8 @@ const NAV = [
 
 export default function PublicLayout() {
   const [open, setOpen] = useState(false);
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const { pathname } = useLocation();
 
   return (
@@ -45,16 +48,28 @@ export default function PublicLayout() {
           </nav>
 
           <div className="hidden md:flex items-center gap-3">
-            <Link to="/login">
-              <Button variant="ghost" size="sm" className="text-white/80 hover:text-white hover:bg-white/10">
-                Log in
+            {user ? (
+              <Button
+                size="sm"
+                className="bg-[hsl(var(--accent))] text-white hover:bg-[hsl(var(--accent))]/90 font-semibold"
+                onClick={() => navigate('/dashboard')}
+              >
+                Go to dashboard <ArrowRight className="ml-1.5 w-3.5 h-3.5" />
               </Button>
-            </Link>
-            <Link to="/register">
-              <Button size="sm" className="bg-[hsl(var(--accent))] text-white hover:bg-[hsl(var(--accent))]/90 font-semibold">
-                Get started <ArrowRight className="ml-1.5 w-3.5 h-3.5" />
-              </Button>
-            </Link>
+            ) : (
+              <>
+                <Link to="/login">
+                  <Button variant="ghost" size="sm" className="text-white/80 hover:text-white hover:bg-white/10">
+                    Log in
+                  </Button>
+                </Link>
+                <Link to="/register">
+                  <Button size="sm" className="bg-[hsl(var(--accent))] text-white hover:bg-[hsl(var(--accent))]/90 font-semibold">
+                    Get started <ArrowRight className="ml-1.5 w-3.5 h-3.5" />
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile toggle */}
