@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
-import OnboardingChecklist from '@/components/dashboard/OnboardingChecklist';
+import CompleteProfileChecklist from '@/components/dashboard/OnboardingChecklist';
 
 export default function Dashboard() {
   const { user, isLoadingAuth } = useAuth();
@@ -145,7 +145,7 @@ export default function Dashboard() {
       </div>
 
       {/* Onboarding Checklist — shown to new users until all steps complete */}
-      <OnboardingChecklist />
+      <CompleteProfileChecklist />
 
       {/* Quick Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
