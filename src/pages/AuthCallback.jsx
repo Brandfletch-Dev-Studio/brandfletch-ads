@@ -80,8 +80,8 @@ export default function AuthCallback() {
     if (type === "recovery") {
       navigate("/reset-password", { replace: true });
     } else {
-      // New users go to onboarding
-      navigate("/onboarding", { replace: true });
+      // New users go straight to dashboard — profile completion is on the dashboard checklist
+      navigate("/dashboard", { replace: true });
     }
   };
 
