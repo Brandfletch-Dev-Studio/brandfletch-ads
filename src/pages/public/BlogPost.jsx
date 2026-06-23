@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Calendar, Clock, ArrowLeft, Share2, AlertCircle, Loader2 } from 'lucide-react';
+import { Calendar, Clock, ArrowLeft, Share2, AlertCircle, Eye, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/api/base44Client';
@@ -11,8 +11,28 @@ export default function BlogPost() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [related, setRelated] = useState([]);
+  const viewTracked = useRef(false);
+  const readTracked = useRef(false);
 
   useEffect(() => { fetchPost(); }, [slug]);
+
+  // Track "read" when user scrolls to 80% of the article
+  useEffect(() => {
+    if (!post) return;
+    const onScroll = () => {
+      if (readTracked.current) return;
+      const el = document.getElementById('blog-content');
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      const scrolled = (window.innerHeight - rect.top) / rect.height;
+      if (scrolled > 0.8) {
+        readTracked.current = true;
+        supabase.rpc('increment_blog_counter', { post_id: post.id, col_name: 'read_count' }).catch(() => {});
+      }
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, [post]);
 
   const fetchPost = async () => {
     setLoading(true);
@@ -24,14 +44,19 @@ export default function BlogPost() {
         .eq('slug', slug)
         .eq('status', 'published')
         .single();
-
       if (err) throw err;
       setPost(data);
+
+      // Track view (once per page load, not on re-renders)
+      if (!viewTracked.current) {
+        viewTracked.current = true;
+        supabase.rpc('increment_blog_counter', { post_id: data.id, col_name: 'view_count' }).catch(() => {});
+      }
 
       if (data?.category) {
         const { data: rel } = await supabase
           .from('BlogPost')
-          .select('id,title,slug,excerpt,category,published_at,cover_image,emoji')
+          .select('id,title,slug,excerpt,category,published_at,cover_image,emoji,view_count')
           .eq('status', 'published')
           .eq('category', data.category)
           .neq('id', data.id)
@@ -44,6 +69,19 @@ export default function BlogPost() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleShare = async () => {
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: post.title, url: window.location.href });
+      } else {
+        await navigator.clipboard.writeText(window.location.href);
+        alert('Link copied to clipboard!');
+      }
+      // Track share
+      supabase.rpc('increment_blog_counter', { post_id: post.id, col_name: 'share_count' }).catch(() => {});
+    } catch (_) {}
   };
 
   if (loading) return (
@@ -63,9 +101,7 @@ export default function BlogPost() {
       <p className="text-5xl mb-4">😕</p>
       <h1 className="text-2xl font-bold mb-2">Post not found</h1>
       <p className="text-muted-foreground mb-6">This article may have been moved or removed.</p>
-      <Link to="/blog">
-        <Button variant="outline"><ArrowLeft className="w-4 h-4 mr-2" /> Back to blog</Button>
-      </Link>
+      <Link to="/blog"><Button variant="outline"><ArrowLeft className="w-4 h-4 mr-2" /> Back to blog</Button></Link>
     </div>
   );
 
@@ -81,113 +117,72 @@ export default function BlogPost() {
     </div>
   );
 
-  // Strip HTML tags for read time calculation
   const plainText = post.content?.replace(/<[^>]+>/g, '') || '';
   const readTime = Math.max(1, Math.ceil(plainText.split(/\s+/).length / 200));
-
-  // The content field contains Quill HTML — render it directly
   const htmlContent = post.content_html || post.content || '';
-
-  const handleShare = async () => {
-    try {
-      if (navigator.share) {
-        await navigator.share({ title: post.title, url: window.location.href });
-      } else {
-        await navigator.clipboard.writeText(window.location.href);
-        // small feedback — could use toast but keeping deps light
-        alert('Link copied to clipboard!');
-      }
-    } catch (_) {}
-  };
 
   return (
     <div className="bg-background">
       {/* Header */}
       <div className="bg-[hsl(var(--primary))] text-white py-16">
         <div className="max-w-3xl mx-auto px-4">
-          <Link
-            to="/blog"
-            className="inline-flex items-center gap-2 text-white/60 hover:text-white text-sm mb-6 transition-colors"
-          >
+          <Link to="/blog" className="inline-flex items-center gap-2 text-white/60 hover:text-white text-sm mb-6 transition-colors">
             <ArrowLeft className="w-4 h-4" /> Back to blog
           </Link>
-          {post.category && (
-            <Badge className="mb-4 bg-white/10 text-white/80 border-white/20">{post.category}</Badge>
-          )}
+          {post.category && <Badge className="mb-4 bg-white/10 text-white/80 border-white/20">{post.category}</Badge>}
           <h1 className="text-3xl sm:text-4xl font-bold leading-tight mb-4">{post.title}</h1>
-          {post.excerpt && (
-            <p className="text-white/70 text-lg mb-5 leading-relaxed">{post.excerpt}</p>
-          )}
-          <div className="flex items-center gap-4 text-white/60 text-sm">
+          {post.excerpt && <p className="text-white/70 text-lg mb-5 leading-relaxed">{post.excerpt}</p>}
+          <div className="flex items-center gap-4 text-white/60 text-sm flex-wrap">
             <span className="flex items-center gap-1.5">
               <Calendar className="w-4 h-4" />
               {new Date(post.published_at || post.created_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
             </span>
-            <span className="flex items-center gap-1.5">
-              <Clock className="w-4 h-4" />
-              {readTime} min read
-            </span>
-            {post.author_name && (
-              <span className="text-white/50">by {post.author_name}</span>
+            <span className="flex items-center gap-1.5"><Clock className="w-4 h-4" />{readTime} min read</span>
+            {post.author_name && <span className="text-white/50">by {post.author_name}</span>}
+            {post.view_count > 0 && (
+              <span className="flex items-center gap-1.5"><Eye className="w-4 h-4" />{post.view_count.toLocaleString()} views</span>
             )}
           </div>
         </div>
       </div>
 
-      {/* Cover image */}
       {post.cover_image && (
         <div className="max-w-3xl mx-auto px-4 -mt-8">
-          <img
-            src={post.cover_image}
-            alt={post.title}
-            className="w-full rounded-2xl shadow-xl object-cover max-h-80"
-          />
+          <img src={post.cover_image} alt={post.title} className="w-full rounded-2xl shadow-xl object-cover max-h-80" />
         </div>
       )}
 
       {/* Content */}
       <div className="max-w-3xl mx-auto px-4 py-12">
         <div
-          className="
-            prose prose-lg max-w-none
-            text-foreground
-            prose-headings:text-foreground prose-headings:font-bold
-            prose-p:text-foreground/90 prose-p:leading-relaxed
-            prose-a:text-primary prose-a:underline
-            prose-strong:text-foreground
-            prose-blockquote:border-primary prose-blockquote:text-muted-foreground
-            prose-code:text-primary prose-code:bg-muted prose-code:px-1 prose-code:rounded
-            prose-pre:bg-muted prose-pre:border prose-pre:border-border
-            prose-img:rounded-xl
-            prose-li:text-foreground/90
-          "
+          id="blog-content"
+          className="prose prose-lg max-w-none text-foreground prose-headings:text-foreground prose-headings:font-bold prose-p:text-foreground/90 prose-p:leading-relaxed prose-a:text-primary prose-a:underline prose-strong:text-foreground prose-blockquote:border-primary prose-blockquote:text-muted-foreground prose-code:text-primary prose-code:bg-muted prose-code:px-1 prose-code:rounded prose-pre:bg-muted prose-pre:border prose-pre:border-border prose-img:rounded-xl prose-li:text-foreground/90"
           dangerouslySetInnerHTML={{ __html: htmlContent }}
         />
 
-        {/* Share / nav */}
         <div className="mt-10 pt-8 border-t border-border flex items-center justify-between">
           <Link to="/blog">
-            <Button variant="outline" size="sm">
-              <ArrowLeft className="w-4 h-4 mr-1.5" /> All posts
-            </Button>
+            <Button variant="outline" size="sm"><ArrowLeft className="w-4 h-4 mr-1.5" /> All posts</Button>
           </Link>
-          <Button variant="outline" size="sm" onClick={handleShare}>
-            <Share2 className="w-4 h-4 mr-1.5" /> Share
-          </Button>
+          <div className="flex items-center gap-2">
+            {post.read_count > 0 && (
+              <span className="text-xs text-muted-foreground flex items-center gap-1">
+                <BookOpen className="w-3.5 h-3.5" />{post.read_count.toLocaleString()} reads
+              </span>
+            )}
+            <Button variant="outline" size="sm" onClick={handleShare}>
+              <Share2 className="w-4 h-4 mr-1.5" /> Share
+            </Button>
+          </div>
         </div>
       </div>
 
-      {/* Related posts */}
       {related.length > 0 && (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-16">
           <h2 className="text-xl font-bold mb-6">More in {post.category}</h2>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {related.map(r => (
-              <Link
-                key={r.id}
-                to={`/blog/${r.slug}`}
-                className="group block bg-card border border-border rounded-xl overflow-hidden hover:border-primary/30 hover:shadow-md transition-all"
-              >
+              <Link key={r.id} to={`/blog/${r.slug}`} className="group block bg-card border border-border rounded-xl overflow-hidden hover:border-primary/30 hover:shadow-md transition-all">
                 {r.cover_image ? (
                   <div className="h-36 overflow-hidden bg-muted">
                     <img src={r.cover_image} alt={r.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
@@ -198,14 +193,11 @@ export default function BlogPost() {
                   </div>
                 )}
                 <div className="p-4">
-                  <p className="font-semibold text-sm leading-snug line-clamp-2 group-hover:text-primary transition-colors">
-                    {r.title}
-                  </p>
-                  {r.published_at && (
-                    <p className="text-xs text-muted-foreground mt-1.5">
-                      {new Date(r.published_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                    </p>
-                  )}
+                  <p className="font-semibold text-sm leading-snug line-clamp-2 group-hover:text-primary transition-colors">{r.title}</p>
+                  <div className="flex items-center gap-3 mt-1.5 text-xs text-muted-foreground">
+                    {r.published_at && <span>{new Date(r.published_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>}
+                    {r.view_count > 0 && <span className="flex items-center gap-1"><Eye className="w-3 h-3" />{r.view_count}</span>}
+                  </div>
                 </div>
               </Link>
             ))}
