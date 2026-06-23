@@ -367,11 +367,46 @@ export default function PricingPage() {
   const [activeTab,  setActiveTab]  = useState('meta-ads');
   const [country,    setCountry]    = useState('Malawi');
   const [dbRows,     setDbRows]     = useState([]);
-  const [loading,    setLoading]    = useState(true);
+  const [loading,    setLoading]    = useState(false);
   const [mwkRate,    setMwkRate]    = useState(DEFAULT_RATE);
 
-  // Fetch Meta Ads prices + MWK exchange rate from DB
-  
+  // Fetch Meta Ads prices from DB in background — LOCAL_PRICES already shown instantly
+  useEffect(() => {
+    // DB enrichment — silent background fetch, no spinner
+    supabase
+      .from('PackagePricing')
+      .select('*')
+      .then(({ data }) => { if (data?.length) setDbRows(data); })
+      .catch(() => {/* fail silently */});
+
+    // Country detection: profile → localStorage cache → live IP (last resort)
+    if (user?.country) {
+      const COUNTRIES = ['Malawi','Zambia','South Africa','Kenya','Tanzania'];
+      const match = COUNTRIES.find(c => c.toLowerCase() === user.country.toLowerCase());
+      if (match) { setCountry(match); return; }
+    }
+    try {
+      const cached = JSON.parse(localStorage.getItem('bf_ip_country') || 'null');
+      if (cached?.country && cached.expires > Date.now()) {
+        const COUNTRIES = ['Malawi','Zambia','South Africa','Kenya','Tanzania'];
+        const match = COUNTRIES.find(c => c.toLowerCase() === cached.country.toLowerCase());
+        if (match) setCountry(match);
+        return;
+      }
+    } catch {}
+    const ctrl = new AbortController();
+    fetch('https://ipapi.co/json/', { signal: ctrl.signal })
+      .then(r => r.json())
+      .then(d => {
+        const name = d.country_name || '';
+        localStorage.setItem('bf_ip_country', JSON.stringify({ country: name, expires: Date.now() + 86_400_000 }));
+        const COUNTRIES = ['Malawi','Zambia','South Africa','Kenya','Tanzania'];
+        const match = COUNTRIES.find(c => c.toLowerCase() === name.toLowerCase());
+        if (match) setCountry(match);
+      })
+      .catch(() => {});
+    return () => ctrl.abort();
+  }, [user?.country]);
 
   // Smart CTA handler — auth-aware routing for all plan types
   function handlePlanCta(serviceType, plan) {
@@ -544,3 +579,4 @@ export default function PricingPage() {
     </div>
   );
 }
+
