@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 import {
   LayoutDashboard, Megaphone, Facebook, Users, Wallet as WalletIcon,
   Settings, X, ChevronRight, BarChart3, Shield, Bell, Tv2, ClipboardList,
-  Tags, LifeBuoy, Palette, Target, Gift, FileText, MessageSquare
+  Tags, LifeBuoy, Palette, Target, Gift, FileText, MessageSquare, Video
 } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -21,6 +21,7 @@ const clientNav = [
   { path: '/dashboard', label: 'Dashboard',       icon: LayoutDashboard },
   { path: '/campaigns', label: 'Campaigns',        icon: Megaphone },
   { path: '/designs',   label: 'Designs',          icon: Palette },
+  { path: '/ugc-ads',   label: 'UGC Ads',           icon: Video },
   { path: '/leads',     label: 'Leads (Coming Soon)', icon: Target, disabled: true },
   { path: '/pages',     label: 'Facebook Pages',   icon: Facebook },
   { path: '/audiences', label: 'Audiences',        icon: Users },
@@ -42,6 +43,7 @@ const designerNav = [
 const codNav = [
   { path: '/creative-ops',    label: 'My Dashboard',       icon: LayoutDashboard },
   { path: '/admin/designs',   label: 'Design Requests',    icon: Palette },
+  { path: '/admin/ugc-ads',   label: 'UGC Orders',         icon: Video },
   { path: '/admin/users',     label: 'Design Team',        icon: Users },
   { path: '/admin/payments',  label: 'Payments',           icon: WalletIcon },
   { path: '/admin/reports',   label: 'Reports',            icon: BarChart3 },
@@ -67,6 +69,7 @@ const ALL_ADMIN_NAV = [
   { key: 'overview',      path: '/admin',                label: 'Overview',          icon: LayoutDashboard, permission: null },
   { key: 'campaigns',     path: '/admin/campaigns',      label: 'All Campaigns',     icon: Megaphone,       permission: 'campaigns.view' },
   { key: 'designs',       path: '/admin/designs',        label: 'Design Requests',   icon: Palette,         permission: 'designs.view' },
+  { key: 'ugc_ads',       path: '/admin/ugc-ads',        label: 'UGC Orders',        icon: Video,           permission: 'designs.view' },
   { key: 'leads',         path: '/admin/leads',          label: 'Leads & CRM (Soon)',icon: Target,          permission: 'leads.view', disabled: true },
   { key: 'pages',         path: '/admin/pages',          label: 'Page Requests',     icon: Facebook,        permission: 'pages.view' },
   { key: 'users',         path: '/admin/users',          label: 'Team & Users',      icon: Users,           permission: 'users.view' },
