@@ -207,9 +207,7 @@ export default function BlogPost() {
       {/* Header */}
       <div className="bg-[hsl(var(--primary))] text-white py-16">
         <div className="max-w-3xl mx-auto px-4">
-          <Link to="/blog" className="inline-flex items-center gap-2 text-white/60 hover:text-white text-sm mb-6 transition-colors">
-            <ArrowLeft className="w-4 h-4" /> Back to blog
-          </Link>
+
           {post.category && (
             <Badge className="mb-4 bg-white/10 text-white/80 border-white/20">{post.category}</Badge>
           )}
@@ -318,3 +316,4 @@ export default function BlogPost() {
     </div>
   );
 }
+
