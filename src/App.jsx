@@ -223,7 +223,7 @@ const AppRoutes = () => (
 
       </Routes>
     </Suspense>
-  </>
+    </ErrorBoundary>
 );
 
 function App() {
@@ -240,4 +240,5 @@ function App() {
 }
 
 export default App;
+
 
