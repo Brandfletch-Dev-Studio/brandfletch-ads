@@ -94,51 +94,73 @@ export default function Home() {
     <div className="flex flex-col">
 
       {/* ── HERO ─────────────────────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden bg-[hsl(var(--primary))] text-white">
-        {/* Background grid */}
-        <div className="absolute inset-0 opacity-5"
-          style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.15) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.15) 1px,transparent 1px)', backgroundSize: '32px 32px' }} />
-        {/* Glow orbs */}
-        <div className="absolute -top-32 -left-32 w-96 h-96 bg-[hsl(var(--accent))]/20 rounded-full blur-3xl" />
-        <div className="absolute -bottom-32 right-0 w-80 h-80 bg-[hsl(var(--accent))]/10 rounded-full blur-3xl" />
+      <section className="relative overflow-hidden bg-[hsl(var(--primary))] text-white min-h-[90vh] flex items-center">
+        {/* Subtle dot pattern */}
+        <div className="absolute inset-0 opacity-[0.04]"
+          style={{ backgroundImage: 'radial-gradient(rgba(255,255,255,1) 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
 
-        <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-24 text-center">
-          <Badge className="mb-5 bg-white/10 text-white border-white/20 hover:bg-white/10 text-xs font-medium px-3 py-1">
-            🚀 Advertising & Marketing for African Businesses
-          </Badge>
+        {/* Glow accents */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-[hsl(var(--accent))]/15 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute bottom-0 right-0 w-64 h-64 bg-blue-400/10 rounded-full blur-3xl pointer-events-none" />
 
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-display font-extrabold leading-[1.1] tracking-tight mb-6">
-            Advertising campaigns that{' '}
-            <span className="text-[hsl(var(--accent))]">generate leads</span>
-            <br className="hidden sm:block" /> for your business
-          </h1>
+        <div className="relative w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-24 lg:py-32">
+          <div className="max-w-4xl mx-auto text-center">
 
-          <p className="text-lg sm:text-xl text-white/70 max-w-2xl mx-auto leading-relaxed mb-4">
-            We create Meta Ads-ready creatives built to maximise attention, trust, and conversions — backed by UGC content, professional design, and full social media management.
-          </p>
-          <p className="text-sm text-white/50 max-w-xl mx-auto mb-10">
-            The real transformation: <span className="text-white/70 font-medium">Business offer → Better packaging → Story → UGC creative → Meta Ads ready → More qualified leads.</span>
-          </p>
+            {/* Eyebrow pill */}
+            <div className="inline-flex items-center gap-2 bg-white/10 border border-white/15 text-white/80 text-xs font-semibold px-4 py-2 rounded-full mb-8 tracking-wide uppercase">
+              <span className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--accent))] animate-pulse" />
+              Meta Ads · UGC · Design · Social Media
+            </div>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-            <Link to="/register">
-              <Button size="lg" className="bg-[hsl(var(--accent))] text-white hover:bg-[hsl(var(--accent))]/90 font-bold px-8 h-12 text-base shadow-lg">
-                Get started <ArrowRight className="ml-2 w-4 h-4" />
-              </Button>
-            </Link>
-            <Link to="/contact">
-              <Button size="lg" variant="outline" className="border-white/25 text-white bg-white/5 hover:bg-white/10 font-semibold px-8 h-12 text-base">
-                Start a discussion
-              </Button>
-            </Link>
+            {/* Headline */}
+            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-display font-extrabold leading-[1.05] tracking-tight mb-6">
+              Grow your business
+              <br />
+              <span className="relative inline-block">
+                <span className="text-[hsl(var(--accent))]">with digital ads</span>
+                <svg className="absolute -bottom-2 left-0 w-full" viewBox="0 0 400 12" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <path d="M2 9C100 3 200 3 398 9" stroke="hsl(var(--accent))" strokeWidth="3" strokeLinecap="round" opacity="0.5"/>
+                </svg>
+              </span>
+              <br />
+              that actually convert
+            </h1>
+
+            {/* Sub-copy */}
+            <p className="text-lg sm:text-xl text-white/65 max-w-2xl mx-auto leading-relaxed mb-10">
+              We build and run advertising systems for African businesses — from Meta Ads and UGC creatives to social media and professional design. Everything you need, in one place.
+            </p>
+
+            {/* CTA row */}
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
+              <Link to="/register">
+                <Button size="lg" className="bg-[hsl(var(--accent))] text-white hover:bg-[hsl(var(--accent))]/90 font-bold px-10 h-13 text-base shadow-xl shadow-[hsl(var(--accent))]/20 rounded-xl">
+                  Get started free <ArrowRight className="ml-2 w-4 h-4" />
+                </Button>
+              </Link>
+              <Link to="/contact">
+                <Button size="lg" variant="ghost" className="text-white/80 hover:text-white hover:bg-white/10 font-semibold px-8 h-13 text-base rounded-xl border border-white/15">
+                  Talk to us first
+                </Button>
+              </Link>
+            </div>
+
+            {/* Trust bar */}
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-6 text-white/40 text-xs font-medium">
+              <span className="flex items-center gap-1.5"><CheckCircle className="w-3.5 h-3.5 text-[hsl(var(--accent))]" /> No long-term contracts</span>
+              <span className="hidden sm:block w-px h-4 bg-white/15" />
+              <span className="flex items-center gap-1.5"><CheckCircle className="w-3.5 h-3.5 text-[hsl(var(--accent))]" /> Results-focused approach</span>
+              <span className="hidden sm:block w-px h-4 bg-white/15" />
+              <span className="flex items-center gap-1.5"><CheckCircle className="w-3.5 h-3.5 text-[hsl(var(--accent))]" /> Built for African markets</span>
+            </div>
           </div>
 
           {/* Stats bar */}
-          <div className="mt-16 grid grid-cols-2 sm:grid-cols-4 gap-6 border-t border-white/10 pt-10">
+          <div className="mt-20 grid grid-cols-2 sm:grid-cols-4 gap-px bg-white/10 rounded-2xl overflow-hidden border border-white/10">
             {STATS.map(s => (
-              <div key={s.label} className="text-center">
-                <p className="text-2xl sm:text-3xl font-display font-extrabold text-white">{s.value}</p>
-                <p className="text-xs text-white/50 mt-1 font-medium">{s.label}</p>
+              <div key={s.label} className="bg-white/5 backdrop-blur-sm px-6 py-6 text-center hover:bg-white/10 transition-colors">
+                <p className="text-3xl sm:text-4xl font-display font-extrabold text-white mb-1">{s.value}</p>
+                <p className="text-xs text-white/45 font-medium">{s.label}</p>
               </div>
             ))}
           </div>
@@ -309,3 +331,4 @@ export default function Home() {
     </div>
   );
 }
+
