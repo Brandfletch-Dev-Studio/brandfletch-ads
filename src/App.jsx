@@ -138,7 +138,7 @@ function AuthGuard({ children }) {
 
 // ── Route tree ────────────────────────────────────────────────────────────────
 const AppRoutes = () => (
-  <>
+  <ErrorBoundary>
     <ScrollToTop />
     <Suspense fallback={<PageSpinner />}>
       <Routes>
@@ -223,7 +223,7 @@ const AppRoutes = () => (
 
       </Routes>
     </Suspense>
-    </ErrorBoundary>
+  </ErrorBoundary>
 );
 
 function App() {
@@ -240,5 +240,6 @@ function App() {
 }
 
 export default App;
+
 
 
