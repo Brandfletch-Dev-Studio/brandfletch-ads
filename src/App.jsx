@@ -69,6 +69,46 @@ const AdminUgcAds          = lazy(() => import('@/pages/admin/AdminUgcAds'));
 const AdminLeads           = lazy(() => import('@/pages/admin/AdminLeads'));
 const AdminBlog            = lazy(() => import('@/pages/admin/AdminBlog'));
 
+
+// ── ErrorBoundary ─────────────────────────────────────────────────────────────
+// Catches render-phase errors in the route tree and shows a fallback instead
+// of a blank white screen. Must be a class component — React requirement.
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, info) {
+    console.error('[ErrorBoundary] Caught render error:', error, info);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="fixed inset-0 flex flex-col items-center justify-center bg-background text-foreground gap-4 p-8">
+          <div className="text-4xl">⚠️</div>
+          <h2 className="text-xl font-semibold">Something went wrong</h2>
+          <p className="text-muted-foreground text-sm text-center max-w-sm">
+            {this.state.error?.message || 'An unexpected error occurred.'}
+          </p>
+          <button
+            onClick={() => { this.setState({ hasError: false, error: null }); window.location.href = '/'; }}
+            className="px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
+          >
+            Go to Home
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 // ── Helpers ──
 const STAFF_ROLES = [
   'admin','super_admin','ads_manager','campaign_manager',
@@ -240,6 +280,7 @@ function App() {
 }
 
 export default App;
+
 
 
 
