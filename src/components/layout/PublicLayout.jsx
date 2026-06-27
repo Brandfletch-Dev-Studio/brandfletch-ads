@@ -10,8 +10,9 @@ const NAV = [
   { label: 'Home',    to: '/' },
   { label: 'About',   to: '/about' },
   { label: 'Pricing', to: '/pricing' },
-  { label: 'Blog',    to: '/blog' },
-  { label: 'Contact', to: '/contact' },
+  { label: 'Blog',      to: '/blog' },
+  { label: 'Portfolio', to: '/portfolio' },
+  { label: 'Contact',   to: '/contact' },
 ];
 
 export default function PublicLayout() {
