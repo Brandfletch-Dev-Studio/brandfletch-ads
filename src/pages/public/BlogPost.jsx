@@ -4,6 +4,7 @@ import { Calendar, Clock, ArrowLeft, Share2, AlertCircle, Eye, BookOpen } from '
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/api/base44Client';
+import { useSEO } from '@/hooks/useSEO';
 
 const ARTICLE_CSS = `
   .bf-article { color: hsl(var(--foreground)); line-height: 1.8; font-size: 1.05rem; }
@@ -50,6 +51,20 @@ export default function BlogPost() {
   const [related, setRelated] = useState([]);
   const viewTracked = useRef(false);
   const readTracked = useRef(false);
+
+  // ── Dynamic SEO ──────────────────────────────────────────────────────────
+  useSEO(post ? {
+    title:       `${post.title} — Brandfletch Blog`,
+    description: post.excerpt || 'Read this article on the Brandfletch Media blog.',
+    image:       post.cover_image || undefined,
+    url:         `https://brandfletch.com/blog/${post.slug}`,
+    type:        'article',
+    author:      post.author_name || 'Brandfletch Team',
+    publishedAt: post.published_at,
+  } : {
+    title:       'Blog — Brandfletch Media',
+    description: 'Advertising insights and tips for African businesses.',
+  });
 
   useEffect(() => {
     viewTracked.current = false;
@@ -316,4 +331,5 @@ export default function BlogPost() {
     </div>
   );
 }
+
 
