@@ -14,7 +14,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import {
   Plus, Pencil, Trash2, Eye, EyeOff, Star, StarOff,
   Upload, X, Loader2, Image, ExternalLink, LayoutGrid
@@ -333,16 +332,22 @@ export default function DesignerPortfolioTab({ user }) {
         </DialogContent>
       </Dialog>
 
-      <ConfirmDialog
-        open={!!confirmDelete}
-        title="Delete portfolio item"
-        description={`"${confirmDelete?.title}" will be permanently removed.`}
-        confirmLabel="Delete"
-        onConfirm={() => deleteMutation.mutate(confirmDelete.id)}
-        onCancel={() => setConfirmDelete(null)}
-        loading={deleteMutation.isPending}
-        variant="destructive"
-      />
+      {confirmDelete && (
+        <Dialog open onOpenChange={() => !deleteMutation.isPending && setConfirmDelete(null)}>
+          <DialogContent className="max-w-sm">
+            <DialogHeader>
+              <DialogTitle>Delete portfolio item?</DialogTitle>
+            </DialogHeader>
+            <p className="text-sm text-muted-foreground">"{confirmDelete?.title}" will be permanently removed.</p>
+            <DialogFooter className="gap-2 pt-2">
+              <Button variant="outline" onClick={() => setConfirmDelete(null)} disabled={deleteMutation.isPending}>Cancel</Button>
+              <Button variant="destructive" onClick={() => deleteMutation.mutate(confirmDelete.id)} disabled={deleteMutation.isPending}>
+                {deleteMutation.isPending ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Deleting…</> : 'Delete'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }
