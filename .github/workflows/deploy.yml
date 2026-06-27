@@ -47,37 +47,24 @@ jobs:
           fi
           echo "✅ Build output exists"
 
-      - name: Deploy to Vercel (production)
+      - name: Deploy to Vercel and alias domain
         run: |
-          # Write output to file instead of command substitution to avoid pipe hanging
-          npx vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }} --yes > deploy_output.txt 2>&1 &
-          DEPLOY_PID=$!
-          
-          # Wait up to 4 minutes
-          for i in $(seq 1 48); do
-            if ! kill -0 $DEPLOY_PID 2>/dev/null; then
-              break
-            fi
-            sleep 5
-          done
-          
-          # If still running, kill it
-          if kill -0 $DEPLOY_PID 2>/dev/null; then
-            kill $DEPLOY_PID 2>/dev/null
-            echo "::warning::Deploy process still running after 4 min, killing"
-          fi
-          
-          # Show output and extract URL
-          cat deploy_output.txt
-          DEPLOY_URL=$(grep -oP 'https://[a-zA-Z0-9-]+\.vercel\.app' deploy_output.txt | head -1)
-          
-          if [ -n "$DEPLOY_URL" ]; then
-            echo "✅ Deployed to: $DEPLOY_URL"
-          else
+          DEPLOY_OUTPUT=$(npx vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }} --yes 2>&1)
+          echo "$DEPLOY_OUTPUT"
+
+          DEPLOY_URL=$(echo "$DEPLOY_OUTPUT" | grep -oP 'https://[a-zA-Z0-9-]+\.vercel\.app' | tail -1)
+
+          if [ -z "$DEPLOY_URL" ]; then
             echo "::error::No deployment URL found in output"
             exit 1
           fi
-        timeout-minutes: 6
+
+          echo "✅ Deployed to: $DEPLOY_URL"
+
+          # Pin brandfletch.com to this exact deployment
+          echo "🔗 Aliasing brandfletch.com → $DEPLOY_URL"
+          npx vercel alias set "$DEPLOY_URL" brandfletch.com --token=${{ secrets.VERCEL_TOKEN }}
+          echo "✅ brandfletch.com updated"
 
       - name: Done
-        run: echo "🚀 Production deploy complete"
+        run: echo "🚀 Live at https://brandfletch.com"
