@@ -18,6 +18,7 @@ import PricingPage from '@/pages/public/PricingPage';
 import ContactPage from '@/pages/public/ContactPage';
 import BlogIndex from '@/pages/public/BlogIndex';
 import BlogPost from '@/pages/public/BlogPost';
+import PortfolioPage from '@/pages/public/PortfolioPage';
 import PrivacyPolicy from '@/pages/PrivacyPolicy';
 import Terms from '@/pages/Terms';
 import PublicFormView from '@/pages/PublicFormView';
@@ -51,6 +52,7 @@ const AdsManagerDashboard  = lazy(() => import('@/pages/AdsManagerDashboard'));
 const Referrals            = lazy(() => import('@/pages/Referrals'));
 const UgcAds               = lazy(() => import('@/pages/UgcAds'));
 const AdminOverview        = lazy(() => import('@/pages/admin/AdminOverview'));
+const AdminPortfolio       = lazy(() => import('@/pages/admin/AdminPortfolio'));
 const AdminCampaigns       = lazy(() => import('@/pages/admin/AdminCampaigns'));
 const AdminCampaignDetail  = lazy(() => import('@/pages/admin/AdminCampaignDetail'));
 const AdminPayments        = lazy(() => import('@/pages/admin/AdminPayments'));
@@ -213,6 +215,7 @@ const AppRoutes = () => (
           <Route path="/contact"        element={<ContactPage />} />
           <Route path="/blog"           element={<BlogIndex />} />
           <Route path="/blog/:slug"     element={<BlogPost />} />
+          <Route path="/portfolio"       element={<PortfolioPage />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/terms"          element={<Terms />} />
         </Route>
@@ -267,6 +270,7 @@ const AppRoutes = () => (
           <Route path="/admin/referrals"       element={<AdminReferrals />} />
           <Route path="/admin/messages"        element={<Navigate to="/admin/support" replace />} />
           <Route path="/admin/blog"            element={<AdminBlog />} />
+          <Route path="/admin/portfolio"       element={<AdminPortfolio />} />
         </Route>
 
         {/* ── 404 ── */}
@@ -291,6 +295,7 @@ function App() {
 }
 
 export default App;
+
 
 
 
