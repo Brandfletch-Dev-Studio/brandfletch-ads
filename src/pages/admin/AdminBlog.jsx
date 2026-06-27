@@ -381,7 +381,7 @@ export default function AdminBlog() {
   };
 
   return (
-    <div className="p-4 lg:p-8 max-w-6xl mx-auto space-y-6">
+    <div className="p-4 lg:p-6 space-y-5 w-full">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -419,7 +419,7 @@ export default function AdminBlog() {
         {/* ── Posts tab ── */}
         <TabsContent value="posts" className="space-y-4">
           {/* Quick stats */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full">
             {[
               { label: 'Total',     val: posts.length,                                  icon: FileText,  color: 'bg-primary/10 text-primary'      },
               { label: 'Published', val: posts.filter(p=>p.status==='published').length, icon: Globe,     color: 'bg-emerald-500/10 text-emerald-500' },
@@ -457,79 +457,86 @@ export default function AdminBlog() {
             </div>
           </div>
 
-          {/* Table */}
-          <div className="bg-card border border-border rounded-xl overflow-hidden">
-            {loading ? (
-              <div className="p-12 flex items-center justify-center gap-2 text-muted-foreground">
-                <Loader2 className="w-5 h-5 animate-spin" /> Loading posts…
-              </div>
-            ) : filtered.length === 0 ? (
-              <div className="p-12 text-center">
-                <p className="text-4xl mb-3">✍️</p>
-                <p className="text-muted-foreground">{search ? 'No posts match your search.' : 'No posts yet — create your first one!'}</p>
-              </div>
-            ) : (
-              <table className="w-full text-sm">
-                <thead className="bg-muted/40 border-b border-border">
-                  <tr>
-                    <th className="text-left px-4 py-3 text-muted-foreground font-medium">Title</th>
-                    <th className="text-left px-4 py-3 text-muted-foreground font-medium hidden sm:table-cell">Category</th>
-                    <th className="text-left px-4 py-3 text-muted-foreground font-medium">Status</th>
-                    <th className="text-right px-4 py-3 text-muted-foreground font-medium hidden md:table-cell">Views</th>
-                    <th className="text-left px-4 py-3 text-muted-foreground font-medium hidden lg:table-cell">Published</th>
-                    <th className="px-4 py-3" />
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {filtered.map(p => (
-                    <tr key={p.id} className="hover:bg-muted/20 transition-colors">
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <span className="text-lg">{p.emoji}</span>
-                          <span className="font-medium text-foreground line-clamp-1">{p.title}</span>
-                        </div>
-                        <p className="text-xs text-muted-foreground ml-8 line-clamp-1">/blog/{p.slug}</p>
-                      </td>
-                      <td className="px-4 py-3 hidden sm:table-cell">
-                        {p.category ? <Badge variant="outline" className="text-xs">{p.category}</Badge> : '—'}
-                      </td>
-                      <td className="px-4 py-3">{statusBadge(p.status)}</td>
-                      <td className="px-4 py-3 text-right hidden md:table-cell">
-                        <span className="font-medium">{(p.view_count||0).toLocaleString()}</span>
-                        {p.read_count > 0 && <span className="text-xs text-muted-foreground block">{p.read_count} reads</span>}
-                      </td>
-                      <td className="px-4 py-3 text-muted-foreground hidden lg:table-cell">
-                        {p.published_at ? new Date(p.published_at).toLocaleDateString() : '—'}
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-1 justify-end">
-                          {p.status === 'published' && (
-                            <Button size="icon" variant="ghost" title="View live" asChild>
-                              <a href={`/blog/${p.slug}`} target="_blank" rel="noopener">
-                                <ExternalLink className="w-4 h-4 text-muted-foreground" />
-                              </a>
-                            </Button>
-                          )}
-                          <Button size="icon" variant="ghost" title={p.status==='published'?'Unpublish':'Publish'} onClick={() => toggleStatus(p)}>
-                            {p.status==='published'
-                              ? <EyeOff className="w-4 h-4 text-muted-foreground" />
-                              : <Eye    className="w-4 h-4 text-primary" />
-                            }
-                          </Button>
-                          <Button size="icon" variant="ghost" onClick={() => openEdit(p)}>
-                            <Edit2 className="w-4 h-4 text-muted-foreground" />
-                          </Button>
-                          <Button size="icon" variant="ghost" onClick={() => setDeleteConfirm(p)}>
-                            <Trash2 className="w-4 h-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </div>
+          {/* Post Cards Grid */}
+          {loading ? (
+            <div className="p-12 flex items-center justify-center gap-2 text-muted-foreground">
+              <Loader2 className="w-5 h-5 animate-spin" /> Loading posts…
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="p-12 text-center bg-card border border-border rounded-xl">
+              <p className="text-4xl mb-3">✍️</p>
+              <p className="text-muted-foreground">{search ? 'No posts match your search.' : 'No posts yet — create your first one!'}</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
+              {filtered.map(p => (
+                <div key={p.id} className="bg-card border border-border rounded-xl overflow-hidden flex flex-col hover:border-primary/40 hover:shadow-md transition-all group">
+                  {/* Card top — emoji / cover */}
+                  <div className="h-32 bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center relative shrink-0">
+                    {p.cover_image
+                      ? <img src={p.cover_image} alt="" className="w-full h-full object-cover" />
+                      : <span className="text-5xl select-none">{p.emoji || '📝'}</span>
+                    }
+                    {/* Status pill */}
+                    <div className="absolute top-2 left-2">
+                      {statusBadge(p.status)}
+                    </div>
+                    {/* Quick actions — appear on hover */}
+                    <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      {p.status === 'published' && (
+                        <Button size="icon" variant="secondary" className="w-7 h-7" title="View live" asChild>
+                          <a href={`/blog/${p.slug}`} target="_blank" rel="noopener">
+                            <ExternalLink className="w-3.5 h-3.5" />
+                          </a>
+                        </Button>
+                      )}
+                      <Button size="icon" variant="secondary" className="w-7 h-7" title={p.status==='published'?'Unpublish':'Publish'} onClick={() => toggleStatus(p)}>
+                        {p.status==='published'
+                          ? <EyeOff className="w-3.5 h-3.5" />
+                          : <Eye    className="w-3.5 h-3.5 text-primary" />
+                        }
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Card body */}
+                  <div className="p-4 flex flex-col gap-2 flex-1">
+                    {p.category && (
+                      <Badge variant="outline" className="self-start text-[10px] uppercase tracking-wide">{p.category}</Badge>
+                    )}
+                    <h3 className="font-semibold text-sm leading-snug line-clamp-2 text-foreground">{p.title}</h3>
+                    {p.excerpt && (
+                      <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">{p.excerpt}</p>
+                    )}
+                    <p className="text-[10px] text-muted-foreground/60 font-mono truncate mt-auto pt-1">/blog/{p.slug}</p>
+                  </div>
+
+                  {/* Card footer */}
+                  <div className="px-4 py-3 border-t border-border flex items-center justify-between">
+                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <Eye className="w-3 h-3" /> {(p.view_count||0).toLocaleString()}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <BookOpen className="w-3 h-3" /> {(p.read_count||0).toLocaleString()}
+                      </span>
+                      {p.published_at && (
+                        <span className="hidden sm:inline">{new Date(p.published_at).toLocaleDateString('en-GB', { day:'numeric', month:'short' })}</span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Button size="icon" variant="ghost" className="w-7 h-7" onClick={() => openEdit(p)}>
+                        <Edit2 className="w-3.5 h-3.5 text-muted-foreground" />
+                      </Button>
+                      <Button size="icon" variant="ghost" className="w-7 h-7" onClick={() => setDeleteConfirm(p)}>
+                        <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </TabsContent>
 
         {/* ── Analytics tab ── */}
@@ -665,3 +672,4 @@ export default function AdminBlog() {
     </div>
   );
 }
+
