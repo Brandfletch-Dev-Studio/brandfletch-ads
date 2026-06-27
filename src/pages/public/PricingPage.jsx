@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Check, ArrowRight, MessageSquare, Loader2 } from 'lucide-react';
+import { Check, ArrowRight, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -408,75 +408,20 @@ export default function PricingPage() {
     return () => ctrl.abort();
   }, [user?.country]);
 
-  // ── Guest order modal state ───────────────────────────────────────────────
-  const [guestModal, setGuestModal] = useState(false);
-  const [guestPlan, setGuestPlan]   = useState(null);
-  const [guestForm, setGuestForm]   = useState({ full_name:'', email:'', phone:'', business_name:'', notes:'' });
-  const [guestSubmitting, setGuestSubmitting] = useState(false);
-  const [guestDone, setGuestDone]   = useState(false);
-
-  function openGuestModal(serviceType, plan) {
-    setGuestPlan({ serviceType, plan });
-    setGuestForm({ full_name:'', email:'', phone:'', business_name:'', notes:'' });
-    setGuestDone(false);
-    setGuestModal(true);
-  }
-
-  async function submitGuestOrder(e) {
-    e.preventDefault();
-    if (!guestForm.full_name.trim() || !guestForm.email.trim()) {
-      toast.error('Name and email are required');
-      return;
-    }
-    setGuestSubmitting(true);
-    try {
-      await supabase.from('GuestOrder').insert([{
-        full_name:     guestForm.full_name.trim(),
-        email:         guestForm.email.trim(),
-        phone:         guestForm.phone.trim() || null,
-        business_name: guestForm.business_name.trim() || null,
-        country:       country,
-        service_type:  guestPlan.serviceType,
-        package_slug:  guestPlan.plan?.pkgSlug || guestPlan.plan?.plan_slug || null,
-        plan_name:     guestPlan.plan?.name || guestPlan.plan?.plan_name || guestPlan.plan?.label || null,
-        currency:      CURRENCY_MAP[country]?.currency || 'MWK',
-        price:         guestPlan.plan?.price || guestPlan.plan?.monthly_price || guestPlan.plan?.monthly || 0,
-        duration:      guestPlan.plan?.period || 'monthly',
-        notes:         guestForm.notes.trim() || null,
-        status:        'new',
-      }]);
-      setGuestDone(true);
-    } catch (err) {
-      console.error('[GuestOrder]', err);
-      toast.error('Something went wrong — please try again or contact us directly.');
-    } finally {
-      setGuestSubmitting(false);
-    }
-  }
-
-  // Smart CTA handler — auth-aware routing for all plan types
+  // CTA handler — no auth required, all flows accessible to guests
   function handlePlanCta(serviceType, plan) {
-    const isLoggedIn = !!user;
-
-    if (serviceType === 'meta-ads' && isLoggedIn) {
+    if (serviceType === 'meta-ads') {
       const params = new URLSearchParams();
       if (plan.pkgSlug) params.set('package', plan.pkgSlug);
       navigate(`/campaigns/new${params.toString() ? '?' + params.toString() : ''}`);
       return;
     }
-
-    if (serviceType === 'ugc-ads' && isLoggedIn) {
+    if (serviceType === 'ugc-ads') {
       navigate('/ugc-ads');
       return;
     }
-
-    if (isLoggedIn) {
-      navigate('/support');
-      return;
-    }
-
-    // Guest — open order modal instead of redirecting to register
-    openGuestModal(serviceType, plan);
+    // Other services — go to support/contact
+    navigate('/support');
   }
 
   const service = STATIC_PLANS[activeTab];
@@ -615,90 +560,6 @@ export default function PricingPage() {
           </Button>
         </Link>
       </section>
-
-      {/* ── Guest Order Modal ─────────────────────────────────────────────── */}
-      <Dialog open={guestModal} onOpenChange={setGuestModal}>
-        <DialogContent className="sm:max-w-md">
-          {!guestDone ? (
-            <>
-              <DialogHeader>
-                <DialogTitle className="text-lg font-bold">Place your order</DialogTitle>
-                <DialogDescription>
-                  {guestPlan && (
-                    <span className="text-sm text-muted-foreground">
-                      <span className="font-semibold text-foreground">
-                        {guestPlan.plan?.label || guestPlan.plan?.plan_name || guestPlan.plan?.name || 'Selected plan'}
-                      </span>
-                      {' · '}
-                      {({'meta-ads':'Meta Ads','ugc-ads':'UGC Ads','designs':'Graphic Design','web':'Web Development','social':'Social Media'}[guestPlan.serviceType] || guestPlan.serviceType)}
-                    </span>
-                  )}
-                </DialogDescription>
-              </DialogHeader>
-
-              <form onSubmit={submitGuestOrder} className="space-y-4 mt-2">
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <Label htmlFor="g-name" className="text-xs font-semibold">Full name *</Label>
-                    <Input id="g-name" placeholder="Your name" value={guestForm.full_name}
-                      onChange={e => setGuestForm(f => ({ ...f, full_name: e.target.value }))} required />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="g-email" className="text-xs font-semibold">Email *</Label>
-                    <Input id="g-email" type="email" placeholder="you@example.com" value={guestForm.email}
-                      onChange={e => setGuestForm(f => ({ ...f, email: e.target.value }))} required />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <Label htmlFor="g-phone" className="text-xs font-semibold">Phone / WhatsApp</Label>
-                    <Input id="g-phone" placeholder="+265 ..." value={guestForm.phone}
-                      onChange={e => setGuestForm(f => ({ ...f, phone: e.target.value }))} />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="g-biz" className="text-xs font-semibold">Business name</Label>
-                    <Input id="g-biz" placeholder="Your business" value={guestForm.business_name}
-                      onChange={e => setGuestForm(f => ({ ...f, business_name: e.target.value }))} />
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="g-notes" className="text-xs font-semibold">Anything you want us to know?</Label>
-                  <Textarea id="g-notes" placeholder="Products, target audience, goals…" rows={3}
-                    value={guestForm.notes} onChange={e => setGuestForm(f => ({ ...f, notes: e.target.value }))}
-                    className="resize-none" />
-                </div>
-                <Button type="submit" className="w-full font-semibold" disabled={guestSubmitting}>
-                  {guestSubmitting
-                    ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Submitting…</>
-                    : 'Submit order →'
-                  }
-                </Button>
-                <p className="text-xs text-center text-muted-foreground">
-                  We'll reach out within 24 hours to confirm your order and next steps.
-                </p>
-              </form>
-            </>
-          ) : (
-            <div className="py-8 text-center space-y-4">
-              <div className="w-14 h-14 rounded-full bg-green-500/10 flex items-center justify-center mx-auto">
-                <svg className="w-7 h-7 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-foreground mb-1">Order received!</h3>
-                <p className="text-sm text-muted-foreground max-w-xs mx-auto">
-                  Thanks, <span className="font-medium text-foreground">{guestForm.full_name.split(' ')[0]}</span>.
-                  {' '}We'll be in touch at{' '}
-                  <span className="font-medium text-foreground">{guestForm.email}</span>{' '}
-                  within 24 hours to get things moving.
-                </p>
-              </div>
-              <Button variant="outline" size="sm" onClick={() => setGuestModal(false)}>Done</Button>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
