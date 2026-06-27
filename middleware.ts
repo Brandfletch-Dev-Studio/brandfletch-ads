@@ -1,9 +1,6 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
-
-// Vercel Edge Middleware — runs before any request
-// For bots/crawlers: injects per-route SEO tags into the HTML shell
-// For real browsers: passes through to the SPA as normal
+// Vercel Edge Middleware — runs before any request on the CDN edge
+// For bots/crawlers: injects per-route SEO Open Graph tags into the HTML shell
+// For real browsers: passes through to the SPA as-is
 
 const BOT_UA = /facebookexternalhit|twitterbot|linkedinbot|whatsapp|slackbot|telegrambot|googlebot|bingbot|duckduckbot|applebot|pinterest|discordbot|embedly|quora|outbrain|rogerbot|showyoubot|vkshare|w3c_validator|redditbot|ia_archiver/i;
 
@@ -15,10 +12,8 @@ const DEFAULTS = {
   title:       'Brandfletch Media — Advertising & Marketing for African Businesses',
   description: 'We build and run advertising systems for African businesses — Meta Ads, UGC creatives, social media, and professional design. Everything you need, in one place.',
   image:       `${SITE_URL}/og-default.jpg`,
-  type:        'website',
 };
 
-// Per-static-route overrides
 const STATIC_META: Record<string, { title: string; description: string; image?: string }> = {
   '/': {
     title:       'Brandfletch Media — Digital Advertising for African Businesses',
@@ -26,7 +21,7 @@ const STATIC_META: Record<string, { title: string; description: string; image?: 
   },
   '/about': {
     title:       'About Brandfletch Media — Built for Africa',
-    description: 'Learn how Brandfletch Media was born from the African market and why we\'re obsessed with helping local businesses grow through digital advertising.',
+    description: "Learn how Brandfletch Media was born from the African market and why we're obsessed with helping local businesses grow through digital advertising.",
   },
   '/pricing': {
     title:       'Pricing — Brandfletch Media',
@@ -34,7 +29,7 @@ const STATIC_META: Record<string, { title: string; description: string; image?: 
   },
   '/contact': {
     title:       'Contact Brandfletch Media',
-    description: 'Get in touch with our team to discuss your advertising goals. We\'re ready to help your business grow.',
+    description: "Get in touch with our team to discuss your advertising goals. We're ready to help your business grow.",
   },
   '/blog': {
     title:       'The Brandfletch Blog — Advertising Tips for African Businesses',
@@ -86,17 +81,18 @@ function buildHtml(meta: {
 </html>`;
 }
 
-export async function middleware(req: NextRequest) {
+export default async function middleware(req: Request): Promise<Response> {
   const ua = req.headers.get('user-agent') || '';
-  const { pathname } = req.nextUrl;
+  const url = new URL(req.url);
+  const { pathname } = url;
 
-  // Only intercept if it's a bot AND a public page
-  const isBot = BOT_UA.test(ua);
+  // Only intercept bots on non-asset paths
+  const isBot  = BOT_UA.test(ua);
   const isPage = !pathname.match(/\.(js|css|png|jpg|svg|ico|woff|woff2|json|map|txt|xml)$/);
 
-  if (!isBot || !isPage) return NextResponse.next();
+  if (!isBot || !isPage) return fetch(req);
 
-  const url = `${SITE_URL}${pathname}`;
+  const fullUrl = `${SITE_URL}${pathname}`;
 
   // ── Blog post ─────────────────────────────────────────────────────────────
   const blogMatch = pathname.match(/^\/blog\/([^/]+)$/);
@@ -110,22 +106,21 @@ export async function middleware(req: NextRequest) {
       const rows = await res.json() as any[];
       if (rows?.length) {
         const p = rows[0];
-        const image = p.cover_image || DEFAULTS.image;
         const html = buildHtml({
           title:       `${p.title} — Brandfletch Blog`,
           description: p.excerpt || DEFAULTS.description,
-          image,
-          url,
+          image:       p.cover_image || DEFAULTS.image,
+          url:         fullUrl,
           type:        'article',
           author:      p.author_name || 'Brandfletch Team',
           publishedAt: p.published_at,
         });
-        return new NextResponse(html, {
+        return new Response(html, {
           status: 200,
           headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=3600, s-maxage=3600' },
         });
       }
-    } catch (_) {}
+    } catch (_) { /* fall through to static */ }
   }
 
   // ── Static routes ─────────────────────────────────────────────────────────
@@ -135,18 +130,18 @@ export async function middleware(req: NextRequest) {
       title:       staticMeta.title,
       description: staticMeta.description,
       image:       staticMeta.image || DEFAULTS.image,
-      url,
+      url:         fullUrl,
       type:        'website',
     });
-    return new NextResponse(html, {
+    return new Response(html, {
       status: 200,
       headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=86400, s-maxage=86400' },
     });
   }
 
-  return NextResponse.next();
+  return fetch(req);
 }
 
 export const config = {
-  matcher: ['/((?!_next|api|static).*)'],
+  matcher: ['/((?!_next|api|static|assets).*)'],
 };
