@@ -176,6 +176,13 @@ function AuthGuard({ children }) {
   return children;
 }
 
+// ── GuestAppRoute ─────────────────────────────────────────────────────────────
+// Like AppLayout but accessible without login. Used for ordering flows that
+// work with or without an account (e.g. /campaigns/new, /ugc-ads).
+function GuestAppRoute({ children }) {
+  return <AppLayout />;
+}
+
 // ── Route tree ────────────────────────────────────────────────────────────────
 const AppRoutes = () => (
   <ErrorBoundary>
@@ -214,18 +221,22 @@ const AppRoutes = () => (
             AuthGuard waits for auth and redirects to login if not logged in.
             These are completely separate from the public route tree above.
         ─────────────────────────────────────────────────────────────────── */}
+        {/* Semi-public ordering flows — accessible with or without login */}
+        <Route element={<GuestAppRoute />}>
+          <Route path="/campaigns/new" element={<CampaignWizard />} />
+          <Route path="/ugc-ads"       element={<UgcAds />} />
+        </Route>
+
         <Route element={<AuthGuard><AppLayout /></AuthGuard>}>
           <Route path="/dashboard"             element={<Dashboard />} />
           <Route path="/pages"                 element={<FacebookPages />} />
           <Route path="/campaigns"             element={<CampaignsList />} />
-          <Route path="/campaigns/new"         element={<CampaignWizard />} />
           <Route path="/campaigns/:id"         element={<CampaignDetail />} />
           <Route path="/campaigns/:id/payment" element={<CampaignPayment />} />
           <Route path="/audiences"             element={<SavedAudiences />} />
           <Route path="/settings"              element={<ProfileSettings />} />
           <Route path="/designs"               element={<Designs />} />
           <Route path="/designs/payment"       element={<DesignPayment />} />
-          <Route path="/ugc-ads"               element={<UgcAds />} />
           <Route path="/leads"                 element={<LeadsComingSoon />} />
           <Route path="/leads/forms"           element={<LeadForms />} />
           <Route path="/referrals"             element={<Referrals />} />
@@ -280,6 +291,7 @@ function App() {
 }
 
 export default App;
+
 
 
 
