@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/api/base44Client';
+import { useSEO } from '@/hooks/useSEO';
 
 function PostCard({ post }) {
   const readTime = Math.ceil((post.content?.replace(/<[^>]+>/g, '').split(' ').length || 200) / 200);
@@ -49,6 +50,11 @@ function PostCard({ post }) {
 }
 
 export default function BlogIndex() {
+  useSEO({
+    title:       'The Brandfletch Blog — Advertising Tips for African Businesses',
+    description: 'Insights, strategies, and success stories to help African businesses win with digital advertising on Facebook, Instagram, and beyond.',
+  });
+
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -170,3 +176,4 @@ export default function BlogIndex() {
     </div>
   );
 }
+
