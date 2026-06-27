@@ -48,8 +48,8 @@ const CONTACT_METHODS = [
 
 export default function ContactPage() {
   useSEO({
-    title:       'Contact Brandfletch Media — Let's Grow Your Business',
-    description: 'Get in touch with our advertising team. We're ready to help you launch campaigns and grow your business across Africa.',
+    title:       "Contact Brandfletch Media — Let's Grow Your Business",
+    description: "Get in touch with our advertising team. We're ready to help you launch campaigns and grow your business across Africa.",
   });
 
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });
