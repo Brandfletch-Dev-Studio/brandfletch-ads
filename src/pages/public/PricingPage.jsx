@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import { supabase } from '@/api/base44Client';
 import { LOCAL_PRICES } from '@/lib/pricing';
 import { useAuth } from '@/lib/AuthContext';
+import { useSEO } from '@/hooks/useSEO';
 
 const DEFAULT_RATE = 5000;
 
@@ -362,6 +363,11 @@ function MetaAdsPricing({ dbRows, loading, country, onCountryChange, onPlanSelec
 
 // ── Main component ────────────────────────────────────────────────────────────
 export default function PricingPage() {
+  useSEO({
+    title:       'Pricing — Brandfletch Media Ad Management Packages',
+    description: 'Flexible Meta Ads management, UGC creatives, graphic design, and social media packages. Clear pricing in USD and MWK for African businesses.',
+  });
+
   const { user } = useAuth();
   const navigate = useNavigate();
   const [activeTab,  setActiveTab]  = useState('meta-ads');
@@ -563,5 +569,6 @@ export default function PricingPage() {
     </div>
   );
 }
+
 
 
