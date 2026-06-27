@@ -2,30 +2,56 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="https://base44.com/logo_v2.svg" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="manifest" href="/manifest.json" />
-    
-    <!-- SEO Meta Tags -->
-    <title>Brandfletch Media — Advertising & Marketing for African Businesses</title>
-    <meta name="description" content="Create and manage professional Facebook ad campaigns with ease. Built for African businesses with local payment methods, flexible packages, and expert support." />
-    <meta name="keywords" content="Facebook ads, advertising management, African businesses, digital marketing, campaign management, social media advertising, Malawi, Kenya, Zambia" />
+
+    <!-- Primary SEO (fallback — overridden per-page by useSEO hook & Edge middleware) -->
+    <title>Brandfletch Media — Digital Advertising for African Businesses</title>
+    <meta name="description" content="We build and run advertising systems for African businesses — from Meta Ads and UGC creatives to social media and professional design. Everything you need, in one place." />
+    <meta name="keywords" content="Facebook ads, Instagram ads, Meta advertising, African businesses, digital marketing, UGC creatives, Malawi, Kenya, Zambia, social media management" />
     <meta name="author" content="Brandfletch Media" />
     <meta name="robots" content="index, follow" />
-    
-    <!-- Open Graph / Social Sharing -->
-    <meta property="og:type" content="website" />
-    <meta property="og:title" content="Brandfletch Media — Advertising & Marketing for African Businesses" />
-    <meta property="og:description" content="Empowering African businesses with world-class advertising technology. Create, manage, and optimize Facebook campaigns with local payment support." />
-    <meta property="og:site_name" content="Brandfletch Media" />
-    
+
+    <!-- Open Graph -->
+    <meta property="og:type"        content="website" />
+    <meta property="og:url"         content="https://brandfletch.com" />
+    <meta property="og:title"       content="Brandfletch Media — Digital Advertising for African Businesses" />
+    <meta property="og:description" content="We build and run advertising systems for African businesses — Meta Ads, UGC creatives, social media, and design. Everything in one place." />
+    <meta property="og:image"       content="https://brandfletch.com/og-default.jpg" />
+    <meta property="og:site_name"   content="Brandfletch Media" />
+    <meta property="og:locale"      content="en_US" />
+
     <!-- Twitter Card -->
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Brandfletch Media — Advertising & Marketing for African Businesses" />
-    <meta name="twitter:description" content="Professional campaign management with flexible packages, precise targeting, and local payment methods." />
-    
-    <!-- Canonical URL -->
+    <meta name="twitter:card"        content="summary_large_image" />
+    <meta name="twitter:site"        content="@brandfletchmedia" />
+    <meta name="twitter:title"       content="Brandfletch Media — Digital Advertising for African Businesses" />
+    <meta name="twitter:description" content="Professional ad management, UGC creatives, and design for African businesses. Clear pricing, local payment methods." />
+    <meta name="twitter:image"       content="https://brandfletch.com/og-default.jpg" />
+
+    <!-- Canonical -->
     <link rel="canonical" href="https://brandfletch.com" />
+
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Brandfletch Media",
+      "url": "https://brandfletch.com",
+      "logo": "https://brandfletch.com/logo.png",
+      "description": "Digital advertising agency specialising in Meta Ads, UGC creatives, graphic design, and social media management for African businesses.",
+      "foundingLocation": {
+        "@type": "Place",
+        "name": "Malawi, Africa"
+      },
+      "areaServed": ["Malawi", "Kenya", "Zambia", "Tanzania", "South Africa"],
+      "sameAs": [
+        "https://www.facebook.com/brandfletchmedia",
+        "https://www.instagram.com/brandfletchmedia"
+      ]
+    }
+    </script>
   </head>
   <body>
     <div id="root"></div>
