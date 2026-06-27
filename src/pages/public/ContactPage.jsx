@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { supabase } from '@/api/base44Client';
+import { useSEO } from '@/hooks/useSEO';
 
 const CONTACT_METHODS = [
   {
@@ -46,6 +47,11 @@ const CONTACT_METHODS = [
 ];
 
 export default function ContactPage() {
+  useSEO({
+    title:       'Contact Brandfletch Media — Let's Grow Your Business',
+    description: 'Get in touch with our advertising team. We're ready to help you launch campaigns and grow your business across Africa.',
+  });
+
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
@@ -230,3 +236,4 @@ export default function ContactPage() {
     </div>
   );
 }
+
