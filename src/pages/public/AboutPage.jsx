@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, Heart, Globe, Users, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { useSEO } from '@/hooks/useSEO';
 
 const VALUES = [
   { icon: Heart,  title: 'Africa-First',      desc: 'We understand the African market — its nuances, local payment methods, and growth opportunities.' },
@@ -11,6 +12,11 @@ const VALUES = [
 ];
 
 export default function AboutPage() {
+  useSEO({
+    title:       'About Brandfletch Media — Built for Africa, Powered by Ambition',
+    description: 'Brandfletch Media was born from the African market. We democratise world-class digital advertising for businesses across Malawi, Kenya, Zambia, and beyond.',
+  });
+
   return (
     <div>
       {/* Hero */}
@@ -92,3 +98,4 @@ export default function AboutPage() {
     </div>
   );
 }
+
