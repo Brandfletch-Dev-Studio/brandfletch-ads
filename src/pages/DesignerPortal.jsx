@@ -18,6 +18,7 @@ import { useRoleGuard } from '@/hooks/useRoleGuard';
 import { useAuth } from '@/lib/AuthContext';
 import DesignChatComponent from '@/components/designs/DesignChatComponent';
 import DesignStatusTimeline from '@/components/designs/DesignStatusTimeline';
+import DesignerPortfolioTab from '@/components/portfolio/DesignerPortfolioTab';
 
 // Only designers + design dept head can access this portal
 // creative_ops_director sees ALL design requests; designer sees only their own
@@ -296,17 +297,20 @@ export default function DesignerPortal() {
 
       {/* Tabs: Projects | Portfolio */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-2 w-fit">
+        <TabsList className="grid grid-cols-3 w-fit">
           <TabsTrigger value="projects" className="flex items-center gap-2">
             <Briefcase className="w-4 h-4" /> Projects
           </TabsTrigger>
           <TabsTrigger value="portfolio" className="flex items-center gap-2">
-            <Star className="w-4 h-4" /> Portfolio
+            <Star className="w-4 h-4" /> Showcase
             {portfolio.length > 0 && (
               <span className="ml-1 bg-[hsl(var(--primary))]/15 text-[hsl(var(--primary))] text-xs rounded-full px-1.5 py-0.5 font-semibold">
                 {portfolio.length}
               </span>
             )}
+          </TabsTrigger>
+          <TabsTrigger value="my-portfolio" className="flex items-center gap-2">
+            <Briefcase className="w-4 h-4" /> Portfolio
           </TabsTrigger>
         </TabsList>
 
@@ -365,7 +369,7 @@ export default function DesignerPortal() {
           ))}
         </TabsContent>
 
-        {/* ── Portfolio tab ── */}
+        {/* ── Work showcase (from design requests) ── */}
         <TabsContent value="portfolio" className="mt-4">
           {portfolio.length === 0 ? (
             <Card>
@@ -407,6 +411,10 @@ export default function DesignerPortal() {
               ))}
             </div>
           )}
+        </TabsContent>
+        {/* ── Portfolio management tab ── */}
+        <TabsContent value="my-portfolio" className="mt-4">
+          <DesignerPortfolioTab user={user} />
         </TabsContent>
       </Tabs>
     </div>
