@@ -1,75 +1,96 @@
-import { useLocation } from 'react-router-dom';
-import { base44 } from '@/api/base44Client';
-import { useQuery } from '@tanstack/react-query';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { ArrowLeft, Home, Search, Megaphone } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useAuth } from '@/lib/AuthContext';
 
+const QUICK_LINKS = [
+  { label: 'Home',       href: '/',        desc: 'Back to the main site' },
+  { label: 'Blog',       href: '/blog',    desc: 'Tips & strategies for African businesses' },
+  { label: 'Pricing',    href: '/pricing', desc: 'See our ad management packages' },
+  { label: 'Contact',    href: '/contact', desc: 'Talk to our team' },
+];
 
-export default function PageNotFound({}) {
-    const location = useLocation();
-    const pageName = location.pathname.substring(1);
+export default function PageNotFound() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { user } = useAuth();
 
-    const { data: authData, isFetched } = useQuery({
-        queryKey: ['user'],
-        queryFn: async () => {
-            try {
-                const user = await base44.auth.me();
-                return { user, isAuthenticated: true };
-            } catch (error) {
-                return { user: null, isAuthenticated: false };
-            }
-        }
-    });
-    
-    return (
-        <div className="min-h-screen flex items-center justify-center p-6 bg-slate-50">
-            <div className="max-w-md w-full">
-                <div className="text-center space-y-6">
-                    {/* 404 Error Code */}
-                    <div className="space-y-2">
-                        <h1 className="text-7xl font-light text-slate-300">404</h1>
-                        <div className="h-0.5 w-16 bg-slate-200 mx-auto"></div>
-                    </div>
-                    
-                    {/* Main Message */}
-                    <div className="space-y-3">
-                        <h2 className="text-2xl font-medium text-slate-800">
-                            Page Not Found
-                        </h2>
-                        <p className="text-slate-600 leading-relaxed">
-                            The page <span className="font-medium text-slate-700">"{pageName}"</span> could not be found in this application.
-                        </p>
-                    </div>
-                    
-                    {/* Admin Note */}
-                    {isFetched && authData.isAuthenticated && authData.user?.role === 'admin' && (
-                        <div className="mt-8 p-4 bg-slate-100 rounded-lg border border-slate-200">
-                            <div className="flex items-start space-x-3">
-                                <div className="flex-shrink-0 w-5 h-5 rounded-full bg-orange-100 flex items-center justify-center mt-0.5">
-                                    <div className="w-2 h-2 rounded-full bg-orange-400"></div>
-                                </div>
-                                <div className="text-left space-y-1">
-                                    <p className="text-sm font-medium text-slate-700">Admin Note</p>
-                                    <p className="text-sm text-slate-600 leading-relaxed">
-                                        This could mean that the AI hasn't implemented this page yet. Ask it to implement it in the chat.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-                    
-                    {/* Action Button */}
-                    <div className="pt-6">
-                        <button 
-                            onClick={() => window.location.href = '/'} 
-                            className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:border-slate-300 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500"
-                        >
-                            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                            </svg>
-                            Go Home
-                        </button>
-                    </div>
-                </div>
+  const badPath = location.pathname;
+
+  return (
+    <div className="min-h-screen bg-background flex flex-col">
+      {/* Top bar */}
+      <div className="px-6 py-5 border-b border-border">
+        <Link to="/" className="inline-flex items-center gap-2 group">
+          <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center">
+            <Megaphone className="w-4 h-4 text-primary-foreground" />
+          </div>
+          <span className="font-semibold text-sm text-foreground">Brandfletch Media</span>
+        </Link>
+      </div>
+
+      {/* Main content */}
+      <div className="flex-1 flex items-center justify-center px-6 py-16">
+        <div className="w-full max-w-2xl">
+
+          {/* Big 404 */}
+          <div className="relative mb-10 select-none">
+            <p className="text-[160px] sm:text-[220px] font-black leading-none text-foreground/[0.04] text-center tracking-tighter">
+              404
+            </p>
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <div className="w-14 h-14 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mb-5">
+                <Search className="w-6 h-6 text-primary" />
+              </div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-foreground text-center">
+                Page not found
+              </h1>
+              <p className="mt-3 text-muted-foreground text-center text-sm sm:text-base max-w-sm leading-relaxed">
+                <span className="font-mono text-xs bg-muted text-foreground/70 px-2 py-0.5 rounded mr-1">{badPath}</span>
+                doesn't exist or may have moved.
+              </p>
             </div>
+          </div>
+
+          {/* Quick links */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
+            {QUICK_LINKS.map(link => (
+              <Link
+                key={link.href}
+                to={link.href}
+                className="group flex flex-col gap-1.5 p-4 rounded-xl bg-card border border-border hover:border-primary/40 hover:bg-primary/5 transition-all"
+              >
+                <span className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
+                  {link.label}
+                </span>
+                <span className="text-[11px] text-muted-foreground leading-relaxed line-clamp-2">
+                  {link.desc}
+                </span>
+              </Link>
+            ))}
+          </div>
+
+          {/* Actions */}
+          <div className="flex items-center justify-center gap-3 flex-wrap">
+            <Button variant="outline" onClick={() => navigate(-1)} className="gap-2">
+              <ArrowLeft className="w-4 h-4" /> Go back
+            </Button>
+            <Button asChild className="gap-2">
+              <Link to={user ? '/dashboard' : '/'}>
+                <Home className="w-4 h-4" />
+                {user ? 'Dashboard' : 'Go home'}
+              </Link>
+            </Button>
+          </div>
+
+          {/* Admin hint */}
+          {user?.role === 'admin' && (
+            <p className="mt-8 text-center text-xs text-muted-foreground/60">
+              Admin: this route may not be implemented yet. Ask the AI to build it.
+            </p>
+          )}
         </div>
-    )
+      </div>
+    </div>
+  );
 }
