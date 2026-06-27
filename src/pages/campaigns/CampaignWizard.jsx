@@ -8,7 +8,6 @@ import { toast } from 'sonner';
 import { useAuth } from '@/lib/AuthContext';
 
 import StepName from './wizard/StepName';
-import StepSelectPage from './wizard/StepSelectPage';
 import StepCreative from './wizard/StepCreative';
 import StepGoal from './wizard/StepGoal';
 import StepAudience from './wizard/StepAudience';
@@ -16,13 +15,12 @@ import StepPackage from './wizard/StepPackage';
 import StepSummary from './wizard/StepSummary';
 
 const STEPS = [
-  { id: 1, label: 'Name' },
-  { id: 2, label: 'Page' },
-  { id: 3, label: 'Creative' },
-  { id: 4, label: 'Goal' },
-  { id: 5, label: 'Audience' },
-  { id: 6, label: 'Package' },
-  { id: 7, label: 'Summary' },
+  { id: 1, label: 'Campaign' },
+  { id: 2, label: 'Creative' },
+  { id: 3, label: 'Goal' },
+  { id: 4, label: 'Audience' },
+  { id: 5, label: 'Package' },
+  { id: 6, label: 'Summary' },
 ];
 
 export default function CampaignWizard() {
@@ -85,7 +83,7 @@ export default function CampaignWizard() {
       // Strip any fields that don't belong in the schema or have invalid enum values
       const payload = {
         campaign_name:        data.campaign_name,
-        user_id:              user.id,
+        user_id:              user?.id || null,
         page_id:              data.page_id || '',
         page_name:            data.page_name || '',
         goal:                 data.goal || undefined,
@@ -126,9 +124,9 @@ export default function CampaignWizard() {
       return;
     }
 
-    if (data.save_audience && data.audience_name) {
+    if (data.save_audience && data.audience_name && user?.id) {
       await base44.entities.SavedAudience.create({
-        user_id: user.id,
+        user_id: user?.id || null,
         name: data.audience_name,
         countries: data.audience_countries,
         regions: data.audience_regions,
@@ -202,12 +200,11 @@ export default function CampaignWizard() {
         {/* Step content */}
         <div className="bg-card rounded-2xl border border-border shadow-sm p-6 lg:p-8">
           {step === 1 && <StepName data={data} update={update} />}
-          {step === 2 && <StepSelectPage data={data} update={update} userId={user?.id} user={user} />}
-          {step === 3 && <StepCreative data={data} update={update} />}
-          {step === 4 && <StepGoal data={data} update={update} />}
-          {step === 5 && <StepAudience data={data} update={update} userId={user?.id} />}
-          {step === 6 && <StepPackage data={data} update={update} />}
-          {step === 7 && <StepSummary data={data} update={update} />}
+          {step === 2 && <StepCreative data={data} update={update} />}
+          {step === 3 && <StepGoal data={data} update={update} />}
+          {step === 4 && <StepAudience data={data} update={update} userId={user?.id} />}
+          {step === 5 && <StepPackage data={data} update={update} />}
+          {step === 6 && <StepSummary data={data} update={update} />}
         </div>
 
         {/* Nav */}
@@ -219,27 +216,26 @@ export default function CampaignWizard() {
           >
             <ChevronLeft className="w-4 h-4" /> {step === 1 ? 'Cancel' : 'Back'}
           </Button>
-          {step < 7 ? (
+          {step < 6 ? (
             <Button
               onClick={() => setStep(s => s + 1)}
               disabled={
                 (step === 1 && !data.campaign_name?.trim()) ||
-                (step === 2 && !data.page_name) ||
-                (step === 3 && (data.creative_type === 'existing_post' || !data.creative_type) && !data.post_url) ||
-                (step === 3 && data.creative_type === 'new_creative' && !data.description) ||
-                (step === 4 && (
+                (step === 2 && (data.creative_type === 'existing_post' || !data.creative_type) && !data.post_url) ||
+                (step === 2 && data.creative_type === 'new_creative' && !data.description) ||
+                (step === 3 && (
                   !data.goal ||
                   (data.goal === 'messages' && data.messaging_platforms?.length === 0) ||
                   (data.goal === 'website_traffic' && !data.website_url) ||
                   (data.goal === 'phone_calls' && !data.phone_number)
                 )) ||
-                (step === 6 && !data.package)
+                (step === 5 && !data.package)
               }
               className="gap-2 bg-[hsl(var(--primary))] text-primary-foreground font-semibold"
             >
               Continue <ChevronRight className="w-4 h-4" />
             </Button>
-          ) : step === 7 ? (
+          ) : step === 6 ? (
             <Button
               onClick={handleSubmit}
               disabled={submitting}
