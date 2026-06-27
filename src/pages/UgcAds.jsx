@@ -298,9 +298,9 @@ export default function UgcAds() {
       const seq   = Date.now().toString().slice(-5);
       return base44.entities.UgcOrder.create({
         order_ref:    `BF-UGC-${seq}`,
-        user_id:      user.id,
-        user_name:    user.full_name || user.email,
-        user_email:   user.email,
+        user_id:      user?.id || null,
+        user_name:    user?.full_name || user?.email || 'Guest',
+        user_email:   user?.email || null,
         package:      selectedPkg,
         num_videos:   pkg.videos,
         amount:       price.amount,
@@ -833,3 +833,4 @@ export default function UgcAds() {
     </div>
   );
 }
+
