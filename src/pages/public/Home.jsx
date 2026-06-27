@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { useSEO } from '@/hooks/useSEO';
 
 const SERVICES = [
   {
@@ -85,6 +86,11 @@ const HOW = [
 ];
 
 export default function Home() {
+  useSEO({
+    title:       'Brandfletch Media — Digital Advertising for African Businesses',
+    description: 'We build and run advertising systems for African businesses — from Meta Ads and UGC creatives to social media and professional design.',
+  });
+
   const { user } = useAuth();
   const navigate = useNavigate();
   const ctaTo   = user ? '/dashboard' : '/register';
@@ -331,4 +337,5 @@ export default function Home() {
     </div>
   );
 }
+
 
