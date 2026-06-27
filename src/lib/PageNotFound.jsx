@@ -1,3 +1,4 @@
+// v2 — branded 404
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Home, Search, Megaphone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
