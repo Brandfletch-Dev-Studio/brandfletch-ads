@@ -1,97 +1,129 @@
-// v2 — branded 404
+// Conversion-focused 404 — guides visitors back into the funnel
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Home, Search, Megaphone } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Home, LayoutGrid, DollarSign, BookOpen, Phone, LayoutDashboard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/AuthContext';
 
+const SERVICES = [
+  { label: 'Meta Ads',       desc: 'Run Facebook & Instagram ads that actually convert',  href: '/pricing#meta-ads' },
+  { label: 'UGC Ads',        desc: 'Authentic video creatives from real African creators', href: '/pricing#ugc-ads' },
+  { label: 'Graphic Design', desc: 'Scroll-stopping visuals for your brand',               href: '/pricing#graphic-design' },
+  { label: 'Web Design',     desc: 'Fast, professional sites built for conversion',        href: '/pricing#web-design' },
+];
+
 const QUICK_LINKS = [
-  { label: 'Home',       href: '/',        desc: 'Back to the main site' },
-  { label: 'Blog',       href: '/blog',    desc: 'Tips & strategies for African businesses' },
-  { label: 'Pricing',    href: '/pricing', desc: 'See our ad management packages' },
-  { label: 'Contact',    href: '/contact', desc: 'Talk to our team' },
+  { label: 'Portfolio',  href: '/portfolio', icon: LayoutGrid,     desc: 'See our work' },
+  { label: 'Pricing',    href: '/pricing',   icon: DollarSign,     desc: 'Clear, honest packages' },
+  { label: 'Blog',       href: '/blog',      icon: BookOpen,       desc: 'Free growth tips' },
+  { label: 'Contact us', href: '/contact',   icon: Phone,          desc: 'Let's talk' },
 ];
 
 export default function PageNotFound() {
   const location = useLocation();
-  const navigate = useNavigate();
-  const { user } = useAuth();
+  const navigate  = useNavigate();
+  const { user }  = useAuth();
 
-  const badPath = location.pathname;
+  const badPath = location.pathname.replace(/^\//, '') || '?';
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      {/* Top bar */}
-      <div className="px-6 py-5 border-b border-border">
-        <Link to="/" className="inline-flex items-center gap-2 group">
-          <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center">
-            <Megaphone className="w-4 h-4 text-primary-foreground" />
+    <div className="min-h-screen bg-background">
+      {/* Hero section */}
+      <section className="bg-[hsl(var(--primary))] text-white py-16 px-4 text-center relative overflow-hidden">
+        {/* Decorative blobs */}
+        <div className="absolute -top-20 -left-20 w-64 h-64 rounded-full bg-white/5 blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-16 -right-16 w-80 h-80 rounded-full bg-[hsl(var(--accent))]/10 blur-3xl pointer-events-none" />
+
+        <div className="relative max-w-xl mx-auto">
+          <p className="text-7xl font-black text-white/10 mb-0 leading-none select-none">404</p>
+          <h1 className="text-3xl sm:text-4xl font-extrabold mb-3 -mt-4">
+            Oops — page not found
+          </h1>
+          <p className="text-white/70 text-base leading-relaxed max-w-md mx-auto mb-6">
+            <span className="font-mono text-xs bg-white/10 px-2 py-0.5 rounded">/{badPath}</span>
+            {" "}doesn't exist. But you're in the right place — let's get you somewhere useful.
+          </p>
+          <div className="flex flex-wrap justify-center gap-3">
+            <Button
+              variant="outline"
+              className="border-white/30 text-white bg-white/10 hover:bg-white/20 gap-2"
+              onClick={() => navigate(-1)}
+            >
+              <ArrowLeft className="w-4 h-4" /> Go back
+            </Button>
+            <Button asChild className="bg-[hsl(var(--accent))] text-white hover:bg-[hsl(var(--accent))]/90 font-semibold gap-2">
+              <Link to={user ? '/dashboard' : '/'}>
+                <Home className="w-4 h-4" />
+                {user ? 'My Dashboard' : 'Back to Home'}
+              </Link>
+            </Button>
           </div>
-          <span className="font-semibold text-sm text-foreground">Brandfletch Media</span>
-        </Link>
-      </div>
+        </div>
+      </section>
 
-      {/* Main content */}
-      <div className="flex-1 flex items-center justify-center px-6 py-16">
-        <div className="w-full max-w-2xl">
-
-          {/* Big 404 */}
-          <div className="relative mb-10 select-none">
-            <p className="text-[160px] sm:text-[220px] font-black leading-none text-foreground/[0.04] text-center tracking-tighter">
-              404
-            </p>
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <div className="w-14 h-14 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mb-5">
-                <Search className="w-6 h-6 text-primary" />
+      {/* Quick navigation */}
+      <section className="max-w-4xl mx-auto px-4 py-12">
+        <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-5 text-center">
+          Where would you like to go?
+        </p>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-12">
+          {QUICK_LINKS.map(({ label, href, icon: Icon, desc }) => (
+            <Link
+              key={href}
+              to={href}
+              className="group flex flex-col items-center gap-2 p-5 rounded-2xl bg-card border border-border hover:border-[hsl(var(--primary))]/40 hover:shadow-md transition-all text-center"
+            >
+              <div className="w-10 h-10 rounded-xl bg-[hsl(var(--primary))]/8 flex items-center justify-center group-hover:bg-[hsl(var(--primary))]/15 transition-colors">
+                <Icon className="w-5 h-5 text-[hsl(var(--primary))]" />
               </div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-foreground text-center">
-                Page not found
-              </h1>
-              <p className="mt-3 text-muted-foreground text-center text-sm sm:text-base max-w-sm leading-relaxed">
-                <span className="font-mono text-xs bg-muted text-foreground/70 px-2 py-0.5 rounded mr-1">{badPath}</span>
-                doesn't exist or may have moved.
+              <span className="text-sm font-semibold text-foreground group-hover:text-[hsl(var(--primary))] transition-colors">
+                {label}
+              </span>
+              <span className="text-[11px] text-muted-foreground leading-relaxed">{desc}</span>
+            </Link>
+          ))}
+        </div>
+
+        {/* Services CTA block */}
+        <div className="rounded-2xl border border-border bg-card p-6 sm:p-8">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <div>
+              <h2 className="text-lg font-bold text-foreground">Not sure where to start?</h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                We help African businesses grow online. Here's what we do:
               </p>
             </div>
+            <Link to="/contact" className="shrink-0">
+              <Button className="bg-[hsl(var(--accent))] text-white hover:bg-[hsl(var(--accent))]/90 font-semibold gap-2 w-full sm:w-auto">
+                Start a project <ArrowRight className="w-4 h-4" />
+              </Button>
+            </Link>
           </div>
-
-          {/* Quick links */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
-            {QUICK_LINKS.map(link => (
+          <div className="grid sm:grid-cols-2 gap-3">
+            {SERVICES.map(({ label, desc, href }) => (
               <Link
-                key={link.href}
-                to={link.href}
-                className="group flex flex-col gap-1.5 p-4 rounded-xl bg-card border border-border hover:border-primary/40 hover:bg-primary/5 transition-all"
+                key={label}
+                to={href}
+                className="flex items-start gap-3 p-4 rounded-xl hover:bg-muted/60 transition-colors group"
               >
-                <span className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
-                  {link.label}
-                </span>
-                <span className="text-[11px] text-muted-foreground leading-relaxed line-clamp-2">
-                  {link.desc}
-                </span>
+                <span className="mt-0.5 w-2 h-2 rounded-full bg-[hsl(var(--accent))] shrink-0 mt-2" />
+                <div>
+                  <p className="text-sm font-semibold text-foreground group-hover:text-[hsl(var(--primary))] transition-colors">
+                    {label}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{desc}</p>
+                </div>
               </Link>
             ))}
           </div>
-
-          {/* Actions */}
-          <div className="flex items-center justify-center gap-3 flex-wrap">
-            <Button variant="outline" onClick={() => navigate(-1)} className="gap-2">
-              <ArrowLeft className="w-4 h-4" /> Go back
-            </Button>
-            <Button asChild className="gap-2">
-              <Link to={user ? '/dashboard' : '/'}>
-                <Home className="w-4 h-4" />
-                {user ? 'Dashboard' : 'Go home'}
-              </Link>
-            </Button>
-          </div>
-
-          {/* Admin hint */}
-          {user?.role === 'admin' && (
-            <p className="mt-8 text-center text-xs text-muted-foreground/60">
-              Admin: this route may not be implemented yet. Ask the AI to build it.
-            </p>
-          )}
         </div>
-      </div>
+
+        {/* Admin-only hint */}
+        {user?.role === 'admin' || user?.role === 'super_admin' ? (
+          <p className="mt-6 text-center text-xs text-muted-foreground/50">
+            Admin: route <span className="font-mono">/{badPath}</span> is not implemented yet.
+          </p>
+        ) : null}
+      </section>
     </div>
   );
 }
