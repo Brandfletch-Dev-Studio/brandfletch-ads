@@ -331,9 +331,9 @@ function Lightbox({ item, initTab, onClose }) {
   const embedInfo = getEmbedId(currentVideoUrl);
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-0 sm:p-4" onClick={onClose}>
+    <div className="fixed inset-x-0 bottom-0 top-16 z-40 bg-black/80 flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={onClose}>
       <div
-        className="bg-card w-full max-w-5xl max-h-screen sm:max-h-[92vh] flex flex-col md:flex-row sm:rounded-2xl overflow-hidden shadow-2xl"
+        className="bg-card w-full max-w-5xl h-full sm:h-auto sm:max-h-[88vh] flex flex-col md:flex-row sm:rounded-2xl overflow-hidden shadow-2xl"
         onClick={e => e.stopPropagation()}
       >
 
