@@ -4,7 +4,6 @@ import { base44 } from '@/api/base44Client';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Check, Palette, RefreshCcw, FileText, DollarSign, ExternalLink, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
