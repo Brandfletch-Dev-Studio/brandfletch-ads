@@ -91,31 +91,39 @@ export default function AdminMessages() {
   }, [selectedUserId]);
 
   async function handleUpload(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    setUploading(true);
-    const { file_url } = await base44.integrations.Core.UploadFile({ file });
-    setAttachment(file_url);
-    setUploading(false);
+    try {
+      const file = e.target.files[0];
+      if (!file) return;
+      setUploading(true);
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      setAttachment(file_url);
+      setUploading(false);
+    } catch (err) {
+      toast.error(err?.message || 'Something went wrong. Please try again.');
+    }
   }
 
   async function handleSend(e) {
-    e.preventDefault();
-    if (!input.trim() && !attachment) return;
-    if (!selectedUserId) return;
-    setSending(true);
-    await base44.entities.Message.create({
-      sender_id: adminUser.id,
-      sender_name: adminUser.full_name || 'Support',
-      sender_role: 'admin',
-      content: input.trim(),
-      attachment_url: attachment || '',
-      is_read: false,
-      conversation_user_id: selectedUserId,
-    });
-    setInput('');
-    setAttachment(null);
-    setSending(false);
+    try {
+      e.preventDefault();
+      if (!input.trim() && !attachment) return;
+      if (!selectedUserId) return;
+      setSending(true);
+      await base44.entities.Message.create({
+        sender_id: adminUser.id,
+        sender_name: adminUser.full_name || 'Support',
+        sender_role: 'admin',
+        content: input.trim(),
+        attachment_url: attachment || '',
+        is_read: false,
+        conversation_user_id: selectedUserId,
+      });
+      setInput('');
+      setAttachment(null);
+      setSending(false);
+    } catch (err) {
+      toast.error(err?.message || 'Something went wrong. Please try again.');
+    }
   }
 
   const selectedConvo = conversations.find(c => c.userId === selectedUserId);
