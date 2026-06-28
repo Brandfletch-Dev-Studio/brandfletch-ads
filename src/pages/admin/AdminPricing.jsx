@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useRoleGuard } from '@/hooks/useRoleGuard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
+import ConfirmDialog from '@/components/ConfirmDialog';
 import { Save, RefreshCw, Plus, Trash2 } from 'lucide-react';
 import { LOCAL_PRICES } from '@/lib/pricing';
 import AdminServicePricingTab from '@/components/settings/AdminServicePricingTab';
@@ -41,6 +42,8 @@ function buildDefaults() {
 }
 
 export default function AdminPricing() {
+  const [confirmRow, setConfirmRow] = useState(null);
+  const [confirmRow, setConfirmRow] = useState(null);
   useRoleGuard(['admin']);
   const [pricing, setPricing] = useState([]);
   const [saving, setSaving] = useState(false);
@@ -228,7 +231,7 @@ export default function AdminPricing() {
                     </td>
                   ))}
                   <td className="px-2 py-2">
-                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => deletePackage(row)}>
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setConfirmRow(row)}>
                       <Trash2 className="w-3.5 h-3.5 text-destructive" />
                     </Button>
                   </td>
