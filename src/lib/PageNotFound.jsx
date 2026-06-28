@@ -15,7 +15,7 @@ const QUICK_LINKS = [
   { label: 'Portfolio',  href: '/portfolio', icon: LayoutGrid,     desc: 'See our work' },
   { label: 'Pricing',    href: '/pricing',   icon: DollarSign,     desc: 'Clear, honest packages' },
   { label: 'Blog',       href: '/blog',      icon: BookOpen,       desc: 'Free growth tips' },
-  { label: 'Contact us', href: '/contact',   icon: Phone,          desc: 'Let's talk' },
+  { label: "Contact us", href: "/contact",   icon: Phone,          desc: "Let's talk" },
 ];
 
 export default function PageNotFound() {
