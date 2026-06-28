@@ -8,7 +8,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Progress } from '@/components/ui/progress';
 import { Sparkles, ArrowLeft, ArrowRight, Check } from 'lucide-react';
 import { toast } from 'sonner';
-import { base44 } from '@/api/base44Client';
 
 export default function MultiStepFormView({ form, onSubmit }) {
   const [currentStep, setCurrentStep] = useState(0);
