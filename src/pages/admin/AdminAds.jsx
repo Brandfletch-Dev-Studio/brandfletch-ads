@@ -1,3 +1,5 @@
+import { format } from 'date-fns';
+import { toast } from 'sonner';
 import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
@@ -128,7 +130,7 @@ function AdCard({ ad, stats, onEdit, onToggle, onDelete }) {
           </span>
           {(ad.start_date || ad.end_date) && (
             <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-secondary text-muted-foreground font-medium">
-              <Calendar className="w-3 h-3" />{ad.start_date || '—'} → {ad.end_date || '∞'}
+              <Calendar className="w-3 h-3" />{ad.start_date ? format(new Date(ad.start_date), 'dd MMM yy') : '—'} → {ad.end_date ? format(new Date(ad.end_date), 'dd MMM yy') : '∞'}
             </span>
           )}
         </div>
@@ -222,10 +224,14 @@ export default function AdminAds() {
 
   const remove = useMutation({
     mutationFn: (id) => base44.entities.AppAd.delete(id),
+  onSuccess: () => { toast.success("Ad deleted"); setDeleteId(null); },
+  onError: (err) => toast.error(err?.message || "Failed to delete ad"),
   });
 
   const toggle = useMutation({
     mutationFn: ({ id, is_active }) => base44.entities.AppAd.update(id, { is_active }),
+  onSuccess: () => toast.success("Ad status updated"),
+  onError: (err) => toast.error(err?.message || "Failed to update ad"),
   });
 
   function openNew() { setForm(EMPTY_FORM); setEditId(null); setOpen(true); }
