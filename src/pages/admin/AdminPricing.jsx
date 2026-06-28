@@ -9,7 +9,6 @@ import { toast } from 'sonner';
 import { Save, RefreshCw, Plus, Trash2 } from 'lucide-react';
 import { LOCAL_PRICES } from '@/lib/pricing';
 import AdminServicePricingTab from '@/components/settings/AdminServicePricingTab';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const COUNTRIES = ['Malawi', 'Zambia', 'South Africa', 'Kenya', 'Tanzania'];
 const DURATIONS = ['daily', 'weekly', 'monthly'];
