@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import { base44 } from '@/api/base44Client';
-import { Bell, Mail, Save } from 'lucide-react';
+import { Bell, Save } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
