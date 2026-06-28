@@ -15,6 +15,7 @@ import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
+import ConfirmDialog from '@/components/ConfirmDialog';
 import { format } from 'date-fns';
 import { useRoleGuard } from '@/hooks/useRoleGuard';
 import { cn } from '@/lib/utils';
@@ -588,7 +589,7 @@ function MaterialsTab() {
                 >
                   {m.is_active ? 'Active' : 'Hidden'}
                 </button>
-                <button onClick={() => { if (confirm('Delete this material?')) deleteMut.mutate(m.id); }} className="text-xs text-red-500 hover:text-red-700 transition-colors ml-auto">
+                <button onClick={() => setDeleteMaterialId(m.id)} className="text-xs text-red-500 hover:text-red-700 transition-colors ml-auto">
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
               </div>
@@ -985,6 +986,7 @@ function SettingsTab() {
 
 
 export default function AdminReferrals() {
+  const [deleteMaterialId, setDeleteMaterialId] = useState(null);
   useRoleGuard(null, 'referrals.view');
   const [activeTab, setActiveTab] = useState('overview');
 
