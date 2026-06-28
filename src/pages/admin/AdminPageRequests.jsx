@@ -20,43 +20,51 @@ export default function AdminPageRequests() {
   useEffect(() => { load(); }, []);
 
   async function load() {
-    const data = await base44.entities.FacebookPage.list({ sort: '-created_date', limit: 100 });
-    setPages(data);
+    try {
+          const data = await base44.entities.FacebookPage.list({ sort: '-created_date', limit: 100 });
+          setPages(data);
+    } catch (err) {
+      toast.error(err?.message || "Something went wrong. Please try again.");
+    }
   }
 
   async function updatePage(id, status, page) {
-    if (page.connection_status !== 'pending_verification') {
-      toast.error('This page request has already been processed.');
-      return;
+    try {
+          if (page.connection_status !== 'pending_verification') {
+            toast.error('This page request has already been processed.');
+            return;
+          }
+          setProcessing(p => ({ ...p, [id]: true }));
+          await base44.entities.FacebookPage.update(id, {
+            connection_status: status,
+            admin_notes: notes[id] || '',
+          });
+          auditLog(
+            status === 'connected' ? 'page_approved' : 'page_rejected',
+            'FacebookPage', id,
+            `Page "${page.page_name}" ${status === 'connected' ? 'approved' : 'rejected'}. Notes: ${notes[id] || 'none'}`
+          );
+      
+          if (page.user_id) {
+            const notif = status === 'connected'
+              ? { type: 'page_connected', title: '✅ Page Connected!', msg: `Your Facebook Page "${page.page_name}" has been successfully connected.` }
+              : { type: 'page_rejected', title: '❌ Page Not Approved', msg: `Your request to connect "${page.page_name}" was not approved. ${notes[id] || ''}` };
+      
+            await base44.entities.Notification.create({
+              recipient_id: page.user_id,
+              type: notif.type,
+              title: notif.title,
+              message: notif.msg,
+              is_read: false,
+            });
+          }
+      
+          toast.success(`Page ${status === 'connected' ? 'approved' : 'rejected'}`);
+          load();
+          setProcessing(p => ({ ...p, [id]: false }));
+    } catch (err) {
+      toast.error(err?.message || "Something went wrong. Please try again.");
     }
-    setProcessing(p => ({ ...p, [id]: true }));
-    await base44.entities.FacebookPage.update(id, {
-      connection_status: status,
-      admin_notes: notes[id] || '',
-    });
-    auditLog(
-      status === 'connected' ? 'page_approved' : 'page_rejected',
-      'FacebookPage', id,
-      `Page "${page.page_name}" ${status === 'connected' ? 'approved' : 'rejected'}. Notes: ${notes[id] || 'none'}`
-    );
-
-    if (page.user_id) {
-      const notif = status === 'connected'
-        ? { type: 'page_connected', title: '✅ Page Connected!', msg: `Your Facebook Page "${page.page_name}" has been successfully connected.` }
-        : { type: 'page_rejected', title: '❌ Page Not Approved', msg: `Your request to connect "${page.page_name}" was not approved. ${notes[id] || ''}` };
-
-      await base44.entities.Notification.create({
-        recipient_id: page.user_id,
-        type: notif.type,
-        title: notif.title,
-        message: notif.msg,
-        is_read: false,
-      });
-    }
-
-    toast.success(`Page ${status === 'connected' ? 'approved' : 'rejected'}`);
-    load();
-    setProcessing(p => ({ ...p, [id]: false }));
   }
 
   const filtered = pages.filter(p => filter === 'all' || p.connection_status === filter);
