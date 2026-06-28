@@ -38,17 +38,21 @@ export default function BusinessTab({ form, setForm }) {
   const [saving, setSaving] = useState(false);
 
   async function handleSave() {
-    setSaving(true);
-    await base44.auth.updateMe({
-      business_name: form.business_name,
-      business_type: form.business_type,
-      business_website: form.business_website,
-      business_industry: form.business_industry,
-      business_description: form.business_description,
-      primary_goal: form.primary_goal,
-    });
-    toast.success('Business info saved!');
-    setSaving(false);
+    try {
+          setSaving(true);
+          await base44.auth.updateMe({
+            business_name: form.business_name,
+            business_type: form.business_type,
+            business_website: form.business_website,
+            business_industry: form.business_industry,
+            business_description: form.business_description,
+            primary_goal: form.primary_goal,
+          });
+          toast.success('Business info saved!');
+          setSaving(false);
+    } catch (err) {
+      toast.error(err?.message || "Something went wrong. Please try again.");
+    }
   }
 
   const isComplete = form.business_name && form.business_industry && form.primary_goal;
