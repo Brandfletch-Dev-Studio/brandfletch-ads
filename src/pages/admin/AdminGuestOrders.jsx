@@ -66,7 +66,9 @@ export default function AdminGuestOrders() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: async ({ id, status }) => {
+    mutationFn: async ({ id, status },
+    onSuccess: () => toast.success('Order updated'),
+    onError: (err) => toast.error(err?.message || 'Failed to update order'),) => {
       const update = { status };
       if (status === 'converted') update.converted_at = new Date().toISOString();
       const { data, error } = await supabase.from('GuestOrder').update(update).eq('id', id).select().single();
