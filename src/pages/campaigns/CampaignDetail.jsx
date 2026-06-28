@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/lib/AuthContext';
-import { ArrowLeft, ExternalLink, CreditCard, Package, Target, Users, MapPin, FileImage, MessageSquare, Phone, Globe, Share2, RefreshCw } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Package, Users, FileImage, RefreshCw } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
