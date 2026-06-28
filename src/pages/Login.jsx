@@ -21,8 +21,12 @@ export default function Login() {
     const params   = new URLSearchParams(window.location.search);
     const prefill  = params.get('email');
     const reason   = params.get('reason');
+    const redirect = params.get('redirect');
 
     if (prefill)  setEmail(decodeURIComponent(prefill));
+    // Persist the intended destination so handleSubmit can use it
+    if (redirect) sessionStorage.setItem('bf_post_login_redirect', decodeURIComponent(redirect));
+
     if (reason === 'existing') {
       setNotice("An account with that email already exists. Enter your password to log in.");
     }
@@ -34,7 +38,9 @@ export default function Login() {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         localStorage.setItem('bf_visited', '1');
-        window.location.href = "/dashboard";
+        const postLogin = sessionStorage.getItem('bf_post_login_redirect');
+        sessionStorage.removeItem('bf_post_login_redirect');
+        window.location.href = postLogin || "/dashboard";
       }
     });
   }, []);
@@ -82,7 +88,9 @@ export default function Login() {
       }
 
       localStorage.setItem('bf_visited', '1');
-      window.location.href = "/dashboard";
+      const postLogin = sessionStorage.getItem('bf_post_login_redirect');
+      sessionStorage.removeItem('bf_post_login_redirect');
+      window.location.href = postLogin || "/dashboard";
 
     } catch (err) {
       setError(err.message || "Login failed. Please try again.");
@@ -99,7 +107,13 @@ export default function Login() {
       footer={
         <>
           New here?{" "}
-          <Link to="/register" className="text-[hsl(var(--accent))] font-semibold hover:underline">
+          <Link
+            to={(() => {
+              const r = new URLSearchParams(window.location.search).get('redirect');
+              return r ? `/register?redirect=${encodeURIComponent(r)}` : '/register';
+            })()}
+            className="text-[hsl(var(--accent))] font-semibold hover:underline"
+          >
             Create a free account
           </Link>
         </>
