@@ -25,108 +25,124 @@ export default function DesignPayment() {
   useEffect(() => { init(); }, []);
 
   async function init() {
-    const u = await base44.auth.me();
-    setUser(u);
-
-    const subscriptions = await base44.entities.PlatformSubscription.filter({
-      user_id: u?.id,
-      subscription_type: 'design_retainer',
-      status: 'pending',
-    }, { sort: '-created_date' });
-
-    const sub = subscriptions[0] || null;
-    if (sub) setSubscription(sub);
-
-    // Detect Malawi by currency (MWK) or user country
-    const userCountry = u.country || '';
-    const subCurrency = sub?.currency || '';
-    const isMW = subCurrency === 'MWK' || userCountry.toLowerCase() === 'malawi' || userCountry.toUpperCase() === 'MW';
-    setIsMalawi(isMW);
-
-    if (!isMW && userCountry) {
-      const methods = await base44.entities.PaymentMethod.filter({ is_active: true, country: userCountry }, { sort: 'sort_order' });
-      setPaymentMethods(methods);
-    } else if (!isMW) {
-      // Try fetching generic payment methods
-      const methods = await base44.entities.PaymentMethod.filter({ is_active: true }, { sort: 'sort_order' });
-      setPaymentMethods(methods);
+    try {
+          const u = await base44.auth.me();
+          setUser(u);
+      
+          const subscriptions = await base44.entities.PlatformSubscription.filter({
+            user_id: u?.id,
+            subscription_type: 'design_retainer',
+            status: 'pending',
+          }, { sort: '-created_date' });
+      
+          const sub = subscriptions[0] || null;
+          if (sub) setSubscription(sub);
+      
+          // Detect Malawi by currency (MWK) or user country
+          const userCountry = u.country || '';
+          const subCurrency = sub?.currency || '';
+          const isMW = subCurrency === 'MWK' || userCountry.toLowerCase() === 'malawi' || userCountry.toUpperCase() === 'MW';
+          setIsMalawi(isMW);
+      
+          if (!isMW && userCountry) {
+            const methods = await base44.entities.PaymentMethod.filter({ is_active: true, country: userCountry }, { sort: 'sort_order' });
+            setPaymentMethods(methods);
+          } else if (!isMW) {
+            // Try fetching generic payment methods
+            const methods = await base44.entities.PaymentMethod.filter({ is_active: true }, { sort: 'sort_order' });
+            setPaymentMethods(methods);
+          }
+    } catch (err) {
+      toast.error(err?.message || "Something went wrong. Please try again.");
     }
   }
 
   async function handlePaychangu() {
-    if (!subscription) return;
-    setPaychanguLoading(true);
-    const txRef = `BF-DESIGN-${subscription.id}-${Date.now()}`;
-    const appUrl = window.location.origin;
-
-    const res = await base44.functions.invoke('paychanguCheckout', {
-      amount: subscription.amount,
-      currency: subscription.currency || 'MWK',
-      tx_ref: txRef,
-      description: `Design Subscription - ${subscription.subscription_type.replace('_', ' ')}`,
-      callback_url: `${appUrl}/designs?paychangu_tx=${txRef}&payment_type=design&sub_id=${subscription.id}`,
-      return_url: `${appUrl}/designs/payment`,
-    });
-
-    setPaychanguLoading(false);
-
-    if (res.data?.checkout_url) {
-      window.location.href = res.data.checkout_url;
-    } else {
-      toast.error(res.data?.error || 'Failed to initiate payment');
+    try {
+          if (!subscription) return;
+          setPaychanguLoading(true);
+          const txRef = `BF-DESIGN-${subscription.id}-${Date.now()}`;
+          const appUrl = window.location.origin;
+      
+          const res = await base44.functions.invoke('paychanguCheckout', {
+            amount: subscription.amount,
+            currency: subscription.currency || 'MWK',
+            tx_ref: txRef,
+            description: `Design Subscription - ${subscription.subscription_type.replace('_', ' ')}`,
+            callback_url: `${appUrl}/designs?paychangu_tx=${txRef}&payment_type=design&sub_id=${subscription.id}`,
+            return_url: `${appUrl}/designs/payment`,
+          });
+      
+          setPaychanguLoading(false);
+      
+          if (res.data?.checkout_url) {
+            window.location.href = res.data.checkout_url;
+          } else {
+            toast.error(res.data?.error || 'Failed to initiate payment');
+          }
+    } catch (err) {
+      toast.error(err?.message || "Something went wrong. Please try again.");
     }
   }
 
   async function handleProofUpload(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    setUploading(true);
-    const { file_url } = await base44.integrations.Core.UploadFile({ file });
-    setProofFile(file_url);
-    setUploading(false);
-    toast.success('Proof uploaded!');
+    try {
+          const file = e.target.files[0];
+          if (!file) return;
+          setUploading(true);
+          const { file_url } = await base44.integrations.Core.UploadFile({ file });
+          setProofFile(file_url);
+          setUploading(false);
+          toast.success('Proof uploaded!');
+    } catch (err) {
+      toast.error(err?.message || "Something went wrong. Please try again.");
+    }
   }
 
   async function handleSubmit() {
-    if (!selectedMethod || !proofFile) {
-      toast.error('Please select a payment method and upload your proof.');
-      return;
+    try {
+          if (!selectedMethod || !proofFile) {
+            toast.error('Please select a payment method and upload your proof.');
+            return;
+          }
+          setSubmitting(true);
+      
+          await base44.entities.PlatformSubscription.update(subscription.id, {
+            status: 'awaiting_payment',
+            payment_method: selectedMethod.method_name,
+          });
+      
+          const serviceOrders = await base44.entities.ServiceOrder.filter({
+            user_id: user.id,
+            status: 'pending',
+          });
+      
+          if (serviceOrders.length > 0) {
+            await base44.entities.ServiceOrder.update(serviceOrders[0].id, {
+              payment_method: selectedMethod.method_name,
+              payment_reference: reference,
+              payment_proof_url: proofFile,
+            });
+          }
+      
+          await base44.entities.WalletTransaction.create({
+            user_id: user.id,
+            type: 'payment',
+            amount: subscription.amount,
+            currency: subscription.currency,
+            payment_method: selectedMethod.method_name,
+            payment_reference: reference,
+            payment_proof_url: proofFile,
+            status: 'pending',
+            description: `Design subscription payment`,
+          });
+      
+          toast.success("Payment submitted! We'll verify your payment shortly.");
+          navigate('/designs');
+          setSubmitting(false);
+    } catch (err) {
+      toast.error(err?.message || "Something went wrong. Please try again.");
     }
-    setSubmitting(true);
-
-    await base44.entities.PlatformSubscription.update(subscription.id, {
-      status: 'awaiting_payment',
-      payment_method: selectedMethod.method_name,
-    });
-
-    const serviceOrders = await base44.entities.ServiceOrder.filter({
-      user_id: user.id,
-      status: 'pending',
-    });
-
-    if (serviceOrders.length > 0) {
-      await base44.entities.ServiceOrder.update(serviceOrders[0].id, {
-        payment_method: selectedMethod.method_name,
-        payment_reference: reference,
-        payment_proof_url: proofFile,
-      });
-    }
-
-    await base44.entities.WalletTransaction.create({
-      user_id: user.id,
-      type: 'payment',
-      amount: subscription.amount,
-      currency: subscription.currency,
-      payment_method: selectedMethod.method_name,
-      payment_reference: reference,
-      payment_proof_url: proofFile,
-      status: 'pending',
-      description: `Design subscription payment`,
-    });
-
-    toast.success("Payment submitted! We'll verify your payment shortly.");
-    navigate('/designs');
-    setSubmitting(false);
   }
 
   const formatAmount = () => {
