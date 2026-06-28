@@ -59,10 +59,14 @@ export default function AdminSettings() {
   }, [authUser?.id]);
 
   async function saveAdminEmail() {
-    setSavingEmail(true);
-    await base44.auth.updateMe({ admin_notification_email: adminEmail });
-    toast.success('Saved!', { duration: 1500 });
-    setSavingEmail(false);
+    try {
+      setSavingEmail(true);
+      await base44.auth.updateMe({ admin_notification_email: adminEmail });
+      toast.success('Saved!', { duration: 1500 });
+      setSavingEmail(false);
+    } catch (err) {
+      toast.error(err?.message || 'Something went wrong. Please try again.');
+    }
   }
 
 
@@ -70,78 +74,118 @@ export default function AdminSettings() {
 
 
   async function saveRate(rate) {
-    await base44.entities.ExchangeRate.update(rate.id, rate);
-    toast.success('Saved!', { duration: 1500 });
+    try {
+      await base44.entities.ExchangeRate.update(rate.id, rate);
+      toast.success('Saved!', { duration: 1500 });
+    } catch (err) {
+      toast.error(err?.message || 'Something went wrong. Please try again.');
+    }
   }
 
   async function addRate() {
-    if (!newRate.currency_code || !newRate.rate_to_usd) return;
-    await base44.entities.ExchangeRate.create({ ...newRate, is_active: true });
-    toast.success('Exchange rate added');
-    setNewRate({ currency_code: '', currency_name: '', country: '', rate_to_usd: '', use_fixed_pricing: false });
-    const r = await base44.entities.ExchangeRate.list({});
-    setRates(r);
+    try {
+      if (!newRate.currency_code || !newRate.rate_to_usd) return;
+      await base44.entities.ExchangeRate.create({ ...newRate, is_active: true });
+      toast.success('Exchange rate added');
+      setNewRate({ currency_code: '', currency_name: '', country: '', rate_to_usd: '', use_fixed_pricing: false });
+      const r = await base44.entities.ExchangeRate.list({});
+      setRates(r);
+    } catch (err) {
+      toast.error(err?.message || 'Something went wrong. Please try again.');
+    }
   }
 
   async function deleteRate(id) {
-    await base44.entities.ExchangeRate.delete(id);
-    setRates(r => r.filter(x => x.id !== id));
-    toast.success('Rate deleted');
+    try {
+      await base44.entities.ExchangeRate.delete(id);
+      setRates(r => r.filter(x => x.id !== id));
+      toast.success('Rate deleted');
+    } catch (err) {
+      toast.error(err?.message || 'Something went wrong. Please try again.');
+    }
   }
 
   async function addMethod() {
-    if (!newMethod.country || !newMethod.method_name) return;
-    await base44.entities.PaymentMethod.create({ ...newMethod, is_active: true });
-    toast.success('Payment method added');
-    setNewMethod({ country: '', method_name: '', method_type: 'mobile_money', account_number: '', account_name: '', instructions: '' });
-    const m = await base44.entities.PaymentMethod.list({});
-    setMethods(m);
+    try {
+      if (!newMethod.country || !newMethod.method_name) return;
+      await base44.entities.PaymentMethod.create({ ...newMethod, is_active: true });
+      toast.success('Payment method added');
+      setNewMethod({ country: '', method_name: '', method_type: 'mobile_money', account_number: '', account_name: '', instructions: '' });
+      const m = await base44.entities.PaymentMethod.list({});
+      setMethods(m);
+    } catch (err) {
+      toast.error(err?.message || 'Something went wrong. Please try again.');
+    }
   }
 
   async function toggleMethod(id, is_active) {
-    await base44.entities.PaymentMethod.update(id, { is_active });
-    setMethods(ms => ms.map(m => m.id === id ? { ...m, is_active } : m));
-    toast.success(`Method ${is_active ? 'enabled' : 'disabled'}`);
+    try {
+      await base44.entities.PaymentMethod.update(id, { is_active });
+      setMethods(ms => ms.map(m => m.id === id ? { ...m, is_active } : m));
+      toast.success(`Method ${is_active ? 'enabled' : 'disabled'}`);
+    } catch (err) {
+      toast.error(err?.message || 'Something went wrong. Please try again.');
+    }
   }
 
   async function deleteMethod(id) {
-    await base44.entities.PaymentMethod.delete(id);
-    setMethods(ms => ms.filter(m => m.id !== id));
-    toast.success('Method deleted');
+    try {
+      await base44.entities.PaymentMethod.delete(id);
+      setMethods(ms => ms.filter(m => m.id !== id));
+      toast.success('Method deleted');
+    } catch (err) {
+      toast.error(err?.message || 'Something went wrong. Please try again.');
+    }
   }
 
   async function addDesignPricing() {
-    if (!newDesignPricing.country || !newDesignPricing.price) return;
-    await base44.entities.DesignPricing.create({ ...newDesignPricing, is_active: true });
-    toast.success('Design pricing added');
-    setNewDesignPricing({ pricing_type: 'per_design', country: '', currency: '', symbol: '', price: '', monthly_quota: null, max_revisions: 2 });
-    const dp = await base44.entities.DesignPricing.list({});
-    setDesignPricing(dp);
+    try {
+      if (!newDesignPricing.country || !newDesignPricing.price) return;
+      await base44.entities.DesignPricing.create({ ...newDesignPricing, is_active: true });
+      toast.success('Design pricing added');
+      setNewDesignPricing({ pricing_type: 'per_design', country: '', currency: '', symbol: '', price: '', monthly_quota: null, max_revisions: 2 });
+      const dp = await base44.entities.DesignPricing.list({});
+      setDesignPricing(dp);
+    } catch (err) {
+      toast.error(err?.message || 'Something went wrong. Please try again.');
+    }
   }
 
   async function updateDesignPricing(id, data) {
-    await base44.entities.DesignPricing.update(id, data);
-    toast.success('Saved!', { duration: 1500 });
-    const dp = await base44.entities.DesignPricing.list({});
-    setDesignPricing(dp);
+    try {
+      await base44.entities.DesignPricing.update(id, data);
+      toast.success('Saved!', { duration: 1500 });
+      const dp = await base44.entities.DesignPricing.list({});
+      setDesignPricing(dp);
+    } catch (err) {
+      toast.error(err?.message || 'Something went wrong. Please try again.');
+    }
   }
 
   async function deleteDesignPricing(id) {
-    await base44.entities.DesignPricing.delete(id);
-    toast.success('Design pricing deleted');
-    const dp = await base44.entities.DesignPricing.list({});
-    setDesignPricing(dp);
+    try {
+      await base44.entities.DesignPricing.delete(id);
+      toast.success('Design pricing deleted');
+      const dp = await base44.entities.DesignPricing.list({});
+      setDesignPricing(dp);
+    } catch (err) {
+      toast.error(err?.message || 'Something went wrong. Please try again.');
+    }
   }
 
   async function deleteAllEntity(entityKey) {
-    setDeleting(true);
-    const records = await base44.entities[entityKey].list({});
-    for (const r of records) {
-      await base44.entities[entityKey].delete(r.id);
+    try {
+      setDeleting(true);
+      const records = await base44.entities[entityKey].list({});
+      for (const r of records) {
+        await base44.entities[entityKey].delete(r.id);
+      }
+      setDeleting(false);
+      setConfirmDelete(null);
+      toast.success(`All ${entityKey} records deleted`);
+    } catch (err) {
+      toast.error(err?.message || 'Something went wrong. Please try again.');
     }
-    setDeleting(false);
-    setConfirmDelete(null);
-    toast.success(`All ${entityKey} records deleted`);
   }
 
   function startEdit(m) {
@@ -150,10 +194,14 @@ export default function AdminSettings() {
   }
 
   async function saveEditMethod() {
-    await base44.entities.PaymentMethod.update(editingMethod, editMethodData);
-    setMethods(ms => ms.map(m => m.id === editingMethod ? { ...m, ...editMethodData } : m));
-    setEditingMethod(null);
-    toast.success('Saved!', { duration: 1500 });
+    try {
+      await base44.entities.PaymentMethod.update(editingMethod, editMethodData);
+      setMethods(ms => ms.map(m => m.id === editingMethod ? { ...m, ...editMethodData } : m));
+      setEditingMethod(null);
+      toast.success('Saved!', { duration: 1500 });
+    } catch (err) {
+      toast.error(err?.message || 'Something went wrong. Please try again.');
+    }
   }
 
   return (
