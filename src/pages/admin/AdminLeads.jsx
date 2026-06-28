@@ -7,7 +7,6 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Target, Search, Mail, Phone } from 'lucide-react';
-import { toast } from 'sonner';
 
 const STAGE_OPTIONS = [
   { value: 'new_lead', label: 'New Lead', color: 'bg-blue-100 text-blue-800' },
