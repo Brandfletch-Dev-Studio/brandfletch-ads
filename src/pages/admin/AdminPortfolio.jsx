@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { base44, supabase } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -12,7 +12,7 @@ import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import {
   Plus, Search, Pencil, Trash2, Eye, EyeOff, Star,
-  StarOff, Upload, X, Loader2, LayoutGrid, Image
+  StarOff, Upload, X, Loader2, LayoutGrid, Image, Video, Link2
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -21,10 +21,10 @@ import { useAuth } from '@/lib/AuthContext';
 
 const CATEGORIES = [
   { value: 'graphic_design', label: 'Graphic Design' },
-  { value: 'meta_ads',       label: 'Meta Ads' },
-  { value: 'ugc_ads',        label: 'UGC Ads' },
-  { value: 'social_media',   label: 'Social Media' },
   { value: 'web_design',     label: 'Web Design' },
+  { value: 'ugc_ads',        label: 'UGC Ads' },
+  { value: 'meta_ads',       label: 'Meta Ads' },
+  { value: 'social_media',   label: 'Social Media' },
   { value: 'branding',       label: 'Branding' },
   { value: 'other',          label: 'Other' },
 ];
@@ -42,22 +42,35 @@ const CAT_COLORS = {
 const BLANK = {
   title: '', description: '', category: 'graphic_design',
   tags: [], cover_image: '', images: [],
+  video_url: '', video_urls: [],
   client_name: '', client_industry: '', results: '',
   featured: false, status: 'draft', display_order: 0,
   designer_name: '',
 };
+
+// Strip undefined/null id so Supabase uses its gen_random_uuid() default
+function cleanPayload(data) {
+  const p = { ...data };
+  if (!p.id) delete p.id;
+  // coerce arrays — Supabase needs real arrays, not undefined
+  p.tags       = Array.isArray(p.tags)       ? p.tags       : [];
+  p.images     = Array.isArray(p.images)     ? p.images     : [];
+  p.video_urls = Array.isArray(p.video_urls) ? p.video_urls : [];
+  return p;
+}
 
 export default function AdminPortfolio() {
   useRoleGuard(['admin', 'super_admin']);
   const { user } = useAuth();
   const qc = useQueryClient();
 
-  const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [editing, setEditing] = useState(null);   // null | BLANK | item
+  const [search, setSearch]               = useState('');
+  const [statusFilter, setStatusFilter]   = useState('all');
+  const [editing, setEditing]             = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
-  const [uploading, setUploading] = useState(false);
-  const [tagInput, setTagInput] = useState('');
+  const [uploading, setUploading]         = useState(false);
+  const [tagInput, setTagInput]           = useState('');
+  const [videoInput, setVideoInput]       = useState('');
 
   const { data: items = [], isLoading } = useQuery({
     queryKey: ['adminPortfolio'],
@@ -66,15 +79,20 @@ export default function AdminPortfolio() {
 
   const saveMutation = useMutation({
     mutationFn: async (data) => {
-      if (data.id) return base44.entities.PortfolioItem.update(data.id, data);
-      return base44.entities.PortfolioItem.create({ ...data, created_by: user?.id });
+      const payload = cleanPayload(data);
+      if (payload.id) {
+        return base44.entities.PortfolioItem.update(payload.id, payload);
+      }
+      return base44.entities.PortfolioItem.create({ ...payload, created_by: user?.id });
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['adminPortfolio'] });
       toast.success(editing?.id ? 'Portfolio item updated' : 'Portfolio item created');
       setEditing(null);
+      setTagInput('');
+      setVideoInput('');
     },
-    onError: (e) => toast.error('Save failed: ' + e.message),
+    onError: (e) => toast.error('Save failed: ' + (e.message || 'Unknown error')),
   });
 
   const deleteMutation = useMutation({
@@ -99,11 +117,10 @@ export default function AdminPortfolio() {
     onError: (e) => toast.error(e.message),
   });
 
-  // Image upload (cover or extra)
   async function uploadImage(file, field) {
     setUploading(true);
     try {
-      const ext = file.name.split('.').pop();
+      const ext  = file.name.split('.').pop();
       const path = `portfolio/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
       const { error } = await supabase.storage.from('designs').upload(path, file, { upsert: true });
       if (error) throw error;
@@ -122,7 +139,7 @@ export default function AdminPortfolio() {
   }
 
   const filtered = items.filter(i => {
-    const q = search.toLowerCase();
+    const q          = search.toLowerCase();
     const matchSearch = !q || i.title?.toLowerCase().includes(q) || i.client_name?.toLowerCase().includes(q);
     const matchStatus = statusFilter === 'all' || i.status === statusFilter;
     return matchSearch && matchStatus;
@@ -135,15 +152,28 @@ export default function AdminPortfolio() {
     draft:     items.filter(i => i.status === 'draft').length,
   };
 
+  function openEdit(item) {
+    setTagInput('');
+    setVideoInput('');
+    setEditing({
+      ...item,
+      tags:       Array.isArray(item.tags)       ? item.tags       : [],
+      images:     Array.isArray(item.images)     ? item.images     : [],
+      video_urls: Array.isArray(item.video_urls) ? item.video_urls : [],
+    });
+  }
+
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2"><LayoutGrid className="w-6 h-6" /> Portfolio</h1>
+          <h1 className="text-2xl font-bold flex items-center gap-2">
+            <LayoutGrid className="w-6 h-6" /> Portfolio
+          </h1>
           <p className="text-muted-foreground text-sm mt-0.5">Manage work showcased on the public portfolio page.</p>
         </div>
-        <Button onClick={() => setEditing({ ...BLANK })} className="flex items-center gap-2">
+        <Button onClick={() => { setTagInput(''); setVideoInput(''); setEditing({ ...BLANK }); }} className="flex items-center gap-2">
           <Plus className="w-4 h-4" /> Add item
         </Button>
       </div>
@@ -188,9 +218,10 @@ export default function AdminPortfolio() {
           {[...Array(6)].map((_,i) => <div key={i} className="h-48 rounded-xl bg-muted animate-pulse" />)}
         </div>
       ) : filtered.length === 0 ? (
-        <div className="text-center py-16 text-muted-foreground">
+        <div className="text-center py-16 text-muted-foreground border border-dashed border-border rounded-xl">
           <LayoutGrid className="w-10 h-10 mx-auto mb-3 opacity-30" />
-          <p>No portfolio items yet. Add your first one.</p>
+          <p className="font-medium">No portfolio items yet.</p>
+          <p className="text-sm mt-1">Add your first piece of work to get started.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -199,9 +230,21 @@ export default function AdminPortfolio() {
               <div className="relative h-44 bg-muted">
                 {item.cover_image ? (
                   <img src={item.cover_image} alt={item.title} className="w-full h-full object-cover" />
+                ) : item.video_url ? (
+                  <div className="w-full h-full flex items-center justify-center text-muted-foreground bg-muted">
+                    <Video className="w-8 h-8 opacity-40" />
+                  </div>
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-muted-foreground">
                     <Image className="w-8 h-8 opacity-30" />
+                  </div>
+                )}
+                {/* video badge */}
+                {(item.video_url || item.video_urls?.length > 0) && (
+                  <div className="absolute bottom-2 left-2">
+                    <Badge className="bg-black/60 text-white text-[10px] border-0 gap-1">
+                      <Video className="w-2.5 h-2.5" /> Video
+                    </Badge>
                   </div>
                 )}
                 <div className="absolute top-2 left-2 flex gap-1">
@@ -219,15 +262,16 @@ export default function AdminPortfolio() {
               <div className="p-3">
                 <p className="font-semibold text-sm line-clamp-1">{item.title}</p>
                 {item.client_name && <p className="text-xs text-muted-foreground">{item.client_name}</p>}
+                {item.results && <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium mt-0.5">{item.results}</p>}
                 <div className="flex items-center gap-1 mt-3">
-                  <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setEditing({ ...item, tags: item.tags || [], images: item.images || [] })}>
+                  <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => openEdit(item)}>
                     <Pencil className="w-3.5 h-3.5" />
-                  </Button>
-                  <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => toggleFeatured.mutate({ id: item.id, featured: !item.featured })}>
-                    {item.featured ? <StarOff className="w-3.5 h-3.5 text-amber-500" /> : <Star className="w-3.5 h-3.5" />}
                   </Button>
                   <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => toggleStatus.mutate({ id: item.id, status: item.status === 'published' ? 'draft' : 'published' })}>
                     {item.status === 'published' ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5 text-emerald-600" />}
+                  </Button>
+                  <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => toggleFeatured.mutate({ id: item.id, featured: !item.featured })}>
+                    {item.featured ? <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" /> : <StarOff className="w-3.5 h-3.5" />}
                   </Button>
                   <Button size="icon" variant="ghost" className="h-7 w-7 ml-auto text-destructive hover:text-destructive" onClick={() => setConfirmDelete(item)}>
                     <Trash2 className="w-3.5 h-3.5" />
@@ -239,8 +283,8 @@ export default function AdminPortfolio() {
         </div>
       )}
 
-      {/* ── Edit / Create Dialog ── */}
-      <Dialog open={!!editing} onOpenChange={o => !o && setEditing(null)}>
+      {/* Edit/Create Dialog */}
+      <Dialog open={!!editing} onOpenChange={o => { if (!o) { setEditing(null); setTagInput(''); setVideoInput(''); } }}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editing?.id ? 'Edit portfolio item' : 'New portfolio item'}</DialogTitle>
@@ -253,10 +297,12 @@ export default function AdminPortfolio() {
               onUpload={uploadImage}
               tagInput={tagInput}
               setTagInput={setTagInput}
+              videoInput={videoInput}
+              setVideoInput={setVideoInput}
             />
           )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditing(null)}>Cancel</Button>
+          <DialogFooter className="pt-2">
+            <Button variant="outline" onClick={() => { setEditing(null); setTagInput(''); setVideoInput(''); }}>Cancel</Button>
             <Button
               onClick={() => saveMutation.mutate(editing)}
               disabled={saveMutation.isPending || !editing?.title?.trim()}
@@ -271,10 +317,8 @@ export default function AdminPortfolio() {
       {confirmDelete && (
         <Dialog open onOpenChange={() => !deleteMutation.isPending && setConfirmDelete(null)}>
           <DialogContent className="max-w-sm">
-            <DialogHeader>
-              <DialogTitle>Delete portfolio item?</DialogTitle>
-            </DialogHeader>
-            <p className="text-sm text-muted-foreground">"{confirmDelete?.title}" will be permanently removed. This cannot be undone.</p>
+            <DialogHeader><DialogTitle>Delete portfolio item?</DialogTitle></DialogHeader>
+            <p className="text-sm text-muted-foreground">"{confirmDelete?.title}" will be permanently removed.</p>
             <DialogFooter className="gap-2 pt-2">
               <Button variant="outline" onClick={() => setConfirmDelete(null)} disabled={deleteMutation.isPending}>Cancel</Button>
               <Button variant="destructive" onClick={() => deleteMutation.mutate(confirmDelete.id)} disabled={deleteMutation.isPending}>
@@ -288,16 +332,26 @@ export default function AdminPortfolio() {
   );
 }
 
-// ── Inline form component ─────────────────────────────────────────────────────
-function PortfolioForm({ data, onChange, uploading, onUpload, tagInput, setTagInput }) {
+// ── Shared portfolio form ─────────────────────────────────────────────────────
+function PortfolioForm({ data, onChange, uploading, onUpload, tagInput, setTagInput, videoInput, setVideoInput }) {
   const set = (field, value) => onChange(prev => ({ ...prev, [field]: value }));
 
   function addTag(e) {
     if (e.key === 'Enter' && tagInput.trim()) {
       e.preventDefault();
       const tag = tagInput.trim().toLowerCase();
-      if (!data.tags.includes(tag)) set('tags', [...data.tags, tag]);
+      if (!(data.tags || []).includes(tag)) set('tags', [...(data.tags || []), tag]);
       setTagInput('');
+    }
+  }
+
+  function addVideoUrl(e) {
+    if (e.key === 'Enter' && videoInput.trim()) {
+      e.preventDefault();
+      const url = videoInput.trim();
+      const existing = data.video_urls || [];
+      if (!existing.includes(url)) set('video_urls', [...existing, url]);
+      setVideoInput('');
     }
   }
 
@@ -307,13 +361,25 @@ function PortfolioForm({ data, onChange, uploading, onUpload, tagInput, setTagIn
     set('images', imgs);
   }
 
+  function removeVideoUrl(idx) {
+    const vids = [...(data.video_urls || [])];
+    vids.splice(idx, 1);
+    set('video_urls', vids);
+  }
+
   return (
     <div className="space-y-5 py-2">
-      {/* Basic info */}
+
+      {/* ── Basic info ──────────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="sm:col-span-2">
           <Label>Title *</Label>
-          <Input value={data.title} onChange={e => set('title', e.target.value)} placeholder="e.g. Jollof Kitchen Brand Identity" className="mt-1" />
+          <Input
+            value={data.title}
+            onChange={e => set('title', e.target.value)}
+            placeholder="e.g. Jollof Kitchen Brand Identity"
+            className="mt-1"
+          />
         </div>
         <div>
           <Label>Category *</Label>
@@ -337,11 +403,16 @@ function PortfolioForm({ data, onChange, uploading, onUpload, tagInput, setTagIn
         </div>
         <div className="sm:col-span-2">
           <Label>Description</Label>
-          <Textarea value={data.description || ''} onChange={e => set('description', e.target.value)} placeholder="What was the brief? What did you create?" className="mt-1 h-24 resize-none" />
+          <Textarea
+            value={data.description || ''}
+            onChange={e => set('description', e.target.value)}
+            placeholder="What was the brief? What did you create?"
+            className="mt-1 h-24 resize-none"
+          />
         </div>
       </div>
 
-      {/* Client & results */}
+      {/* ── Client & results ─────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div>
           <Label>Client name</Label>
@@ -349,15 +420,15 @@ function PortfolioForm({ data, onChange, uploading, onUpload, tagInput, setTagIn
         </div>
         <div>
           <Label>Industry</Label>
-          <Input value={data.client_industry || ''} onChange={e => set('client_industry', e.target.value)} className="mt-1" placeholder="e.g. Food & Beverage" />
+          <Input value={data.client_industry || ''} onChange={e => set('client_industry', e.target.value)} placeholder="e.g. Food & Beverage" className="mt-1" />
         </div>
         <div>
           <Label>Results</Label>
-          <Input value={data.results || ''} onChange={e => set('results', e.target.value)} className="mt-1" placeholder="e.g. 3x ROAS" />
+          <Input value={data.results || ''} onChange={e => set('results', e.target.value)} placeholder="e.g. 3x ROAS" className="mt-1" />
         </div>
       </div>
 
-      {/* Designer + display order + featured */}
+      {/* ── Designer + order + featured ──────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
         <div>
           <Label>Designer name</Label>
@@ -373,32 +444,35 @@ function PortfolioForm({ data, onChange, uploading, onUpload, tagInput, setTagIn
         </div>
       </div>
 
-      {/* Cover image */}
+      {/* ── Cover image ──────────────────────────────────────────────────── */}
       <div>
         <Label>Cover image</Label>
-        <div className="mt-1 flex items-center gap-3">
+        <div className="mt-1 flex items-center gap-3 flex-wrap">
           {data.cover_image && (
-            <div className="relative w-20 h-16 rounded overflow-hidden border border-border">
+            <div className="relative w-20 h-16 rounded overflow-hidden border border-border shrink-0">
               <img src={data.cover_image} alt="cover" className="w-full h-full object-cover" />
               <button onClick={() => set('cover_image', '')} className="absolute top-0.5 right-0.5 bg-black/50 text-white rounded-full p-0.5">
                 <X className="w-3 h-3" />
               </button>
             </div>
           )}
-          <label className="cursor-pointer">
+          <label className="cursor-pointer shrink-0">
             <div className="flex items-center gap-1.5 text-sm text-muted-foreground border border-dashed border-border rounded-lg px-3 py-2 hover:bg-muted/50 transition-colors">
               {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
               {uploading ? 'Uploading…' : 'Upload cover'}
             </div>
             <input type="file" accept="image/*" className="hidden" onChange={e => e.target.files?.[0] && onUpload(e.target.files[0], 'cover_image')} />
           </label>
-          <div className="flex-1">
-            <Input value={data.cover_image || ''} onChange={e => set('cover_image', e.target.value)} placeholder="Or paste URL" className="text-xs" />
-          </div>
+          <Input
+            value={data.cover_image || ''}
+            onChange={e => set('cover_image', e.target.value)}
+            placeholder="Or paste image URL"
+            className="text-xs flex-1 min-w-0"
+          />
         </div>
       </div>
 
-      {/* Extra images */}
+      {/* ── Additional images ────────────────────────────────────────────── */}
       <div>
         <Label>Additional images</Label>
         <div className="mt-1 flex flex-wrap gap-2 items-center">
@@ -419,7 +493,75 @@ function PortfolioForm({ data, onChange, uploading, onUpload, tagInput, setTagIn
         </div>
       </div>
 
-      {/* Tags */}
+      {/* ── Primary video URL ─────────────────────────────────────────────── */}
+      <div>
+        <Label className="flex items-center gap-1.5">
+          <Video className="w-3.5 h-3.5" /> Primary video URL
+        </Label>
+        <p className="text-xs text-muted-foreground mt-0.5 mb-1.5">
+          Paste a YouTube, Vimeo, TikTok, or direct mp4 link. For UGC / ad creatives.
+        </p>
+        <div className="flex items-center gap-2">
+          <Link2 className="w-4 h-4 text-muted-foreground shrink-0" />
+          <Input
+            value={data.video_url || ''}
+            onChange={e => set('video_url', e.target.value)}
+            placeholder="https://youtube.com/watch?v=... or https://..."
+            className="text-xs"
+          />
+          {data.video_url && (
+            <button onClick={() => set('video_url', '')} className="text-muted-foreground hover:text-foreground shrink-0">
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* ── Extra video URLs ──────────────────────────────────────────────── */}
+      <div>
+        <Label className="flex items-center gap-1.5">
+          <Video className="w-3.5 h-3.5" /> Additional video URLs
+        </Label>
+        <div className="mt-1 flex gap-2">
+          <Input
+            value={videoInput}
+            onChange={e => setVideoInput(e.target.value)}
+            onKeyDown={addVideoUrl}
+            placeholder="Paste a video URL and press Enter"
+            className="text-xs flex-1"
+          />
+          <Button
+            size="sm"
+            variant="outline"
+            type="button"
+            onClick={() => {
+              if (videoInput.trim()) {
+                const url = videoInput.trim();
+                const existing = data.video_urls || [];
+                if (!existing.includes(url)) set('video_urls', [...existing, url]);
+                setVideoInput('');
+              }
+            }}
+          >
+            Add
+          </Button>
+        </div>
+        {(data.video_urls || []).length > 0 && (
+          <div className="flex flex-col gap-1.5 mt-2">
+            {(data.video_urls || []).map((url, i) => (
+              <div key={i} className="flex items-center gap-2 text-xs bg-muted px-3 py-1.5 rounded">
+                <Video className="w-3 h-3 shrink-0 text-muted-foreground" />
+                <span className="truncate flex-1 text-muted-foreground">{url}</span>
+                <button onClick={() => removeVideoUrl(i)} className="text-muted-foreground hover:text-foreground shrink-0">
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* ── Tags ─────────────────────────────────────────────────────────── */}
       <div>
         <Label>Tags</Label>
         <Input
@@ -429,9 +571,9 @@ function PortfolioForm({ data, onChange, uploading, onUpload, tagInput, setTagIn
           placeholder="Type a tag and press Enter"
           className="mt-1"
         />
-        {data.tags?.length > 0 && (
+        {(data.tags || []).length > 0 && (
           <div className="flex flex-wrap gap-1.5 mt-2">
-            {data.tags.map(t => (
+            {(data.tags || []).map(t => (
               <span key={t} className="inline-flex items-center gap-1 text-xs bg-muted px-2 py-0.5 rounded">
                 {t}
                 <button onClick={() => set('tags', data.tags.filter(x => x !== t))} className="text-muted-foreground hover:text-foreground">
