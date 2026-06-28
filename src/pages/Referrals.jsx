@@ -47,10 +47,12 @@ function resolveServiceCommission(settings, serviceKey, currency) {
 }
 
 const SERVICE_LABELS = {
-  meta_ads:        'Meta Ads',
-  graphic_design:  'Graphic Design',
-  social_media:    'Social Media',
-  web_dev:         'Web Development',
+  meta_ads:       'Meta Ads',
+  ugc_ads:        'UGC Ads',
+  graphic_design: 'Graphic Design',
+  social_media:   'Social Media',
+  web_dev:        'Web Development',
+  branding:       'Branding',
 };
 
 const TABS = [
@@ -99,7 +101,7 @@ function DashboardTab({ user, affiliateSettings, referrals = [], commissions = [
   const converted     = referrals.filter(r => r.status === 'converted').length;
   const convRate      = referrals.length > 0 ? Math.round((converted / referrals.length) * 100) : 0;
   const minPayout     = affiliateSettings?.minimum_payout || 5000;
-  const currency      = affiliateSettings?.minimum_payout_currency || 'MWK';
+  const currency      = affiliateSettings?.minimum_payout_currency || affiliateSettings?.default_currency || 'MWK';
 
   const stats = [
     { label: 'Total Earnings',      value: `${currency} ${compactNum(totalEarnings)}`,          color: 'text-green-600', bg: 'bg-green-50',  icon: TrendingUp },
@@ -530,7 +532,7 @@ function LinksTab({ user }) {
 }
 
 // ─── TAB: Referrals ───────────────────────────────────────────────────
-function ReferralsTab({ referrals = [], loading }) {
+function ReferralsTab({ referrals = [], loading, affiliateSettings }) {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
@@ -599,7 +601,7 @@ function ReferralsTab({ referrals = [], loading }) {
                         </Badge>
                       </td>
                       <td className="px-4 py-3 font-semibold text-green-600">
-                        {r.reward_amount ? `${r.reward_currency || 'MWK'} ${r.reward_amount.toLocaleString()}` : '—'}
+                        {r.reward_amount ? `${r.reward_currency || affiliateSettings?.minimum_payout_currency || affiliateSettings?.default_currency || 'MWK'} ${r.reward_amount.toLocaleString()}` : '—'}
                       </td>
                     </tr>
                   ))}
@@ -614,7 +616,7 @@ function ReferralsTab({ referrals = [], loading }) {
 }
 
 // ─── TAB: Commissions ─────────────────────────────────────────────────
-function CommissionsTab({ commissions = [], loading }) {
+function CommissionsTab({ commissions = [], loading, affiliateSettings }) {
   const [statusFilter, setStatusFilter] = useState('all');
 
   const filtered = commissions.filter(c => statusFilter === 'all' || c.status === statusFilter);
@@ -678,7 +680,7 @@ function CommissionsTab({ commissions = [], loading }) {
                         </td>
                         <td className="px-4 py-3">
                           <p className="font-semibold text-green-600">
-                            {c.commission_currency || 'MWK'} {(c.commission_amount || 0).toLocaleString()}
+                            {c.commission_currency || affiliateSettings?.minimum_payout_currency || affiliateSettings?.default_currency || 'MWK'} {(c.commission_amount || 0).toLocaleString()}
                           </p>
                           <p className="text-xs text-muted-foreground">
                             {c.commission_type === 'percentage'
@@ -709,7 +711,7 @@ function PayoutsTab({ user, affiliateSettings, commissions = [], payouts = [], l
   const [details, setDetails] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  const currency = affiliateSettings?.minimum_payout_currency || 'MWK';
+  const currency = affiliateSettings?.minimum_payout_currency || affiliateSettings?.default_currency || 'MWK';
   const minPayout = affiliateSettings?.minimum_payout || 5000;
   const paidComm = commissions.filter(c => c.status === 'paid').reduce((s, c) => s + (c.commission_amount || 0), 0);
   const paidOut  = payouts.filter(p => p.status === 'completed').reduce((s, p) => s + (p.amount || 0), 0);
