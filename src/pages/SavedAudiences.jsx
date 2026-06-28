@@ -20,33 +20,49 @@ export default function SavedAudiences() {
   }, []);
 
   async function init() {
-    const u = await base44.auth.me();
-    setUser(u);
-    loadAudiences(u.id);
+    try {
+          const u = await base44.auth.me();
+          setUser(u);
+          loadAudiences(u.id);
+    } catch (err) {
+      toast.error(err?.message || "Something went wrong. Please try again.");
+    }
   }
 
   async function loadAudiences(uid) {
-    const data = await base44.entities.SavedAudience.filter({ user_id: uid }, '-created_date');
-    setAudiences(data);
+    try {
+          const data = await base44.entities.SavedAudience.filter({ user_id: uid }, '-created_date');
+          setAudiences(data);
+    } catch (err) {
+      toast.error(err?.message || "Something went wrong. Please try again.");
+    }
   }
 
   async function handleDelete(id) {
-    await base44.entities.SavedAudience.delete(id);
-    toast.success('Audience deleted');
-    loadAudiences(user.id);
+    try {
+          await base44.entities.SavedAudience.delete(id);
+          toast.success('Audience deleted');
+          loadAudiences(user.id);
+    } catch (err) {
+      toast.error(err?.message || "Something went wrong. Please try again.");
+    }
   }
 
   async function handleSave(form) {
-    if (editing) {
-      await base44.entities.SavedAudience.update(editing.id, form);
-      toast.success('Audience updated');
-    } else {
-      await base44.entities.SavedAudience.create({ ...form, user_id: user.id });
-      toast.success('Audience saved');
+    try {
+          if (editing) {
+            await base44.entities.SavedAudience.update(editing.id, form);
+            toast.success('Audience updated');
+          } else {
+            await base44.entities.SavedAudience.create({ ...form, user_id: user.id });
+            toast.success('Audience saved');
+          }
+          setShowDialog(false);
+          setEditing(null);
+          loadAudiences(user.id);
+    } catch (err) {
+      toast.error(err?.message || "Something went wrong. Please try again.");
     }
-    setShowDialog(false);
-    setEditing(null);
-    loadAudiences(user.id);
   }
 
   return (
