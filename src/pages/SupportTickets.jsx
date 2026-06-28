@@ -11,7 +11,6 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { format, formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -30,7 +29,7 @@ const PRIORITY_DOT = {
   urgent: 'bg-red-500',
 };
 
-function StatusBadge({ status }) {
+function Status({ status }) {
   const cfg = STATUS_CONFIG[status] || STATUS_CONFIG.open;
   const Icon = cfg.icon;
   return (
@@ -117,7 +116,7 @@ function TicketChat({ ticket, currentUser, onBack, onTicketUpdate }) {
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-sm text-foreground truncate">{ticket.subject}</p>
           <div className="flex items-center gap-2 mt-0.5">
-            <StatusBadge status={ticket.status} />
+            <Status status={ticket.status} />
             <span className="text-xs text-muted-foreground capitalize">
               {(ticket.category || 'general').replace(/_/g, ' ')}
             </span>
@@ -249,7 +248,7 @@ function TicketRow({ ticket, onClick }) {
         </div>
         <p className="text-xs text-muted-foreground truncate mt-0.5">{preview}</p>
         <div className="flex items-center gap-2 mt-1.5">
-          <StatusBadge status={ticket.status} />
+          <Status status={ticket.status} />
           {unread > 0 && (
             <span className="bg-[hsl(var(--accent))] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
               {unread} new
