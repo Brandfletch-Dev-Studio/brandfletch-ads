@@ -138,7 +138,7 @@ export default function AdminUsers() {
       try {
         await base44.functions.invoke('setAdminRole', { userId, role: newRole });
       } catch (metaErr) {
-        console.warn('setAdminRole metadata sync failed (non-fatal):', metaErr);
+        // metadata sync failed — non-fatal, role already set in DB
       }
 
       auditLog('user_role_changed', 'User', userId,
