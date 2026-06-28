@@ -232,12 +232,10 @@ function DollarCalculator({ defaultRate }) {
           </div>
           <div>
             <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Exchange rate (MK per $1)</label>
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold text-sm">MK</span>
-              <input type="number" min="1" value={rate} onChange={e => setRate(parseFloat(e.target.value) || DEFAULT_RATE)}
-                className="w-full pl-9 pr-4 py-3 border border-input rounded-lg bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(var(--accent))]/40" />
+            <div className="flex items-center gap-2 px-3 py-3 border border-border rounded-lg bg-muted/40">
+              <span className="text-muted-foreground font-semibold text-sm">MK</span>
+              <span className="text-foreground font-bold text-sm">{rate.toLocaleString()}</span>
             </div>
-            <p className="text-xs text-muted-foreground mt-1">Rate managed in admin settings.</p>
           </div>
           {mwk !== null && !isNaN(mwk) && (
             <div className="bg-[hsl(var(--accent))]/10 border border-[hsl(var(--accent))]/20 rounded-xl p-5 text-center">
@@ -414,7 +412,9 @@ export default function PricingPage() {
     return () => ctrl.abort();
   }, [user?.country]);
 
-  // CTA handler — route all service clicks to the guest order flow
+  // CTA handler — authenticated users go to /contact with plan params,
+  // guests are sent to /login with a redirect back to this page so the
+  // order context is preserved after they authenticate.
   function handlePlanCta(serviceType, plan) {
     const serviceMap = {
       'meta-ads':      'meta_ads',
@@ -426,10 +426,19 @@ export default function PricingPage() {
     };
     const mapped = serviceMap[serviceType] || serviceType;
     const slug   = plan?.pkgSlug || plan?.slug || '';
-    const params = new URLSearchParams();
-    params.set('service', mapped);
-    if (slug) params.set('plan', slug);
-    navigate('/contact');
+    const orderParams = new URLSearchParams();
+    orderParams.set('service', mapped);
+    if (slug) orderParams.set('plan', slug);
+    const orderUrl = '/contact?' + orderParams.toString();
+
+    if (user) {
+      // Logged in — go straight to the contact/order page
+      navigate(orderUrl);
+    } else {
+      // Guest — redirect to login, then bounce back to the order URL
+      const loginUrl = '/login?redirect=' + encodeURIComponent(orderUrl);
+      navigate(loginUrl);
+    }
   }
 
   const service = STATIC_PLANS[activeTab];
