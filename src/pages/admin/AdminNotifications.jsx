@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
-import { STAFF_ROLES } from '@/lib/permissions';
+import { } from '@/lib/permissions';
 
 const TYPE_OPTIONS = [
   { value: 'campaign_approved',  label: 'Campaign Approved' },
