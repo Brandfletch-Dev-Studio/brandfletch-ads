@@ -18,35 +18,47 @@ export default function ProfileTab({ user, form, setForm }) {
     : (user?.email?.[0] || 'U').toUpperCase();
 
   async function handleSave() {
-    setSaving(true);
-    await base44.auth.updateMe({
-      full_name: form.full_name,
-      phone: form.phone,
-    });
-    toast.success('Profile saved!');
-    setSaving(false);
+    try {
+          setSaving(true);
+          await base44.auth.updateMe({
+            full_name: form.full_name,
+            phone: form.phone,
+          });
+          toast.success('Profile saved!');
+          setSaving(false);
+    } catch (err) {
+      toast.error(err?.message || "Something went wrong. Please try again.");
+    }
   }
 
   async function handlePhotoUpload(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    setUploadingPhoto(true);
-    const { file_url } = await base44.integrations.Core.UploadFile({ file });
-    setForm(f => ({ ...f, profile_photo: file_url }));
-    await base44.auth.updateMe({ profile_photo: file_url });
-    toast.success('Profile photo updated!');
-    setUploadingPhoto(false);
+    try {
+          const file = e.target.files[0];
+          if (!file) return;
+          setUploadingPhoto(true);
+          const { file_url } = await base44.integrations.Core.UploadFile({ file });
+          setForm(f => ({ ...f, profile_photo: file_url }));
+          await base44.auth.updateMe({ profile_photo: file_url });
+          toast.success('Profile photo updated!');
+          setUploadingPhoto(false);
+    } catch (err) {
+      toast.error(err?.message || "Something went wrong. Please try again.");
+    }
   }
 
   async function handleCoverUpload(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    setUploadingCover(true);
-    const { file_url } = await base44.integrations.Core.UploadFile({ file });
-    setForm(f => ({ ...f, cover_photo: file_url }));
-    await base44.auth.updateMe({ cover_photo: file_url });
-    toast.success('Cover photo updated!');
-    setUploadingCover(false);
+    try {
+          const file = e.target.files[0];
+          if (!file) return;
+          setUploadingCover(true);
+          const { file_url } = await base44.integrations.Core.UploadFile({ file });
+          setForm(f => ({ ...f, cover_photo: file_url }));
+          await base44.auth.updateMe({ cover_photo: file_url });
+          toast.success('Cover photo updated!');
+          setUploadingCover(false);
+    } catch (err) {
+      toast.error(err?.message || "Something went wrong. Please try again.");
+    }
   }
 
   return (
