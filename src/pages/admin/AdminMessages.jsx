@@ -1,3 +1,4 @@
+import { toast } from 'sonner';
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/lib/AuthContext';
 import { base44 } from '@/api/base44Client';
@@ -86,7 +87,7 @@ export default function AdminMessages() {
     if (!selectedUserId) return;
     allMessages
       .filter(m => m.conversation_user_id === selectedUserId && m.sender_role === 'user' && !m.is_read)
-      .forEach(m => base44.entities.Message.update(m.id, { is_read: true }).catch(() => {}));
+      .forEach(m => base44.entities.Message.update(m.id, { is_read: true }).catch((err) => toast.error('Failed to mark messages as read')));
   }, [selectedUserId]);
 
   async function handleUpload(e) {
