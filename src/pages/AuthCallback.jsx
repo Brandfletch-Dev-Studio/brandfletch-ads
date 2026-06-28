@@ -54,7 +54,9 @@ export default function AuthCallback() {
       const ok = await ensureSession();
       if (ok) {
         setStatus("success");
-        navigate("/dashboard", { replace: true });
+        { const _r = sessionStorage.getItem("bf_post_login_redirect");
+    sessionStorage.removeItem("bf_post_login_redirect");
+    navigate(_r || "/dashboard", { replace: true }); }
         return;
       }
 
@@ -81,7 +83,9 @@ export default function AuthCallback() {
       navigate("/reset-password", { replace: true });
     } else {
       // New users go straight to dashboard — profile completion is on the dashboard checklist
-      navigate("/dashboard", { replace: true });
+      { const _r = sessionStorage.getItem("bf_post_login_redirect");
+    sessionStorage.removeItem("bf_post_login_redirect");
+    navigate(_r || "/dashboard", { replace: true }); }
     }
   };
 
