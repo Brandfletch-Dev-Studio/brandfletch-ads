@@ -4,7 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { Link, useLocation, Outlet } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import {
-  LayoutDashboard, Megaphone, Facebook, Users, Wallet as WalletIcon,
+  LayoutDashboard, LayoutGrid, Megaphone, Facebook, Users, Wallet as WalletIcon,
   Settings, X, ChevronRight, BarChart3, Shield, Bell, Tv2, ClipboardList,
   Tags, LifeBuoy, Palette, Target, Gift, FileText, MessageSquare, Video
 } from 'lucide-react';
