@@ -34,19 +34,23 @@ export default function AdminCampaignDetail() {
   }, [id]);
 
   async function loadCampaign() {
-    // Fix: fetch only this campaign by ID, not the full table
-    const results = await base44.entities.Campaign.filter({ id });
-    const c = results?.[0] || null;
-    setCampaign(c);
-    if (c) {
-      setNotes(c.manager_notes || '');
-      setMetrics({
-        impressions: c.impressions || 0,
-        reach: c.reach || 0,
-        clicks: c.clicks || 0,
-        messages: c.messages || 0,
-        leads: c.leads || 0,
-      });
+    try {
+      // Fix: fetch only this campaign by ID, not the full table
+      const results = await base44.entities.Campaign.filter({ id });
+      const c = results?.[0] || null;
+      setCampaign(c);
+      if (c) {
+        setNotes(c.manager_notes || '');
+        setMetrics({
+          impressions: c.impressions || 0,
+          reach: c.reach || 0,
+          clicks: c.clicks || 0,
+          messages: c.messages || 0,
+          leads: c.leads || 0,
+        });
+      }
+    } catch (err) {
+      toast.error(err?.message || 'Something went wrong. Please try again.');
     }
   }
 
@@ -61,58 +65,66 @@ export default function AdminCampaignDetail() {
   };
 
   async function updateStatus(status) {
-    const allowed = VALID_TRANSITIONS[campaign.status] || [];
-    if (!allowed.includes(status)) {
-      toast.error(`Cannot transition from "${campaign.status}" to "${status}"`);
-      return;
-    }
-    setSaving(true);
-    await base44.entities.Campaign.update(id, { status, manager_notes: notes, assigned_manager: user?.id });
-    auditLog(`campaign_${status.replace('_', '_')}`, 'Campaign', id,
-      `Campaign "${campaign.page_name}" → ${status}. Notes: ${notes || 'none'}`);
-
-    const notifMap = {
-      approved: { type: 'campaign_approved', title: '🎉 Campaign Approved!', msg: `Your campaign for ${campaign.page_name} has been approved and will be launched shortly.` },
-      active: { type: 'campaign_approved', title: '🚀 Campaign is Live!', msg: `Your campaign for ${campaign.page_name} is now active.` },
-      rejected: { type: 'campaign_rejected', title: '❌ Campaign Rejected', msg: `Your campaign for ${campaign.page_name} was rejected. Reason: ${notes}` },
-      changes_requested: { type: 'changes_requested', title: '⚠️ Changes Requested', msg: `Your campaign for ${campaign.page_name} needs changes: ${notes}` },
-      completed: { type: 'campaign_completed', title: '✅ Campaign Completed', msg: `Your campaign for ${campaign.page_name} has been completed. View your final report.` },
-      refunded: { type: 'payment_rejected', title: '↩ Campaign Refunded', msg: `Your campaign for ${campaign.page_name} has been refunded. ${notes || ''}` },
-    };
-    const notif = notifMap[status];
-    if (notif && campaign.user_id) {
-      await base44.entities.Notification.create({
-        recipient_id: campaign.user_id,
-        type: notif.type,
-        title: notif.title,
-        message: notif.msg,
-        campaign_id: id,
-        is_read: false,
-      });
-      // Email the client
-      const clientUsers = await base44.entities.User.list({});
-      const clientUser = clientUsers.find(u => u.id === campaign.user_id);
-      if (clientUser?.email) {
-        base44.integrations.Core.SendEmail({
-          to: clientUser.email,
-          from_name: 'Brandfletch Media',
-          subject: notif.title.replace(/[^\w\s\-!]/g, '').trim(),
-          body: `Hi ${clientUser.full_name || 'there'},\n\n${notif.msg}\n\nLog in to your dashboard to view your campaign details.\n\nhttps://brandfletchads.base44.app/campaigns/${id}\n\n— Brandfletch Media Team`,
-        }).catch(() => {});
+    try {
+      const allowed = VALID_TRANSITIONS[campaign.status] || [];
+      if (!allowed.includes(status)) {
+        toast.error(`Cannot transition from "${campaign.status}" to "${status}"`);
+        return;
       }
+      setSaving(true);
+      await base44.entities.Campaign.update(id, { status, manager_notes: notes, assigned_manager: user?.id });
+      auditLog(`campaign_${status.replace('_', '_')}`, 'Campaign', id,
+        `Campaign "${campaign.page_name}" → ${status}. Notes: ${notes || 'none'}`);
+  
+      const notifMap = {
+        approved: { type: 'campaign_approved', title: '🎉 Campaign Approved!', msg: `Your campaign for ${campaign.page_name} has been approved and will be launched shortly.` },
+        active: { type: 'campaign_approved', title: '🚀 Campaign is Live!', msg: `Your campaign for ${campaign.page_name} is now active.` },
+        rejected: { type: 'campaign_rejected', title: '❌ Campaign Rejected', msg: `Your campaign for ${campaign.page_name} was rejected. Reason: ${notes}` },
+        changes_requested: { type: 'changes_requested', title: '⚠️ Changes Requested', msg: `Your campaign for ${campaign.page_name} needs changes: ${notes}` },
+        completed: { type: 'campaign_completed', title: '✅ Campaign Completed', msg: `Your campaign for ${campaign.page_name} has been completed. View your final report.` },
+        refunded: { type: 'payment_rejected', title: '↩ Campaign Refunded', msg: `Your campaign for ${campaign.page_name} has been refunded. ${notes || ''}` },
+      };
+      const notif = notifMap[status];
+      if (notif && campaign.user_id) {
+        await base44.entities.Notification.create({
+          recipient_id: campaign.user_id,
+          type: notif.type,
+          title: notif.title,
+          message: notif.msg,
+          campaign_id: id,
+          is_read: false,
+        });
+        // Email the client
+        const clientUsers = await base44.entities.User.list({});
+        const clientUser = clientUsers.find(u => u.id === campaign.user_id);
+        if (clientUser?.email) {
+          base44.integrations.Core.SendEmail({
+            to: clientUser.email,
+            from_name: 'Brandfletch Media',
+            subject: notif.title.replace(/[^\w\s\-!]/g, '').trim(),
+            body: `Hi ${clientUser.full_name || 'there'},\n\n${notif.msg}\n\nLog in to your dashboard to view your campaign details.\n\nhttps://brandfletchads.base44.app/campaigns/${id}\n\n— Brandfletch Media Team`,
+          }).catch(() => {});
+        }
+      }
+  
+      toast.success(`Campaign ${status.replace('_', ' ')}`);
+      loadCampaign();
+      setSaving(false);
+    } catch (err) {
+      toast.error(err?.message || 'Something went wrong. Please try again.');
     }
-
-    toast.success(`Campaign ${status.replace('_', ' ')}`);
-    loadCampaign();
-    setSaving(false);
   }
 
   async function saveMetrics() {
-    setSaving(true);
-    await base44.entities.Campaign.update(id, metrics);
-    auditLog('campaign_metrics_updated', 'Campaign', id, `Metrics updated: ${JSON.stringify(metrics)}`);
-    toast.success('Metrics updated!');
-    setSaving(false);
+    try {
+      setSaving(true);
+      await base44.entities.Campaign.update(id, metrics);
+      auditLog('campaign_metrics_updated', 'Campaign', id, `Metrics updated: ${JSON.stringify(metrics)}`);
+      toast.success('Metrics updated!');
+      setSaving(false);
+    } catch (err) {
+      toast.error(err?.message || 'Something went wrong. Please try again.');
+    }
   }
 
   if (!campaign) return <div className="p-8 text-center text-muted-foreground">Loading...</div>;
