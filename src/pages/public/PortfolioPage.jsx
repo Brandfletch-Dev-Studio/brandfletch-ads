@@ -256,7 +256,7 @@ function PortfolioCard({ item, featured, onOpen }) {
       {/* Thumbnail — click opens images tab */}
       <div
         className={cn('relative overflow-hidden bg-muted cursor-pointer', featured ? 'h-64' : 'h-52')}
-        onClick={() => onOpen({ item, tab: 'images', imgIndex: 0 })}
+        onClick={() => onOpen({ item, tab: allImages.length ? 'images' : 'video', imgIndex: 0 })}
       >
         {thumb ? (
           <img
@@ -378,6 +378,10 @@ function Lightbox({ item, initTab, initImgIndex, onClose }) {
   const [idx, setIdx]   = useState(initImgIndex ?? 0);
   const [vidIdx, setVidIdx] = useState(0);
 
+  // Safety net: if tab='images' but no images exist, fall back to video
+  // (handles edge case where item has no cover_image but has video_url)
+  const effectiveTab = (tab === 'images' && !hasImgs && hasVid) ? 'video' : tab;
+
   const embed = getVideoEmbed(allVideos[vidIdx]);
 
   return (
@@ -399,14 +403,14 @@ function Lightbox({ item, initTab, initImgIndex, onClose }) {
               <button
                 onClick={() => setTab('images')}
                 className={cn('flex items-center gap-1.5 px-4 py-2.5 text-xs font-semibold transition-colors',
-                  tab === 'images' ? 'text-white border-b-2 border-white' : 'text-white/50 hover:text-white/80')}
+                  effectiveTab === 'images' ? 'text-white border-b-2 border-white' : 'text-white/50 hover:text-white/80')}
               >
                 <Images className="w-3.5 h-3.5" /> Images ({allImages.length})
               </button>
               <button
                 onClick={() => setTab('video')}
                 className={cn('flex items-center gap-1.5 px-4 py-2.5 text-xs font-semibold transition-colors',
-                  tab === 'video' ? 'text-white border-b-2 border-white' : 'text-white/50 hover:text-white/80')}
+                  effectiveTab === 'video' ? 'text-white border-b-2 border-white' : 'text-white/50 hover:text-white/80')}
               >
                 <Play className="w-3.5 h-3.5 fill-current" /> Video{allVideos.length > 1 ? ` (${allVideos.length})` : ''}
               </button>
@@ -414,7 +418,7 @@ function Lightbox({ item, initTab, initImgIndex, onClose }) {
           )}
 
           {/* Images tab */}
-          {(tab === 'images' || !hasVid) && hasImgs && (
+          {(effectiveTab === 'images' || !hasVid) && hasImgs && (
             <div className="flex-1 relative flex items-center justify-center min-h-[240px]">
               <img
                 src={allImages[idx]}
@@ -452,7 +456,7 @@ function Lightbox({ item, initTab, initImgIndex, onClose }) {
           )}
 
           {/* Video tab */}
-          {(tab === 'video' || !hasImgs) && hasVid && (
+          {(effectiveTab === 'video' || !hasImgs) && hasVid && (
             <div className="flex-1 flex flex-col">
               {/* Video embed */}
               <div className="flex-1 relative bg-black min-h-[240px]">
@@ -572,7 +576,7 @@ function Lightbox({ item, initTab, initImgIndex, onClose }) {
                 Start a similar project <ArrowRight className="ml-1.5 w-4 h-4" />
               </Button>
             </Link>
-            {hasVid && tab !== 'video' && (
+            {hasVid && effectiveTab !== 'video' && (
               <button
                 onClick={() => setTab('video')}
                 className="flex items-center justify-center gap-1.5 text-xs font-semibold text-[hsl(var(--primary))] hover:text-[hsl(var(--primary))]/80 transition-colors py-1"
@@ -580,7 +584,7 @@ function Lightbox({ item, initTab, initImgIndex, onClose }) {
                 <Play className="w-3.5 h-3.5 fill-current" /> Watch video
               </button>
             )}
-            {hasImgs && tab !== 'images' && (
+            {hasImgs && effectiveTab !== 'images' && (
               <button
                 onClick={() => setTab('images')}
                 className="flex items-center justify-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors py-1"
