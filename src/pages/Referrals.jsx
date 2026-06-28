@@ -6,7 +6,8 @@ import {
   Image, UserCircle, Copy, Check, Share2,
   TrendingUp, Clock, CheckCircle, XCircle, AlertCircle,
   Download, MessageSquare, ChevronRight, QrCode, Loader2,
-  Phone, Mail, Bell, CreditCard, Building2
+  Phone, Mail, Bell, CreditCard, Building2,
+  Gift, ArrowRight, Star, Zap, RefreshCw, BookOpen
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -109,10 +110,161 @@ function DashboardTab({ user, affiliateSettings, referrals = [], commissions = [
     { label: 'Conversion Rate',     value: `${convRate}%`,                                     color: 'text-rose-600',  bg: 'bg-rose-50',   icon: TrendingUp },
   ];
 
+  // Build commission rows — works with or without affiliateSettings
+  const commRows = Object.entries(SERVICE_LABELS).map(([key, label]) => {
+    if (!affiliateSettings) return { key, label, rate: 'TBC', sub: 'Configured by admin' };
+    const typeField  = `${key}_commission_type`;
+    const fixedField = `${key}_fixed_amount`;
+    const pctField   = `${key}_percentage`;
+    const type = affiliateSettings[typeField] || 'global';
+    let rate, sub;
+    if (type === 'global') {
+      if (affiliateSettings.default_commission_type === 'fixed') {
+        rate = `${currency} ${(affiliateSettings.default_fixed_amount || 0).toLocaleString()}`;
+        sub = 'Fixed per sale';
+      } else {
+        rate = `${affiliateSettings.default_percentage || 0}%`;
+        sub = 'Of sale value';
+      }
+    } else if (type === 'fixed') {
+      rate = `${currency} ${(affiliateSettings[fixedField] || 0).toLocaleString()}`;
+      sub = 'Fixed per sale';
+    } else {
+      rate = `${affiliateSettings[pctField] || 0}%`;
+      sub = 'Of sale value';
+    }
+    const recurringApplies = !affiliateSettings?.recurring_applies_to?.length || affiliateSettings.recurring_applies_to.includes(key);
+    const recurring = affiliateSettings?.recurring_enabled && recurringApplies
+      ? (affiliateSettings.recurring_type === 'fixed'
+          ? `+ ${currency} ${(affiliateSettings.recurring_fixed_amount || 0).toLocaleString()} /renewal`
+          : `+ ${affiliateSettings.recurring_percentage || 0}% /renewal`)
+      : null;
+    return { key, label, rate, sub, recurring };
+  });
+
   return (
     <div className="space-y-6">
-      {/* Program info banner */}
-      {affiliateSettings && (
+
+      {/* ── Commission Structure Hero ─────────────────────────────────── */}
+      <div className="rounded-2xl overflow-hidden border border-border bg-card shadow-sm">
+        <div className="bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--primary))]/80 px-6 py-5 text-white">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <Gift className="w-5 h-5 opacity-80" />
+                <span className="text-sm font-semibold uppercase tracking-wider opacity-75">Affiliate Program</span>
+              </div>
+              <h2 className="text-2xl font-bold">Your Commission Structure</h2>
+              <p className="text-white/70 text-sm mt-1">Earn on every client you refer — commissions tracked automatically.</p>
+            </div>
+            {affiliateSettings && (
+              <Badge className={affiliateSettings.program_enabled
+                ? 'bg-white/20 text-white border-white/30 shrink-0'
+                : 'bg-red-400/30 text-white border-red-300/30 shrink-0'}>
+                {affiliateSettings.program_enabled ? '● Active' : '● Paused'}
+              </Badge>
+            )}
+          </div>
+        </div>
+        <div className="p-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+            {commRows.map(({ key, label, rate, sub, recurring }) => (
+              <div key={key} className="flex items-center justify-between rounded-xl bg-muted/40 border border-border/50 px-4 py-3">
+                <div>
+                  <p className="text-sm font-semibold">{label}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{sub}</p>
+                </div>
+                <div className="text-right shrink-0 ml-3">
+                  <p className="text-base font-bold text-emerald-600">{rate}</p>
+                  {recurring && <p className="text-[11px] text-blue-500 font-medium mt-0.5">{recurring}</p>}
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="flex flex-wrap gap-4 pt-3 border-t border-border/50">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Wallet className="w-4 h-4 shrink-0 text-[hsl(var(--primary))]" />
+              <span>Min. payout: <strong className="text-foreground">{currency} {minPayout.toLocaleString()}</strong></span>
+            </div>
+            {affiliateSettings?.recurring_enabled && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <RefreshCw className="w-4 h-4 shrink-0 text-blue-500" />
+                <span>Recurring commissions
+                  {affiliateSettings.recurring_max_months > 0
+                    ? ` · up to ${affiliateSettings.recurring_max_months} months`
+                    : ' · unlimited'}
+                </span>
+              </div>
+            )}
+            {affiliateSettings?.cookie_duration_days > 0 && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Star className="w-4 h-4 shrink-0 text-amber-500" />
+                <span>Cookie window: <strong className="text-foreground">{affiliateSettings.cookie_duration_days} days</strong></span>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* ── How to Refer & Earn ─────────────────────────────────────── */}
+      <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+        <div className="px-6 py-4 border-b border-border flex items-center gap-2">
+          <BookOpen className="w-4 h-4 text-[hsl(var(--primary))]" />
+          <h3 className="font-semibold text-base">How to Refer &amp; Earn</h3>
+          <span className="text-xs text-muted-foreground ml-auto">4 simple steps</span>
+        </div>
+        <div className="p-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {[
+              {
+                step: '01', icon: Link2, color: 'bg-blue-500/10 text-blue-600',
+                title: 'Get your referral link',
+                desc: 'Go to the "Referral Links" tab and copy your unique tracking link. Every click and signup is automatically tracked to your account.',
+              },
+              {
+                step: '02', icon: Share2, color: 'bg-purple-500/10 text-purple-600',
+                title: 'Share with businesses',
+                desc: 'Send your link via WhatsApp, social media, email, or word of mouth. Target businesses that need digital marketing help.',
+              },
+              {
+                step: '03', icon: Users, color: 'bg-amber-500/10 text-amber-600',
+                title: 'They sign up & subscribe',
+                desc: 'When someone clicks your link and purchases any Brandfletch service, their subscription is linked to your account.',
+              },
+              {
+                step: '04', icon: Wallet, color: 'bg-emerald-500/10 text-emerald-600',
+                title: 'Withdraw your earnings',
+                desc: `Once your balance hits ${currency} ${minPayout.toLocaleString()}, go to the Payouts tab and request a withdrawal via mobile money or bank transfer.`,
+              },
+            ].map(({ step, icon: Icon, title, desc, color }) => (
+              <div key={step} className="flex gap-4 p-4 rounded-xl bg-muted/30 border border-border/40 hover:border-[hsl(var(--primary))]/30 transition-colors">
+                <div className="shrink-0 flex flex-col items-center gap-2">
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${color}`}>
+                    <Icon className="w-5 h-5" />
+                  </div>
+                  <span className="text-[10px] font-black text-muted-foreground/40 tracking-widest">{step}</span>
+                </div>
+                <div>
+                  <p className="font-semibold text-sm mb-1">{title}</p>
+                  <p className="text-xs text-muted-foreground leading-relaxed">{desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-4 flex items-start gap-3 rounded-xl bg-[hsl(var(--primary))]/5 border border-[hsl(var(--primary))]/20 px-4 py-3">
+            <Zap className="w-4 h-4 text-[hsl(var(--primary))] shrink-0 mt-0.5" />
+            <div>
+              <p className="text-xs font-semibold text-[hsl(var(--primary))] mb-0.5">Pro tip</p>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Use the <strong className="text-foreground">Marketing Materials</strong> tab to download branded images, banners, and captions — ready to share instantly, no design skills needed.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Legacy program info banner (kept but hidden — hero above replaces it) */}
+      {false && affiliateSettings && (
         <Card className="bg-gradient-to-br from-[hsl(var(--primary))]/10 to-[hsl(var(--accent))]/10 border-[hsl(var(--primary))]/20">
           <CardContent className="p-4 flex flex-col sm:flex-row gap-4 sm:items-center justify-between">
             <div className="flex-1 min-w-0">
