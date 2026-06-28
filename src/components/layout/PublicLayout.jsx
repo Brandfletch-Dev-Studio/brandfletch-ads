@@ -5,6 +5,7 @@ import { Menu, X, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import BrandLogo from '@/components/BrandLogo';
 import { cn } from '@/lib/utils';
+import BottomNav from '@/components/layout/BottomNav';
 
 const NAV = [
   { label: 'Home',    to: '/' },
@@ -154,6 +155,9 @@ export default function PublicLayout() {
           © {new Date().getFullYear()} Brandfletch Media. All rights reserved.
         </div>
       </footer>
+      {/* Bottom padding so content isn't hidden behind the mobile nav */}
+      <div className="h-16 lg:hidden" aria-hidden="true" />
+      <BottomNav />
     </div>
   );
 }
