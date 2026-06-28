@@ -1,6 +1,6 @@
 // Conversion-focused 404 — guides visitors back into the funnel
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, Home, LayoutGrid, DollarSign, BookOpen, Phone, LayoutDashboard } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Home, LayoutGrid, DollarSign, BookOpen, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/AuthContext';
 
