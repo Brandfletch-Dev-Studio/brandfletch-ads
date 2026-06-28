@@ -82,7 +82,6 @@ const ALL_ADMIN_NAV = [
   { key: 'support',       path: '/admin/support',        label: 'Support Tickets',   icon: LifeBuoy,        permission: 'support.view' },
   { key: 'referrals',     path: '/admin/referrals',      label: 'Referrals',         icon: Gift,            permission: 'referrals.view' },
   { key: 'portfolio',   path: '/admin/portfolio',     label: 'Portfolio',          icon: LayoutGrid,      permission: null },
-  { key: 'guest_orders', path: '/admin/guest-orders',  label: 'Guest Orders',       icon: ShoppingBag,     permission: null },
   { key: 'blog',          path: '/admin/blog',           label: 'Blog',              icon: FileText,        permission: null },
   { key: 'settings',      path: '/admin/settings',       label: 'Settings',          icon: Settings,        permission: 'settings.view' },
 ];
