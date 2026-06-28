@@ -43,14 +43,8 @@ const CATEGORY_LABELS = {
   other:          'Other',
 };
 
-// Order service keys that map to /order?service=
-const SERVICE_KEYS = ['graphic_design','meta_ads','ugc_ads','social_media','web_design','branding'];
-
-function getOrderUrl(item) {
-  const svc = item.category;
-  if (SERVICE_KEYS.includes(svc)) return `/order?service=${svc}`;
-  return '/contact';
-}
+// All CTAs go to /contact
+function getOrderUrl() { return '/contact'; }
 
 // ── Video helpers ──────────────────────────────────────────────────────────────
 function getEmbedId(url) {
@@ -194,7 +188,7 @@ export default function PortfolioPage() {
           Let's create work that makes your brand stand out.
         </p>
         <div className="flex justify-center gap-3 flex-wrap">
-          <Link to="/order">
+          <Link to="/contact">
             <Button className="bg-[hsl(var(--primary))] text-white hover:bg-[hsl(var(--primary))]/90 font-semibold">
               Start a project <ArrowRight className="ml-1.5 w-4 h-4" />
             </Button>
