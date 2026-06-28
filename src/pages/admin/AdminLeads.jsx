@@ -1,3 +1,4 @@
+import { toast } from 'sonner';
 import { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -30,6 +31,8 @@ export default function AdminLeads() {
 
   const updateLeadMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.Lead.update(id, data),
+  onSuccess: () => toast.success('Lead updated'),
+  onError: (err) => toast.error(err?.message || 'Failed to update lead'),
   });
 
   const filteredLeads = leads?.filter(lead => {
