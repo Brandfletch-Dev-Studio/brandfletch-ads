@@ -274,8 +274,10 @@ const AppRoutes = () => (
           <Route path="/admin/portfolio"       element={<AdminPortfolio />} />
         </Route>
 
-        {/* ── 404 ── */}
-        <Route path="*" element={<PageNotFound />} />
+        {/* ── 404 — wrapped in PublicLayout so header/footer show ── */}
+        <Route element={<PublicLayout />}>
+          <Route path="*" element={<PageNotFound />} />
+        </Route>
 
       </Routes>
     </Suspense>
