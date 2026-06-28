@@ -21,15 +21,22 @@ export default function Register() {
 
   const referralCode = new URLSearchParams(window.location.search).get('ref') || '';
 
-  // Pre-fill email if redirected from login page
+  // Pre-fill email if redirected from login page; preserve post-login redirect
   useEffect(() => {
-    const prefill = new URLSearchParams(window.location.search).get('email');
-    if (prefill) setEmail(decodeURIComponent(prefill));
+    const params   = new URLSearchParams(window.location.search);
+    const prefill  = params.get('email');
+    const redirect = params.get('redirect');
+    if (prefill)  setEmail(decodeURIComponent(prefill));
+    if (redirect) sessionStorage.setItem('bf_post_login_redirect', decodeURIComponent(redirect));
   }, []);
 
   useEffect(() => {
     base44.auth.isAuthenticated().then((authed) => {
-      if (authed) navigate('/dashboard', { replace: true });
+      const postLogin = sessionStorage.getItem('bf_post_login_redirect');
+      if (authed) {
+        sessionStorage.removeItem('bf_post_login_redirect');
+        navigate(postLogin || '/dashboard', { replace: true });
+      }
     });
   }, []);
 
