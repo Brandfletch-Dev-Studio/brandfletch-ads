@@ -28,26 +28,34 @@ export default function AdminCampaigns() {
   }, []);
 
   async function deleteCampaign(e, id) {
-    e.preventDefault();
-    e.stopPropagation();
-    if (deletingId === id) {
-      await base44.entities.Campaign.delete(id);
-      setCampaigns(cs => cs.filter(c => c.id !== id));
-      setDeletingId(null);
-      toast.success('Campaign deleted');
-    } else {
-      setDeletingId(id);
+    try {
+      e.preventDefault();
+      e.stopPropagation();
+      if (deletingId === id) {
+        await base44.entities.Campaign.delete(id);
+        setCampaigns(cs => cs.filter(c => c.id !== id));
+        setDeletingId(null);
+        toast.success('Campaign deleted');
+      } else {
+        setDeletingId(id);
+      }
+    } catch (err) {
+      toast.error(err?.message || 'Something went wrong. Please try again.');
     }
   }
 
   async function deleteBulk() {
-    const toDelete = filtered;
-    for (const c of toDelete) {
-      await base44.entities.Campaign.delete(c.id);
+    try {
+      const toDelete = filtered;
+      for (const c of toDelete) {
+        await base44.entities.Campaign.delete(c.id);
+      }
+      setCampaigns(cs => cs.filter(c => !toDelete.find(d => d.id === c.id)));
+      setConfirmBulkDelete(false);
+      toast.success(`${toDelete.length} campaigns deleted`);
+    } catch (err) {
+      toast.error(err?.message || 'Something went wrong. Please try again.');
     }
-    setCampaigns(cs => cs.filter(c => !toDelete.find(d => d.id === c.id)));
-    setConfirmBulkDelete(false);
-    toast.success(`${toDelete.length} campaigns deleted`);
   }
 
   function toggleSelect(id) {
@@ -67,25 +75,29 @@ export default function AdminCampaigns() {
   }
 
   async function bulkAction(action) {
-    setBulkLoading(true);
-    const ids = [...selected];
-    const statusMap = { approve: 'approved', reject: 'rejected' };
-    for (const id of ids) {
-      if (action === 'delete') {
-        await base44.entities.Campaign.delete(id);
-      } else {
-        await base44.entities.Campaign.update(id, { status: statusMap[action] });
+    try {
+      setBulkLoading(true);
+      const ids = [...selected];
+      const statusMap = { approve: 'approved', reject: 'rejected' };
+      for (const id of ids) {
+        if (action === 'delete') {
+          await base44.entities.Campaign.delete(id);
+        } else {
+          await base44.entities.Campaign.update(id, { status: statusMap[action] });
+        }
       }
+      if (action === 'delete') {
+        setCampaigns(cs => cs.filter(c => !selected.has(c.id)));
+        toast.success(`${ids.length} campaigns deleted`);
+      } else {
+        setCampaigns(cs => cs.map(c => selected.has(c.id) ? { ...c, status: statusMap[action] } : c));
+        toast.success(`${ids.length} campaigns ${action}d`);
+      }
+      setSelected(new Set());
+      setBulkLoading(false);
+    } catch (err) {
+      toast.error(err?.message || 'Something went wrong. Please try again.');
     }
-    if (action === 'delete') {
-      setCampaigns(cs => cs.filter(c => !selected.has(c.id)));
-      toast.success(`${ids.length} campaigns deleted`);
-    } else {
-      setCampaigns(cs => cs.map(c => selected.has(c.id) ? { ...c, status: statusMap[action] } : c));
-      toast.success(`${ids.length} campaigns ${action}d`);
-    }
-    setSelected(new Set());
-    setBulkLoading(false);
   }
 
   const STATUSES = ['all', 'pending_review', 'awaiting_payment', 'active', 'approved', 'paused', 'completed', 'rejected'];
