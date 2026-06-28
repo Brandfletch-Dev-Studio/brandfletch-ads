@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Palette, Plus, ArrowLeft, Lock, MessageSquare, Loader2, Upload, Download, RotateCcw, CheckCircle2, X } from 'lucide-react';
+import { Palette, Plus, ArrowLeft, Lock, MessageSquare, Loader2, Download, RotateCcw, CheckCircle2, X } from 'lucide-react';
 import { toast } from 'sonner';
 import DesignSubscription from '@/components/designs/DesignSubscription';
 import DesignChatComponent from '@/components/designs/DesignChatComponent';
