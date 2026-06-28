@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
+import ConfirmDialog from '@/components/ConfirmDialog';
 import { format } from 'date-fns';
 import { } from '@/lib/permissions';
 
@@ -30,6 +31,7 @@ export default function AdminNotifications() {
   const [users, setUsers] = useState([]);
   const [form, setForm] = useState({ title: '', message: '', type: 'campaign_approved', recipient_id: 'all' });
   const [sending, setSending] = useState(false);
+  const [confirmId, setConfirmId] = useState(null);
   const [tab, setTab] = useState('send');
   const [loading, setLoading] = useState(true);
 
@@ -213,7 +215,7 @@ export default function AdminNotifications() {
                     {n.created_date ? format(new Date(n.created_date), 'MMM d, yyyy HH:mm') : ''}
                   </p>
                 </div>
-                <button onClick={() => deleteNotif(n.id)}
+                <button onClick={() => setConfirmId(n.id)}
                   className="text-muted-foreground hover:text-destructive transition-colors flex-shrink-0 p-1">
                   <Trash2 className="w-4 h-4" />
                 </button>
