@@ -17,18 +17,19 @@ import {
 } from 'lucide-react';
 import BrandLogo from '@/components/BrandLogo';
 
-// ── Service catalogue ─────────────────────────────────────────────────────────
+// ── Service catalogue — prices match PricingPage ──────────────────────────────
+// Prices in MWK, same packages as the public Pricing page
 const SERVICES = [
   {
     key: 'meta_ads',
     label: 'Meta Ads',
     icon: Megaphone,
     color: 'bg-blue-500/10 text-blue-600',
-    desc: 'Facebook & Instagram ad campaigns managed end-to-end.',
+    desc: "Facebook & Instagram ad campaigns managed end-to-end. Prices shown in MWK — use the calculator on our Pricing page for USD.",
     plans: [
-      { slug: 'starter',    name: 'Starter',    price: 150,  currency: 'USD', billing: 'monthly',  desc: 'Up to 2 campaigns, basic targeting' },
-      { slug: 'growth',     name: 'Growth',     price: 250,  currency: 'USD', billing: 'monthly',  desc: 'Up to 4 campaigns, A/B testing, retargeting' },
-      { slug: 'scale',      name: 'Scale',      price: 450,  currency: 'USD', billing: 'monthly',  desc: 'Unlimited campaigns, full funnel strategy' },
+      { slug: 'starter',  name: 'Starter',        price: 'MK 100,000', priceNote: '/month',       billing: 'monthly',  desc: 'Up to 2 campaigns, basic audience targeting' },
+      { slug: 'growth',   name: 'Growth',          price: 'MK 250,000', priceNote: '/month',       billing: 'monthly',  desc: 'Up to 4 campaigns, A/B testing, retargeting' },
+      { slug: 'scale',    name: 'Scale',           price: 'MK 750,000', priceNote: '/month',       billing: 'monthly',  desc: 'Unlimited campaigns, full funnel strategy' },
     ],
   },
   {
@@ -36,11 +37,11 @@ const SERVICES = [
     label: 'UGC Ads',
     icon: Video,
     color: 'bg-purple-500/10 text-purple-600',
-    desc: 'User-generated-style video creatives that convert.',
+    desc: "We don't just create videos. We create UGC ads designed to help businesses attract customers — Meta Ads-ready.",
     plans: [
-      { slug: 'basic',      name: 'Basic',      price: 120,  currency: 'USD', billing: 'once-off', desc: '3 UGC video ads, 1 revision each' },
-      { slug: 'standard',   name: 'Standard',   price: 200,  currency: 'USD', billing: 'once-off', desc: '6 UGC video ads, 2 revisions each' },
-      { slug: 'pro',        name: 'Pro',        price: 350,  currency: 'USD', billing: 'once-off', desc: '12 UGC video ads, unlimited revisions' },
+      { slug: 'starter',         name: 'Starter',        price: 'MK 100,000', priceNote: 'per campaign', billing: 'once-off', desc: '1 UGC ad creative, creator matching, brand story, Meta Ads-ready format' },
+      { slug: 'growth',          name: 'Growth',         price: 'MK 250,000', priceNote: 'per campaign', billing: 'once-off', desc: '3 UGC ad creatives, multiple angles, A/B testing, full brand story' },
+      { slug: 'brand-campaign',  name: 'Brand Campaign', price: 'MK 750,000', priceNote: 'per campaign', billing: 'once-off', desc: '10 UGC ad creatives, multiple creators, full advertising content library' },
     ],
   },
   {
@@ -48,11 +49,11 @@ const SERVICES = [
     label: 'Graphic Design',
     icon: Palette,
     color: 'bg-pink-500/10 text-pink-600',
-    desc: 'Social media graphics, brand visuals, and marketing assets.',
+    desc: 'Consistent, professional design output on a monthly retainer — posters, social posts, motion graphics & more.',
     plans: [
-      { slug: 'basic',      name: 'Basic',      price: 80,   currency: 'USD', billing: 'monthly',  desc: '8 designs/month, 1 revision each' },
-      { slug: 'standard',   name: 'Standard',   price: 150,  currency: 'USD', billing: 'monthly',  desc: '20 designs/month, 2 revisions each' },
-      { slug: 'premium',    name: 'Premium',    price: 280,  currency: 'USD', billing: 'monthly',  desc: '40 designs/month, unlimited revisions' },
+      { slug: 'starter',  name: 'Starter',  price: 'MK 100,000', priceNote: '/month', billing: 'monthly',  desc: '10 design requests/month, static designs, 24–48hr turnaround' },
+      { slug: 'growth',   name: 'Growth',   price: 'MK 180,000', priceNote: '/month', billing: 'monthly',  desc: '15 design requests/month, static + motion, 12–24hr turnaround' },
+      { slug: 'premium',  name: 'Premium',  price: 'MK 280,000', priceNote: '/month', billing: 'monthly',  desc: '20 design requests/month, full suite, dedicated designer, 6–12hr turnaround' },
     ],
   },
   {
@@ -60,11 +61,11 @@ const SERVICES = [
     label: 'Social Media',
     icon: Share2,
     color: 'bg-green-500/10 text-green-600',
-    desc: 'Full social media management across platforms.',
+    desc: 'Full social media management — content, strategy, scheduling, and community engagement.',
     plans: [
-      { slug: 'basic',      name: 'Starter',    price: 100,  currency: 'USD', billing: 'monthly',  desc: '12 posts/month, 2 platforms' },
-      { slug: 'standard',   name: 'Growth',     price: 200,  currency: 'USD', billing: 'monthly',  desc: '24 posts/month, 4 platforms + Reels' },
-      { slug: 'premium',    name: 'Full Mgmt',  price: 380,  currency: 'USD', billing: 'monthly',  desc: '32 posts/month, all platforms, analytics' },
+      { slug: 'starter',      name: 'Starter',      price: 'MK 150,000', priceNote: '/month', billing: 'monthly',  desc: '16 branded posts/month, page management, content planning, basic engagement' },
+      { slug: 'growth',       name: 'Growth',       price: 'MK 300,000', priceNote: '/month', billing: 'monthly',  desc: '32 branded posts/month, full management, Reels, content calendar, report' },
+      { slug: 'brand-growth', name: 'Brand Growth', price: 'MK 450,000', priceNote: '/month', billing: 'monthly',  desc: '32+ posts/month, paid ads integration, influencer coordination, full strategy' },
     ],
   },
   {
@@ -72,11 +73,11 @@ const SERVICES = [
     label: 'Web Design',
     icon: Globe,
     color: 'bg-orange-500/10 text-orange-600',
-    desc: 'Websites that look great and convert visitors.',
+    desc: 'Websites designed around business growth — mobile-first, conversion-focused, built for African businesses.',
     plans: [
-      { slug: 'landing',    name: 'Landing Page', price: 300, currency: 'USD', billing: 'once-off', desc: 'Single high-converting landing page' },
-      { slug: 'business',   name: 'Business Site',price: 600, currency: 'USD', billing: 'once-off', desc: '5-page business website' },
-      { slug: 'ecommerce',  name: 'E-commerce',   price: 1200,currency: 'USD', billing: 'once-off', desc: 'Full e-commerce store setup' },
+      { slug: 'starter',  name: 'Starter Website',  price: 'MK 150,000', priceNote: 'one-off', billing: 'once-off', desc: 'Up to 5 pages, mobile responsive, contact form, WhatsApp integration, basic SEO' },
+      { slug: 'growth',   name: 'Growth Website',   price: 'MK 350,000', priceNote: 'one-off', billing: 'once-off', desc: 'Up to 10 pages, lead capture, blog/news, SEO optimisation, analytics setup' },
+      { slug: 'pro',      name: 'Business Pro',     price: 'MK 750,000', priceNote: 'one-off', billing: 'once-off', desc: 'Unlimited pages, e-commerce, booking systems, payment integrations, advanced SEO' },
     ],
   },
   {
@@ -84,11 +85,11 @@ const SERVICES = [
     label: 'Branding',
     icon: Layers,
     color: 'bg-amber-500/10 text-amber-600',
-    desc: 'Logo, brand identity, and brand guidelines.',
+    desc: 'Logo, brand identity, and brand guidelines — built to make your business look the part.',
     plans: [
-      { slug: 'logo',       name: 'Logo Only',  price: 150,  currency: 'USD', billing: 'once-off', desc: 'Logo + 3 concepts, 2 revisions' },
-      { slug: 'identity',   name: 'Brand Identity', price: 350, currency: 'USD', billing: 'once-off', desc: 'Logo + colour palette + typography + guidelines' },
-      { slug: 'full',       name: 'Full Brand', price: 650,  currency: 'USD', billing: 'once-off', desc: 'Complete brand system + social media templates' },
+      { slug: 'logo',      name: 'Logo Only',      price: 'MK 150,000', priceNote: 'one-off', billing: 'once-off', desc: 'Logo + 3 concepts, 2 revisions, all file formats' },
+      { slug: 'identity',  name: 'Brand Identity', price: 'MK 350,000', priceNote: 'one-off', billing: 'once-off', desc: 'Logo + colour palette + typography + brand guidelines' },
+      { slug: 'full',      name: 'Full Brand',     price: 'MK 750,000', priceNote: 'one-off', billing: 'once-off', desc: 'Complete brand system + social media templates + all assets' },
     ],
   },
 ];
@@ -195,7 +196,7 @@ export default function GuestOrderPage() {
           service_type: selectedService,
           plan_name:    selectedPlan.name,
           plan_slug:    selectedPlan.slug,
-          currency:     selectedPlan.currency,
+          currency:     'MWK',
           price:        selectedPlan.price,
           billing_cycle:selectedPlan.billing,
           status:       'pending',
@@ -268,7 +269,7 @@ export default function GuestOrderPage() {
             <span className="text-muted-foreground">·</span>
             <span>{selectedPlan?.name}</span>
             <span className="text-muted-foreground">·</span>
-            <span className="font-bold text-foreground">${selectedPlan?.price}/{selectedPlan?.billing === 'once-off' ? 'once' : 'mo'}</span>
+            <span className="font-bold text-foreground">{selectedPlan?.price} {selectedPlan?.priceNote}</span>
           </div>
 
           <div className="space-y-3">
@@ -395,8 +396,8 @@ export default function GuestOrderPage() {
                     <p className="text-xs text-muted-foreground mt-0.5">{plan.desc}</p>
                   </div>
                   <div className="text-right ml-4 shrink-0">
-                    <p className="font-bold text-lg">${plan.price}</p>
-                    <p className="text-xs text-muted-foreground">{plan.billing === 'once-off' ? 'once-off' : '/month'}</p>
+                    <p className="font-bold text-lg">{plan.price}</p>
+                    {plan.priceNote && <p className="text-xs text-muted-foreground">{plan.priceNote}</p>}
                   </div>
                 </button>
               ))}
@@ -413,7 +414,7 @@ export default function GuestOrderPage() {
             {/* Selected plan pill */}
             <div className="mb-6 inline-flex items-center gap-2 bg-[hsl(var(--primary))]/10 text-[hsl(var(--primary))] rounded-full px-4 py-1.5 text-sm font-semibold">
               <serviceObj.icon className="w-4 h-4" />
-              {serviceObj.label} — {selectedPlan.name} · ${selectedPlan.price}/{selectedPlan.billing === 'once-off' ? 'once' : 'mo'}
+              {serviceObj.label} — {selectedPlan.name} · {selectedPlan.price} {selectedPlan.priceNote}
             </div>
             <h1 className="text-2xl font-bold mb-1">Your details</h1>
             <p className="text-muted-foreground mb-8 text-sm">We'll use this to set up your account and reach out about your order.</p>
@@ -477,8 +478,8 @@ export default function GuestOrderPage() {
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-xl font-bold">${selectedPlan.price}</p>
-                  <p className="text-xs text-muted-foreground">{selectedPlan.billing === 'once-off' ? 'once-off' : 'per month'}</p>
+                  <p className="text-xl font-bold">{selectedPlan.price}</p>
+                  <p className="text-xs text-muted-foreground">{selectedPlan.priceNote}</p>
                 </div>
               </div>
 
@@ -528,3 +529,4 @@ export default function GuestOrderPage() {
     </div>
   );
 }
+
