@@ -504,54 +504,59 @@ function Lightbox({ item, initTab, onClose }) {
   );
 }
 
-// ── Native Video Player ──────────────────────────────────────────────────────────
-// Renders the embed full-bleed with no visible iframe chrome.
-// For mp4: uses <video> with native controls hidden, custom overlay.
-// For YouTube/Vimeo/TikTok: full-bleed iframe, no border/padding/background.
+// ── Native Video Player ───────────────────────────────────────────────────────
+// Strategy:
+//   mp4        → <video> tag, hidden native controls, custom overlay
+//   YouTube    → iframe with controls=0, then DIV overlay with our own play btn
+//                The iframe is scaled 115% + clipped to hide the bottom bar that
+//                YouTube draws even with controls=0 (Shorts logo, timestamp strip)
+//   Vimeo      → iframe with all chrome params disabled
+//   external   → open-in-browser button
 function NativeVideoPlayer({ embedInfo, title }) {
-  const videoRef = useRef(null);
-  const [playing, setPlaying]   = useState(false);
-  const [muted, setMuted]       = useState(false);
-  const [started, setStarted]   = useState(false);
+  const videoRef   = useRef(null);
+  const iframeRef  = useRef(null);
+  const [playing,  setPlaying]  = useState(true);   // autoplay — assume playing
+  const [muted,    setMuted]    = useState(false);
+  const [showPlay, setShowPlay] = useState(false);  // brief flash overlay on pause/play
 
   if (!embedInfo) return (
     <div className="flex-1 flex items-center justify-center text-white/30 text-sm">Video unavailable</div>
   );
 
-  // ── mp4: native <video> with custom overlay play button ──
+  // ── mp4 ──
   if (embedInfo.platform === 'mp4') {
     return (
-      <div className="flex-1 relative bg-black group">
+      <div className="flex-1 relative bg-black group min-h-[260px]">
         <video
           ref={videoRef}
           src={embedInfo.id}
-          className="w-full h-full object-contain"
+          autoPlay
           playsInline
+          className="absolute inset-0 w-full h-full object-contain"
           onClick={() => {
-            if (videoRef.current?.paused) { videoRef.current.play(); setPlaying(true); setStarted(true); }
+            if (videoRef.current?.paused) { videoRef.current.play(); setPlaying(true); }
             else { videoRef.current.pause(); setPlaying(false); }
           }}
           onEnded={() => setPlaying(false)}
         />
-        {/* Big play overlay — disappears once started */}
-        {!started && (
+        {/* Tap-to-play overlay */}
+        {!playing && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="w-20 h-20 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center border border-white/20">
-              <Play className="w-9 h-9 text-white fill-current ml-1" />
+            <div className="w-16 h-16 rounded-full bg-black/60 backdrop-blur-sm flex items-center justify-center">
+              <Play className="w-7 h-7 text-white fill-current ml-1" />
             </div>
           </div>
         )}
-        {/* Bottom controls */}
+        {/* Bottom bar */}
         <div className="absolute bottom-0 left-0 right-0 flex items-center gap-3 px-4 py-3
-          bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
-          <button onClick={() => {
-            if (!videoRef.current) return;
-            if (videoRef.current.paused) { videoRef.current.play(); setPlaying(true); setStarted(true); }
-            else { videoRef.current.pause(); setPlaying(false); }
-          }} className="text-white">
-            {playing ? <span className="text-xs font-bold">⏸</span> : <Play className="w-4 h-4 fill-current" />}
+          bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none group-hover:pointer-events-auto">
+          <button onClick={() => { videoRef.current?.paused ? videoRef.current.play() : videoRef.current?.pause(); setPlaying(p => !p); }} className="text-white">
+            {playing
+              ? <svg className="w-4 h-4 fill-white" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+              : <Play className="w-4 h-4 fill-current" />
+            }
           </button>
-          <button onClick={() => { if (videoRef.current) { videoRef.current.muted = !muted; setMuted(!muted); } }} className="text-white">
+          <button onClick={() => { if (videoRef.current) { videoRef.current.muted = !muted; setMuted(m => !m); } }} className="text-white">
             {muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
           </button>
           <button onClick={() => videoRef.current?.requestFullscreen?.()} className="text-white ml-auto">
@@ -562,10 +567,10 @@ function NativeVideoPlayer({ embedInfo, title }) {
     );
   }
 
-  // ── external link fallback ──
+  // ── external ──
   if (embedInfo.platform === 'external') {
     return (
-      <div className="flex-1 flex items-center justify-center bg-black/90">
+      <div className="flex-1 flex items-center justify-center bg-black">
         <a href={embedInfo.id} target="_blank" rel="noopener noreferrer"
           className="flex items-center gap-2 px-6 py-3 rounded-full bg-[hsl(var(--primary))] text-white font-semibold text-sm hover:opacity-90 transition-opacity">
           <Play className="w-4 h-4 fill-current" /> Watch video
@@ -574,27 +579,94 @@ function NativeVideoPlayer({ embedInfo, title }) {
     );
   }
 
-  // ── YouTube / Vimeo / TikTok — full-bleed iframe, zero chrome ──
-  let src = '';
+  // ── YouTube ──
+  // controls=0  hides the YouTube control bar entirely
+  // The iframe is scaled up 120% and the overflow is hidden via the parent clip
+  // This crops the bottom strip (timestamp / Shorts bar) YouTube still renders
+  // even with controls=0, giving a clean full-bleed look.
   if (embedInfo.platform === 'youtube') {
-    src = `https://www.youtube-nocookie.com/embed/${embedInfo.id}?autoplay=1&rel=0&modestbranding=1&playsinline=1&color=white&iv_load_policy=3&controls=1&fs=1`;
-  } else if (embedInfo.platform === 'vimeo') {
-    src = `https://player.vimeo.com/video/${embedInfo.id}?autoplay=1&title=0&byline=0&portrait=0&dnt=1&color=ffffff`;
-  } else if (embedInfo.platform === 'tiktok') {
-    src = `https://www.tiktok.com/embed/v2/${embedInfo.id}?autoplay=1`;
+    const ytSrc = `https://www.youtube-nocookie.com/embed/${embedInfo.id}?autoplay=1&controls=0&rel=0&modestbranding=1&playsinline=1&iv_load_policy=3&disablekb=1&fs=0&loop=1&playlist=${embedInfo.id}`;
+    return (
+      <div className="flex-1 relative bg-black overflow-hidden min-h-[260px]"
+        style={{ isolation: 'isolate' }}>
+        {/* Scaled iframe — crops bottom chrome */}
+        <div className="absolute inset-0 flex items-center justify-center"
+          style={{ margin: '-12% 0 -12% 0' }}>   {/* negative margin clips top+bottom evenly */}
+          <iframe
+            ref={iframeRef}
+            key={ytSrc}
+            src={ytSrc}
+            title={title}
+            className="w-full h-full border-0"
+            style={{ display: 'block', width: '100%', height: '100%' }}
+            allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
+            allowFullScreen
+            referrerPolicy="strict-origin-when-cross-origin"
+          />
+        </div>
+        {/* Transparent click-through overlay — blocks YouTube UI click targets */}
+        <div className="absolute inset-0 cursor-pointer" style={{ zIndex: 1 }}
+          onClick={() => {
+            // Send postMessage play/pause — YouTube iframe API
+            const msg = playing
+              ? '{"event":"command","func":"pauseVideo","args":""}'
+              : '{"event":"command","func":"playVideo","args":""}';
+            iframeRef.current?.contentWindow?.postMessage(msg, '*');
+            setPlaying(p => !p);
+            setShowPlay(true);
+            setTimeout(() => setShowPlay(false), 600);
+          }}
+        />
+        {/* Tap feedback */}
+        {showPlay && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ zIndex: 2 }}>
+            <div className="w-14 h-14 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center animate-ping-once">
+              {playing
+                ? <svg className="w-7 h-7 fill-white" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+                : <Play className="w-7 h-7 fill-white ml-1" />
+              }
+            </div>
+          </div>
+        )}
+        {/* Fullscreen button — only UI we keep */}
+        <button
+          onClick={() => iframeRef.current?.requestFullscreen?.()}
+          className="absolute bottom-3 right-3 z-10 w-8 h-8 rounded-lg bg-black/50 backdrop-blur-sm text-white flex items-center justify-center hover:bg-black/70 transition-colors"
+          style={{ zIndex: 3 }}
+        >
+          <Maximize2 className="w-3.5 h-3.5" />
+        </button>
+      </div>
+    );
+  }
+
+  // ── Vimeo ──
+  if (embedInfo.platform === 'vimeo') {
+    const vmSrc = `https://player.vimeo.com/video/${embedInfo.id}?autoplay=1&title=0&byline=0&portrait=0&controls=0&dnt=1&transparent=0&background=1`;
+    return (
+      <div className="flex-1 relative bg-black overflow-hidden min-h-[260px]">
+        <iframe key={vmSrc} src={vmSrc} title={title}
+          className="absolute inset-0 w-full h-full border-0"
+          allow="autoplay; fullscreen; picture-in-picture"
+          allowFullScreen referrerPolicy="strict-origin-when-cross-origin" />
+      </div>
+    );
+  }
+
+  // ── TikTok ──
+  if (embedInfo.platform === 'tiktok') {
+    const ttSrc = `https://www.tiktok.com/embed/v2/${embedInfo.id}?autoplay=1`;
+    return (
+      <div className="flex-1 relative bg-black overflow-hidden min-h-[260px]">
+        <iframe key={ttSrc} src={ttSrc} title={title}
+          className="absolute inset-0 w-full h-full border-0"
+          allow="autoplay; fullscreen"
+          allowFullScreen referrerPolicy="strict-origin-when-cross-origin" />
+      </div>
+    );
   }
 
   return (
-    <div className="flex-1 relative bg-black" style={{ aspectRatio: '9/16', maxHeight: '70vh' }}>
-      <iframe
-        key={src}
-        src={src}
-        title={title}
-        className="absolute inset-0 w-full h-full border-0"
-        allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
-        allowFullScreen
-        referrerPolicy="strict-origin-when-cross-origin"
-      />
-    </div>
+    <div className="flex-1 flex items-center justify-center text-white/30 text-sm">Video unavailable</div>
   );
 }
