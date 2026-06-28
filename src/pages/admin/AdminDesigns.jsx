@@ -53,11 +53,16 @@ export default function AdminDesigns() {
   const { data: designers = [] } = useQuery({
     queryKey: ['designers'],
     queryFn: async () => {
-      const [designers, directors] = await Promise.all([
-        base44.entities.User.filter({ role: 'designer' }),
-        base44.entities.User.filter({ role: 'creative_ops_director' }),
-      ]);
-      return [...directors, ...designers];
+      try {
+        const [designers, directors] = await Promise.all([
+          base44.entities.User.filter({ role: 'designer' }),
+          base44.entities.User.filter({ role: 'creative_ops_director' }),
+        ]);
+        return [...directors, ...designers];
+      } catch (err) {
+        toast.error(err?.message || 'Failed to load designers');
+        return [];
+      }
     },
   });
 
