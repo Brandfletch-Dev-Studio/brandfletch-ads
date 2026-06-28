@@ -16,10 +16,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
-    env:
-      VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-      VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -30,49 +26,33 @@ jobs:
           node-version: 20
           cache: npm
 
-      - name: Pull Vercel Environment (production)
-        run: npx vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
-
       - name: Install dependencies
         run: npm ci
 
-      - name: Build with Vercel
-        run: npx vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
-
-      - name: Verify build output
-        run: |
-          if [ ! -d ".vercel/output" ]; then
-            echo "::error::Vercel build did not produce output"
-            exit 1
-          fi
-          echo "✅ Build output exists"
-
-      - name: Deploy to Vercel
+      - name: Deploy to Vercel (prod)
         id: deploy
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
         run: |
-          DEPLOY_OUTPUT=$(npx vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }} --yes 2>&1)
-          echo "$DEPLOY_OUTPUT"
-          # Extract URL — Vercel CLI may output it in different formats
-          DEPLOY_URL=$(echo "$DEPLOY_OUTPUT" | grep -oE 'https://[a-zA-Z0-9._-]+\.vercel\.app' | tail -1)
+          OUTPUT=$(npx vercel --prod --yes --token=${{ secrets.VERCEL_TOKEN }} 2>&1)
+          echo "$OUTPUT"
+          DEPLOY_URL=$(echo "$OUTPUT" | grep -oE 'https://[a-zA-Z0-9._-]+-[a-zA-Z0-9-]+\.vercel\.app' | tail -1)
           if [ -z "$DEPLOY_URL" ]; then
-            DEPLOY_URL=$(echo "$DEPLOY_OUTPUT" | grep -oE 'https://[a-zA-Z0-9._-]+' | grep 'vercel' | tail -1)
+            DEPLOY_URL=$(echo "$OUTPUT" | grep -oE 'https://[a-zA-Z0-9._/-]+\.vercel\.app' | tail -1)
           fi
           echo "deploy_url=$DEPLOY_URL" >> $GITHUB_OUTPUT
-          if [ -n "$DEPLOY_URL" ]; then
-            echo "✅ Deployed to: $DEPLOY_URL"
-          else
-            echo "⚠️  Could not extract deployment URL (deploy may still have succeeded)"
-          fi
+          echo "✅ Deployed: $DEPLOY_URL"
 
       - name: Alias brandfletch.com
         continue-on-error: true
         run: |
-          DEPLOY_URL="${{ steps.deploy.outputs.deploy_url }}"
-          if [ -n "$DEPLOY_URL" ]; then
-            echo "🔗 Aliasing brandfletch.com → $DEPLOY_URL"
-            npx vercel alias set "$DEPLOY_URL" brandfletch.com --token=${{ secrets.VERCEL_TOKEN }} || echo "⚠️  Alias step failed (non-fatal)"
+          URL="${{ steps.deploy.outputs.deploy_url }}"
+          if [ -n "$URL" ]; then
+            npx vercel alias set "$URL" brandfletch.com --token=${{ secrets.VERCEL_TOKEN }} || true
+            echo "✅ Alias set: $URL -> brandfletch.com"
           else
-            echo "⚠️  No deploy URL — skipping alias"
+            echo "⚠️ No deploy URL captured — skipping alias"
           fi
 
       - name: Done
