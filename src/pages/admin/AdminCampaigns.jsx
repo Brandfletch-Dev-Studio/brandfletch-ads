@@ -190,7 +190,12 @@ export default function AdminCampaigns() {
               </label>
             </div>
           )}
-          {filtered.map(c => (
+          {filtered.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 text-muted-foreground gap-2">
+              <p className="text-sm font-medium">No campaigns found</p>
+              {(search || statusFilter !== 'all') && <p className="text-xs">Try adjusting your filters</p>}
+            </div>
+          ) : filtered.map(c => (
             <div key={c.id} className="flex items-center gap-2">
               <Checkbox
                 checked={selected.has(c.id)}
