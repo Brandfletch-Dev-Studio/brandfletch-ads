@@ -8,7 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
-import { Plus, Trash2, Save, Star } from 'lucide-react';
+import { Trash2, Save, Star } from 'lucide-react';
 
 const SERVICE_TYPES = [
   { value: 'ugc_ads',                  label: '🎥 UGC Ads' },
