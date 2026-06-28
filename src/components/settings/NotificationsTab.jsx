@@ -19,16 +19,20 @@ export default function NotificationsTab({ form, setForm }) {
   const [saving, setSaving] = useState(false);
 
   async function handleSave() {
-    setSaving(true);
-    await base44.auth.updateMe({
-      notify_campaign_approved: form.notify_campaign_approved,
-      notify_campaign_rejected: form.notify_campaign_rejected,
-      notify_payment_confirmed: form.notify_payment_confirmed,
-      notify_campaign_completed: form.notify_campaign_completed,
-      notify_messages: form.notify_messages,
-    });
-    toast.success('Notification preferences saved!');
-    setSaving(false);
+    try {
+          setSaving(true);
+          await base44.auth.updateMe({
+            notify_campaign_approved: form.notify_campaign_approved,
+            notify_campaign_rejected: form.notify_campaign_rejected,
+            notify_payment_confirmed: form.notify_payment_confirmed,
+            notify_campaign_completed: form.notify_campaign_completed,
+            notify_messages: form.notify_messages,
+          });
+          toast.success('Notification preferences saved!');
+          setSaving(false);
+    } catch (err) {
+      toast.error(err?.message || "Something went wrong. Please try again.");
+    }
   }
 
   return (
