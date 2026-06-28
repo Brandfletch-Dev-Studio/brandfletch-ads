@@ -7,7 +7,8 @@ import {
   TrendingUp, Clock, CheckCircle, XCircle, AlertCircle,
   Download, MessageSquare, ChevronRight, QrCode, Loader2,
   Phone, Mail, Bell, CreditCard, Building2,
-  Gift, ArrowRight, Star, Zap, RefreshCw, BookOpen
+  Gift, ArrowRight, Star, Zap, RefreshCw, BookOpen,
+  Megaphone, Video, Palette, Globe, Layers
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -93,47 +94,47 @@ function useCopyClipboard() {
 
 // ─── TAB: Dashboard ───────────────────────────────────────────────────
 function DashboardTab({ user, affiliateSettings, referrals = [], commissions = [], payouts = [] }) {
-  const totalEarnings = commissions.filter(c => c.status === 'paid').reduce((s, c) => s + (c.commission_amount || 0), 0);
-  const pendingComm   = commissions.filter(c => c.status === 'pending').reduce((s, c) => s + (c.commission_amount || 0), 0);
-  const paidComm      = commissions.filter(c => c.status === 'paid').reduce((s, c) => s + (c.commission_amount || 0), 0);
-  const paidOut       = payouts.filter(p => p.status === 'completed').reduce((s, p) => s + (p.amount || 0), 0);
-  const availableBalance = paidComm - paidOut;
-  const converted     = referrals.filter(r => r.status === 'converted').length;
-  const convRate      = referrals.length > 0 ? Math.round((converted / referrals.length) * 100) : 0;
-  const minPayout     = affiliateSettings?.minimum_payout || 5000;
-  const currency      = affiliateSettings?.minimum_payout_currency || affiliateSettings?.default_currency || 'MWK';
+  const { copied, copy } = useCopyClipboard();
 
-  const stats = [
-    { label: 'Total Earnings',      value: `${currency} ${compactNum(totalEarnings)}`,          color: 'text-green-600', bg: 'bg-green-50',  icon: TrendingUp },
-    { label: 'Pending Commissions', value: `${currency} ${compactNum(pendingComm)}`,            color: 'text-amber-600', bg: 'bg-amber-50',  icon: Clock },
-    { label: 'Paid Commissions',    value: `${currency} ${compactNum(paidComm)}`,               color: 'text-blue-600',  bg: 'bg-blue-50',   icon: CheckCircle },
-    { label: 'Available Balance',   value: `${currency} ${compactNum(Math.max(0, availableBalance))}`, color: 'text-purple-600', bg: 'bg-purple-50', icon: Wallet },
-    { label: 'Total Referrals',     value: compactNum(referrals.length),                       color: 'text-sky-600',   bg: 'bg-sky-50',    icon: Users },
-    { label: 'Conversion Rate',     value: `${convRate}%`,                                     color: 'text-rose-600',  bg: 'bg-rose-50',   icon: TrendingUp },
-  ];
+  const totalEarnings    = commissions.filter(c => c.status === 'paid').reduce((s, c) => s + (c.commission_amount || 0), 0);
+  const pendingComm      = commissions.filter(c => c.status === 'pending').reduce((s, c) => s + (c.commission_amount || 0), 0);
+  const paidComm         = commissions.filter(c => c.status === 'paid').reduce((s, c) => s + (c.commission_amount || 0), 0);
+  const paidOut          = payouts.filter(p => p.status === 'completed').reduce((s, p) => s + (p.amount || 0), 0);
+  const availableBalance = Math.max(0, paidComm - paidOut);
+  const converted        = referrals.filter(r => r.status === 'converted').length;
+  const convRate         = referrals.length > 0 ? Math.round((converted / referrals.length) * 100) : 0;
+  const minPayout        = affiliateSettings?.minimum_payout || 5000;
+  const currency         = affiliateSettings?.minimum_payout_currency || affiliateSettings?.default_currency || 'MWK';
 
-  // Build commission rows — works with or without affiliateSettings
+  const code     = user?.referral_code || (user?.id ? `BF-${user.id.slice(-6).toUpperCase()}` : '');
+  const baseLink = typeof window !== 'undefined' ? `${window.location.origin}/register?ref=${code}` : '';
+
+  // ── Commission rows — reads flat/percentage/fixed from affiliateSettings ──
   const commRows = Object.entries(SERVICE_LABELS).map(([key, label]) => {
-    if (!affiliateSettings) return { key, label, rate: 'TBC', sub: 'Configured by admin' };
+    if (!affiliateSettings) return { key, label, rate: '—', sub: 'Set by admin', type: 'tbc' };
     const typeField  = `${key}_commission_type`;
     const fixedField = `${key}_fixed_amount`;
     const pctField   = `${key}_percentage`;
     const type = affiliateSettings[typeField] || 'global';
-    let rate, sub;
+    let rate, sub, commType;
     if (type === 'global') {
       if (affiliateSettings.default_commission_type === 'fixed') {
         rate = `${currency} ${(affiliateSettings.default_fixed_amount || 0).toLocaleString()}`;
-        sub = 'Fixed per sale';
+        sub  = 'Fixed per sale';
+        commType = 'fixed';
       } else {
         rate = `${affiliateSettings.default_percentage || 0}%`;
-        sub = 'Of sale value';
+        sub  = 'Of sale value';
+        commType = 'percentage';
       }
     } else if (type === 'fixed') {
       rate = `${currency} ${(affiliateSettings[fixedField] || 0).toLocaleString()}`;
-      sub = 'Fixed per sale';
+      sub  = 'Fixed per sale';
+      commType = 'fixed';
     } else {
       rate = `${affiliateSettings[pctField] || 0}%`;
-      sub = 'Of sale value';
+      sub  = 'Of sale value';
+      commType = 'percentage';
     }
     const recurringApplies = !affiliateSettings?.recurring_applies_to?.length || affiliateSettings.recurring_applies_to.includes(key);
     const recurring = affiliateSettings?.recurring_enabled && recurringApplies
@@ -141,328 +142,391 @@ function DashboardTab({ user, affiliateSettings, referrals = [], commissions = [
           ? `+ ${currency} ${(affiliateSettings.recurring_fixed_amount || 0).toLocaleString()} /renewal`
           : `+ ${affiliateSettings.recurring_percentage || 0}% /renewal`)
       : null;
-    return { key, label, rate, sub, recurring };
+    return { key, label, rate, sub, commType, recurring };
   });
 
+  // ── Per-service referral links with prefilled WhatsApp messages ──
+  const SERVICE_LINK_META = {
+    meta_ads: {
+      icon: Megaphone, gradient: 'from-blue-500 to-blue-600',
+      cta: 'Get clients with Facebook & Instagram Ads',
+      message: (link) =>
+        `🚀 *Grow your business with Meta Ads!*\n\nAre you spending money on ads but not seeing results? Brandfletch Media creates and manages high-converting Facebook & Instagram campaigns for businesses.\n\n✅ Done-for-you campaigns\n✅ Real results tracked\n✅ Affordable MWK pricing\n\nSign up here 👇\n${link}`,
+    },
+    ugc_ads: {
+      icon: Video, gradient: 'from-purple-500 to-purple-600',
+      cta: 'Video ads that actually convert',
+      message: (link) =>
+        `🎬 *Need video ads that actually convert?*\n\nBrandfletch Media creates UGC-style video creatives that work on Facebook & Instagram — designed to make customers take action.\n\n✅ Meta Ads-ready format\n✅ Real creators, authentic feel\n✅ Affordable pricing\n\nCheck it out 👇\n${link}`,
+    },
+    graphic_design: {
+      icon: Palette, gradient: 'from-pink-500 to-pink-600',
+      cta: 'Professional design — monthly retainer',
+      message: (link) =>
+        `🎨 *Tired of inconsistent graphics?*\n\nBrandfletch Media offers professional graphic design on a monthly retainer — social posts, flyers, banners, motion graphics and more.\n\n✅ Fast turnaround\n✅ Unlimited revisions\n✅ MWK pricing\n\nGet started 👇\n${link}`,
+    },
+    social_media: {
+      icon: Share2, gradient: 'from-green-500 to-green-600',
+      cta: 'Full social media management',
+      message: (link) =>
+        `📱 *Let us run your social media!*\n\nBrandfletch Media handles everything — content creation, scheduling, captions, Reels, and community management.\n\n✅ Consistent posting\n✅ Branded content\n✅ Affordable monthly packages\n\nLearn more 👇\n${link}`,
+    },
+    web_dev: {
+      icon: Globe, gradient: 'from-orange-500 to-orange-600',
+      cta: 'Websites built to convert',
+      message: (link) =>
+        `🌐 *Your business needs a proper website!*\n\nBrandfletch Designs builds mobile-first, conversion-focused websites for African businesses — fast, professional, and affordable.\n\n✅ Mobile responsive\n✅ WhatsApp integration\n✅ SEO-ready\n\nSee packages 👇\n${link}`,
+    },
+    branding: {
+      icon: Layers, gradient: 'from-amber-500 to-amber-600',
+      cta: 'Logo & brand identity packages',
+      message: (link) =>
+        `✨ *Make your brand stand out!*\n\nBrandfletch Media creates professional logos, brand identities, and full brand systems for businesses ready to look the part.\n\n✅ Multiple concepts\n✅ All file formats included\n✅ Social media templates\n\nSee packages 👇\n${link}`,
+    },
+  };
+
+  const serviceLinks = Object.entries(SERVICE_LABELS).map(([key, label]) => {
+    const meta  = SERVICE_LINK_META[key] || { icon: Gift, gradient: 'from-gray-500 to-gray-600', cta: label, message: (l) => `Sign up via my link:\n${l}` };
+    const url   = `${baseLink}&service=${key}`;
+    const waMsg = encodeURIComponent(meta.message(url));
+    const commRow = commRows.find(r => r.key === key);
+    return { key, label, url, waMsg, meta, commRow };
+  });
+
+  function shareWA(waMsg) { window.open(`https://wa.me/?text=${waMsg}`, '_blank'); }
+  function shareNative(url, label) {
+    if (navigator.share) navigator.share({ title: label, url }).catch(() => {});
+    else copy(url, label);
+  }
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
 
-      {/* ── Commission Structure Hero ─────────────────────────────────── */}
-      <div className="rounded-2xl overflow-hidden border border-border bg-card shadow-sm">
-        <div className="bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--primary))]/80 px-6 py-5 text-white">
-          <div className="flex items-start justify-between gap-4">
+      {/* ── 1. HERO ─────────────────────────────────────────────────────── */}
+      <div className="rounded-2xl overflow-hidden border border-border shadow-sm">
+        <div className="bg-gradient-to-br from-[hsl(var(--primary))] via-[hsl(var(--primary))]/90 to-[hsl(var(--accent))]/80 px-6 py-8 text-white">
+          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-6">
             <div>
-              <div className="flex items-center gap-2 mb-1">
-                <Gift className="w-5 h-5 opacity-80" />
-                <span className="text-sm font-semibold uppercase tracking-wider opacity-75">Affiliate Program</span>
-              </div>
-              <h2 className="text-2xl font-bold">Your Commission Structure</h2>
-              <p className="text-white/70 text-sm mt-1">Earn on every client you refer — commissions tracked automatically.</p>
-            </div>
-            {affiliateSettings && (
-              <Badge className={affiliateSettings.program_enabled
-                ? 'bg-white/20 text-white border-white/30 shrink-0'
-                : 'bg-red-400/30 text-white border-red-300/30 shrink-0'}>
-                {affiliateSettings.program_enabled ? '● Active' : '● Paused'}
-              </Badge>
-            )}
-          </div>
-        </div>
-        <div className="p-5">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-            {commRows.map(({ key, label, rate, sub, recurring }) => (
-              <div key={key} className="flex items-center justify-between rounded-xl bg-muted/40 border border-border/50 px-4 py-3">
-                <div>
-                  <p className="text-sm font-semibold">{label}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{sub}</p>
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-8 h-8 rounded-xl bg-white/15 flex items-center justify-center">
+                  <Gift className="w-4 h-4" />
                 </div>
-                <div className="text-right shrink-0 ml-3">
-                  <p className="text-base font-bold text-emerald-600">{rate}</p>
-                  {recurring && <p className="text-[11px] text-blue-500 font-medium mt-0.5">{recurring}</p>}
-                </div>
+                <span className="text-xs font-bold uppercase tracking-widest opacity-70">Affiliate Program</span>
               </div>
-            ))}
-          </div>
-          <div className="flex flex-wrap gap-4 pt-3 border-t border-border/50">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Wallet className="w-4 h-4 shrink-0 text-[hsl(var(--primary))]" />
-              <span>Min. payout: <strong className="text-foreground">{currency} {minPayout.toLocaleString()}</strong></span>
-            </div>
-            {affiliateSettings?.recurring_enabled && (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <RefreshCw className="w-4 h-4 shrink-0 text-blue-500" />
-                <span>Recurring commissions
-                  {affiliateSettings.recurring_max_months > 0
-                    ? ` · up to ${affiliateSettings.recurring_max_months} months`
-                    : ' · unlimited'}
-                </span>
-              </div>
-            )}
-            {affiliateSettings?.cookie_duration_days > 0 && (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Star className="w-4 h-4 shrink-0 text-amber-500" />
-                <span>Cookie window: <strong className="text-foreground">{affiliateSettings.cookie_duration_days} days</strong></span>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* ── How to Refer & Earn ─────────────────────────────────────── */}
-      <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
-        <div className="px-6 py-4 border-b border-border flex items-center gap-2">
-          <BookOpen className="w-4 h-4 text-[hsl(var(--primary))]" />
-          <h3 className="font-semibold text-base">How to Refer &amp; Earn</h3>
-          <span className="text-xs text-muted-foreground ml-auto">4 simple steps</span>
-        </div>
-        <div className="p-5">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {[
-              {
-                step: '01', icon: Link2, color: 'bg-blue-500/10 text-blue-600',
-                title: 'Get your referral link',
-                desc: 'Go to the "Referral Links" tab and copy your unique tracking link. Every click and signup is automatically tracked to your account.',
-              },
-              {
-                step: '02', icon: Share2, color: 'bg-purple-500/10 text-purple-600',
-                title: 'Share with businesses',
-                desc: 'Send your link via WhatsApp, social media, email, or word of mouth. Target businesses that need digital marketing help.',
-              },
-              {
-                step: '03', icon: Users, color: 'bg-amber-500/10 text-amber-600',
-                title: 'They sign up & subscribe',
-                desc: 'When someone clicks your link and purchases any Brandfletch service, their subscription is linked to your account.',
-              },
-              {
-                step: '04', icon: Wallet, color: 'bg-emerald-500/10 text-emerald-600',
-                title: 'Withdraw your earnings',
-                desc: `Once your balance hits ${currency} ${minPayout.toLocaleString()}, go to the Payouts tab and request a withdrawal via mobile money or bank transfer.`,
-              },
-            ].map(({ step, icon: Icon, title, desc, color }) => (
-              <div key={step} className="flex gap-4 p-4 rounded-xl bg-muted/30 border border-border/40 hover:border-[hsl(var(--primary))]/30 transition-colors">
-                <div className="shrink-0 flex flex-col items-center gap-2">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${color}`}>
-                    <Icon className="w-5 h-5" />
-                  </div>
-                  <span className="text-[10px] font-black text-muted-foreground/40 tracking-widest">{step}</span>
-                </div>
-                <div>
-                  <p className="font-semibold text-sm mb-1">{title}</p>
-                  <p className="text-xs text-muted-foreground leading-relaxed">{desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="mt-4 flex items-start gap-3 rounded-xl bg-[hsl(var(--primary))]/5 border border-[hsl(var(--primary))]/20 px-4 py-3">
-            <Zap className="w-4 h-4 text-[hsl(var(--primary))] shrink-0 mt-0.5" />
-            <div>
-              <p className="text-xs font-semibold text-[hsl(var(--primary))] mb-0.5">Pro tip</p>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Use the <strong className="text-foreground">Marketing Materials</strong> tab to download branded images, banners, and captions — ready to share instantly, no design skills needed.
+              <h1 className="text-2xl sm:text-3xl font-bold font-heading leading-tight">
+                Welcome, {user?.full_name?.split(' ')[0] || 'Affiliate'} 👋
+              </h1>
+              <p className="text-white/70 text-sm mt-2 max-w-md leading-relaxed">
+                Refer businesses to Brandfletch Media and earn a commission for every client you bring in. The more you refer, the more you earn.
               </p>
+              <div className="flex flex-wrap gap-3 mt-4">
+                <div className="flex items-center gap-2 bg-white/10 rounded-xl px-3 py-1.5 text-sm font-medium border border-white/15">
+                  <code className="font-mono text-base font-black tracking-widest">{code}</code>
+                </div>
+                <button
+                  onClick={() => copy(code, 'hero-code')}
+                  className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 rounded-xl px-3 py-1.5 text-sm font-medium border border-white/15 transition-colors"
+                >
+                  {copied === 'hero-code' ? <><Check className="w-3.5 h-3.5 text-green-300" /> Copied</> : <><Copy className="w-3.5 h-3.5" /> Copy code</>}
+                </button>
+                <button
+                  onClick={() => copy(baseLink, 'hero-link')}
+                  className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 rounded-xl px-3 py-1.5 text-sm font-medium border border-white/15 transition-colors"
+                >
+                  {copied === 'hero-link' ? <><Check className="w-3.5 h-3.5 text-green-300" /> Copied</> : <><Link2 className="w-3.5 h-3.5" /> Copy link</>}
+                </button>
+              </div>
+            </div>
+            <div className="shrink-0 flex flex-col items-center gap-2 bg-white/10 border border-white/15 rounded-2xl p-4">
+              <img
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(baseLink)}&color=ffffff&bgcolor=00000000`}
+                alt="QR Code"
+                className="w-20 h-20 rounded-lg"
+              />
+              <p className="text-xs opacity-60">Your QR code</p>
             </div>
           </div>
         </div>
+        {/* Status strip */}
+        <div className="bg-card px-6 py-3 flex flex-wrap gap-4 text-xs border-t border-border">
+          <div className="flex items-center gap-1.5 text-muted-foreground">
+            <div className={cn('w-2 h-2 rounded-full', affiliateSettings?.program_enabled ? 'bg-emerald-500' : 'bg-red-400')} />
+            <span>{affiliateSettings?.program_enabled ? 'Program active' : 'Program paused'}</span>
+          </div>
+          <div className="flex items-center gap-1.5 text-muted-foreground">
+            <Wallet className="w-3.5 h-3.5 text-[hsl(var(--primary))]" />
+            <span>Min. payout: <strong className="text-foreground">{currency} {minPayout.toLocaleString()}</strong></span>
+          </div>
+          {affiliateSettings?.cookie_duration_days > 0 && (
+            <div className="flex items-center gap-1.5 text-muted-foreground">
+              <Clock className="w-3.5 h-3.5 text-amber-500" />
+              <span>Cookie window: <strong className="text-foreground">{affiliateSettings.cookie_duration_days} days</strong></span>
+            </div>
+          )}
+          {affiliateSettings?.recurring_enabled && (
+            <div className="flex items-center gap-1.5 text-muted-foreground">
+              <RefreshCw className="w-3.5 h-3.5 text-blue-500" />
+              <span>Recurring commissions enabled</span>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Legacy program info banner (kept but hidden — hero above replaces it) */}
-      {false && affiliateSettings && (
-        <Card className="bg-gradient-to-br from-[hsl(var(--primary))]/10 to-[hsl(var(--accent))]/10 border-[hsl(var(--primary))]/20">
-          <CardContent className="p-4 flex flex-col sm:flex-row gap-4 sm:items-center justify-between">
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-[hsl(var(--primary))] mb-2">Commission Structure</p>
-              <div className="space-y-1">
-                {Object.entries(SERVICE_LABELS).map(([key, label]) => {
-                  const typeField  = `${key}_commission_type`;
-                  const fixedField = `${key}_fixed_amount`;
-                  const pctField   = `${key}_percentage`;
-                  const type = affiliateSettings[typeField] || 'global';
-                  let rate;
-                  if (type === 'global') {
-                    rate = affiliateSettings.default_commission_type === 'fixed'
-                      ? `${currency} ${(affiliateSettings.default_fixed_amount || 0).toLocaleString()}`
-                      : `${affiliateSettings.default_percentage || 0}%`;
-                  } else if (type === 'fixed') {
-                    rate = `${currency} ${(affiliateSettings[fixedField] || 0).toLocaleString()}`;
-                  } else {
-                    rate = `${affiliateSettings[pctField] || 0}%`;
-                  }
-                  return (
-                    <div key={key} className="flex items-center justify-between gap-4 text-sm">
-                      <span className="text-muted-foreground">{label}</span>
-                      <span className="font-semibold tabular-nums">{rate} <span className="text-xs text-muted-foreground font-normal">per sale</span></span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-            <div className="h-px sm:h-12 sm:w-px bg-border" />
-            <div>
-              <p className="text-sm font-semibold">Minimum Payout</p>
-              <p className="text-3xl font-bold mt-0.5">{currency} {minPayout.toLocaleString()}</p>
-              <p className="text-xs text-muted-foreground mt-1">Minimum balance needed to request withdrawal</p>
-            </div>
-            <div className="h-px sm:h-12 sm:w-px bg-border" />
-            {affiliateSettings?.recurring_enabled && (
-              <>
-                <div>
-                  <p className="text-sm font-semibold text-green-600">Recurring Commissions</p>
-                  <p className="text-xl font-bold mt-0.5">
-                    {affiliateSettings.recurring_type === 'fixed'
-                      ? `${currency} ${(affiliateSettings.recurring_fixed_amount || 0).toLocaleString()}`
-                      : `${affiliateSettings.recurring_percentage || 0}%`}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Per renewal payment
-                    {affiliateSettings.recurring_max_months > 0 ? ` · up to ${affiliateSettings.recurring_max_months} months` : ' · unlimited'}
-                  </p>
-                </div>
-                <div className="h-px sm:h-12 sm:w-px bg-border" />
-              </>
-            )}
-            <div>
-              <p className="text-sm font-semibold">Program Status</p>
-              <Badge className={affiliateSettings.program_enabled ? 'bg-green-100 text-green-700 mt-1' : 'bg-red-100 text-red-700 mt-1'}>
-                {affiliateSettings.program_enabled ? 'Active' : 'Paused'}
+      {/* ── 2. COMMISSION RATES ─────────────────────────────────────────── */}
+      <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+        <div className="px-6 py-4 border-b border-border flex items-center gap-3">
+          <div className="w-8 h-8 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+            <DollarSign className="w-4 h-4 text-emerald-600" />
+          </div>
+          <div>
+            <h2 className="font-bold text-base font-heading">Your Commission Rates</h2>
+            <p className="text-xs text-muted-foreground">Earn on every service your referrals purchase</p>
+          </div>
+          {affiliateSettings && (
+            <div className="ml-auto shrink-0">
+              <Badge className={cn('text-xs font-semibold',
+                affiliateSettings.default_commission_type === 'fixed'
+                  ? 'bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/20'
+                  : 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20'
+              )}>
+                {affiliateSettings.default_commission_type === 'fixed' ? 'Flat Rate' : 'Percentage'} structure
               </Badge>
             </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Stat cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-        {stats.map(({ label, value, color, bg, icon: Icon }) => (
-          <Card key={label} className="shadow-sm">
-            <CardContent className="p-4 flex flex-col items-start gap-2">
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${bg}`}>
-                <Icon className={`w-5 h-5 ${color}`} />
+          )}
+        </div>
+        <div className="p-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {commRows.map(({ key, label, rate, sub, commType, recurring }) => {
+              const meta = SERVICE_LINK_META[key];
+              const Icon = meta?.icon || Gift;
+              return (
+                <div key={key}
+                  className="flex items-center gap-3 rounded-xl border border-border/60 bg-muted/30 px-4 py-3 hover:border-[hsl(var(--primary))]/30 transition-colors">
+                  <div className={cn('w-9 h-9 rounded-xl bg-gradient-to-br flex items-center justify-center shrink-0', meta?.gradient || 'from-gray-500 to-gray-600')}>
+                    <Icon className="w-4 h-4 text-white" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold">{label}</p>
+                    <p className="text-xs text-muted-foreground">{sub}</p>
+                    {recurring && <p className="text-[11px] text-blue-500 font-medium mt-0.5">{recurring}</p>}
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className={cn('text-base font-bold tabular-nums',
+                      commType === 'percentage' ? 'text-emerald-600' : 'text-[hsl(var(--primary))]'
+                    )}>{rate}</p>
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                      {commType === 'percentage' ? 'per sale' : 'fixed'}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          {affiliateSettings?.recurring_enabled && (
+            <div className="mt-4 flex items-start gap-3 rounded-xl bg-blue-500/5 border border-blue-500/15 px-4 py-3">
+              <RefreshCw className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-semibold text-blue-600 dark:text-blue-400">Recurring Commissions</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  You also earn on renewal payments —{' '}
+                  <strong className="text-foreground">
+                    {affiliateSettings.recurring_type === 'fixed'
+                      ? `${currency} ${(affiliateSettings.recurring_fixed_amount || 0).toLocaleString()} per renewal`
+                      : `${affiliateSettings.recurring_percentage || 0}% per renewal`}
+                  </strong>
+                  {affiliateSettings.recurring_max_months > 0
+                    ? ` for up to ${affiliateSettings.recurring_max_months} months`
+                    : ' with no limit'}
+                  .
+                </p>
               </div>
-              <p className={`text-xl font-bold leading-tight ${color}`}>{value}</p>
-              <p className="text-xs text-muted-foreground leading-tight">{label}</p>
-            </CardContent>
-          </Card>
-        ))}
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* How You Earn */}
-      {affiliateSettings && (
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-semibold flex items-center gap-2">
-              <DollarSign className="w-4 h-4 text-green-500" /> How You Earn
-            </CardTitle>
-            <CardDescription className="text-xs">Commission rates per service type</CardDescription>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <div className="divide-y divide-border">
-              {Object.entries(SERVICE_LABELS).map(([key, label]) => {
-                const typeField  = `${key}_commission_type`;
-                const fixedField = `${key}_fixed_amount`;
-                const pctField   = `${key}_percentage`;
-                const type = affiliateSettings[typeField] || 'global';
-                let rateLabel, subLabel;
-                if (type === 'global') {
-                  if (affiliateSettings.default_commission_type === 'fixed') {
-                    rateLabel = `${currency} ${(affiliateSettings.default_fixed_amount || 0).toLocaleString()}`;
-                    subLabel  = 'Fixed per sale';
-                  } else {
-                    rateLabel = `${affiliateSettings.default_percentage || 0}%`;
-                    subLabel  = 'Of sale amount';
-                  }
-                } else if (type === 'fixed') {
-                  rateLabel = `${currency} ${(affiliateSettings[fixedField] || 0).toLocaleString()}`;
-                  subLabel  = 'Fixed per sale';
-                } else {
-                  rateLabel = `${affiliateSettings[pctField] || 0}%`;
-                  subLabel  = 'Of sale amount';
-                }
-                // Recurring badge
-                const recurringApplies = !affiliateSettings.recurring_applies_to?.length
-                  || affiliateSettings.recurring_applies_to.includes(key);
-                return (
-                  <div key={key} className="flex items-center justify-between py-3 gap-3">
-                    <div>
-                      <p className="text-sm font-medium">{label}</p>
-                      <p className="text-xs text-muted-foreground">{subLabel}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-bold text-green-600">{rateLabel}</p>
-                      {affiliateSettings.recurring_enabled && recurringApplies && (
-                        <p className="text-xs text-blue-600 mt-0.5">
-                          + {affiliateSettings.recurring_type === 'fixed'
-                            ? `${currency} ${(affiliateSettings.recurring_fixed_amount || 0).toLocaleString()}`
-                            : `${affiliateSettings.recurring_percentage || 0}%`} recurring
-                          {affiliateSettings.recurring_max_months > 0 ? ` (${affiliateSettings.recurring_max_months}mo)` : ''}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
+      {/* ── 3. STAT CARDS ───────────────────────────────────────────────── */}
+      <div>
+        <h2 className="text-base font-bold font-heading mb-3 flex items-center gap-2">
+          <TrendingUp className="w-4 h-4 text-[hsl(var(--primary))]" /> Your Performance
+        </h2>
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+          {[
+            { label: 'Total Earnings',      value: `${currency} ${compactNum(totalEarnings)}`,          sub: 'All paid commissions',   color: 'text-emerald-600', bg: 'bg-emerald-500/10', icon: TrendingUp },
+            { label: 'Available Balance',   value: `${currency} ${compactNum(availableBalance)}`,       sub: 'Ready to withdraw',      color: 'text-[hsl(var(--primary))]', bg: 'bg-[hsl(var(--primary))]/10', icon: Wallet },
+            { label: 'Pending Commissions', value: `${currency} ${compactNum(pendingComm)}`,            sub: 'Awaiting approval',      color: 'text-amber-600',   bg: 'bg-amber-500/10',   icon: Clock },
+            { label: 'Total Referrals',     value: compactNum(referrals.length),                       sub: `${converted} converted`, color: 'text-sky-600',     bg: 'bg-sky-500/10',     icon: Users },
+            { label: 'Conversion Rate',     value: `${convRate}%`,                                     sub: 'Signups → clients',      color: 'text-violet-600',  bg: 'bg-violet-500/10',  icon: ArrowRight },
+            { label: 'Paid Out',            value: `${currency} ${compactNum(paidOut)}`,               sub: 'Withdrawn to date',      color: 'text-teal-600',    bg: 'bg-teal-500/10',    icon: CheckCircle },
+          ].map(({ label, value, sub, color, bg, icon: Icon }) => (
+            <div key={label} className="bg-card rounded-2xl border border-border p-4 shadow-sm hover:shadow-md transition-shadow">
+              <div className={cn('w-9 h-9 rounded-xl flex items-center justify-center mb-3', bg)}>
+                <Icon className={cn('w-4 h-4', color)} />
+              </div>
+              <p className={cn('text-xl font-bold font-heading leading-tight tabular-nums', color)}>{value}</p>
+              <p className="text-sm font-medium text-foreground mt-0.5">{label}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{sub}</p>
             </div>
-          </CardContent>
-        </Card>
-      )}
+          ))}
+        </div>
+      </div>
 
-      {/* Recent referrals */}
-      {referrals.length > 0 && (
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-semibold">Recent Referrals</CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="divide-y divide-border">
-              {referrals.slice(0, 5).map(r => (
-                <div key={r.id} className="flex items-center justify-between px-4 py-3 gap-3">
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium truncate">{r.referred_name || r.referred_email || 'Anonymous'}</p>
-                    <p className="text-xs text-muted-foreground">{r.created_date ? format(new Date(r.created_date), 'MMM d, yyyy') : ''}</p>
-                  </div>
-                  <Badge className={r.status === 'converted' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}>
-                    {r.status === 'converted' ? 'Converted' : 'Signed Up'}
-                  </Badge>
+      {/* ── 4. HOW TO REFER & EARN ──────────────────────────────────────── */}
+      <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+        <div className="px-6 py-4 border-b border-border flex items-center gap-3">
+          <div className="w-8 h-8 rounded-xl bg-[hsl(var(--primary))]/10 flex items-center justify-center">
+            <BookOpen className="w-4 h-4 text-[hsl(var(--primary))]" />
+          </div>
+          <div>
+            <h2 className="font-bold text-base font-heading">How to Refer &amp; Earn</h2>
+            <p className="text-xs text-muted-foreground">4 simple steps to start earning</p>
+          </div>
+        </div>
+        <div className="p-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {[
+            {
+              step: '01', icon: Link2, color: 'bg-blue-500/10 text-blue-600',
+              title: 'Copy your referral link',
+              desc: 'Pick a service link below — each one has your tracking code pre-built in and a ready-made WhatsApp message.',
+            },
+            {
+              step: '02', icon: Share2, color: 'bg-purple-500/10 text-purple-600',
+              title: 'Share with businesses',
+              desc: 'Send via WhatsApp, social media, email, or face-to-face. Target businesses that need digital marketing help.',
+            },
+            {
+              step: '03', icon: Users, color: 'bg-amber-500/10 text-amber-600',
+              title: 'They sign up & subscribe',
+              desc: 'When someone clicks your link and purchases any Brandfletch service, the referral is automatically linked to your account.',
+            },
+            {
+              step: '04', icon: Wallet, color: 'bg-emerald-500/10 text-emerald-600',
+              title: 'Withdraw your earnings',
+              desc: `Once your balance hits ${currency} ${minPayout.toLocaleString()}, go to the Payouts tab and request a withdrawal via mobile money or bank.`,
+            },
+          ].map(({ step, icon: Icon, title, desc, color }) => (
+            <div key={step} className="flex gap-4 p-4 rounded-xl bg-muted/30 border border-border/40 hover:border-[hsl(var(--primary))]/25 transition-colors">
+              <div className="shrink-0 flex flex-col items-center gap-2">
+                <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center', color)}>
+                  <Icon className="w-5 h-5" />
                 </div>
-              ))}
+                <span className="text-[10px] font-black text-muted-foreground/40 tracking-widest">{step}</span>
+              </div>
+              <div>
+                <p className="font-semibold text-sm mb-1">{title}</p>
+                <p className="text-xs text-muted-foreground leading-relaxed">{desc}</p>
+              </div>
             </div>
-          </CardContent>
-        </Card>
-      )}
+          ))}
+        </div>
+        <div className="mx-5 mb-5 flex items-start gap-3 rounded-xl bg-[hsl(var(--primary))]/5 border border-[hsl(var(--primary))]/20 px-4 py-3">
+          <Zap className="w-4 h-4 text-[hsl(var(--primary))] shrink-0 mt-0.5" />
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            <strong className="text-foreground">Pro tip:</strong> Use the service-specific links below — they pre-select the right service for the business you're talking to, making it easier for them to place an order.
+          </p>
+        </div>
+      </div>
+
+      {/* ── 5. PER-SERVICE REFERRAL LINKS ────────────────────────────────── */}
+      <div>
+        <div className="mb-4">
+          <h2 className="text-base font-bold font-heading flex items-center gap-2">
+            <Link2 className="w-4 h-4 text-[hsl(var(--primary))]" /> Your Referral Links
+          </h2>
+          <p className="text-xs text-muted-foreground mt-0.5">Each link is pre-tagged with your tracking code. Tap WhatsApp to send with a prefilled message.</p>
+        </div>
+        <div className="space-y-3">
+          {serviceLinks.map(({ key, label, url, waMsg, meta, commRow }) => {
+            const Icon = meta.icon;
+            const linkKey = `link-${key}`;
+            const msgKey  = `msg-${key}`;
+            const rawMsg  = decodeURIComponent(waMsg);
+            return (
+              <div key={key} className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden hover:border-[hsl(var(--primary))]/30 transition-colors">
+                {/* Header */}
+                <div className="flex items-center gap-3 px-4 py-3 border-b border-border/60">
+                  <div className={cn('w-9 h-9 rounded-xl bg-gradient-to-br flex items-center justify-center shrink-0', meta.gradient)}>
+                    <Icon className="w-4 h-4 text-white" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-sm">{label}</p>
+                    <p className="text-xs text-muted-foreground">{meta.cta}</p>
+                  </div>
+                  {commRow && (
+                    <div className="shrink-0 text-right">
+                      <p className="text-sm font-bold text-emerald-600">{commRow.rate}</p>
+                      <p className="text-[10px] text-muted-foreground">your commission</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Link row */}
+                <div className="px-4 pt-3 pb-2">
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-1.5">Referral link</p>
+                  <div className="flex gap-2">
+                    <div className="flex-1 min-w-0 bg-muted rounded-lg px-3 py-1.5 font-mono text-xs text-muted-foreground truncate select-all">
+                      {url}
+                    </div>
+                    <button
+                      onClick={() => copy(url, linkKey)}
+                      className="shrink-0 flex items-center gap-1.5 h-8 px-3 rounded-lg border border-border bg-background hover:bg-secondary text-xs font-medium transition-colors"
+                    >
+                      {copied === linkKey ? <><Check className="w-3 h-3 text-green-500" /> Copied</> : <><Copy className="w-3 h-3" /> Copy</>}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Prefilled message preview */}
+                <div className="px-4 pb-3">
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-1.5">Prefilled message</p>
+                  <div className="bg-muted/50 rounded-xl px-3 py-2.5 text-xs text-muted-foreground whitespace-pre-line leading-relaxed border border-border/40 max-h-24 overflow-hidden relative">
+                    {rawMsg.split('\n').slice(0, 5).join('\n')}
+                    {rawMsg.split('\n').length > 5 && (
+                      <div className="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-muted/50 to-transparent rounded-b-xl" />
+                    )}
+                  </div>
+                  <button
+                    onClick={() => copy(rawMsg, msgKey)}
+                    className="mt-1.5 flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {copied === msgKey ? <><Check className="w-3 h-3 text-green-500" /> Message copied</> : <><Copy className="w-3 h-3" /> Copy message</>}
+                  </button>
+                </div>
+
+                {/* Action buttons */}
+                <div className="flex gap-2 px-4 pb-4">
+                  <button
+                    onClick={() => shareWA(waMsg)}
+                    className="flex-1 flex items-center justify-center gap-2 h-9 rounded-xl bg-green-500 hover:bg-green-600 text-white text-sm font-semibold transition-colors"
+                  >
+                    <MessageSquare className="w-4 h-4" /> Send on WhatsApp
+                  </button>
+                  <button
+                    onClick={() => shareNative(url, label)}
+                    className="flex items-center justify-center gap-2 h-9 px-4 rounded-xl border border-border bg-background hover:bg-secondary text-sm font-medium transition-colors"
+                  >
+                    <Share2 className="w-4 h-4" /> Share
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
     </div>
   );
 }
 
-// ─── TAB: Referral Links ───────────────────────────────────────────────
 function LinksTab({ user }) {
   const { copied, copy } = useCopyClipboard();
-  const code = user?.referral_code || (user?.id ? `BF-${user.id.slice(-6).toUpperCase()}` : '');
-  const baseLink = `${window.location.origin}/register?ref=${code}`;
-
-  const links = [
-    { label: 'Default Referral Link',              url: baseLink,                              desc: 'Works for any new signup' },
-    { label: 'Campaign Referral Link',              url: `${baseLink}&type=campaign`,           desc: 'For businesses interested in ad campaigns' },
-    { label: 'Design Retainer Referral Link',       url: `${baseLink}&type=design`,             desc: 'For businesses needing design services' },
-  ];
-
-  function shareWA(url) {
-    const msg = encodeURIComponent(
-      `🚀 Grow your business with professionally managed Facebook Ads!\n\nJoin Brandfletch Media today:\n${url}`
-    );
-    window.open(`https://wa.me/?text=${msg}`, '_blank');
-  }
-
-  function shareNative(url, label) {
-    if (navigator.share) {
-      navigator.share({ title: label, url }).catch(() => {});
-    } else {
-      copy(url, label);
-    }
-  }
+  const code     = user?.referral_code || (user?.id ? `BF-${user.id.slice(-6).toUpperCase()}` : '');
+  const baseLink = typeof window !== 'undefined' ? `${window.location.origin}/register?ref=${code}` : '';
 
   return (
     <div className="space-y-5">
       <div>
-        <h2 className="text-base font-semibold">Your Referral Code</h2>
+        <h2 className="text-base font-semibold font-heading">Your Referral Code</h2>
         <p className="text-sm text-muted-foreground mt-0.5">Use this code or the links below to refer new clients</p>
         <div className="mt-3 inline-flex items-center gap-3 bg-secondary px-4 py-2 rounded-xl">
           <code className="text-lg font-bold font-mono tracking-widest">{code}</code>
@@ -471,67 +535,29 @@ function LinksTab({ user }) {
           </button>
         </div>
       </div>
-
-      {/* QR code */}
       <Card className="border-dashed">
         <CardContent className="p-4 flex flex-col sm:flex-row items-center gap-4">
           <div className="w-28 h-28 bg-secondary rounded-xl flex items-center justify-center flex-shrink-0">
             <img
               src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(baseLink)}&color=000000&bgcolor=ffffff`}
-              alt="QR Code"
-              className="w-24 h-24 rounded"
+              alt="QR Code" className="w-24 h-24 rounded"
             />
           </div>
           <div className="flex-1 text-center sm:text-left">
             <p className="font-medium text-sm">Your QR Code</p>
             <p className="text-xs text-muted-foreground mt-1 mb-3">Print or share this QR code — scanning it opens your referral signup link</p>
-            <Button
-              size="sm"
-              variant="outline"
-              className="gap-2"
-              onClick={() => window.open(`https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(baseLink)}`, '_blank')}
-            >
+            <Button size="sm" variant="outline" className="gap-2"
+              onClick={() => window.open(`https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(baseLink)}`, '_blank')}>
               <Download className="w-3.5 h-3.5" /> Download QR
             </Button>
           </div>
         </CardContent>
       </Card>
-
-      {/* Link cards */}
-      <div className="space-y-3">
-        {links.map(({ label, url, desc }) => (
-          <Card key={label} className="shadow-sm">
-            <CardContent className="p-4">
-              <div className="flex items-start justify-between gap-3 mb-2">
-                <div>
-                  <p className="text-sm font-semibold">{label}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{desc}</p>
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <Input value={url} readOnly className="text-xs font-mono bg-secondary h-8 flex-1" />
-                <Button size="sm" variant="outline" className="h-8 px-3 gap-1.5" onClick={() => copy(url, label)}>
-                  {copied === label ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
-                  {copied === label ? 'Copied' : 'Copy'}
-                </Button>
-              </div>
-              <div className="flex gap-2 mt-2">
-                <Button size="sm" className="h-8 bg-green-500 hover:bg-green-600 text-white gap-1.5 flex-1" onClick={() => shareWA(url)}>
-                  <MessageSquare className="w-3.5 h-3.5" /> WhatsApp
-                </Button>
-                <Button size="sm" variant="outline" className="h-8 gap-1.5 flex-1" onClick={() => shareNative(url, label)}>
-                  <Share2 className="w-3.5 h-3.5" /> Share
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      <p className="text-sm text-muted-foreground">For service-specific links with prefilled messages, see the <strong>Dashboard</strong> tab.</p>
     </div>
   );
 }
 
-// ─── TAB: Referrals ───────────────────────────────────────────────────
 function ReferralsTab({ referrals = [], loading, affiliateSettings }) {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -1184,3 +1210,4 @@ export default function Referrals() {
     </div>
   );
 }
+
