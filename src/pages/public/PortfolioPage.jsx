@@ -487,9 +487,7 @@ function Lightbox({ item, initTab, onClose }) {
               Get this for my brand <ArrowRight className="ml-1.5 w-4 h-4" />
             </Button>
             <p className="text-[10px] text-muted-foreground text-center mt-2">
-              {SERVICE_KEYS.includes(item.category)
-                ? `${CATEGORY_LABELS[item.category]} — choose a plan that fits`
-                : 'Get in touch to discuss your brief'}
+              {CATEGORY_LABELS[item.category] ? `${CATEGORY_LABELS[item.category]} — get in touch to discuss your brief` : 'Get in touch to discuss your brief'}
             </p>
           </div>
         </div>
