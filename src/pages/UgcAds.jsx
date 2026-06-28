@@ -19,7 +19,7 @@ import {
   Play, Users, Target, Megaphone, ChevronRight, RefreshCw,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { LOCAL_PRICES, COUNTRY_CURRENCY } from '@/lib/pricing';
+import { } from '@/lib/pricing';
 import InvoiceDownload from '@/components/InvoiceDownload';
 
 // ── UGC Pricing ──────────────────────────────────────────────────────────────
