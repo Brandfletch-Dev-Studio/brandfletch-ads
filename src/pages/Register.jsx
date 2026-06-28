@@ -68,7 +68,10 @@ export default function Register() {
       // Detect this: identities array will be empty when the email already exists.
       if (data?.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
         // Email is already registered — redirect to login with prefilled email
-        navigate(`/login?email=${encodeURIComponent(email)}&reason=existing`, { replace: true });
+        { const _r = sessionStorage.getItem('bf_post_login_redirect');
+        const _p = new URLSearchParams({ email, reason: 'existing' });
+        if (_r) _p.set('redirect', _r);
+        navigate(`/login?${_p.toString()}`, { replace: true }); }
         return;
       }
 
@@ -82,7 +85,10 @@ export default function Register() {
         msg.includes('email already') ||
         msg.includes('already been registered')
       ) {
-        navigate(`/login?email=${encodeURIComponent(email)}&reason=existing`, { replace: true });
+        { const _r = sessionStorage.getItem('bf_post_login_redirect');
+        const _p = new URLSearchParams({ email, reason: 'existing' });
+        if (_r) _p.set('redirect', _r);
+        navigate(`/login?${_p.toString()}`, { replace: true }); }
         return;
       }
       setError(err.message || "Registration failed. Please try again.");
