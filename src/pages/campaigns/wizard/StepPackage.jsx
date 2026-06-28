@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { PACKAGES, DURATIONS, calculatePriceFromList, calculateEstimatedResults } from '@/lib/pricing';
 import { cn } from '@/lib/utils';
-import { CheckCircle2, TrendingUp, MessageSquare, Sliders } from 'lucide-react';
+import { CheckCircle2, TrendingUp, Sliders } from 'lucide-react';
 import { COUNTRIES } from '@/lib/constants';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
