@@ -36,6 +36,7 @@ export default function AdminSettings() {
   const [savingEmail, setSavingEmail] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const { user: authUser } = useAuth();
 
