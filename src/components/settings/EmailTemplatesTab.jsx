@@ -58,38 +58,50 @@ export default function EmailTemplatesTab() {
   }
 
   async function saveTemplate() {
-    setSaving(true);
-    const existing = templates[editing];
-    let saved;
-    if (existing) {
-      saved = await base44.entities.EmailTemplate.update(existing.id, editData);
-    } else {
-      saved = await base44.entities.EmailTemplate.create({ ...editData, event_type: editing });
+    try {
+          setSaving(true);
+          const existing = templates[editing];
+          let saved;
+          if (existing) {
+            saved = await base44.entities.EmailTemplate.update(existing.id, editData);
+          } else {
+            saved = await base44.entities.EmailTemplate.create({ ...editData, event_type: editing });
+          }
+          setTemplates(t => ({ ...t, [editing]: saved }));
+          setEditing(null);
+          toast.success('Template saved!', { duration: 1500 });
+          setSaving(false);
+    } catch (err) {
+      toast.error(err?.message || "Something went wrong. Please try again.");
     }
-    setTemplates(t => ({ ...t, [editing]: saved }));
-    setEditing(null);
-    toast.success('Template saved!', { duration: 1500 });
-    setSaving(false);
   }
 
   async function resetToDefault(eventType) {
-    const existing = templates[eventType];
-    const data = { event_type: eventType, is_active: true, ...DEFAULTS[eventType] };
-    let saved;
-    if (existing) {
-      saved = await base44.entities.EmailTemplate.update(existing.id, data);
-    } else {
-      saved = await base44.entities.EmailTemplate.create(data);
+    try {
+          const existing = templates[eventType];
+          const data = { event_type: eventType, is_active: true, ...DEFAULTS[eventType] };
+          let saved;
+          if (existing) {
+            saved = await base44.entities.EmailTemplate.update(existing.id, data);
+          } else {
+            saved = await base44.entities.EmailTemplate.create(data);
+          }
+          setTemplates(t => ({ ...t, [eventType]: saved }));
+          toast.success('Reset to default', { duration: 1500 });
+    } catch (err) {
+      toast.error(err?.message || "Something went wrong. Please try again.");
     }
-    setTemplates(t => ({ ...t, [eventType]: saved }));
-    toast.success('Reset to default', { duration: 1500 });
   }
 
   async function toggleActive(eventType, is_active) {
-    const existing = templates[eventType];
-    if (existing) {
-      await base44.entities.EmailTemplate.update(existing.id, { is_active });
-      setTemplates(t => ({ ...t, [eventType]: { ...existing, is_active } }));
+    try {
+          const existing = templates[eventType];
+          if (existing) {
+            await base44.entities.EmailTemplate.update(existing.id, { is_active });
+            setTemplates(t => ({ ...t, [eventType]: { ...existing, is_active } }));
+          }
+    } catch (err) {
+      toast.error(err?.message || "Something went wrong. Please try again.");
     }
   }
 
