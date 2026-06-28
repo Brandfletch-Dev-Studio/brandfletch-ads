@@ -1,16 +1,10 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Edit2, Trash2, Eye, Share2, Settings, Globe, Lock, Copy, ExternalLink, Target, Wand2, Zap, FileText, CheckCircle, MessageSquare, Layers, FileCheck } from 'lucide-react';
+import { Plus, Edit2, Eye, Share2, Globe, Lock, FileText, CheckCircle, MessageSquare, Layers, FileCheck } from 'lucide-react';
 import { toast } from 'sonner';
 import FormBuilder from '@/components/lead-forms/FormBuilder';
 import FormPreview from '@/components/lead-forms/FormPreview';
