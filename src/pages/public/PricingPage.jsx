@@ -41,7 +41,7 @@ const STATIC_PLANS = {
         priceNote: 'per campaign',
         badge: null,
         features: ['1 UGC ad creative','Creator matching','Brand story development','Offer packaging session','Meta Ads-ready format','Creator social media feature'],
-        cta: 'Place order', ctaLink: '/order',
+        cta: 'Place order', ctaLink: '/contact',
       },
       {
         name: 'Growth',
@@ -49,7 +49,7 @@ const STATIC_PLANS = {
         priceNote: 'per campaign',
         badge: 'Best value',
         features: ['3 UGC ad creatives','Multiple message angles','Creator matching','Full brand story development','Offer packaging session','Meta Ads-ready formats','Creator social media feature','A/B testing angles'],
-        cta: 'Place order', ctaLink: '/order',
+        cta: 'Place order', ctaLink: '/contact',
       },
       {
         name: 'Brand Campaign',
@@ -57,7 +57,7 @@ const STATIC_PLANS = {
         priceNote: 'per campaign',
         badge: 'Scaling brands',
         features: ['10 UGC ad creatives','Full advertising content library','Multiple creators','Complete brand story development','Offer packaging session','Meta Ads-ready formats','Creator social media features','Designed for scaling campaigns'],
-        cta: 'Place order', ctaLink: '/order',
+        cta: 'Place order', ctaLink: '/contact',
       },
     ],
   },
@@ -70,19 +70,19 @@ const STATIC_PLANS = {
         name: 'Starter',
         price: 'MK 100,000', priceNote: '/month', badge: null,
         features: ['10 design requests/month','Static designs only','Posters, flyers, social posts, banners','1 concurrent request','24–48 hour turnaround','Revisions included'],
-        cta: 'Get started', ctaLink: '/order',
+        cta: 'Get started', ctaLink: '/contact',
       },
       {
         name: 'Growth',
         price: 'MK 180,000', priceNote: '/month', badge: 'Most popular',
         features: ['15 design requests/month','Static designs + motion graphics','Animated posts, simple GIFs','2 concurrent requests','12–24 hour turnaround','1–2 short video edits/month','Priority queue'],
-        cta: 'Get started', ctaLink: '/order',
+        cta: 'Get started', ctaLink: '/contact',
       },
       {
         name: 'Premium',
         price: 'MK 280,000', priceNote: '/month', badge: null,
         features: ['20 design requests/month','Full suite: static, motion & video','3 concurrent requests','6–12 hour priority turnaround','Unlimited video content (within cap)','Brand consistency management','Dedicated designer'],
-        cta: 'Get started', ctaLink: '/order',
+        cta: 'Get started', ctaLink: '/contact',
       },
     ],
   },
@@ -95,21 +95,21 @@ const STATIC_PLANS = {
         name: 'Starter Website',
         price: 'MK 150,000', priceNote: 'one-off', badge: null,
         features: ['Up to 5 pages','Professional business website','Mobile responsive design','Contact form','WhatsApp integration','Basic SEO setup','Social media links','Website launch support'],
-        cta: 'Place order', ctaLink: '/order',
+        cta: 'Place order', ctaLink: '/contact',
         ideal: 'Small businesses, personal brands & startups',
       },
       {
         name: 'Growth Website',
         price: 'MK 350,000', priceNote: 'one-off', badge: 'Most popular',
         features: ['Up to 10 pages','Custom website design','Modern UI/UX','Lead capture forms','WhatsApp/business integrations','Blog/news section','SEO optimisation','Analytics setup','Conversion-focused structure'],
-        cta: 'Place order', ctaLink: '/order',
+        cta: 'Place order', ctaLink: '/contact',
         ideal: 'Growing businesses that need more than just a website',
       },
       {
         name: 'Business Pro',
         price: 'MK 750,000', priceNote: 'one-off', badge: 'Serious brands',
         features: ['Unlimited pages','Fully custom design','Advanced UI/UX','Booking systems / custom features','E-commerce functionality','Payment integrations','Advanced SEO','Speed optimisation','Analytics + tracking','Priority support'],
-        cta: 'Place order', ctaLink: '/order',
+        cta: 'Place order', ctaLink: '/contact',
         ideal: 'Established businesses & brands',
       },
     ],
@@ -129,21 +129,21 @@ const STATIC_PLANS = {
         name: 'Starter',
         price: 'MK 150,000', priceNote: '/month', badge: null,
         features: ['16 branded posts/month','Social media page management','Content planning','Caption writing','Content scheduling','Basic community management','Monthly performance insights'],
-        cta: 'Get started', ctaLink: '/order',
+        cta: 'Get started', ctaLink: '/contact',
         ideal: 'Businesses that need consistency and a professional presence',
       },
       {
         name: 'Growth',
         price: 'MK 300,000', priceNote: '/month', badge: 'Popular',
         features: ['32 branded posts/month','Full social media management','Content strategy','Short-form content / Reels','Caption & CTA optimisation','Audience engagement','Monthly content calendar','Performance report'],
-        cta: 'Get started', ctaLink: '/order',
+        cta: 'Get started', ctaLink: '/contact',
         ideal: 'Businesses actively growing their online presence',
       },
       {
         name: 'Brand Growth',
         price: 'MK 450,000', priceNote: '/month', badge: 'Full service',
         features: ['60+ monthly content pieces','Full social media management','Reels/short-form videos','Brand storytelling','Content campaigns','Community management','Growth strategy','Analytics & optimisation'],
-        cta: 'Get started', ctaLink: '/order',
+        cta: 'Get started', ctaLink: '/contact',
         ideal: 'Brands that want social media as a marketing channel',
       },
     ],
@@ -429,7 +429,7 @@ export default function PricingPage() {
     const params = new URLSearchParams();
     params.set('service', mapped);
     if (slug) params.set('plan', slug);
-    navigate('/order?' + params.toString());
+    navigate('/contact');
   }
 
   const service = STATIC_PLANS[activeTab];
@@ -571,6 +571,7 @@ export default function PricingPage() {
     </div>
   );
 }
+
 
 
 
