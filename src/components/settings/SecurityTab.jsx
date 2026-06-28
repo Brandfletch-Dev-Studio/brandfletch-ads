@@ -1,5 +1,5 @@
 import { base44 } from '@/api/base44Client';
-import { Lock, LogOut, KeyRound, Trash2, ShieldCheck } from 'lucide-react';
+import { Lock, LogOut, KeyRound, ShieldCheck } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
