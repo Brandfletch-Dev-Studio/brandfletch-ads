@@ -224,22 +224,26 @@ function OrderDetail({ order, onBack, onUpdate, updating }) {
   const [saving, setSaving]             = useState(false);
 
   async function save() {
-    setSaving(true);
-    await onUpdate({
-      status,
-      payment_status:        payStatus,
-      admin_notes:           adminNotes,
-      deliverables_url:      deliverablesUrl,
-      assigned_creator_name: assignedCreator,
-      revision_notes:        revisionNotes,
-      ...(status === 'in_production' && !order.production_started_at
-        ? { production_started_at: new Date().toISOString() }
-        : {}),
-      ...(status === 'completed' && !order.completed_at
-        ? { completed_at: new Date().toISOString() }
-        : {}),
-    });
-    setSaving(false);
+    try {
+      setSaving(true);
+      await onUpdate({
+        status,
+        payment_status:        payStatus,
+        admin_notes:           adminNotes,
+        deliverables_url:      deliverablesUrl,
+        assigned_creator_name: assignedCreator,
+        revision_notes:        revisionNotes,
+        ...(status === 'in_production' && !order.production_started_at
+          ? { production_started_at: new Date().toISOString() }
+          : {}),
+        ...(status === 'completed' && !order.completed_at
+          ? { completed_at: new Date().toISOString() }
+          : {}),
+      });
+      setSaving(false);
+    } catch (err) {
+      toast.error(err?.message || 'Something went wrong. Please try again.');
+    }
   }
 
   const pkg = UGC_PACKAGES[order.package] || {};
