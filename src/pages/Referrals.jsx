@@ -5,9 +5,9 @@ import {
   LayoutDashboard, Link2, Users, DollarSign, Wallet,
   Image, UserCircle, Copy, Check, Share2,
   TrendingUp, Clock, CheckCircle, XCircle, AlertCircle,
-  Download, MessageSquare, ChevronRight, QrCode, Loader2,
-  Phone, Mail, Bell, CreditCard, Building2,
-  Gift, ArrowRight, Star, Zap, RefreshCw, BookOpen,
+  Download, MessageSquare, Loader2,
+  Phone, Mail, Bell, CreditCard,
+  Gift, ArrowRight, Zap, RefreshCw, BookOpen,
   Megaphone, Video, Palette, Globe, Layers
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
