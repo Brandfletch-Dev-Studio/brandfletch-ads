@@ -220,17 +220,33 @@ export default function AdminAds() {
     mutationFn: ({ id, data }) => id
       ? base44.entities.AppAd.update(id, data)
       : base44.entities.AppAd.create(data),
+    onSuccess: (result, { id, data }) => {
+      qc.invalidateQueries({ queryKey: ['app-ads'] });
+      auditLog(id ? 'ad_updated' : 'ad_created', 'AppAd', id || result?.id, data?.title || '');
+      toast.success(id ? 'Ad updated' : 'Ad created');
+      setOpen(false);
+    },
+    onError: (err) => toast.error(err?.message || 'Failed to save ad'),
   });
 
   const remove = useMutation({
     mutationFn: (id) => base44.entities.AppAd.delete(id),
-  onSuccess: () => { toast.success("Ad deleted"); setDeleteId(null); },
+  onSuccess: (_, id) => {
+    qc.invalidateQueries({ queryKey: ['app-ads'] });
+    auditLog('ad_deleted', 'AppAd', id);
+    toast.success("Ad deleted");
+    setDeleteId(null);
+  },
   onError: (err) => toast.error(err?.message || "Failed to delete ad"),
   });
 
   const toggle = useMutation({
     mutationFn: ({ id, is_active }) => base44.entities.AppAd.update(id, { is_active }),
-  onSuccess: () => toast.success("Ad status updated"),
+  onSuccess: (_, { id, is_active }) => {
+    qc.invalidateQueries({ queryKey: ['app-ads'] });
+    auditLog('ad_toggled', 'AppAd', id, is_active ? 'activated' : 'deactivated');
+    toast.success("Ad status updated");
+  },
   onError: (err) => toast.error(err?.message || "Failed to update ad"),
   });
 
