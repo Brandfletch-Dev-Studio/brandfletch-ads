@@ -19,9 +19,16 @@ export default function DesignSubscription({ onSubscribe }) {
     queryFn: () => base44.auth.me(),
   });
 
-  const { data: retainerPricing } = useQuery({
+  // Fetch ALL active retainer pricing rows — admin manages one per country
+  // (see AdminSettings' Design Pricing form, which requires a country per
+  // row) — and pick the row matching the signed-in user's country. Grabbing
+  // r[0] here previously ignored country entirely, so whichever record
+  // happened to come back first from the DB became "the" price shown and
+  // charged to every client regardless of what the public Pricing page
+  // advertised for their actual country.
+  const { data: allRetainerPricing } = useQuery({
     queryKey: ['designPricing'],
-    queryFn: () => base44.entities.DesignPricing.filter({ pricing_type: 'retainer', is_active: true }).then(r => r[0]),
+    queryFn: () => base44.entities.DesignPricing.filter({ pricing_type: 'retainer', is_active: true }),
   });
 
   useEffect(() => {
@@ -31,6 +38,17 @@ export default function DesignSubscription({ onSubscribe }) {
       setIsMalawi(isMW);
     }
   }, [user]);
+
+  const retainerPricing = (() => {
+    const rows = allRetainerPricing || [];
+    if (!rows.length) return null;
+    const userCountry = (user?.country || '').toLowerCase();
+    return (
+      rows.find(p => (p.country || '').toLowerCase() === userCountry) ||
+      rows.find(p => (p.country || '').toLowerCase() === 'malawi') ||
+      rows[0]
+    );
+  })();
 
   const createSubscriptionMutation = useMutation({
     mutationFn: async (planData) => {
@@ -58,9 +76,13 @@ export default function DesignSubscription({ onSubscribe }) {
         // subscription is actually active — redirect them there now.
         await handlePaychanguRedirect(subscription);
       } else {
+        // Non-Malawi clients pay via manual bank transfer / mobile money
+        // proof-of-payment, handled entirely by /designs/payment. The
+        // subscription is created as 'pending' and stays that way until an
+        // admin verifies the payment — it must NOT be reported as
+        // "Subscribed!" yet, since no payment has actually been collected.
         queryClient.invalidateQueries({ queryKey: ['userSubscription'] });
-        toast.success('Subscribed!');
-        onSubscribe?.();
+        navigate('/designs/payment');
       }
     },
     onError: (err) => {
