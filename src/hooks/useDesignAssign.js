@@ -1,4 +1,5 @@
 import { base44 } from '@/api/base44Client';
+import { ADMIN_WHATSAPP } from '@/lib/constants';
 
 /**
  * useDesignAssign
@@ -16,10 +17,15 @@ import { base44 } from '@/api/base44Client';
 export function useDesignAssign() {
 
   async function getAdminPhone() {
+    // PublicSettings table may not exist / have no override yet — always
+    // fall back to the known business WhatsApp number so this notification
+    // never silently no-ops.
     try {
       const settings = await base44.entities.PublicSettings.list({ limit: 1 });
-      return settings?.[0]?.admin_whatsapp || settings?.[0]?.admin_phone || null;
-    } catch { return null; }
+      return settings?.[0]?.admin_whatsapp || settings?.[0]?.admin_phone || ADMIN_WHATSAPP;
+    } catch {
+      return ADMIN_WHATSAPP;
+    }
   }
 
   async function sendWA(to, message) {
