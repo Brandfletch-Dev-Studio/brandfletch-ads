@@ -41,7 +41,6 @@ const CampaignPayment      = lazy(() => import('@/pages/campaigns/CampaignPaymen
 const SavedAudiences       = lazy(() => import('@/pages/SavedAudiences'));
 const ProfileSettings      = lazy(() => import('@/pages/ProfileSettings'));
 const Notifications        = lazy(() => import('@/pages/Notifications'));
-const SupportTickets       = lazy(() => import('@/pages/SupportTickets'));
 const Designs              = lazy(() => import('@/pages/Designs'));
 const DesignPayment        = lazy(() => import('@/pages/DesignPayment'));
 const LeadsComingSoon      = lazy(() => import('@/pages/LeadsComingSoon'));
@@ -64,7 +63,6 @@ const AdminNotifications   = lazy(() => import('@/pages/admin/AdminNotifications
 const AdminAds             = lazy(() => import('@/pages/admin/AdminAds'));
 const AdminAuditLog        = lazy(() => import('@/pages/admin/AdminAuditLog'));
 const AdminPricing         = lazy(() => import('@/pages/admin/AdminPricing'));
-const AdminSupportTickets  = lazy(() => import('@/pages/admin/AdminSupportTickets'));
 const AdminReferrals       = lazy(() => import('@/pages/admin/AdminReferrals'));
 const AdminDesigns         = lazy(() => import('@/pages/admin/AdminDesigns'));
 const AdminUgcAds          = lazy(() => import('@/pages/admin/AdminUgcAds'));
@@ -245,8 +243,6 @@ const AppRoutes = () => (
           <Route path="/leads/forms"           element={<LeadForms />} />
           <Route path="/referrals"             element={<Referrals />} />
           <Route path="/notifications"         element={<Notifications />} />
-          <Route path="/support"               element={<SupportTickets />} />
-          <Route path="/messages"              element={<Navigate to="/support" replace />} />
           <Route path="/designer"              element={<DesignerPortal />} />
           <Route path="/creative-ops"          element={<CreativeOpsDashboard />} />
           <Route path="/ads-manager"           element={<AdsManagerDashboard />} />
@@ -267,9 +263,7 @@ const AppRoutes = () => (
           <Route path="/admin/leads"           element={<AdminLeads />} />
           <Route path="/admin/audit-log"       element={<AdminAuditLog />} />
           <Route path="/admin/pricing"         element={<AdminPricing />} />
-          <Route path="/admin/support"         element={<AdminSupportTickets />} />
           <Route path="/admin/referrals"       element={<AdminReferrals />} />
-          <Route path="/admin/messages"        element={<Navigate to="/admin/support" replace />} />
           <Route path="/admin/blog"            element={<AdminBlog />} />
           <Route path="/admin/portfolio"       element={<AdminPortfolio />} />
         </Route>
