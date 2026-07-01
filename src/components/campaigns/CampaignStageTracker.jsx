@@ -1,4 +1,4 @@
-import { Check, Clock, X } from 'lucide-react';
+import { Check, Clock } from 'lucide-react';
 
 const STAGES = [
   { key: 'pending_review', label: 'Under Review' },
