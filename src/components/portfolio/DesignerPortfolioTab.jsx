@@ -15,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import {
-  Plus, Pencil, Trash2, Eye, EyeOff, Star, StarOff,
+  Plus, Pencil, Trash2, Eye, EyeOff,
   Upload, X, Loader2, Image, LayoutGrid, Video, Link2
 } from 'lucide-react';
 import { toast } from 'sonner';
