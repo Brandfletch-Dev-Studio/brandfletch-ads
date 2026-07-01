@@ -122,7 +122,7 @@ export default function Terms() {
       icon: FileText,
       content: [
         'For questions about these Terms and Conditions, please contact us at support@brandfletch.com',
-        'You may also reach us through the support ticket system available in your dashboard.',
+        'You can also reach us instantly through the live chat widget on our site.',
         'We will respond to all inquiries within 30 days.'
       ]
     }
@@ -161,7 +161,7 @@ export default function Terms() {
         <CardContent className="p-6 text-center">
           <h2 className="text-xl font-bold font-heading mb-2">Questions About Our Terms?</h2>
           <p className="text-sm opacity-90 mb-4">
-            Contact us at support@brandfletch.com or submit a support ticket.
+            Contact us at support@brandfletch.com or use the live chat widget on our site.
           </p>
           <Link to="/contact">
             <Button variant="secondary" size="sm">Contact Us</Button>
