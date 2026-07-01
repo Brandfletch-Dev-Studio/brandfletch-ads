@@ -26,7 +26,6 @@ export default function BottomNav({ isStaff }) {
     location.pathname.startsWith('/campaigns') ||
     location.pathname.startsWith('/designs') ||
     location.pathname.startsWith('/referrals') ||
-    location.pathname.startsWith('/support') ||
     location.pathname.startsWith('/admin') ||
     location.pathname.startsWith('/designer') ||
     location.pathname.startsWith('/notifications') ||
