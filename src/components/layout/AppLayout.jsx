@@ -26,7 +26,6 @@ const clientNav = [
   { path: '/pages',     label: 'Facebook Pages',   icon: Facebook },
   { path: '/audiences', label: 'Audiences',        icon: Users },
   { path: '/referrals', label: 'Refer & Earn',     icon: Gift },
-  { path: '/support',   label: 'Support',          icon: LifeBuoy },
   { path: '/settings',  label: 'Settings',         icon: Settings },
 ];
 
@@ -34,7 +33,6 @@ const clientNav = [
 // Designers never see the admin dashboard. They work exclusively in their portal.
 const designerNav = [
   { path: '/designer',  label: 'My Projects',     icon: Palette },
-  { path: '/support',   label: 'Messages',         icon: MessageSquare },
   { path: '/settings',  label: 'Settings',         icon: Settings },
 ];
 
@@ -47,7 +45,6 @@ const codNav = [
   { path: '/admin/users',     label: 'Design Team',        icon: Users },
   { path: '/admin/payments',  label: 'Payments',           icon: WalletIcon },
   { path: '/admin/reports',   label: 'Reports',            icon: BarChart3 },
-  { path: '/admin/support',   label: 'Support',            icon: LifeBuoy },
   { path: '/settings',        label: 'Settings',           icon: Settings },
 ];
 
@@ -60,7 +57,6 @@ const adsManagerNav = [
   { path: '/admin/users',          label: 'Clients',           icon: Users },
   { path: '/admin/payments',       label: 'Payments',          icon: WalletIcon },
   { path: '/admin/reports',        label: 'Reports',           icon: BarChart3 },
-  { path: '/admin/support',        label: 'Support',           icon: LifeBuoy },
   { path: '/settings',             label: 'Settings',          icon: Settings },
 ];
 
@@ -79,7 +75,6 @@ const ALL_ADMIN_NAV = [
   { key: 'reports',       path: '/admin/reports',        label: 'Reports',           icon: BarChart3,       permission: 'reports.view' },
   { key: 'audit_log',     path: '/admin/audit-log',      label: 'Audit Log',         icon: ClipboardList,   permission: 'audit_log.view' },
   { key: 'pricing',       path: '/admin/pricing',        label: 'Pricing',           icon: Tags,            permission: 'pricing.view' },
-  { key: 'support',       path: '/admin/support',        label: 'Support Tickets',   icon: LifeBuoy,        permission: 'support.view' },
   { key: 'referrals',     path: '/admin/referrals',      label: 'Referrals',         icon: Gift,            permission: 'referrals.view' },
   { key: 'portfolio',   path: '/admin/portfolio',     label: 'Portfolio',          icon: LayoutGrid,      permission: null },
   { key: 'blog',          path: '/admin/blog',           label: 'Blog',              icon: FileText,        permission: null },
@@ -116,17 +111,6 @@ export default function AppLayout() {
     navItems = clientNav;
   }
 
-  // Unread messages badge — staff see client-sent messages; clients see admin replies
-  const { data: unreadMessages = [] } = useQuery({
-    queryKey: ['unread-messages', currentUser?.id, isStaff],
-    queryFn: () => isStaff
-      ? base44.entities.Message.filter({ is_read: false, sender_role: 'user' }, { limit: 100 })
-      : base44.entities.Message.filter({ conversation_user_id: currentUser?.id, is_read: false, sender_role: 'admin' }, { limit: 100 }),
-    enabled: !!currentUser?.id,
-    refetchInterval: 15000,
-  });
-  const unreadCount = unreadMessages.length;
-
   return (
     <div className="flex h-screen bg-background overflow-hidden">
       {/* ── Sidebar ── */}
@@ -161,9 +145,6 @@ export default function AppLayout() {
             const active = path === '/admin'
               ? location.pathname === '/admin'
               : location.pathname === path || location.pathname.startsWith(path + '/');
-            // Show unread badge on support/messages nav items
-            const showBadge = (path === '/support' || path === '/admin/support') && unreadCount > 0;
-
             if (disabled) {
               return (
                 <div key={path}
@@ -183,14 +164,7 @@ export default function AppLayout() {
                     : "text-[hsl(var(--sidebar-foreground))] hover:bg-[hsl(var(--sidebar-accent))] hover:text-white"
                 )}
               >
-                <div className="relative flex-shrink-0">
-                  <Icon className="w-4 h-4" />
-                  {showBadge && (
-                    <span className="absolute -top-1.5 -right-1.5 min-w-[14px] h-3.5 px-0.5 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center">
-                      {unreadCount > 99 ? '99+' : unreadCount}
-                    </span>
-                  )}
-                </div>
+                <Icon className="w-4 h-4 flex-shrink-0" />
                 <span className="flex-1">{label}</span>
                 {active && <ChevronRight className="w-3 h-3 opacity-70" />}
               </Link>
@@ -237,7 +211,7 @@ export default function AppLayout() {
         <main className="flex-1 overflow-y-auto pb-16 lg:pb-0">
           <Outlet />
         </main>
-        <BottomNav isStaff={isStaff} unreadCount={unreadCount} />
+        <BottomNav isStaff={isStaff} />
       </div>
     </div>
   );
