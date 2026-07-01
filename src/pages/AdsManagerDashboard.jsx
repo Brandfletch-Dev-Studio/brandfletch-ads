@@ -222,11 +222,6 @@ export default function AdsManagerDashboard() {
     queryFn: () => base44.entities.WalletTransaction.list({ sort: '-created_date', limit: 200 }).catch(() => []),
   });
 
-  const { data: tickets = [] } = useQuery({
-    queryKey: ['am-support'],
-    queryFn: () => base44.entities.SupportTicket.list({ sort: '-created_date', limit: 50 }).catch(() => []),
-  });
-
   const clients = allUsers.filter(u => u.role === 'user');
 
   const updateMutation = useMutation({
@@ -245,7 +240,6 @@ export default function AdsManagerDashboard() {
   const pendingRev  = campaigns.filter(c => c.status === 'pending_review');
   const completed   = campaigns.filter(c => c.status === 'completed');
   const thisWeek    = campaigns.filter(c => c.created_date && isAfter(new Date(c.created_date), subDays(new Date(), 7)));
-  const openTickets = tickets.filter(t => ['open','in_progress'].includes(t.status));
 
   // Revenue
   const revenue = campaigns
@@ -533,7 +527,6 @@ export default function AdsManagerDashboard() {
                     { label: 'Page Requests',      path: '/admin/pages',      icon: Globe },
                     { label: 'Payments',           path: '/admin/payments',   icon: DollarSign },
                     { label: 'Reports',            path: '/admin/reports',    icon: BarChart3 },
-                    { label: 'Support Tickets',    path: '/admin/support',    icon: MessageSquare },
                     { label: 'Team & Users',       path: '/admin/users',      icon: Users },
                   ].map(({ label, path, icon: Icon }) => (
                     <Link key={path} to={path}>
