@@ -4,7 +4,7 @@ import { Check, ArrowRight, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { supabase } from '@/api/base44Client';
+import { supabase, base44 } from '@/api/base44Client';
 import { LOCAL_PRICES } from '@/lib/pricing';
 import { useAuth } from '@/lib/AuthContext';
 import { useSEO } from '@/hooks/useSEO';
