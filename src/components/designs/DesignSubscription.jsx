@@ -52,6 +52,20 @@ export default function DesignSubscription({ onSubscribe }) {
 
       return subscription;
     },
+    onSuccess: async (subscription) => {
+      if (isMalawi) {
+        // Malawi users must complete Paychangu checkout before the
+        // subscription is actually active — redirect them there now.
+        await handlePaychanguRedirect(subscription);
+      } else {
+        queryClient.invalidateQueries({ queryKey: ['userSubscription'] });
+        toast.success('Subscribed!');
+        onSubscribe?.();
+      }
+    },
+    onError: (err) => {
+      toast.error(err?.message || 'Failed to create subscription');
+    },
   });
 
   async function handlePaychanguRedirect(subscription) {
@@ -104,10 +118,6 @@ export default function DesignSubscription({ onSubscribe }) {
       currency: plan.currency,
       monthlyQuota: plan.monthlyQuota,
     });
-    
-    if (onSubscribe) {
-      onSubscribe();
-    }
   };
 
   return (
