@@ -300,6 +300,14 @@ export default function AdminPricing() {
         </div>
       </div>
       </> }
+
+      <ConfirmDialog
+        open={!!confirmRow}
+        onOpenChange={(open) => { if (!open) setConfirmRow(null); }}
+        title="Remove package"
+        description={confirmRow ? `Remove "${confirmRow.package}" from ${confirmRow.country}? This cannot be undone.` : ''}
+        onConfirm={() => { deletePackage(confirmRow); setConfirmRow(null); }}
+      />
     </div>
   );
 }
