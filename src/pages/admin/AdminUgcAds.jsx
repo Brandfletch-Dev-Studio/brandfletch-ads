@@ -13,8 +13,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import {
-  Video, Search, ArrowLeft, CheckCircle2, Clock, Users,
-  ExternalLink, Loader2, Filter, MoreHorizontal, FileText,
+  Video, Search, ArrowLeft, CheckCircle2, Clock,
+  ExternalLink, Loader2, FileText,
   DollarSign, User, Play, AlertCircle, Package,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
