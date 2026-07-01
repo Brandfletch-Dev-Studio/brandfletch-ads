@@ -19,7 +19,8 @@
         "active",
         "cancelled",
         "expired",
-        "pending"
+        "pending",
+        "awaiting_payment"
       ],
       "default": "pending"
     },
