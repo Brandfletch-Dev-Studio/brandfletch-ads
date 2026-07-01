@@ -8,13 +8,14 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { useSEO } from '@/hooks/useSEO';
+import { ADMIN_WHATSAPP } from '@/lib/constants';
 
 const CONTACT_METHODS = [
   {
     icon: MessageCircle,
     label: 'WhatsApp',
     value: '+265 980 011 467',
-    href: 'https://wa.me/265980011467',
+    href: `https://wa.me/${ADMIN_WHATSAPP}`,
     color: 'text-green-600',
     bg: 'bg-green-100 dark:bg-green-900/30',
   },
@@ -22,7 +23,7 @@ const CONTACT_METHODS = [
     icon: Phone,
     label: 'Phone Call',
     value: '+265 980 011 467',
-    href: 'tel:+265980011467',
+    href: 'tel:+265980011467', // display number kept literal; ADMIN_WHATSAPP has no leading +
     color: 'text-blue-600',
     bg: 'bg-blue-100 dark:bg-blue-900/30',
   },
@@ -59,7 +60,7 @@ export default function ContactPage() {
       '',
       form.message,
     ].join('\n');
-    window.open(`https://wa.me/265980011467?text=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
+    window.open(`https://wa.me/${ADMIN_WHATSAPP}?text=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
     setSent(true);
     setForm({ name: '', email: '', subject: '', message: '' });
     setSending(false);
