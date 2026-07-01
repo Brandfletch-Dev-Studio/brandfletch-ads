@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Gift, Users, TrendingUp, CheckCircle, Clock, Search,
   DollarSign, Wallet, Image, Settings2, Plus, Trash2,
-  Upload, Save, Loader2, ExternalLink, BarChart3, XCircle
+  Upload, Save, Loader2, ExternalLink, BarChart3
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
