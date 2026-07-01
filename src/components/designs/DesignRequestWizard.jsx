@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { useDesignAssign } from '@/hooks/useDesignAssign';
 import {
-  ImageIcon, Megaphone, Layout, CreditCard, Briefcase, Star, BookOpen, Presentation, Wand2,
+  ImageIcon, Megaphone, Layout, CreditCard, Star, BookOpen, Presentation, Wand2,
   Upload, X, CheckCircle2, ChevronRight, Loader2, AlertCircle, FileText
 } from 'lucide-react';
 
