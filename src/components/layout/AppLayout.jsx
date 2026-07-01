@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import {
-  LayoutDashboard, LayoutGrid, ShoppingBag, Megaphone, Facebook, Users, Wallet as WalletIcon,
+  LayoutDashboard, LayoutGrid, Megaphone, Facebook, Users, Wallet as WalletIcon,
   Settings, X, ChevronRight, BarChart3, Shield, Bell, Tv2, ClipboardList,
   Tags, Palette, Target, Gift, FileText, Video
 } from 'lucide-react';
