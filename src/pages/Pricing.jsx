@@ -431,29 +431,15 @@ export default function Pricing() {
     };
 
     const info = SERVICE_INFO[serviceType];
-    if (!info) { navigate('/support'); return; }
+    if (!info) { navigate('/contact'); return; }
 
+    // Route order enquiries straight to WhatsApp with the plan details
+    // prefilled — matches our direct-to-contact model (no ticketing backend).
     setOrdering(true);
-    try {
-      await base44.entities.SupportTicket.create({
-        user_id: user.id,
-        user_name: user.full_name || user.email,
-        user_email: user.email,
-        subject: info.subject,
-        description: info.buildDescription(planData),
-        category: 'general',
-        status: 'open',
-        priority: 'medium',
-        messages: [],
-      });
-      toast.success('Order request sent! We will be in touch shortly.');
-      navigate('/support');
-    } catch (err) {
-      toast.error(err?.message || 'Could not submit your request. Please try again.');
-      navigate('/support');
-    } finally {
-      setOrdering(false);
-    }
+    const text = `${info.subject}\n\n${info.buildDescription(planData)}`;
+    window.open(`https://wa.me/265980011467?text=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
+    toast.success('Opening WhatsApp with your order details...');
+    setOrdering(false);
   }
 
   const activeTabMeta = TABS.find(t => t.id === activeTab);
@@ -532,7 +518,7 @@ export default function Pricing() {
           <h3 className="text-xl font-bold text-foreground mb-2">Not sure which service to choose?</h3>
           <p className="text-muted-foreground text-sm mb-6">Talk to our team — we'll help you pick the right package for your business goals and budget.</p>
           <div className="flex flex-wrap gap-3 justify-center">
-            <Button size="lg" onClick={() => navigate(user ? '/support-tickets' : '/register')}>
+            <Button size="lg" onClick={() => window.open('https://wa.me/265980011467', '_blank', 'noopener,noreferrer')}>
               Talk to Us <ChevronRight className="w-4 h-4 ml-1" />
             </Button>
             <Button size="lg" variant="outline" onClick={() => navigate(user ? '/dashboard' : '/register')}>
