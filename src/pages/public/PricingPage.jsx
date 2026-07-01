@@ -371,8 +371,15 @@ export default function PricingPage() {
   const [activeTab,  setActiveTab]  = useState('meta-ads');
   const [country,    setCountry]    = useState('Malawi');
   const [dbRows,     setDbRows]     = useState([]);
-  const [loading,    setLoading]    = useState(false);
   const [mwkRate,    setMwkRate]    = useState(DEFAULT_RATE);
+
+  // Fetch the live admin-configured MWK exchange rate — falls back to
+  // DEFAULT_RATE if none is configured/active yet.
+  useEffect(() => {
+    base44.entities.ExchangeRate.filter({ country: 'Malawi', is_active: true })
+      .then(rows => { if (rows?.[0]?.rate_to_usd) setMwkRate(rows[0].rate_to_usd); })
+      .catch(() => {/* fail silently, keep DEFAULT_RATE */});
+  }, []);
 
   // Fetch Meta Ads prices from DB in background — LOCAL_PRICES already shown instantly
   useEffect(() => {
