@@ -70,6 +70,18 @@ export default function DesignRequestWizard({ subscription, onSuccess, onCancel 
       });
       return request;
     },
+    onSuccess: async (request) => {
+      // Auto-assign to the least-loaded designer + fire WhatsApp notifications.
+      // Non-blocking — a failed assignment shouldn't block the user's flow.
+      assignDesign(request.id, request, user?.full_name || user?.email).catch(() => {});
+      queryClient.invalidateQueries({ queryKey: ['myDesignRequests'] });
+      queryClient.invalidateQueries({ queryKey: ['userSubscription'] });
+      toast.success('Design request submitted!');
+      onSuccess?.();
+    },
+    onError: (err) => {
+      toast.error(err?.message || 'Failed to submit design request');
+    },
   });
 
   const handleFileUpload = async (files) => {
