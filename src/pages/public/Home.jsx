@@ -2,7 +2,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import {
   ArrowRight, Megaphone, Video, Palette, Globe, CreditCard,
-  Smartphone, CheckCircle, TrendingUp, Target, Users, Zap, Star
+  Smartphone, CheckCircle, TrendingUp, Target, Star
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
