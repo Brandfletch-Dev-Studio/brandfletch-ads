@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useRoleGuard } from '@/hooks/useRoleGuard';
 import { Card, CardContent } from '@/components/ui/card';
-import { Palette, Users, TrendingUp, Activity, Clock, CheckCircle } from 'lucide-react';
+import { Palette, Users, TrendingUp, Activity, CheckCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { formatDistanceToNow } from 'date-fns';
 import { base44 } from '@/api/base44Client';
 
 export default function AdminOverview() {
@@ -16,35 +15,30 @@ export default function AdminOverview() {
     revenue: null,
     totalUsers: null,
     pendingCampaigns: null,
-    openTickets: null,
   });
   const [loading, setLoading] = useState(true);
-  const [recentTickets, setRecentTickets] = useState([]);
 
   useEffect(() => {
     async function fetchStats() {
       try {
         // Bug fix: base44.entities.Payment does not exist — use WalletTransaction for revenue
         // Also fix list() call signature — pass options object, not positional args
-        const [designs, leads, campaigns, walletTxns, users, tickets] = await Promise.all([
+        const [designs, leads, campaigns, walletTxns, users] = await Promise.all([
           base44.entities.DesignRequest.list({ sort: '-created_date', limit: 1000 }).catch(() => []),
           base44.entities.Lead.list({ sort: '-created_date', limit: 1000 }).catch(() => []),
           base44.entities.Campaign.list({ sort: '-created_date', limit: 1000 }).catch(() => []),
           base44.entities.WalletTransaction.list({ sort: '-created_date', limit: 1000 }).catch(() => []),
           base44.functions.getAllUsers({}).then(r => r?.users || []).catch(() => []),
-          base44.entities.SupportTicket.list({ sort: '-created_date', limit: 10 }).catch(() => []),
         ]);
 
         const activeCampaigns = campaigns.filter(c => c.status === 'active').length;
         const pendingCampaigns = campaigns.filter(c => ['pending_review', 'awaiting_payment'].includes(c.status)).length;
-        const openTickets = tickets.filter(t => t.status === 'open' || t.status === 'in_progress').length;
 
         // Revenue from wallet credit transactions (deposits/payments)
         const totalRevenue = walletTxns
           .filter(t => t.type === 'credit' && t.status === 'completed')
           .reduce((sum, t) => sum + (t.amount_usd || t.amount || 0), 0);
 
-        setRecentTickets(tickets.slice(0, 5));
         setStats({
           totalDesigns: designs.length,
           totalLeads: leads.length,
@@ -52,7 +46,6 @@ export default function AdminOverview() {
           pendingCampaigns,
           revenue: totalRevenue,
           totalUsers: users.filter(u => u.role === 'user').length,
-          openTickets,
         });
       } catch (err) {
         console.error('AdminOverview stats error:', err);
@@ -100,14 +93,6 @@ export default function AdminOverview() {
       link: '/admin/payments',
     },
     {
-      title: 'Open Tickets',
-      value: fmt(stats.openTickets),
-      sub: '',
-      icon: Clock,
-      color: 'bg-red-100 text-red-700',
-      link: '/admin/support',
-    },
-    {
       title: 'Pending Campaigns',
       value: fmt(stats.pendingCampaigns),
       sub: 'Awaiting review',
@@ -150,46 +135,6 @@ export default function AdminOverview() {
             </Link>
           );
         })}
-      </div>
-
-      {/* ── Recent Tickets ── */}
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-base font-semibold font-heading">Recent Tickets</h2>
-          <Link to="/admin/support" className="text-xs text-[hsl(var(--accent))] hover:underline">View all →</Link>
-        </div>
-        {recentTickets.length === 0 ? (
-          <Card>
-            <CardContent className="py-8 text-center text-muted-foreground text-sm">No tickets yet.</CardContent>
-          </Card>
-        ) : (
-          <Card>
-            <CardContent className="p-0 divide-y divide-border">
-              {recentTickets.map(t => {
-                const STATUS = {
-                  open: 'bg-red-100 text-red-700',
-                  in_progress: 'bg-amber-100 text-amber-700',
-                  resolved: 'bg-green-100 text-green-700',
-                  closed: 'bg-gray-100 text-gray-600',
-                };
-                return (
-                  <Link key={t.id} to="/admin/support" className="flex items-start gap-3 px-4 py-3 hover:bg-accent/40 transition-colors group">
-                    <div className={`mt-0.5 text-xs px-2 py-0.5 rounded-full font-semibold shrink-0 ${STATUS[t.status] || STATUS.open}`}>
-                      {(t.status || 'open').replace('_', ' ')}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-foreground truncate">{t.subject}</p>
-                      <p className="text-xs text-muted-foreground">{t.user_name || t.user_email || 'Unknown user'}</p>
-                    </div>
-                    <span className="text-[10px] text-muted-foreground shrink-0 self-center">
-                      {t.created_date ? formatDistanceToNow(new Date(t.created_date), { addSuffix: true }) : ''}
-                    </span>
-                  </Link>
-                );
-              })}
-            </CardContent>
-          </Card>
-        )}
       </div>
     </div>
   );
