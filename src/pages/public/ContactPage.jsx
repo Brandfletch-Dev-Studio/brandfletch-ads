@@ -6,7 +6,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { toast } from 'sonner';
 import { useSEO } from '@/hooks/useSEO';
 import { ADMIN_WHATSAPP } from '@/lib/constants';
 
