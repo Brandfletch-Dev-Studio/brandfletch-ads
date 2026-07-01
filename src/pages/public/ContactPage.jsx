@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Mail, MapPin, Clock, Send, Phone, MessageCircle, Ticket } from 'lucide-react';
+import { Mail, MapPin, Clock, Send, Phone, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -7,7 +7,6 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { supabase } from '@/api/base44Client';
 import { useSEO } from '@/hooks/useSEO';
 
 const CONTACT_METHODS = [
@@ -35,14 +34,6 @@ const CONTACT_METHODS = [
     color: 'text-amber-600',
     bg: 'bg-amber-100 dark:bg-amber-900/30',
   },
-  {
-    icon: Ticket,
-    label: 'Support Ticket',
-    value: 'Login to submit',
-    href: '/support',
-    color: 'text-purple-600',
-    bg: 'bg-purple-100 dark:bg-purple-900/30',
-  },
 ];
 
 export default function ContactPage() {
@@ -57,31 +48,21 @@ export default function ContactPage() {
 
   const handleChange = e => setForm(p => ({ ...p, [e.target.name]: e.target.value }));
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     setSending(true);
-    try {
-      // Try to get current user (may be null for public visitors)
-      const { data: { user } } = await supabase.auth.getUser().catch(() => ({ data: { user: null } }));
-      await supabase.from('SupportTicket').insert({
-        user_id: user?.id || null,
-        user_name: form.name,
-        user_email: form.email,
-        subject: form.subject,
-        description: form.message,
-        category: 'general',
-        priority: 'medium',
-        status: 'open',
-      });
-      setSent(true);
-      setForm({ name: '', email: '', subject: '', message: '' });
-      toast.success('Message sent! We\'ll get back to you shortly.');
-    } catch (err) {
-      console.error(err);
-      toast.error('Failed to send. Please email us directly at hello@brandfletch.com');
-    } finally {
-      setSending(false);
-    }
+    // Route straight to WhatsApp with the enquiry prefilled — fastest, most
+    // reliable channel for this audience, and matches our direct-to-contact model.
+    const text = [
+      `New enquiry from ${form.name} (${form.email})`,
+      `Subject: ${form.subject}`,
+      '',
+      form.message,
+    ].join('\n');
+    window.open(`https://wa.me/265980011467?text=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
+    setSent(true);
+    setForm({ name: '', email: '', subject: '', message: '' });
+    setSending(false);
   };
 
   return (
@@ -191,7 +172,7 @@ export default function ContactPage() {
                       <Send className="w-7 h-7 text-green-600" />
                     </div>
                     <p className="font-semibold text-foreground">Message sent!</p>
-                    <p className="text-sm text-muted-foreground">We'll get back to you shortly.</p>
+                    <p className="text-sm text-muted-foreground">We opened WhatsApp with your message — just hit send there.</p>
                     <Button variant="outline" size="sm" onClick={() => setSent(false)}>Send another</Button>
                   </div>
                 ) : (
