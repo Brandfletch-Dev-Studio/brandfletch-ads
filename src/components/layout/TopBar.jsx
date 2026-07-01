@@ -3,7 +3,6 @@ import { Menu, Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
-import BrandLogo from '@/components/BrandLogo';
 
 export default function TopBar({ onMenuToggle, currentUser, isStaff }) {
   const navigate = useNavigate();
