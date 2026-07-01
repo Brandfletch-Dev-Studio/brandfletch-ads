@@ -196,13 +196,15 @@ export default function AdminDesigns() {
                   </p>
                 </div>
                 <div className="flex gap-2">
-                  <Button size="sm" variant="outline" className="gap-1"
+                  <Button size="sm" variant="outline" className="gap-1" disabled={verifySubscriptionMutation.isPending}
                     onClick={() => setConfirmAction({ subscription: sub, approve: false })}>
                     <XCircle className="w-4 h-4" /> Reject
                   </Button>
-                  <Button size="sm" className="gap-1 bg-green-600 hover:bg-green-700 text-white"
+                  <Button size="sm" className="gap-1 bg-green-600 hover:bg-green-700 text-white" disabled={verifySubscriptionMutation.isPending}
                     onClick={() => setConfirmAction({ subscription: sub, approve: true })}>
-                    <CheckCircle2 className="w-4 h-4" /> Activate
+                    {verifySubscriptionMutation.isPending
+                      ? <Loader2 className="w-4 h-4 animate-spin" />
+                      : <CheckCircle2 className="w-4 h-4" />} Activate
                   </Button>
                 </div>
               </div>
