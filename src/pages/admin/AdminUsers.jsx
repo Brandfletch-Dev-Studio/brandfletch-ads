@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import {
   Search, Shield, UserPlus, Mail, MoreVertical,
-  UserX, UserCheck, Key, Users, RefreshCw
+  UserX, UserCheck, Users, RefreshCw
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
