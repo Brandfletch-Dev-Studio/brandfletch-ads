@@ -96,7 +96,7 @@ export default function PrivacyPolicy() {
       icon: Shield,
       content: [
         'If you have any questions about this privacy policy, please contact us at support@brandfletch.com',
-        'You may also reach us through the support ticket system available in your dashboard.',
+        'You can also reach us instantly through the live chat widget on our site.',
         'We will respond to all privacy-related inquiries within 30 days.'
       ]
     }
@@ -135,7 +135,7 @@ export default function PrivacyPolicy() {
         <CardContent className="p-6 text-center">
           <h2 className="text-xl font-bold font-heading mb-2">Questions About Privacy?</h2>
           <p className="text-sm opacity-90 mb-4">
-            Contact us at support@brandfletch.com or submit a support ticket.
+            Contact us at support@brandfletch.com or use the live chat widget on our site.
           </p>
           <Link to="/contact">
             <Button variant="secondary" size="sm">Contact Us</Button>
