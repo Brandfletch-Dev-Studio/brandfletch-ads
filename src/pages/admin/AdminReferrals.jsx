@@ -473,6 +473,7 @@ function PayoutsTab({ payouts = [] }) {
 function MaterialsTab() {
   const queryClient = useQueryClient();
   const [showAdd, setShowAdd] = useState(false);
+  const [deleteMaterialId, setDeleteMaterialId] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [newMat, setNewMat] = useState({ title: '', description: '', material_type: 'banner', file_url: '', thumbnail_url: '', whatsapp_text: '', dimensions: '', sort_order: 0 });
 
@@ -491,6 +492,11 @@ function MaterialsTab() {
 
   const deleteMut = useMutation({
     mutationFn: (id) => base44.entities.AffiliateMarketingMaterial.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['adminMaterials'] });
+      toast.success('Material deleted');
+    },
+    onError: (err) => toast.error(err?.message || 'Failed to delete material'),
   });
 
   async function handleUpload(e, field) {
@@ -603,6 +609,14 @@ function MaterialsTab() {
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        open={!!deleteMaterialId}
+        onOpenChange={(open) => { if (!open) setDeleteMaterialId(null); }}
+        title="Delete material"
+        description="Delete this marketing material? This cannot be undone."
+        onConfirm={() => { deleteMut.mutate(deleteMaterialId); setDeleteMaterialId(null); }}
+      />
     </div>
   );
 }
@@ -986,7 +1000,6 @@ function SettingsTab() {
 
 
 export default function AdminReferrals() {
-  const [deleteMaterialId, setDeleteMaterialId] = useState(null);
   useRoleGuard(null, 'referrals.view');
   const [activeTab, setActiveTab] = useState('overview');
 
