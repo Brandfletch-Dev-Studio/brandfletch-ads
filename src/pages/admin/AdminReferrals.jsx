@@ -131,13 +131,18 @@ function OverviewTab({ referrals = [], commissions = [], payouts = [] }) {
 }
 
 // ─── Referrals Tab ────────────────────────────────────────────────────
-function ReferralsTab({ referrals = [], users = [], isLoading }) {
+function ReferralsTab({ referrals = [], users = [] }) {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
   const updateMut = useMutation({
     mutationFn: ({ id, data }) => base44.entities.Referral.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['adminReferrals'] });
+      toast.success('Referral updated');
+    },
+    onError: (e) => toast.error(e?.message || 'Failed to update referral'),
   });
 
   const getReferrer = (code) => {
@@ -218,7 +223,7 @@ const SERVICES_ADMIN = [
 ];
 
 // ─── Commissions Tab ──────────────────────────────────────────────────
-function CommissionsTab({ commissions = [], users = [], affiliateSettings, isLoading }) {
+function CommissionsTab({ commissions = [], users = [], affiliateSettings }) {
   const queryClient = useQueryClient();
   const [statusFilter, setStatusFilter] = useState('all');
 
@@ -417,6 +422,11 @@ function PayoutsTab({ payouts = [] }) {
 
   const updateMut = useMutation({
     mutationFn: ({ id, data }) => base44.entities.AffiliatePayout.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['adminPayouts'] });
+      toast.success('Payout updated');
+    },
+    onError: (e) => toast.error(e?.message || 'Failed to update payout'),
   });
 
   const filtered = payouts.filter(p => statusFilter === 'all' || p.status === statusFilter);
