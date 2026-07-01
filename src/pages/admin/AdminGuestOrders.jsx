@@ -11,8 +11,7 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import {
   Search, ShoppingBag, CheckCircle2, XCircle, Clock,
-  Mail, Phone, MapPin, Building2, StickyNote, Loader2,
-  ArrowUpRight, Pencil, Filter
+  Mail, Phone, MapPin, Building2, StickyNote, Loader2, Pencil
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { useRoleGuard } from '@/hooks/useRoleGuard';
