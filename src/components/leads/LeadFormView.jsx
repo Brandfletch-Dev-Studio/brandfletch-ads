@@ -44,6 +44,12 @@ export default function LeadFormView({ formId }) {
         total_submissions: (form.total_submissions || 0) + 1,
       });
     },
+    onSuccess: () => {
+      setSubmitted(true);
+    },
+    onError: (err) => {
+      toast.error(err?.message || 'Failed to submit — please try again');
+    },
   });
 
   const handleSubmit = (e) => {
