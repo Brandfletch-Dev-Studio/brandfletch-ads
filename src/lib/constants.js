@@ -80,3 +80,7 @@ export const PROMOTE_TYPES = [
   { value: 'messenger_messages', label: 'Get Messenger messages', icon: '📨', desc: 'Drive people to message you on Messenger' },
   { value: 'website_traffic', label: 'Drive website traffic', icon: '🌐', desc: 'Send people to your website or landing page' },
 ];
+// Single source of truth for the admin/business WhatsApp number.
+// Used for contact links, order-enquiry deep links, and internal
+// notification fallbacks (e.g. when PublicSettings has no override).
+export const ADMIN_WHATSAPP = '265980011467';
