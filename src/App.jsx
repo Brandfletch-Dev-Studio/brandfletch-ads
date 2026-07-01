@@ -73,22 +73,60 @@ const AdminBlog            = lazy(() => import('@/pages/admin/AdminBlog'));
 // ── ErrorBoundary ─────────────────────────────────────────────────────────────
 // Catches render-phase errors in the route tree and shows a fallback instead
 // of a blank white screen. Must be a class component — React requirement.
+// A stale-chunk failure happens when the browser has an old page open, we ship
+// a new deploy (new hashed asset filenames), and the old page then tries to
+// lazy-load a chunk that no longer exists on the server. It's not a real bug —
+// the fix is just "load the current version" — so we detect it and reload
+// automatically once, instead of dead-ending the user on a generic error page.
+function isChunkLoadError(error) {
+  const msg = error?.message || '';
+  return (
+    /Failed to fetch dynamically imported module/i.test(msg) ||
+    /error loading dynamically imported module/i.test(msg) ||
+    /Importing a module script failed/i.test(msg) ||
+    (error?.name === 'TypeError' && /dynamically imported module/i.test(msg))
+  );
+}
+
+const CHUNK_RELOAD_FLAG = 'bf_chunk_reload_attempted';
+
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { hasError: false, error: null };
+    this.state = { hasError: false, error: null, isStaleChunk: false };
   }
 
   static getDerivedStateFromError(error) {
-    return { hasError: true, error };
+    return { hasError: true, error, isStaleChunk: isChunkLoadError(error) };
   }
 
   componentDidCatch(error, info) {
     console.error('[ErrorBoundary] Caught render error:', error, info);
+
+    if (isChunkLoadError(error)) {
+      // Only auto-reload once per session — if it happens again right after a
+      // fresh reload, it's a real network/offline issue, not a stale chunk,
+      // so we fall through to the visible fallback UI instead of looping.
+      const alreadyTried = sessionStorage.getItem(CHUNK_RELOAD_FLAG);
+      if (!alreadyTried) {
+        sessionStorage.setItem(CHUNK_RELOAD_FLAG, '1');
+        window.location.reload();
+      }
+    }
   }
 
   render() {
     if (this.state.hasError) {
+      if (this.state.isStaleChunk) {
+        return (
+          <div className="fixed inset-0 flex flex-col items-center justify-center bg-background text-foreground gap-4 p-8">
+            <div className="w-8 h-8 border-4 border-[hsl(var(--primary))]/20 border-t-[hsl(var(--primary))] rounded-full animate-spin" />
+            <p className="text-muted-foreground text-sm text-center max-w-sm">
+              Loading the latest version…
+            </p>
+          </div>
+        );
+      }
       return (
         <div className="fixed inset-0 flex flex-col items-center justify-center bg-background text-foreground gap-4 p-8">
           <div className="text-4xl">⚠️</div>
