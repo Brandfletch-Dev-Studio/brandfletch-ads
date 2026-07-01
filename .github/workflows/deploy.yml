@@ -1,9 +1,9 @@
-name: Deploy to Vercel
+name: Deploy to Vercel (manual / fallback only)
 
+# Vercel's native GitHub integration already auto-deploys on every push to main.
+# This workflow is now MANUAL-ONLY (workflow_dispatch) so we stop double-deploying
+# and burning the free-tier daily deploy quota twice per commit.
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
 
 env:
@@ -42,26 +42,7 @@ jobs:
           echo "$OUTPUT"
           echo "--- Exit code: $EXIT ---"
           set -e
-
           if [ $EXIT -ne 0 ]; then
             echo "::error::Vercel deploy failed with exit code $EXIT. See output above."
             exit $EXIT
           fi
-
-          DEPLOY_URL=$(echo "$OUTPUT" | grep -oE 'https://[a-zA-Z0-9._-]+-[a-zA-Z0-9-]+\.vercel\.app' | tail -1)
-          if [ -z "$DEPLOY_URL" ]; then
-            DEPLOY_URL=$(echo "$OUTPUT" | grep -oE 'https://[a-zA-Z0-9._/-]+\.vercel\.app' | tail -1)
-          fi
-          echo "deploy_url=$DEPLOY_URL" >> $GITHUB_OUTPUT
-          echo "Deployed: $DEPLOY_URL"
-
-      - name: Alias brandfletch.com
-        continue-on-error: true
-        run: |
-          URL="${{ steps.deploy.outputs.deploy_url }}"
-          if [ -n "$URL" ]; then
-            npx vercel alias set "$URL" brandfletch.com --token=${{ secrets.VERCEL_TOKEN }} || true
-          fi
-
-      - name: Done
-        run: echo "Live at https://brandfletch.com"
