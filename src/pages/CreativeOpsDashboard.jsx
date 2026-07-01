@@ -13,10 +13,9 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { toast } from 'sonner';
 import { format, formatDistanceToNow, isAfter, subDays } from 'date-fns';
 import {
-  Palette, Clock, CheckCircle2, AlertTriangle, Users, BarChart3,
-  MessageSquare, Search, ChevronRight, TrendingUp, Zap, Star,
-  ArrowRight, RefreshCw, Eye, UserCheck, FileText, Bell, Filter,
-  Layers, Award, Target, Activity
+  Palette, Clock, AlertTriangle, Users, BarChart3, Search, ChevronRight, TrendingUp, Zap,
+  ArrowRight, RefreshCw, Eye, UserCheck, FileText,
+  Layers, Activity
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
