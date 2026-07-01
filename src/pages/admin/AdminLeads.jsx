@@ -31,7 +31,10 @@ export default function AdminLeads() {
 
   const updateLeadMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.Lead.update(id, data),
-  onSuccess: () => toast.success('Lead updated'),
+  onSuccess: () => {
+    queryClient.invalidateQueries({ queryKey: ['adminLeads'] });
+    toast.success('Lead updated');
+  },
   onError: (err) => toast.error(err?.message || 'Failed to update lead'),
   });
 
