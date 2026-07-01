@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useAuth } from '@/lib/AuthContext';
+import { ADMIN_WHATSAPP } from '@/lib/constants';
 
 import StepName from './wizard/StepName';
 import StepCreative from './wizard/StepCreative';
@@ -142,7 +143,7 @@ export default function CampaignWizard() {
     // Notify admin via WhatsApp (non-blocking)
     try {
       const settings = await base44.entities.PublicSettings.list({ limit: 1 }).catch(() => []);
-      const adminPhone = settings?.[0]?.admin_whatsapp || settings?.[0]?.admin_phone;
+      const adminPhone = settings?.[0]?.admin_whatsapp || settings?.[0]?.admin_phone || ADMIN_WHATSAPP;
       if (adminPhone) {
         base44.functions.invoke('sendWhatsApp', {
           to: adminPhone,
