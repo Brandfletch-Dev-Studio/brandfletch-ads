@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   CheckCircle2, Circle, ChevronRight, X, Rocket,
-  User, Building2, Phone, Globe, Facebook,
-  Megaphone, Loader2, ChevronDown, ChevronUp,
+  User, Building2, Phone, Globe, Loader2, ChevronUp,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
