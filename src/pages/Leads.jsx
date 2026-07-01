@@ -6,10 +6,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { 
-  Search, 
-  Filter,
+  Search,
   Target,
-  Zap,
   Download
 } from 'lucide-react';
 import { toast } from 'sonner';
