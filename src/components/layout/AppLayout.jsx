@@ -12,7 +12,7 @@ import { ROLE_LABELS } from '@/lib/permissions';
 
 import BrandLogo from '@/components/BrandLogo';
 import TopBar from '@/components/layout/TopBar';
-import BottomNav from '@/components/layout/BottomNav';
+import AppBottomNav from '@/components/layout/AppBottomNav';
 
 // ── Client nav (role='user') ─────────────────────────────────────────────────
 const clientNav = [
@@ -209,7 +209,7 @@ export default function AppLayout() {
         <main className="flex-1 overflow-y-auto pb-16 lg:pb-0">
           <Outlet />
         </main>
-        <BottomNav isStaff={isStaff} />
+        <AppBottomNav navItems={navItems} activePath={location.pathname} onMore={() => setSidebarOpen(true)} />
       </div>
     </div>
   );
