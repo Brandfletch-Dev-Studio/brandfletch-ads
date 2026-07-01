@@ -11,10 +11,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { formatDistanceToNow, isAfter, subDays } from 'date-fns';
 import {
-  Megaphone, Clock, CheckCircle2, AlertTriangle, Users, BarChart3,
+  Megaphone, AlertTriangle, Users, BarChart3,
   MessageSquare, Search, ChevronRight, TrendingUp, Zap,
-  ArrowRight, RefreshCw, Eye, DollarSign, Activity, Target,
-  Filter, Globe, Phone, Eye as EyeIcon, ThumbsUp, Send
+  ArrowRight, RefreshCw, Eye, DollarSign, Activity, Target, Globe, Phone, Eye as EyeIcon, ThumbsUp
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
