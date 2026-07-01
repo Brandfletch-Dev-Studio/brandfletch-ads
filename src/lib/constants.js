@@ -1,4 +1,4 @@
-// Brandfletch constants
+// Brandfletch app constants
 // Supported countries — 5 focus markets
 export const COUNTRIES = [
   'Malawi',
