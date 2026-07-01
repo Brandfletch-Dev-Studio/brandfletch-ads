@@ -31,22 +31,6 @@ function compactNum(val) {
 
 
 
-// Resolve the effective commission for a given service key
-function resolveServiceCommission(settings, serviceKey, currency) {
-  if (!settings) return null;
-  const typeField  = `${serviceKey}_commission_type`;
-  const fixedField = `${serviceKey}_fixed_amount`;
-  const pctField   = `${serviceKey}_percentage`;
-  const type = settings[typeField] || 'global';
-  if (type === 'global') {
-    return settings.default_commission_type === 'fixed'
-      ? `${currency} ${(settings.default_fixed_amount || 0).toLocaleString()} fixed`
-      : `${settings.default_percentage || 0}% of sale`;
-  }
-  if (type === 'fixed') return `${currency} ${(settings[fixedField] || 0).toLocaleString()} fixed`;
-  return `${settings[pctField] || 0}% of sale`;
-}
-
 const SERVICE_LABELS = {
   meta_ads:       'Meta Ads',
   ugc_ads:        'UGC Ads',
