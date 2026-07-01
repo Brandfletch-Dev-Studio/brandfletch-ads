@@ -3,12 +3,16 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Home, LayoutGrid, DollarSign, BookOpen, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/AuthContext';
+import { usePermissions } from '@/hooks/usePermissions';
 
+// NOTE: these use ?tab= query params, not #hash anchors — PricingPage is a
+// tabbed interface (activeTab state), not a single scrolling page, so there
+// are no DOM anchors for these ids. ?tab= is read by PricingPage on mount.
 const SERVICES = [
-  { label: 'Meta Ads',       desc: 'Run Facebook & Instagram ads that actually convert',  href: '/pricing#meta-ads' },
-  { label: 'UGC Ads',        desc: 'Authentic video creatives from real African creators', href: '/pricing#ugc-ads' },
-  { label: 'Graphic Design', desc: 'Scroll-stopping visuals for your brand',               href: '/pricing#graphic-design' },
-  { label: 'Web Design',     desc: 'Fast, professional sites built for conversion',        href: '/pricing#web-design' },
+  { label: 'Meta Ads',       desc: 'Run Facebook & Instagram ads that actually convert',  href: '/pricing?tab=meta-ads' },
+  { label: 'UGC Ads',        desc: 'Authentic video creatives from real African creators', href: '/pricing?tab=ugc-ads' },
+  { label: 'Graphic Design', desc: 'Scroll-stopping visuals for your brand',               href: '/pricing?tab=graphic-design' },
+  { label: 'Web Design',     desc: 'Fast, professional sites built for conversion',        href: '/pricing?tab=web-design' },
 ];
 
 const QUICK_LINKS = [
@@ -22,6 +26,7 @@ export default function PageNotFound() {
   const location = useLocation();
   const navigate  = useNavigate();
   const { user }  = useAuth();
+  const { isSuperAdmin } = usePermissions();
 
   const badPath = location.pathname.replace(/^\//, '') || '?';
 
@@ -105,7 +110,7 @@ export default function PageNotFound() {
                 to={href}
                 className="flex items-start gap-3 p-4 rounded-xl hover:bg-muted/60 transition-colors group"
               >
-                <span className="mt-0.5 w-2 h-2 rounded-full bg-[hsl(var(--accent))] shrink-0 mt-2" />
+                <span className="w-2 h-2 rounded-full bg-[hsl(var(--accent))] shrink-0 mt-2" />
                 <div>
                   <p className="text-sm font-semibold text-foreground group-hover:text-[hsl(var(--primary))] transition-colors">
                     {label}
@@ -118,7 +123,7 @@ export default function PageNotFound() {
         </div>
 
         {/* Admin-only hint */}
-        {user?.role === 'admin' || user?.role === 'super_admin' ? (
+        {isSuperAdmin ? (
           <p className="mt-6 text-center text-xs text-muted-foreground/50">
             Admin: route <span className="font-mono">/{badPath}</span> is not implemented yet.
           </p>
