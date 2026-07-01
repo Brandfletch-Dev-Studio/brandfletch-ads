@@ -178,6 +178,39 @@ export default function AdminDesigns() {
         <p className="text-muted-foreground">Manage all design requests from clients</p>
       </div>
 
+      {pendingSubs.length > 0 && (
+        <Card className="border-amber-300 bg-amber-50">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Wallet className="w-4 h-4 text-amber-700" /> Pending Subscription Payments ({pendingSubs.length})
+            </CardTitle>
+            <p className="text-xs text-muted-foreground">Clients paying by bank transfer/mobile money — verify and activate their retainer.</p>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {pendingSubs.map((sub) => (
+              <div key={sub.id} className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-lg bg-background border">
+                <div>
+                  <p className="text-sm font-semibold">{sub.user_name}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {sub.currency} {(sub.amount || 0).toLocaleString()} • via {sub.payment_method || 'unknown method'}
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <Button size="sm" variant="outline" className="gap-1"
+                    onClick={() => setConfirmAction({ subscription: sub, approve: false })}>
+                    <XCircle className="w-4 h-4" /> Reject
+                  </Button>
+                  <Button size="sm" className="gap-1 bg-green-600 hover:bg-green-700 text-white"
+                    onClick={() => setConfirmAction({ subscription: sub, approve: true })}>
+                    <CheckCircle2 className="w-4 h-4" /> Activate
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4">
@@ -299,6 +332,20 @@ export default function AdminDesigns() {
           ))
         )}
       </div>
+
+      <ConfirmDialog
+        open={!!confirmAction}
+        onOpenChange={(open) => !open && setConfirmAction(null)}
+        title={confirmAction?.approve ? 'Activate subscription?' : 'Reject this payment?'}
+        description={confirmAction?.approve
+          ? `Confirm you've received ${confirmAction?.subscription?.currency} ${(confirmAction?.subscription?.amount || 0).toLocaleString()} from ${confirmAction?.subscription?.user_name}. This activates their design retainer immediately.`
+          : `This marks the payment as rejected and notifies ${confirmAction?.subscription?.user_name}. This cannot be undone from here.`}
+        confirmLabel={confirmAction?.approve ? 'Activate' : 'Reject'}
+        onConfirm={() => {
+          verifySubscriptionMutation.mutate({ subscription: confirmAction.subscription, approve: confirmAction.approve });
+          setConfirmAction(null);
+        }}
+      />
     </div>
   );
 }
