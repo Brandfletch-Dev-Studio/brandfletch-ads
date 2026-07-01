@@ -231,11 +231,6 @@ export default function CreativeOpsDashboard() {
     queryFn: () => base44.functions.getAllUsers({}).then(r => r?.users || []).catch(() => []),
   });
 
-  const { data: tickets = [] } = useQuery({
-    queryKey: ['cod-support-tickets'],
-    queryFn: () => base44.entities.SupportTicket.list({ sort: '-created_date', limit: 100 }).catch(() => []),
-  });
-
   const designers = allUsers.filter(u => u.role === 'designer');
   const clients   = allUsers.filter(u => u.role === 'user');
 
@@ -268,7 +263,6 @@ export default function CreativeOpsDashboard() {
   const delivered   = requests.filter(r => DONE.includes(r.status));
   const unassigned  = requests.filter(r => !r.designer_id && r.status !== 'draft' && r.status !== 'cancelled');
   const overdue     = requests.filter(r => r.due_date && isAfter(new Date(), new Date(r.due_date)) && !DONE.includes(r.status));
-  const openTickets = tickets.filter(t => ['open','in_progress'].includes(t.status));
   const thisWeek    = requests.filter(r => r.created_date && isAfter(new Date(r.created_date), subDays(new Date(), 7)));
 
   // ── Filtered list ────────────────────────────────────────────────────────
@@ -334,7 +328,6 @@ export default function CreativeOpsDashboard() {
           <MetricCard label="Unassigned"    value={unassigned.length}  icon={UserCheck}     color="bg-red-100 text-red-600"       onClick={() => setStatusFilter('unassigned')} />
           <MetricCard label="Overdue"       value={overdue.length}     icon={Clock}         color="bg-red-50 text-red-500"        onClick={() => setStatusFilter('all')} />
           <MetricCard label="This Week"     value={thisWeek.length}    icon={TrendingUp}    color="bg-green-100 text-green-700" />
-          <MetricCard label="Open Tickets"  value={openTickets.length} icon={MessageSquare} color="bg-purple-100 text-purple-700"  onClick={() => navigate('/admin/support')} />
         </div>
 
         {/* MAIN TABS */}
@@ -503,7 +496,6 @@ export default function CreativeOpsDashboard() {
                   {[
                     { label: 'Full Design Board',  path: '/admin/designs',    icon: Palette },
                     { label: 'All Payments',       path: '/admin/payments',   icon: FileText },
-                    { label: 'Support Tickets',    path: '/admin/support',    icon: MessageSquare },
                     { label: 'Team & Users',       path: '/admin/users',      icon: Users },
                     { label: 'Reports',            path: '/admin/reports',    icon: BarChart3 },
                   ].map(({ label, path, icon: Icon }) => (
