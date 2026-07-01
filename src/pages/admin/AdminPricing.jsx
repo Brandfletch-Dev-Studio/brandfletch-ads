@@ -43,7 +43,6 @@ function buildDefaults() {
 
 export default function AdminPricing() {
   const [confirmRow, setConfirmRow] = useState(null);
-  const [confirmRow, setConfirmRow] = useState(null);
   useRoleGuard(['admin']);
   const [pricing, setPricing] = useState([]);
   const [saving, setSaving] = useState(false);
