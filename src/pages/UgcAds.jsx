@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { base44, supabase } from '@/api/base44Client';
+import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,8 +15,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import {
   Video, ArrowRight, ArrowLeft, CheckCircle2, Upload, Copy,
-  ExternalLink, Loader2, Clock, FileText, Star, Package,
-  Play, Users, Target, Megaphone, ChevronRight, RefreshCw,
+  ExternalLink, Loader2,
+  Play, ChevronRight,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { } from '@/lib/pricing';
