@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Check, ArrowRight, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -368,7 +368,12 @@ export default function PricingPage() {
 
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [activeTab,  setActiveTab]  = useState('meta-ads');
+  const [searchParams] = useSearchParams();
+  const VALID_TABS = TABS.map(t => t.key);
+  const requestedTab = searchParams.get('tab');
+  const [activeTab,  setActiveTab]  = useState(
+    VALID_TABS.includes(requestedTab) ? requestedTab : 'meta-ads'
+  );
   const [country,    setCountry]    = useState('Malawi');
   const [dbRows,     setDbRows]     = useState([]);
   const [mwkRate,    setMwkRate]    = useState(DEFAULT_RATE);
