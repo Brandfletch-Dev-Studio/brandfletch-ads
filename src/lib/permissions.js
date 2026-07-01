@@ -174,7 +174,12 @@ ROLE_PERMISSIONS.admin = ROLE_PERMISSIONS.super_admin;
 
 export function hasPermission(role, permission) {
   if (!role) return false;
-  const perms = ROLE_PERMISSIONS[role];
+  // 'admin' is a legacy alias for 'super_admin' — every other place in the
+  // app (labels, colors, isSuperAdmin, invite form copy) already treats them
+  // as identical, but ROLE_PERMISSIONS only ever defined 'super_admin'. That
+  // gap meant any user with role 'admin' had ZERO working permissions.
+  const effectiveRole = role === 'admin' ? 'super_admin' : role;
+  const perms = ROLE_PERMISSIONS[effectiveRole];
   if (!perms) return false;
   return perms.includes(permission);
 }
