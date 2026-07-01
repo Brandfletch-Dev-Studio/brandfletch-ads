@@ -8,8 +8,9 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Palette, Search, ArrowLeft } from 'lucide-react';
+import { Palette, Search, ArrowLeft, Wallet, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import ConfirmDialog from '@/components/ConfirmDialog';
 
 const STATUS_OPTIONS = [
   { value: 'draft', label: 'Draft' },
@@ -42,11 +43,68 @@ export default function AdminDesigns() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedRequest, setSelectedRequest] = useState(null);
+  const [confirmAction, setConfirmAction] = useState(null); // { subscription, action: 'approve'|'reject' }
   const queryClient = useQueryClient();
 
   const { data: designRequests, isLoading } = useQuery({
     queryKey: ['adminDesignRequests'],
     queryFn: () => base44.entities.DesignRequest.list({}),
+  });
+
+  // Design retainer subscriptions awaiting manual payment verification —
+  // clients outside Malawi pay via bank transfer/mobile money and submit
+  // proof through /designs/payment, which sets status to 'awaiting_payment'.
+  // Nothing surfaced these for review before, so they had no way to ever
+  // become active.
+  const { data: pendingSubs = [] } = useQuery({
+    queryKey: ['pendingDesignSubscriptions'],
+    queryFn: async () => {
+      const subs = await base44.entities.PlatformSubscription.filter({
+        subscription_type: 'design_retainer', status: 'awaiting_payment',
+      });
+      const withUsers = await Promise.all((subs || []).map(async (s) => {
+        try {
+          const u = await base44.entities.User.get(s.user_id);
+          return { ...s, user_name: u?.full_name || u?.email || s.user_id };
+        } catch {
+          return { ...s, user_name: s.user_id };
+        }
+      }));
+      return withUsers;
+    },
+  });
+
+  const verifySubscriptionMutation = useMutation({
+    mutationFn: async ({ subscription, approve }) => {
+      if (approve) {
+        const startDate = new Date();
+        const resetDate = new Date(startDate);
+        resetDate.setMonth(resetDate.getMonth() + 1);
+        await base44.entities.PlatformSubscription.update(subscription.id, {
+          status: 'active',
+          start_date: startDate.toISOString().split('T')[0],
+          quota_used: 0,
+          quota_reset_date: resetDate.toISOString().split('T')[0],
+        });
+        await base44.entities.Notification.create({
+          recipient_id: subscription.user_id, title: 'Design Subscription Activated',
+          message: 'Your payment was verified and your design subscription is now active!',
+          type: 'payment_confirmed', is_read: false,
+        });
+      } else {
+        await base44.entities.PlatformSubscription.update(subscription.id, { status: 'cancelled' });
+        await base44.entities.Notification.create({
+          recipient_id: subscription.user_id, title: 'Design Subscription Payment Rejected',
+          message: 'We could not verify your payment. Please contact support or try again.',
+          type: 'payment_confirmed', is_read: false,
+        });
+      }
+    },
+    onSuccess: (_, { approve }) => {
+      queryClient.invalidateQueries({ queryKey: ['pendingDesignSubscriptions'] });
+      toast.success(approve ? 'Subscription activated' : 'Subscription payment rejected');
+    },
+    onError: (err) => toast.error(err?.message || 'Failed to update subscription'),
   });
 
   // Include creative_ops_director — they can also take design work
