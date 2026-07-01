@@ -96,7 +96,7 @@ export default function AdminDesigns() {
         await base44.entities.Notification.create({
           recipient_id: subscription.user_id, title: 'Design Subscription Payment Rejected',
           message: 'We could not verify your payment. Please contact support or try again.',
-          type: 'payment_confirmed', is_read: false,
+          type: 'payment_rejected', is_read: false,
         });
       }
     },
