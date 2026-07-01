@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/AuthContext';
 import { base44 } from '@/api/base44Client';
-import { Plus, Trash2, Save, DollarSign, CreditCard, Pencil, X, Check, ShieldAlert, Palette } from 'lucide-react';
+import { Plus, Trash2, Save, DollarSign, CreditCard, Pencil, X, Check, ShieldAlert, Palette, Mail, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -36,7 +36,6 @@ export default function AdminSettings() {
   const [savingEmail, setSavingEmail] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
-  const [loading, setLoading] = useState(true);
 
   const { user: authUser } = useAuth();
 
@@ -428,6 +427,32 @@ export default function AdminSettings() {
 
       {/* Email Templates */}
       <EmailTemplatesTab />
+
+      {/* Admin Notification Email */}
+      <Card className="shadow-sm">
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Mail className="w-4 h-4" /> Admin Notification Email
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            Where system notifications (new campaigns, payments, etc.) get emailed.
+          </p>
+          <div className="flex items-center gap-2">
+            <Input
+              type="email"
+              value={adminEmail}
+              onChange={e => setAdminEmail(e.target.value)}
+              placeholder="admin@brandfletch.com"
+              className="h-9"
+            />
+            <Button onClick={saveAdminEmail} disabled={savingEmail || !adminEmail}>
+              {savingEmail ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Danger Zone — last section */}
       <Card className="shadow-sm border-destructive/30">
