@@ -224,6 +224,14 @@ export default function AdminNotifications() {
           ))}
         </div>
       )}
+
+      <ConfirmDialog
+        open={!!confirmId}
+        onOpenChange={(open) => { if (!open) setConfirmId(null); }}
+        title="Delete notification"
+        description="Are you sure you want to delete this notification? This cannot be undone."
+        onConfirm={() => { deleteNotif(confirmId); setConfirmId(null); }}
+      />
     </div>
   );
 }
