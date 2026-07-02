@@ -103,13 +103,14 @@ Sitemap: ${SITE_URL}/sitemap.xml
 
   // ── sitemap.xml — always served; dynamically includes published blog posts ─
   if (pathname === '/sitemap.xml') {
-    const staticUrls = Object.keys(STATIC_META).map(p => ({
+    type SitemapUrl = { loc: string; lastmod?: string; changefreq: string; priority: string };
+    const staticUrls: SitemapUrl[] = Object.keys(STATIC_META).map(p => ({
       loc: `${SITE_URL}${p}`,
       changefreq: p === '/' ? 'daily' : 'weekly',
       priority: p === '/' ? '1.0' : '0.7',
     }));
 
-    let blogUrls: { loc: string; lastmod?: string; changefreq: string; priority: string }[] = [];
+    let blogUrls: SitemapUrl[] = [];
     if (SUPABASE_URL) {
       try {
         const res = await fetch(
