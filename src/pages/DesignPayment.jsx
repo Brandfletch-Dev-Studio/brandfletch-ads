@@ -52,11 +52,13 @@ export default function DesignPayment() {
           const isMW = subCurrency === 'MWK' || userCountry.toLowerCase() === 'malawi' || userCountry.toUpperCase() === 'MW';
           setIsMalawi(isMW);
       
-          if (!isMW && userCountry) {
+          // Always offer manual payment methods too (bank transfer / mobile
+          // money proof-of-payment) alongside Paychangu for Malawi clients —
+          // some people prefer not to use the online checkout.
+          if (userCountry) {
             const methods = await base44.entities.PaymentMethod.filter({ is_active: true, country: userCountry }, { sort: 'sort_order' });
-            setPaymentMethods(methods);
-          } else if (!isMW) {
-            // Try fetching generic payment methods
+            setPaymentMethods(methods.length ? methods : await base44.entities.PaymentMethod.filter({ is_active: true }, { sort: 'sort_order' }));
+          } else {
             const methods = await base44.entities.PaymentMethod.filter({ is_active: true }, { sort: 'sort_order' });
             setPaymentMethods(methods);
           }
@@ -201,13 +203,13 @@ export default function DesignPayment() {
         </CardContent>
       </Card>
 
-      {/* Malawi: Paychangu checkout */}
-      {isMalawi ? (
+      {/* Malawi: Paychangu checkout — offered alongside manual payment below */}
+      {isMalawi && (
         <Card className="border-2 border-blue-400 bg-blue-50">
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
               <ExternalLink className="w-5 h-5 text-blue-600" />
-              Secure Online Payment
+              Option 1 — Pay Online Instantly
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -227,15 +229,24 @@ export default function DesignPayment() {
             </Button>
           </CardContent>
         </Card>
-      ) : (
-        /* Other countries: manual payment methods */
-        <>
+      )}
+
+      {/* Manual payment methods — available to everyone, including Malawi
+          clients who'd rather send proof of a bank/mobile-money transfer */}
+      <>
+          {isMalawi && (
+            <div className="flex items-center gap-3 py-1">
+              <div className="flex-1 h-px bg-border" />
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Option 2 — Pay Manually</span>
+              <div className="flex-1 h-px bg-border" />
+            </div>
+          )}
           <div>
             <Label className="text-sm font-semibold mb-3 block">Select Payment Method</Label>
             {paymentMethods.length === 0 ? (
               <div className="p-4 border border-dashed rounded-xl text-center text-sm text-muted-foreground">
-                No payment methods configured.<br />
-                <a href="mailto:support@brandfletch.com" className="text-[hsl(var(--accent))] hover:underline">Contact us</a> for payment instructions.
+                No manual payment methods configured for your country.<br />
+                {isMalawi ? 'Use Paychangu above, or ' : ''}<a href="mailto:support@brandfletch.com" className="text-[hsl(var(--accent))] hover:underline">contact us</a> for payment instructions.
               </div>
             ) : (
               <div className="space-y-2">
@@ -315,7 +326,6 @@ export default function DesignPayment() {
             </>
           )}
         </>
-      )}
     </div>
   );
 }

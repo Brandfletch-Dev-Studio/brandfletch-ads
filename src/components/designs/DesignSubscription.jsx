@@ -4,7 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Palette, ExternalLink, Loader2, ArrowRight } from 'lucide-react';
+import { Palette, Loader2, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
 
 /**
@@ -27,11 +27,6 @@ export default function DesignSubscription({ onSubscribe }) {
     queryFn: () => base44.entities.DesignServiceRate.filter({ is_active: true }, { sort: 'sort_order' }),
   });
 
-  const isMalawi = (() => {
-    const c = (user?.country || '').toLowerCase();
-    return c === 'malawi' || c === 'mw';
-  })();
-
   const createOrderMutation = useMutation({
     mutationFn: async (rate) => {
       const order = await base44.entities.PlatformSubscription.create({
@@ -50,44 +45,17 @@ export default function DesignSubscription({ onSubscribe }) {
       return order;
     },
     onSuccess: async (order) => {
-      if (isMalawi) {
-        await handlePaychanguRedirect(order);
-      } else {
-        queryClient.invalidateQueries({ queryKey: ['myDesignOrders'] });
-        navigate(`/designs/payment?order_id=${order.id}`);
-      }
+      // Always land on the unified checkout page — it offers Paychangu
+      // (Airtel Money/TNM Mpamba/card) AND manual bank/mobile-money proof
+      // side by side, so Malawi clients aren't forced into one method.
+      queryClient.invalidateQueries({ queryKey: ['myDesignOrders'] });
+      navigate(`/designs/payment?order_id=${order.id}`);
     },
     onError: (err) => {
       toast.error(err?.message || 'Failed to start your order. Please try again.');
       setOrderingId(null);
     },
   });
-
-  async function handlePaychanguRedirect(order) {
-    const txRef = `BF-DESIGN-${order.id}-${Date.now()}`;
-    const appUrl = window.location.origin;
-
-    try {
-      const res = await base44.functions.invoke('paychanguCheckout', {
-        amount: order.amount,
-        currency: order.currency || 'MWK',
-        tx_ref: txRef,
-        description: `Design Order - ${order.service_name}`,
-        callback_url: `${appUrl}/designs?paychangu_tx=${txRef}&payment_type=design&sub_id=${order.id}`,
-        return_url: `${appUrl}/designs`,
-      });
-
-      if (res.data?.checkout_url) {
-        window.location.href = res.data.checkout_url;
-      } else {
-        toast.error(res.data?.error || 'Failed to initiate payment');
-        setOrderingId(null);
-      }
-    } catch (err) {
-      toast.error(err?.message || 'Something went wrong. Please try again.');
-      setOrderingId(null);
-    }
-  }
 
   function handleOrder(rate) {
     setOrderingId(rate.id);
@@ -129,8 +97,6 @@ export default function DesignSubscription({ onSubscribe }) {
                 >
                   {createOrderMutation.isPending && orderingId === rate.id ? (
                     <><Loader2 className="w-4 h-4 animate-spin" /> Starting order...</>
-                  ) : isMalawi ? (
-                    <>Order & Pay <ExternalLink className="w-4 h-4" /></>
                   ) : (
                     <>Order This Design <ArrowRight className="w-4 h-4" /></>
                   )}

@@ -51,18 +51,20 @@ export default function AdminDesigns() {
     queryFn: () => base44.entities.DesignRequest.list({}),
   });
 
-  // Design retainer subscriptions awaiting manual payment verification —
-  // clients outside Malawi pay via bank transfer/mobile money and submit
-  // proof through /designs/payment, which sets status to 'awaiting_payment'.
-  // Nothing surfaced these for review before, so they had no way to ever
-  // become active.
+  // Design orders awaiting manual payment verification — clients (including
+  // Malawi ones who chose not to use Paychangu) pay via bank transfer/mobile
+  // money and submit proof through /designs/payment, which sets status to
+  // 'awaiting_payment'. Covers both the current per-service 'design_order'
+  // type and any leftover legacy 'design_retainer' rows.
   const { data: pendingSubs = [] } = useQuery({
     queryKey: ['pendingDesignSubscriptions'],
     queryFn: async () => {
-      const subs = await base44.entities.PlatformSubscription.filter({
-        subscription_type: 'design_retainer', status: 'awaiting_payment',
-      });
-      const withUsers = await Promise.all((subs || []).map(async (s) => {
+      const [orders, legacyRetainers] = await Promise.all([
+        base44.entities.PlatformSubscription.filter({ subscription_type: 'design_order', status: 'awaiting_payment' }),
+        base44.entities.PlatformSubscription.filter({ subscription_type: 'design_retainer', status: 'awaiting_payment' }),
+      ]);
+      const subs = [...(orders || []), ...(legacyRetainers || [])];
+      const withUsers = await Promise.all(subs.map(async (s) => {
         try {
           const u = await base44.entities.User.get(s.user_id);
           return { ...s, user_name: u?.full_name || u?.email || s.user_id };
@@ -77,24 +79,21 @@ export default function AdminDesigns() {
   const verifySubscriptionMutation = useMutation({
     mutationFn: async ({ subscription, approve }) => {
       if (approve) {
-        const startDate = new Date();
-        const resetDate = new Date(startDate);
-        resetDate.setMonth(resetDate.getMonth() + 1);
         await base44.entities.PlatformSubscription.update(subscription.id, {
           status: 'active',
-          start_date: startDate.toISOString().split('T')[0],
-          quota_used: 0,
-          quota_reset_date: resetDate.toISOString().split('T')[0],
+          start_date: new Date().toISOString().split('T')[0],
         });
         await base44.entities.Notification.create({
-          recipient_id: subscription.user_id, title: 'Design Subscription Activated',
-          message: 'Your payment was verified and your design subscription is now active!',
+          recipient_id: subscription.user_id, title: 'Design Order Payment Confirmed',
+          message: subscription.service_name
+            ? `Your payment for "${subscription.service_name}" was verified — you can now submit your design brief!`
+            : 'Your payment was verified and your design order is now active!',
           type: 'payment_confirmed', is_read: false,
         });
       } else {
         await base44.entities.PlatformSubscription.update(subscription.id, { status: 'cancelled' });
         await base44.entities.Notification.create({
-          recipient_id: subscription.user_id, title: 'Design Subscription Payment Rejected',
+          recipient_id: subscription.user_id, title: 'Design Order Payment Rejected',
           message: 'We could not verify your payment. Please contact support or try again.',
           type: 'payment_rejected', is_read: false,
         });
@@ -102,9 +101,9 @@ export default function AdminDesigns() {
     },
     onSuccess: (_, { approve }) => {
       queryClient.invalidateQueries({ queryKey: ['pendingDesignSubscriptions'] });
-      toast.success(approve ? 'Subscription activated' : 'Subscription payment rejected');
+      toast.success(approve ? 'Order activated' : 'Order payment rejected');
     },
-    onError: (err) => toast.error(err?.message || 'Failed to update subscription'),
+    onError: (err) => toast.error(err?.message || 'Failed to update order'),
   });
 
   // Include creative_ops_director — they can also take design work
@@ -182,15 +181,15 @@ export default function AdminDesigns() {
         <Card className="border-amber-300 bg-amber-50">
           <CardHeader className="pb-2">
             <CardTitle className="text-base flex items-center gap-2">
-              <Wallet className="w-4 h-4 text-amber-700" /> Pending Subscription Payments ({pendingSubs.length})
+              <Wallet className="w-4 h-4 text-amber-700" /> Pending Design Order Payments ({pendingSubs.length})
             </CardTitle>
-            <p className="text-xs text-muted-foreground">Clients paying by bank transfer/mobile money — verify and activate their retainer.</p>
+            <p className="text-xs text-muted-foreground">Clients paying by bank transfer/mobile money — verify and activate their order.</p>
           </CardHeader>
           <CardContent className="space-y-3">
             {pendingSubs.map((sub) => (
               <div key={sub.id} className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-lg bg-background border">
                 <div>
-                  <p className="text-sm font-semibold">{sub.user_name}</p>
+                  <p className="text-sm font-semibold">{sub.user_name}{sub.service_name ? ` — ${sub.service_name}` : ''}</p>
                   <p className="text-xs text-muted-foreground">
                     {sub.currency} {(sub.amount || 0).toLocaleString()} • via {sub.payment_method || 'unknown method'}
                   </p>

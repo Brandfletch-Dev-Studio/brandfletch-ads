@@ -112,7 +112,13 @@ export default function DesignRequestWizard({ subscription, order, onSuccess, on
     createMutation.mutate(formData);
   };
 
+  // Rate-card orders use their own design_type values (e.g. 'video_ad_creative')
+  // that don't exist in the legacy DESIGN_TYPES list — fall back to the
+  // order's own service_name, then to a readable version of the raw value.
   const selectedType = DESIGN_TYPES.find(t => t.value === formData.design_type);
+  const designTypeLabel = selectedType?.label
+    || order?.service_name
+    || (formData.design_type ? formData.design_type.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) : '');
 
   return (
     <div className="space-y-6">
@@ -275,7 +281,7 @@ export default function DesignRequestWizard({ subscription, order, onSuccess, on
             <CardHeader><CardTitle>Review Your Request</CardTitle></CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4 text-sm">
-                <div><p className="text-muted-foreground">Design Type</p><p className="font-semibold">{selectedType?.label}</p></div>
+                <div><p className="text-muted-foreground">Design Type</p><p className="font-semibold">{designTypeLabel}</p></div>
                 <div><p className="text-muted-foreground">Priority</p><p className="font-semibold capitalize">{formData.priority}</p></div>
                 <div className="col-span-2"><p className="text-muted-foreground">Title</p><p className="font-semibold">{formData.title}</p></div>
                 <div className="col-span-2"><p className="text-muted-foreground">Description</p><p>{formData.description}</p></div>

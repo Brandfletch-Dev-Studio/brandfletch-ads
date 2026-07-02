@@ -6,13 +6,12 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Palette, Plus, ArrowLeft, Lock, MessageSquare, Loader2, Download, RotateCcw, CheckCircle2, X } from 'lucide-react';
+import { Palette, Plus, ArrowLeft, ShoppingBag, MessageSquare, Loader2, Download, RotateCcw, CheckCircle2, X } from 'lucide-react';
 import { toast } from 'sonner';
 import DesignSubscription from '@/components/designs/DesignSubscription';
 import DesignChatComponent from '@/components/designs/DesignChatComponent';
 import DesignRequestWizard from '@/components/designs/DesignRequestWizard';
 import DesignStatusTimeline from '@/components/designs/DesignStatusTimeline';
-import QuotaBar from '@/components/designs/QuotaBar';
 
 const DESIGN_TYPE_LABELS = {
   social_media_post: 'Social Media Post', flyer: 'Flyer', poster: 'Poster', banner: 'Banner',
@@ -37,6 +36,7 @@ const STATUS_COLORS = {
 export default function Designs() {
   const [view, setView] = useState('list'); // list | wizard | subscription | detail
   const [selectedRequest, setSelectedRequest] = useState(null);
+  const [selectedOrder, setSelectedOrder] = useState(null); // paid design_order being fulfilled in the wizard
   const [verifying, setVerifying] = useState(false);
   const queryClient = useQueryClient();
 
@@ -50,8 +50,8 @@ export default function Designs() {
       base44.functions.invoke('verifyPaychanguPayment', { tx_ref: txRef, subscription_id: subId, payment_type: 'design' })
         .then(res => {
           if (res.data?.verified) {
-            toast.success('Payment verified! Your design subscription is now active.');
-            queryClient.invalidateQueries({ queryKey: ['userSubscription'] });
+            toast.success('Payment verified! You can now submit your design brief.');
+            queryClient.invalidateQueries({ queryKey: ['myDesignOrders'] });
           } else {
             toast.error('Payment could not be verified. Please contact support.');
           }
@@ -70,13 +70,16 @@ export default function Designs() {
     initialData: [],
   });
 
-  const { data: subscription } = useQuery({
-    queryKey: ['userSubscription'],
-    queryFn: () => base44.entities.PlatformSubscription.filter({ user_id: user?.id, subscription_type: 'design_retainer', status: 'active' }).then(r => r[0]),
+  // Paid-but-not-yet-submitted orders — a client bought a specific design
+  // service from the catalog and paid, but hasn't filled in the brief yet.
+  const { data: unusedOrders = [] } = useQuery({
+    queryKey: ['myDesignOrders'],
+    queryFn: () => base44.entities.PlatformSubscription.filter({
+      user_id: user?.id, subscription_type: 'design_order', status: 'active', quota_used: 0,
+    }),
     enabled: !!user,
   });
 
-  const hasActiveSubscription = !!subscription;
   const stats = {
     total: (requests || []).length,
     active: (requests || []).filter(r => ['submitted', 'under_review', 'assigned', 'in_progress', 'awaiting_feedback'].includes(r.status)).length,
@@ -84,9 +87,13 @@ export default function Designs() {
     completed: (requests || []).filter(r => ['completed', 'delivered'].includes(r.status)).length,
   };
 
-  const handleNewRequest = () => {
-    if (!hasActiveSubscription) setView('subscription');
-    else setView('wizard');
+  // Always send clients to the catalog to buy a new design — there's no
+  // recurring quota anymore, each order is paid for individually.
+  const handleNewRequest = () => setView('subscription');
+
+  const handleSubmitBrief = (order) => {
+    setSelectedOrder(order);
+    setView('wizard');
   };
 
   if (verifying) return (
@@ -105,14 +112,22 @@ export default function Designs() {
 
   if (view === 'wizard') return (
     <div className="p-[15px] space-y-6">
-      <DesignRequestWizard subscription={subscription} onSuccess={() => setView('list')} onCancel={() => setView('list')} />
+      <DesignRequestWizard
+        order={selectedOrder}
+        onSuccess={() => {
+          setView('list');
+          setSelectedOrder(null);
+          queryClient.invalidateQueries({ queryKey: ['myDesignRequests'] });
+          queryClient.invalidateQueries({ queryKey: ['myDesignOrders'] });
+        }}
+        onCancel={() => { setView('list'); setSelectedOrder(null); }}
+      />
     </div>
   );
 
   if (view === 'detail' && selectedRequest) return (
     <RequestDetail
       request={selectedRequest}
-      subscription={subscription}
       onClose={() => { setView('list'); setSelectedRequest(null); }}
       onUpdate={() => queryClient.invalidateQueries({ queryKey: ['myDesignRequests'] })}
     />
@@ -124,27 +139,37 @@ export default function Designs() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold font-heading" style={{ paddingLeft: '20px' }}>Design Studio</h1>
-          <p className="text-muted-foreground" style={{ paddingLeft: '20px' }}>Professional design services</p>
+          <p className="text-muted-foreground" style={{ paddingLeft: '20px' }}>Pay per design — pick a service, no monthly commitment</p>
         </div>
-        <Button onClick={handleNewRequest} disabled={hasActiveSubscription && (subscription?.monthly_quota || 0) <= (subscription?.quota_used || 0)}>
+        <Button onClick={handleNewRequest}>
           <Plus className="w-4 h-4 mr-2" />
           New Request
         </Button>
       </div>
 
-      {/* Subscription / Quota */}
-      {hasActiveSubscription ? (
-        <QuotaBar subscription={subscription} />
-      ) : (
-        <Card className="border-amber-200 bg-amber-50">
-          <CardContent className="p-6 flex items-start gap-4">
-            <div className="w-12 h-12 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0">
-              <Lock className="w-6 h-6 text-amber-700" />
+      {/* Paid orders awaiting a brief */}
+      {unusedOrders.length > 0 && (
+        <Card className="border-blue-200 bg-blue-50">
+          <CardContent className="p-6">
+            <div className="flex items-start gap-4 mb-3">
+              <div className="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
+                <ShoppingBag className="w-6 h-6 text-blue-700" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-lg text-blue-900">Ready to Submit</h3>
+                <p className="text-sm text-blue-800">You've paid for these designs — tell us what you need and we'll get started.</p>
+              </div>
             </div>
-            <div className="flex-1">
-              <h3 className="font-semibold text-lg text-amber-900 mb-1">Subscribe to Order Designs</h3>
-              <p className="text-sm text-amber-800 mb-3">Get a monthly retainer plan with a set quota of professional design requests.</p>
-              <Button onClick={handleNewRequest}>View Plans</Button>
+            <div className="space-y-2">
+              {unusedOrders.map(order => (
+                <div key={order.id} className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-lg bg-background border">
+                  <div>
+                    <p className="text-sm font-semibold">{order.service_name}</p>
+                    <p className="text-xs text-muted-foreground">{order.currency} {(order.amount || 0).toLocaleString()} • paid</p>
+                  </div>
+                  <Button size="sm" onClick={() => handleSubmitBrief(order)}>Submit Brief</Button>
+                </div>
+              ))}
             </div>
           </CardContent>
         </Card>
