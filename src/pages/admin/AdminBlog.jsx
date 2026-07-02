@@ -648,16 +648,66 @@ export default function AdminBlog() {
               </div>
 
               <div>
-                <Label>Cover Image URL <span className="text-xs text-muted-foreground font-normal">(optional)</span></Label>
-                <Input value={editing.cover_image || ''} onChange={e => setEditing(p => ({...p, cover_image: e.target.value}))} placeholder="https://..." className="mt-1" />
-                {editing.cover_image && (
-                  <img src={editing.cover_image} alt="Cover preview" className="mt-2 rounded-lg h-28 object-cover w-full" />
-                )}
+                <Label>Cover / Thumbnail Image <span className="text-xs text-muted-foreground font-normal">(used on blog cards, post header, and social share previews)</span></Label>
+                <div className="mt-1 flex gap-3 items-start">
+                  <label className={`shrink-0 w-28 h-20 rounded-lg border-2 border-dashed border-border hover:border-primary/50 flex items-center justify-center cursor-pointer overflow-hidden bg-muted/30 transition-colors ${uploadingCover ? 'opacity-60 pointer-events-none' : ''}`}>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={e => e.target.files?.[0] && uploadCoverImage(e.target.files[0])}
+                    />
+                    {uploadingCover ? (
+                      <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                    ) : editing.cover_image ? (
+                      <img src={editing.cover_image} alt="Cover preview" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="flex flex-col items-center gap-1 text-muted-foreground">
+                        <Upload className="w-4 h-4" />
+                        <span className="text-[10px]">Upload</span>
+                      </div>
+                    )}
+                  </label>
+                  <div className="flex-1 space-y-1.5">
+                    <Input
+                      value={editing.cover_image || ''}
+                      onChange={e => setEditing(p => ({...p, cover_image: e.target.value}))}
+                      placeholder="Or paste an image URL…"
+                      className="text-xs font-mono"
+                    />
+                    <p className="text-[11px] text-muted-foreground">Recommended: 1200×630px landscape image, under 10MB.</p>
+                  </div>
+                </div>
               </div>
 
-              <div>
-                <Label>Author</Label>
-                <Input value={editing.author_name || ''} onChange={e => setEditing(p => ({...p, author_name: e.target.value}))} className="mt-1" />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Author</Label>
+                  <Input value={editing.author_name || ''} onChange={e => setEditing(p => ({...p, author_name: e.target.value}))} className="mt-1" />
+                </div>
+                <div>
+                  <Label>Tags <span className="text-xs text-muted-foreground font-normal">(optional)</span></Label>
+                  <div className="mt-1 flex gap-1.5">
+                    <Input
+                      value={tagInput}
+                      onChange={e => setTagInput(e.target.value)}
+                      onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addTag(); } }}
+                      placeholder="e.g. facebook-ads"
+                      className="text-sm"
+                    />
+                    <Button type="button" variant="outline" size="icon" onClick={addTag} className="shrink-0"><Hash className="w-4 h-4" /></Button>
+                  </div>
+                  {(editing.tags || []).length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mt-2">
+                      {(editing.tags || []).map(t => (
+                        <Badge key={t} variant="secondary" className="gap-1 text-xs">
+                          {t}
+                          <button type="button" onClick={() => removeTag(t)} className="hover:text-destructive"><XIcon className="w-3 h-3" /></button>
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div>
@@ -668,6 +718,56 @@ export default function AdminBlog() {
                     onChange={v => setEditing(p => ({...p, content: v, content_html: v}))}
                     placeholder="Write your blog post here…"
                   />
+                </div>
+              </div>
+
+              {/* ── SEO section ── */}
+              <div className="border border-border rounded-lg p-4 space-y-3 bg-muted/20">
+                <div className="flex items-center gap-2">
+                  <SearchIcon className="w-4 h-4 text-muted-foreground" />
+                  <h4 className="text-sm font-semibold">Search & Social Preview (SEO)</h4>
+                </div>
+                <p className="text-xs text-muted-foreground -mt-2">Leave blank to auto-use the title and excerpt above.</p>
+
+                <div>
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs">Meta Title</Label>
+                    <span className={`text-[10px] ${(editing.meta_title || '').length > 60 ? 'text-destructive' : 'text-muted-foreground'}`}>
+                      {(editing.meta_title || '').length}/60
+                    </span>
+                  </div>
+                  <Input
+                    value={editing.meta_title || ''}
+                    onChange={e => setEditing(p => ({...p, meta_title: e.target.value}))}
+                    placeholder={editing.title || 'Post title'}
+                    className="mt-1 text-sm"
+                  />
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs">Meta Description</Label>
+                    <span className={`text-[10px] ${(editing.meta_description || '').length > 160 ? 'text-destructive' : 'text-muted-foreground'}`}>
+                      {(editing.meta_description || '').length}/160
+                    </span>
+                  </div>
+                  <Textarea
+                    value={editing.meta_description || ''}
+                    onChange={e => setEditing(p => ({...p, meta_description: e.target.value}))}
+                    placeholder={editing.excerpt || 'Brief description for Google & social shares…'}
+                    rows={2}
+                    className="mt-1 text-sm"
+                  />
+                </div>
+
+                {/* Live preview */}
+                <div className="border border-border rounded-md p-3 bg-card">
+                  <p className="text-[10px] text-muted-foreground mb-1">Google preview</p>
+                  <p className="text-primary text-sm truncate">{editing.meta_title || editing.title || 'Post title'} — Brandfletch Blog</p>
+                  <p className="text-emerald-600 dark:text-emerald-400 text-xs">brandfletch.com/blog/{editing.slug || 'your-slug'}</p>
+                  <p className="text-muted-foreground text-xs line-clamp-2 mt-0.5">
+                    {editing.meta_description || editing.excerpt || 'Read this article on the Brandfletch Media blog.'}
+                  </p>
                 </div>
               </div>
             </div>
