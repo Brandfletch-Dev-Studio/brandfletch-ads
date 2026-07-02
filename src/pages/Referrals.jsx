@@ -44,6 +44,16 @@ const SERVICE_LABELS = {
   studios:      'UGC Ads',
 };
 
+// Commission Rates are grouped by department for display — Ads (Meta Ads +
+// Social Media share the "Ads" department but keep individual rates),
+// Designs, Dev Studio, Studios each map 1:1 to their single product.
+const DEPARTMENTS = [
+  { id: 'ads',        label: 'Ads',        icon: Megaphone, gradient: 'from-blue-500 to-blue-600',   services: ['meta_ads', 'social_media'] },
+  { id: 'designs',    label: 'Designs',    icon: Palette,   gradient: 'from-pink-500 to-pink-600',   services: ['designs'] },
+  { id: 'dev_studio', label: 'Dev Studio', icon: Globe,     gradient: 'from-orange-500 to-orange-600', services: ['dev_studio'] },
+  { id: 'studios',    label: 'Studios',    icon: Video,     gradient: 'from-purple-500 to-purple-600', services: ['studios'] },
+];
+
 const TABS = [
   { id: 'dashboard',   label: 'Dashboard',          icon: LayoutDashboard },
   { id: 'links',       label: 'Referral Links',      icon: Link2 },
@@ -351,27 +361,67 @@ function DashboardTab({ user, affiliateSettings, referrals = [], commissions = [
         </div>
         <div className="p-5">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {commRows.map(({ key, label, rate, sub, commType, recurring }) => {
-              const meta = SERVICE_LINK_META[key];
-              const Icon = meta?.icon || Gift;
+            {DEPARTMENTS.map((dept) => {
+              const items = dept.services.map((key) => commRows.find((r) => r.key === key)).filter(Boolean);
+              if (items.length === 0) return null;
+              const Icon = dept.icon;
+
+              // Single-product department (Designs / Dev Studio / Studios) —
+              // collapse into one clean card, same layout as before.
+              if (items.length === 1) {
+                const item = items[0];
+                return (
+                  <div key={dept.id}
+                    className="flex items-center gap-3 rounded-xl border border-border/60 bg-muted/30 px-4 py-3 hover:border-[hsl(var(--primary))]/30 transition-colors">
+                    <div className={cn('w-9 h-9 rounded-xl bg-gradient-to-br flex items-center justify-center shrink-0', dept.gradient)}>
+                      <Icon className="w-4 h-4 text-white" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold">{dept.label}</p>
+                      <p className="text-xs text-muted-foreground">{item.sub}</p>
+                      {item.recurring && <p className="text-[11px] text-blue-500 font-medium mt-0.5">{item.recurring}</p>}
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className={cn('text-base font-bold tabular-nums',
+                        item.commType === 'percentage' ? 'text-emerald-600' : 'text-[hsl(var(--primary))]'
+                      )}>{item.rate}</p>
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                        {item.commType === 'percentage' ? 'per sale' : 'fixed'}
+                      </p>
+                    </div>
+                  </div>
+                );
+              }
+
+              // Multi-product department (Ads = Meta Ads + Social Media) —
+              // one category header, individual rate per product underneath.
               return (
-                <div key={key}
-                  className="flex items-center gap-3 rounded-xl border border-border/60 bg-muted/30 px-4 py-3 hover:border-[hsl(var(--primary))]/30 transition-colors">
-                  <div className={cn('w-9 h-9 rounded-xl bg-gradient-to-br flex items-center justify-center shrink-0', meta?.gradient || 'from-gray-500 to-gray-600')}>
-                    <Icon className="w-4 h-4 text-white" />
+                <div key={dept.id}
+                  className="sm:col-span-2 rounded-xl border border-border/60 bg-muted/30 overflow-hidden hover:border-[hsl(var(--primary))]/30 transition-colors">
+                  <div className="flex items-center gap-3 px-4 py-3 border-b border-border/40">
+                    <div className={cn('w-9 h-9 rounded-xl bg-gradient-to-br flex items-center justify-center shrink-0', dept.gradient)}>
+                      <Icon className="w-4 h-4 text-white" />
+                    </div>
+                    <p className="text-sm font-semibold">{dept.label}</p>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold">{label}</p>
-                    <p className="text-xs text-muted-foreground">{sub}</p>
-                    {recurring && <p className="text-[11px] text-blue-500 font-medium mt-0.5">{recurring}</p>}
-                  </div>
-                  <div className="text-right shrink-0">
-                    <p className={cn('text-base font-bold tabular-nums',
-                      commType === 'percentage' ? 'text-emerald-600' : 'text-[hsl(var(--primary))]'
-                    )}>{rate}</p>
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
-                      {commType === 'percentage' ? 'per sale' : 'fixed'}
-                    </p>
+                  <div className="divide-y divide-border/40">
+                    {items.map((item) => (
+                      <div key={item.key} className="flex items-center justify-between gap-3 px-4 py-2.5 pl-[3.25rem]">
+                        <div className="min-w-0">
+                          <p className="text-xs font-medium text-foreground/90">{item.label}</p>
+                          <p className="text-[11px] text-muted-foreground">{item.sub}</p>
+                          {item.recurring && <p className="text-[11px] text-blue-500 font-medium mt-0.5">{item.recurring}</p>}
+                        </div>
+                        <div className="text-right shrink-0">
+                          <p className={cn('text-sm font-bold tabular-nums',
+                            item.commType === 'percentage' ? 'text-emerald-600' : 'text-[hsl(var(--primary))]'
+                          )}>{item.rate}</p>
+                          <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                            {item.commType === 'percentage' ? 'per sale' : 'fixed'}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               );
