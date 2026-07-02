@@ -54,8 +54,8 @@ export default function BlogPost() {
 
   // ── Dynamic SEO ──────────────────────────────────────────────────────────
   useSEO(post ? {
-    title:       `${post.title} — Brandfletch Blog`,
-    description: post.excerpt || 'Read this article on the Brandfletch Media blog.',
+    title:       post.meta_title       ? `${post.meta_title} — Brandfletch Blog` : `${post.title} — Brandfletch Blog`,
+    description: post.meta_description || post.excerpt || 'Read this article on the Brandfletch Media blog.',
     image:       post.cover_image || undefined,
     url:         `https://brandfletch.com/blog/${post.slug}`,
     type:        'article',
