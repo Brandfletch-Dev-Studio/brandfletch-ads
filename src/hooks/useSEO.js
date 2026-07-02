@@ -3,7 +3,7 @@
  * Uses document.querySelector for simplicity (no extra library needed).
  * This handles in-browser tab titles and meta; bots are handled by the Edge middleware.
  */
-export function useSEO({ title, description, image, url, type = 'website', author, publishedAt } = {}) {
+export function useSEO({ title, description, image, url, type = 'website', author, publishedAt, jsonLd } = {}) {
   const SITE = 'https://brandfletch.com';
   const DEFAULTS = {
     title:       'Brandfletch Media — Digital Advertising for African Businesses',
@@ -61,4 +61,15 @@ export function useSEO({ title, description, image, url, type = 'website', autho
   setMeta('meta[name="twitter:title"]',       t);
   setMeta('meta[name="twitter:description"]', d);
   setMeta('meta[name="twitter:image"]',       img);
+
+  // JSON-LD structured data (e.g. BlogPosting) — replaces any previous one this hook added
+  const existingLd = document.getElementById('bf-jsonld');
+  if (existingLd) existingLd.remove();
+  if (jsonLd) {
+    const script = document.createElement('script');
+    script.id = 'bf-jsonld';
+    script.type = 'application/ld+json';
+    script.textContent = JSON.stringify(jsonLd);
+    document.head.appendChild(script);
+  }
 }
