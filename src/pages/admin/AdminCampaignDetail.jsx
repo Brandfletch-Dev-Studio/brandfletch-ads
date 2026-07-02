@@ -103,13 +103,17 @@ export default function AdminCampaignDetail() {
             is_read: false,
           });
         }
-        // Email the client
+        // Email the client via the properly-templated campaignEmailAlerts function.
+        // (base44.integrations.Core.SendEmail does not exist in the Supabase shim client —
+        // calling it threw synchronously on every status change, which is why admins were
+        // seeing a generic error toast after every approve/reject/complete action even though
+        // the status update itself had already succeeded. Fire-and-forget with .catch so a
+        // failed email send can never break the admin UI flow again.)
         if (clientUser?.email) {
-          base44.integrations.Core.SendEmail({
-            to: clientUser.email,
-            from_name: 'Brandfletch Media',
-            subject: notif.title.replace(/[^\w\s\-!]/g, '').trim(),
-            body: `Hi ${clientUser.full_name || 'there'},\n\n${notif.msg}\n\nLog in to your dashboard to view your campaign details.\n\nhttps://brandfletchads.base44.app/campaigns/${id}\n\n— Brandfletch Media Team`,
+          base44.functions.invoke('campaignEmailAlerts', {
+            campaign_id: id,
+            event_type: status,
+            notes: notes || '',
           }).catch(() => {});
         }
       }
