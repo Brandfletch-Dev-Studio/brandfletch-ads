@@ -540,79 +540,95 @@ function DashboardTab({ user, affiliateSettings, referrals = [], commissions = [
           </h2>
           <p className="text-xs text-muted-foreground mt-0.5">Each link is pre-tagged with your tracking code. Tap WhatsApp to send with a prefilled message.</p>
         </div>
-        <div className="space-y-3">
-          {serviceLinks.map(({ key, label, url, waMsg, meta, commRow }) => {
-            const Icon = meta.icon;
-            const linkKey = `link-${key}`;
-            const msgKey  = `msg-${key}`;
-            const rawMsg  = decodeURIComponent(waMsg);
+        <div className="space-y-5">
+          {DEPARTMENTS.map((dept) => {
+            const deptLinks = dept.services.map((key) => serviceLinks.find((l) => l.key === key)).filter(Boolean);
+            if (deptLinks.length === 0) return null;
             return (
-              <div key={key} className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden hover:border-[hsl(var(--primary))]/30 transition-colors">
-                {/* Header */}
-                <div className="flex items-center gap-3 px-4 py-3 border-b border-border/60">
-                  <div className={cn('w-9 h-9 rounded-xl bg-gradient-to-br flex items-center justify-center shrink-0', meta.gradient)}>
-                    <Icon className="w-4 h-4 text-white" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-sm">{label}</p>
-                    <p className="text-xs text-muted-foreground">{meta.cta}</p>
-                  </div>
-                  {commRow && (
-                    <div className="shrink-0 text-right">
-                      <p className="text-sm font-bold text-emerald-600">{commRow.rate}</p>
-                      <p className="text-[10px] text-muted-foreground">your commission</p>
+              <div key={dept.id} className="space-y-3">
+                {deptLinks.length > 1 && (
+                  <div className="flex items-center gap-2 px-1">
+                    <div className={cn('w-6 h-6 rounded-lg bg-gradient-to-br flex items-center justify-center shrink-0', dept.gradient)}>
+                      <dept.icon className="w-3 h-3 text-white" />
                     </div>
-                  )}
-                </div>
+                    <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{dept.label}</p>
+                  </div>
+                )}
+                {deptLinks.map(({ key, label, url, waMsg, meta, commRow }) => {
+                  const Icon = meta.icon;
+                  const linkKey = `link-${key}`;
+                  const msgKey  = `msg-${key}`;
+                  const rawMsg  = decodeURIComponent(waMsg);
+                  return (
+                    <div key={key} className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden hover:border-[hsl(var(--primary))]/30 transition-colors">
+                      {/* Header */}
+                      <div className="flex items-center gap-3 px-4 py-3 border-b border-border/60">
+                        <div className={cn('w-9 h-9 rounded-xl bg-gradient-to-br flex items-center justify-center shrink-0', meta.gradient)}>
+                          <Icon className="w-4 h-4 text-white" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-sm">{label}</p>
+                          <p className="text-xs text-muted-foreground">{meta.cta}</p>
+                        </div>
+                        {commRow && (
+                          <div className="shrink-0 text-right">
+                            <p className="text-sm font-bold text-emerald-600">{commRow.rate}</p>
+                            <p className="text-[10px] text-muted-foreground">your commission</p>
+                          </div>
+                        )}
+                      </div>
 
-                {/* Link row */}
-                <div className="px-4 pt-3 pb-2">
-                  <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-1.5">Referral link</p>
-                  <div className="flex gap-2">
-                    <div className="flex-1 min-w-0 bg-muted rounded-lg px-3 py-1.5 font-mono text-xs text-muted-foreground truncate select-all">
-                      {url}
+                      {/* Link row */}
+                      <div className="px-4 pt-3 pb-2">
+                        <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-1.5">Referral link</p>
+                        <div className="flex gap-2">
+                          <div className="flex-1 min-w-0 bg-muted rounded-lg px-3 py-1.5 font-mono text-xs text-muted-foreground truncate select-all">
+                            {url}
+                          </div>
+                          <button
+                            onClick={() => copy(url, linkKey)}
+                            className="shrink-0 flex items-center gap-1.5 h-8 px-3 rounded-lg border border-border bg-background hover:bg-secondary text-xs font-medium transition-colors"
+                          >
+                            {copied === linkKey ? <><Check className="w-3 h-3 text-green-500" /> Copied</> : <><Copy className="w-3 h-3" /> Copy</>}
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Prefilled message preview */}
+                      <div className="px-4 pb-3">
+                        <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-1.5">Prefilled message</p>
+                        <div className="bg-muted/50 rounded-xl px-3 py-2.5 text-xs text-muted-foreground whitespace-pre-line leading-relaxed border border-border/40 max-h-24 overflow-hidden relative">
+                          {rawMsg.split('\n').slice(0, 5).join('\n')}
+                          {rawMsg.split('\n').length > 5 && (
+                            <div className="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-muted/50 to-transparent rounded-b-xl" />
+                          )}
+                        </div>
+                        <button
+                          onClick={() => copy(rawMsg, msgKey)}
+                          className="mt-1.5 flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                          {copied === msgKey ? <><Check className="w-3 h-3 text-green-500" /> Message copied</> : <><Copy className="w-3 h-3" /> Copy message</>}
+                        </button>
+                      </div>
+
+                      {/* Action buttons */}
+                      <div className="flex gap-2 px-4 pb-4">
+                        <button
+                          onClick={() => shareWA(waMsg)}
+                          className="flex-1 flex items-center justify-center gap-2 h-9 rounded-xl bg-green-500 hover:bg-green-600 text-white text-sm font-semibold transition-colors"
+                        >
+                          <MessageSquare className="w-4 h-4" /> Send on WhatsApp
+                        </button>
+                        <button
+                          onClick={() => shareNative(url, label)}
+                          className="flex items-center justify-center gap-2 h-9 px-4 rounded-xl border border-border bg-background hover:bg-secondary text-sm font-medium transition-colors"
+                        >
+                          <Share2 className="w-4 h-4" /> Share
+                        </button>
+                      </div>
                     </div>
-                    <button
-                      onClick={() => copy(url, linkKey)}
-                      className="shrink-0 flex items-center gap-1.5 h-8 px-3 rounded-lg border border-border bg-background hover:bg-secondary text-xs font-medium transition-colors"
-                    >
-                      {copied === linkKey ? <><Check className="w-3 h-3 text-green-500" /> Copied</> : <><Copy className="w-3 h-3" /> Copy</>}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Prefilled message preview */}
-                <div className="px-4 pb-3">
-                  <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-1.5">Prefilled message</p>
-                  <div className="bg-muted/50 rounded-xl px-3 py-2.5 text-xs text-muted-foreground whitespace-pre-line leading-relaxed border border-border/40 max-h-24 overflow-hidden relative">
-                    {rawMsg.split('\n').slice(0, 5).join('\n')}
-                    {rawMsg.split('\n').length > 5 && (
-                      <div className="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-muted/50 to-transparent rounded-b-xl" />
-                    )}
-                  </div>
-                  <button
-                    onClick={() => copy(rawMsg, msgKey)}
-                    className="mt-1.5 flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    {copied === msgKey ? <><Check className="w-3 h-3 text-green-500" /> Message copied</> : <><Copy className="w-3 h-3" /> Copy message</>}
-                  </button>
-                </div>
-
-                {/* Action buttons */}
-                <div className="flex gap-2 px-4 pb-4">
-                  <button
-                    onClick={() => shareWA(waMsg)}
-                    className="flex-1 flex items-center justify-center gap-2 h-9 rounded-xl bg-green-500 hover:bg-green-600 text-white text-sm font-semibold transition-colors"
-                  >
-                    <MessageSquare className="w-4 h-4" /> Send on WhatsApp
-                  </button>
-                  <button
-                    onClick={() => shareNative(url, label)}
-                    className="flex items-center justify-center gap-2 h-9 px-4 rounded-xl border border-border bg-background hover:bg-secondary text-sm font-medium transition-colors"
-                  >
-                    <Share2 className="w-4 h-4" /> Share
-                  </button>
-                </div>
+                  );
+                })}
               </div>
             );
           })}
