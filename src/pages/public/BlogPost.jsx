@@ -289,6 +289,14 @@ export default function BlogPost() {
           dangerouslySetInnerHTML={{ __html: htmlContent }}
         />
 
+        {post.tags?.length > 0 && (
+          <div className="flex flex-wrap gap-2 mt-8">
+            {post.tags.map(t => (
+              <Badge key={t} variant="outline" className="text-xs text-muted-foreground">#{t}</Badge>
+            ))}
+          </div>
+        )}
+
         <div className="mt-10 pt-8 border-t border-border flex items-center justify-between">
           <Link to="/blog">
             <Button variant="outline" size="sm">
