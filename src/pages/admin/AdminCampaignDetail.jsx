@@ -16,6 +16,7 @@ import { format } from 'date-fns';
 import { useRoleGuard } from '@/hooks/useRoleGuard';
 import { useAuth } from '@/lib/AuthContext';
 import { useAuditLog } from '@/hooks/useAuditLog';
+import { shouldNotify } from '@/lib/notificationPrefs';
 import { GOALS } from '@/lib/constants';
 
 export default function AdminCampaignDetail() {
@@ -86,17 +87,23 @@ export default function AdminCampaignDetail() {
       };
       const notif = notifMap[status];
       if (notif && campaign.user_id) {
-        await base44.entities.Notification.create({
-          recipient_id: campaign.user_id,
-          type: notif.type,
-          title: notif.title,
-          message: notif.msg,
-          campaign_id: id,
-          is_read: false,
-        });
-        // Email the client
         const clientUsers = await base44.entities.User.list({});
         const clientUser = clientUsers.find(u => u.id === campaign.user_id);
+
+        // Respect the client's "In-App Notifications" preferences (Settings)
+        // before creating the bell notification — emails still go out
+        // regardless, since that page only ever claimed to control in-app.
+        if (shouldNotify(clientUser, notif.type)) {
+          await base44.entities.Notification.create({
+            recipient_id: campaign.user_id,
+            type: notif.type,
+            title: notif.title,
+            message: notif.msg,
+            campaign_id: id,
+            is_read: false,
+          });
+        }
+        // Email the client
         if (clientUser?.email) {
           base44.integrations.Core.SendEmail({
             to: clientUser.email,
