@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/AuthContext';
 import { base44 } from '@/api/base44Client';
-import { Plus, Trash2, Save, DollarSign, CreditCard, Pencil, X, Check, ShieldAlert, Palette, Mail, Loader2, Package } from 'lucide-react';
+import { Plus, Trash2, Save, DollarSign, CreditCard, Pencil, X, Check, ShieldAlert, Mail, Loader2, Package } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';

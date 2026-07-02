@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import {
   Plus, Edit2, Trash2, Eye, EyeOff, Search, Globe, FileText,
   Loader2, AlertCircle, ExternalLink, BarChart3, TrendingUp,
-  BookOpen, Share2, ArrowUpRight, ArrowDownRight, Upload, Image as ImageIcon,
+  BookOpen, Share2, ArrowUpRight, ArrowDownRight, Upload,
   Hash, X as XIcon, Search as SearchIcon,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
