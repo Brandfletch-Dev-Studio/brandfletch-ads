@@ -62,7 +62,7 @@ const STATIC_PLANS = {
     ],
   },
   'graphic-design': {
-    title: 'Graphic Design — Retainer Packages',
+    title: 'Graphic Design — Brandfletch Designs',
     desc: 'Consistent, professional design output on a monthly retainer. One-off projects also available — contact us for a quote.',
     billing: 'monthly',
     packages: [
@@ -87,7 +87,7 @@ const STATIC_PLANS = {
     ],
   },
   'web-design': {
-    title: 'Web Design & Development — Brandfletch Designs',
+    title: 'Web Design & Development — Brandfletch Dev Studio',
     desc: 'Websites designed around business growth — not just being online. Every package is built to attract and convert visitors into customers.',
     billing: 'one-off',
     packages: [

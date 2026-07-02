@@ -98,8 +98,47 @@ Deno.serve(async (req) => {
         })
 
         await maybeCreateAffiliateCommission(
-          adminClient, (subscription as any).user_id, 'graphic_design',
+          adminClient, (subscription as any).user_id, 'designs',
           'Design Subscription', txData.amount, txData.currency,
+        )
+      }
+    }
+
+    // ── UGC Ads order (Brandfletch Studios) ──
+    // tx_ref format from UgcAds.jsx is BF-UGC-[id]-[ts], but this webhook
+    // previously only recognized DESIGN/CAMP — UGC payments fell through
+    // untouched (order stayed 'pending_payment' forever server-side even
+    // though Paychangu had actually charged the customer).
+    if (paymentType === 'UGC' && parts[2]) {
+      const orderId = parts[2]
+      const { data: order } = await adminClient
+        .from('UgcOrder').select('*').eq('id', orderId).single()
+
+      if (order && (order as any).payment_status !== 'paid') {
+        await adminClient.from('UgcOrder').update({
+          status: 'awaiting_brief',
+          payment_status: 'paid',
+          payment_method: 'Paychangu',
+          payment_reference: tx_ref,
+        }).eq('id', orderId)
+
+        await adminClient.from('WalletTransaction').insert({
+          user_id: (order as any).user_id, type: 'payment',
+          amount: txData.amount, currency: txData.currency,
+          payment_method: 'Paychangu', payment_reference: tx_ref,
+          status: 'completed', description: `UGC Ad order via Paychangu (webhook) - ${(order as any).package || ''}`,
+        })
+
+        await adminClient.from('Notification').insert({
+          recipient_id: (order as any).user_id,
+          title: 'UGC Ad Order Payment Confirmed',
+          message: 'Your payment was received — our team will begin production shortly.',
+          type: 'payment_confirmed', is_read: false,
+        })
+
+        await maybeCreateAffiliateCommission(
+          adminClient, (order as any).user_id, 'studios',
+          `UGC Ad Order - ${(order as any).package || ''}`, txData.amount, txData.currency,
         )
       }
     }

@@ -29,7 +29,7 @@ Deno.serve(async (req) => {
       })
     }
 
-    const { tx_ref, campaign_id, subscription_id, payment_type } = await req.json()
+    const { tx_ref, campaign_id, subscription_id, order_id, payment_type } = await req.json()
     const secretKey = Deno.env.get('PAYCHANGU_SECRET_KEY')
     if (!secretKey) {
       return new Response(JSON.stringify({ error: 'Paychangu not configured' }), {
@@ -81,6 +81,49 @@ Deno.serve(async (req) => {
       )
     }
 
+    // ── UGC Ads order payment (Brandfletch Studios) ──
+    // Previously unhandled entirely: the client always called this with
+    // payment_type: 'ugc' and order_id, but this function never read either
+    // field — it fell through with no matching branch and still returned
+    // { verified: true } at the bottom, so customers were told their payment
+    // succeeded while the UgcOrder record silently stayed 'pending_payment'/
+    // 'unpaid' forever (no wallet transaction, no affiliate commission).
+    if (payment_type === 'ugc' && order_id) {
+      const { data: order } = await userClient.from('UgcOrder').select('*').eq('id', order_id).single()
+
+      if (order && (order as any).payment_status !== 'paid') {
+        await userClient.from('UgcOrder').update({
+          status: 'awaiting_brief',
+          payment_status: 'paid',
+          payment_method: 'Paychangu',
+          payment_reference: tx_ref,
+        }).eq('id', order_id)
+
+        await adminClient.from('WalletTransaction').insert({
+          user_id: user.id,
+          type: 'payment',
+          amount: txData.amount,
+          currency: txData.currency,
+          payment_method: 'Paychangu',
+          payment_reference: tx_ref,
+          status: 'completed',
+          description: `UGC Ad order via Paychangu - ${(order as any)?.package || ''}`,
+        })
+
+        await adminClient.from('Notification').insert({
+          recipient_id: user.id,
+          title: 'UGC Ad Order Payment Confirmed',
+          message: 'Your payment was received — our team will begin production shortly.',
+          type: 'payment_confirmed', is_read: false,
+        })
+
+        await maybeCreateAffiliateCommission(
+          adminClient, user.id, 'studios',
+          `UGC Ad Order - ${(order as any)?.package || ''}`, txData.amount, txData.currency,
+        )
+      }
+    }
+
     // ── Design subscription payment ──
     if (payment_type === 'design' && subscription_id) {
       const startDate = new Date()
@@ -112,7 +155,7 @@ Deno.serve(async (req) => {
       })
 
       await maybeCreateAffiliateCommission(
-        adminClient, user.id, 'graphic_design', 'Design Subscription', txData.amount, txData.currency,
+        adminClient, user.id, 'designs', 'Design Subscription', txData.amount, txData.currency,
       )
     }
 
