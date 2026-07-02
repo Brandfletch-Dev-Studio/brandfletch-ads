@@ -2,7 +2,8 @@ import { useState, useEffect, useMemo } from 'react';
 import {
   Plus, Edit2, Trash2, Eye, EyeOff, Search, Globe, FileText,
   Loader2, AlertCircle, ExternalLink, BarChart3, TrendingUp,
-  BookOpen, Share2, ArrowUpRight, ArrowDownRight,
+  BookOpen, Share2, ArrowUpRight, ArrowDownRight, Upload, Image as ImageIcon,
+  Hash, X as XIcon, Search as SearchIcon,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,6 +29,7 @@ const EMPTY_POST = {
   title: '', slug: '', excerpt: '', content: '', content_html: '',
   category: '', emoji: '📣', status: 'draft',
   author_name: 'Brandfletch Team', cover_image: '',
+  meta_title: '', meta_description: '', tags: [],
 };
 
 // Strip HTML tags for content validation
