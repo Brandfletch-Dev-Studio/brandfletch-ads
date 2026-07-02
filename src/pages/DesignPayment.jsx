@@ -27,16 +27,25 @@ export default function DesignPayment() {
     try {
           const u = await base44.auth.me();
           setUser(u);
-      
-          const subscriptions = await base44.entities.PlatformSubscription.filter({
-            user_id: u?.id,
-            subscription_type: 'design_retainer',
-            status: 'pending',
-          }, { sort: '-created_date' });
-      
-          const sub = subscriptions[0] || null;
+
+          // A specific order is passed via ?order_id= when coming from the
+          // design catalog (one-off per-service purchase). Fall back to the
+          // most recent pending order of any kind for direct/back navigation.
+          const orderId = new URLSearchParams(window.location.search).get('order_id');
+          let sub = null;
+          if (orderId) {
+            sub = await base44.entities.PlatformSubscription.get(orderId).catch(() => null);
+          }
+          if (!sub) {
+            const subscriptions = await base44.entities.PlatformSubscription.filter({
+              user_id: u?.id,
+              subscription_type: 'design_order',
+              status: 'pending',
+            }, { sort: '-created_date' });
+            sub = subscriptions[0] || null;
+          }
           if (sub) setSubscription(sub);
-      
+
           // Detect Malawi by currency (MWK) or user country
           const userCountry = u.country || '';
           const subCurrency = sub?.currency || '';
@@ -67,9 +76,9 @@ export default function DesignPayment() {
             amount: subscription.amount,
             currency: subscription.currency || 'MWK',
             tx_ref: txRef,
-            description: `Design Subscription - ${subscription.subscription_type.replace('_', ' ')}`,
+            description: subscription.service_name ? `Design Order - ${subscription.service_name}` : `Design Order - ${subscription.subscription_type.replace('_', ' ')}`,
             callback_url: `${appUrl}/designs?paychangu_tx=${txRef}&payment_type=design&sub_id=${subscription.id}`,
-            return_url: `${appUrl}/designs/payment`,
+            return_url: `${appUrl}/designs/payment?order_id=${subscription.id}`,
           });
       
           setPaychanguLoading(false);
@@ -133,7 +142,7 @@ export default function DesignPayment() {
             payment_reference: reference,
             payment_proof_url: proofFile,
             status: 'pending',
-            description: `Design subscription payment`,
+            description: subscription.service_name ? `Design order - ${subscription.service_name}` : 'Design order payment',
           });
       
           toast.success("Payment submitted! We'll verify your payment shortly.");
@@ -170,7 +179,7 @@ export default function DesignPayment() {
     );
   }
 
-  if (!subscription) return <div className="p-8 text-center text-muted-foreground">No pending subscription found.</div>;
+  if (!subscription) return <div className="p-8 text-center text-muted-foreground">No pending order found.</div>;
 
   return (
     <div className="p-4 lg:p-8 max-w-xl mx-auto space-y-6">
@@ -180,7 +189,7 @@ export default function DesignPayment() {
 
       <div>
         <h1 className="text-2xl font-bold font-heading">Complete Payment</h1>
-        <p className="text-muted-foreground text-sm mt-1">Pay to activate your design subscription.</p>
+        <p className="text-muted-foreground text-sm mt-1">Pay for your design order to get started.</p>
       </div>
 
       {/* Amount card */}
@@ -188,7 +197,7 @@ export default function DesignPayment() {
         <CardContent className="p-5">
           <p className="text-sm opacity-80">Total Due</p>
           <p className="text-3xl font-bold font-heading">{formatAmount()}</p>
-          <p className="text-sm opacity-70 mt-1 capitalize">{subscription.subscription_type.replace('_', ' ')}</p>
+          <p className="text-sm opacity-70 mt-1 capitalize">{subscription.service_name || subscription.subscription_type.replace('_', ' ')}</p>
         </CardContent>
       </Card>
 

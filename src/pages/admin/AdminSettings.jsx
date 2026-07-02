@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/AuthContext';
 import { base44 } from '@/api/base44Client';
-import { Plus, Trash2, Save, DollarSign, CreditCard, Pencil, X, Check, ShieldAlert, Palette, Mail, Loader2 } from 'lucide-react';
+import { Plus, Trash2, Save, DollarSign, CreditCard, Pencil, X, Check, ShieldAlert, Palette, Mail, Loader2, Package } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { COUNTRIES } from '@/lib/constants';
 import { toast } from 'sonner';
 import EmailTemplatesTab from '@/components/settings/EmailTemplatesTab';
+import ConfirmDialog from '@/components/ConfirmDialog';
 
 const DANGER_ENTITIES = [
   { key: 'Campaign', label: 'Campaigns', entity: 'Campaign' },
@@ -26,8 +27,12 @@ const DANGER_ENTITIES = [
 export default function AdminSettings() {
   const [rates, setRates] = useState([]);
   const [methods, setMethods] = useState([]);
-  const [designPricing, setDesignPricing] = useState([]);
-  const [newDesignPricing, setNewDesignPricing] = useState({ pricing_type: 'per_design', country: '', currency: '', symbol: '', price: '', monthly_quota: null, max_revisions: 2 });
+  const [designRates, setDesignRates] = useState([]);
+  const [designRatesLoading, setDesignRatesLoading] = useState(true);
+  const [newDesignRate, setNewDesignRate] = useState({ service_name: '', design_type: '', country: 'Malawi', currency: 'MWK', symbol: 'MK', price: '', max_revisions: 2 });
+  const [editingRateId, setEditingRateId] = useState(null);
+  const [editRateData, setEditRateData] = useState({});
+  const [confirmDeleteRate, setConfirmDeleteRate] = useState(null);
   const [newRate, setNewRate] = useState({ currency_code: '', currency_name: '', country: '', rate_to_usd: '', use_fixed_pricing: false });
   const [newMethod, setNewMethod] = useState({ country: '', method_name: '', method_type: 'mobile_money', account_number: '', account_name: '', instructions: '' });
   const [editingMethod, setEditingMethod] = useState(null);
@@ -43,12 +48,12 @@ export default function AdminSettings() {
     Promise.all([
       base44.entities.ExchangeRate.list({}),
       base44.entities.PaymentMethod.list({}),
-      base44.entities.DesignPricing.list({}),
-    ]).then(([r, m, dp]) => {
+      base44.entities.DesignServiceRate.list({ sort: 'sort_order' }),
+    ]).then(([r, m, dr]) => {
       setRates(r);
       setMethods(m);
-      setDesignPricing(dp);
-    });
+      setDesignRates(dr);
+    }).finally(() => setDesignRatesLoading(false));
   }, []);
 
   useEffect(() => {
@@ -137,36 +142,69 @@ export default function AdminSettings() {
     }
   }
 
-  async function addDesignPricing() {
+  async function reloadDesignRates() {
+    const dr = await base44.entities.DesignServiceRate.list({ sort: 'sort_order' });
+    setDesignRates(dr);
+  }
+
+  async function addDesignRate() {
     try {
-      if (!newDesignPricing.country || !newDesignPricing.price) return;
-      await base44.entities.DesignPricing.create({ ...newDesignPricing, is_active: true });
-      toast.success('Design pricing added');
-      setNewDesignPricing({ pricing_type: 'per_design', country: '', currency: '', symbol: '', price: '', monthly_quota: null, max_revisions: 2 });
-      const dp = await base44.entities.DesignPricing.list({});
-      setDesignPricing(dp);
+      if (!newDesignRate.service_name.trim() || !newDesignRate.price) {
+        toast.error('Service name and price are required');
+        return;
+      }
+      const design_type = newDesignRate.design_type.trim() || newDesignRate.service_name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
+      await base44.entities.DesignServiceRate.create({
+        ...newDesignRate,
+        design_type,
+        price: parseFloat(newDesignRate.price) || 0,
+        sort_order: designRates.length,
+        is_active: true,
+      });
+      toast.success('Design service added');
+      setNewDesignRate({ service_name: '', design_type: '', country: 'Malawi', currency: 'MWK', symbol: 'MK', price: '', max_revisions: 2 });
+      await reloadDesignRates();
     } catch (err) {
       toast.error(err?.message || 'Something went wrong. Please try again.');
     }
   }
 
-  async function updateDesignPricing(id, data) {
+  async function updateDesignRate(id, data) {
     try {
-      await base44.entities.DesignPricing.update(id, data);
+      await base44.entities.DesignServiceRate.update(id, data);
       toast.success('Saved!', { duration: 1500 });
-      const dp = await base44.entities.DesignPricing.list({});
-      setDesignPricing(dp);
+      await reloadDesignRates();
     } catch (err) {
       toast.error(err?.message || 'Something went wrong. Please try again.');
     }
   }
 
-  async function deleteDesignPricing(id) {
+  function startEditRate(rate) {
+    setEditingRateId(rate.id);
+    setEditRateData({ service_name: rate.service_name, price: rate.price, max_revisions: rate.max_revisions });
+  }
+
+  async function saveEditRate(id) {
     try {
-      await base44.entities.DesignPricing.delete(id);
-      toast.success('Design pricing deleted');
-      const dp = await base44.entities.DesignPricing.list({});
-      setDesignPricing(dp);
+      await base44.entities.DesignServiceRate.update(id, {
+        service_name: editRateData.service_name,
+        price: parseFloat(editRateData.price) || 0,
+        max_revisions: parseInt(editRateData.max_revisions) || 2,
+      });
+      toast.success('Saved!', { duration: 1500 });
+      setEditingRateId(null);
+      await reloadDesignRates();
+    } catch (err) {
+      toast.error(err?.message || 'Something went wrong. Please try again.');
+    }
+  }
+
+  async function deleteDesignRate(id) {
+    try {
+      await base44.entities.DesignServiceRate.delete(id);
+      toast.success('Design service deleted');
+      setConfirmDeleteRate(null);
+      await reloadDesignRates();
     } catch (err) {
       toast.error(err?.message || 'Something went wrong. Please try again.');
     }
@@ -281,73 +319,87 @@ export default function AdminSettings() {
         </CardContent>
       </Card>
 
-      {/* Design Pricing by Country */}
+      {/* Graphic Design Rate Card — individual per-service pricing (no monthly retainer) */}
       <Card className="shadow-sm">
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
-            <Palette className="w-4 h-4" /> Design Pricing by Country
+            <Package className="w-4 h-4" /> Graphic Design Rate Card
           </CardTitle>
+          <p className="text-xs text-muted-foreground">Every service is a flat, one-off price — no monthly retainer. Clients pay per design they order.</p>
         </CardHeader>
         <CardContent className="space-y-4">
-          {Array.from(new Set(designPricing.map(p => p.country))).map(country => (
-            <div key={country}>
-              <h4 className="font-semibold text-sm text-muted-foreground mb-2 uppercase tracking-wide">{country}</h4>
-              <div className="space-y-2">
-                {designPricing.filter(p => p.country === country).map(p => (
-                  <div key={p.id} className="p-3 bg-secondary/50 rounded-xl">
-                    <div className="flex items-center justify-between">
+          {designRatesLoading ? (
+            <div className="flex items-center justify-center py-8"><Loader2 className="w-5 h-5 animate-spin text-muted-foreground" /></div>
+          ) : designRates.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-4 text-center">No design services yet — add your first one below.</p>
+          ) : (
+            <div className="space-y-2">
+              {designRates.map(rate => (
+                <div key={rate.id} className="p-3 bg-secondary/50 rounded-xl">
+                  {editingRateId === rate.id ? (
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                      <Input className="flex-1" value={editRateData.service_name} onChange={e => setEditRateData(d => ({ ...d, service_name: e.target.value }))} placeholder="Service name" />
+                      <Input className="sm:w-32" type="number" value={editRateData.price} onChange={e => setEditRateData(d => ({ ...d, price: e.target.value }))} placeholder="Price" />
+                      <Input className="sm:w-28" type="number" value={editRateData.max_revisions} onChange={e => setEditRateData(d => ({ ...d, max_revisions: e.target.value }))} placeholder="Revisions" />
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        <Button variant="ghost" size="icon" onClick={() => saveEditRate(rate.id)}><Check className="w-4 h-4 text-green-600" /></Button>
+                        <Button variant="ghost" size="icon" onClick={() => setEditingRateId(null)}><X className="w-4 h-4 text-muted-foreground" /></Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between gap-3">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <p className="font-semibold text-sm">{p.pricing_type === 'retainer' ? 'Monthly Retainer' : 'Pay Per Design'}</p>
-                          <Badge variant={p.is_active ? 'default' : 'secondary'} className="text-xs">{p.is_active ? 'Active' : 'Inactive'}</Badge>
+                          <p className="font-semibold text-sm">{rate.service_name}</p>
+                          <Badge variant={rate.is_active ? 'default' : 'secondary'} className="text-xs">{rate.is_active ? 'Active' : 'Inactive'}</Badge>
                         </div>
                         <p className="text-xs text-muted-foreground mt-1">
-                          {p.symbol}{p.price.toLocaleString()} {p.currency}
-                          {p.pricing_type === 'retainer' && p.monthly_quota && ` • ${p.monthly_quota} designs/month`}
-                          {p.max_revisions && ` • ${p.max_revisions} revisions`}
+                          {rate.symbol}{Number(rate.price).toLocaleString()} {rate.currency} • one-off • {rate.max_revisions} revisions included
                         </p>
                       </div>
                       <div className="flex items-center gap-2 flex-shrink-0">
-                        <Switch checked={p.is_active} onCheckedChange={v => updateDesignPricing(p.id, { is_active: v })} />
-                        <Button variant="ghost" size="icon" onClick={() => deleteDesignPricing(p.id)}>
+                        <Switch checked={rate.is_active} onCheckedChange={v => updateDesignRate(rate.id, { is_active: v })} />
+                        <Button variant="ghost" size="icon" onClick={() => startEditRate(rate)}>
+                          <Pencil className="w-4 h-4 text-muted-foreground" />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => setConfirmDeleteRate(rate.id)}>
                           <Trash2 className="w-4 h-4 text-destructive" />
                         </Button>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  )}
+                </div>
+              ))}
             </div>
-          ))}
+          )}
 
           <div className="p-4 border-2 border-dashed border-border rounded-xl space-y-3">
-            <h4 className="text-sm font-semibold">Add Design Pricing</h4>
+            <h4 className="text-sm font-semibold">Add Design Service</h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Select value={newDesignPricing.pricing_type} onValueChange={v => setNewDesignPricing(p => ({ ...p, pricing_type: v }))}>
-                <SelectTrigger><SelectValue placeholder="Pricing Type" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="per_design">Pay Per Design</SelectItem>
-                  <SelectItem value="retainer">Monthly Retainer</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={newDesignPricing.country} onValueChange={v => setNewDesignPricing(p => ({ ...p, country: v }))}>
+              <Input value={newDesignRate.service_name} onChange={e => setNewDesignRate(p => ({ ...p, service_name: e.target.value }))} placeholder="Service name (e.g. Logo)" />
+              <Input type="number" value={newDesignRate.price} onChange={e => setNewDesignRate(p => ({ ...p, price: e.target.value }))} placeholder="Price" />
+              <Select value={newDesignRate.country} onValueChange={v => setNewDesignRate(p => ({ ...p, country: v }))}>
                 <SelectTrigger><SelectValue placeholder="Country" /></SelectTrigger>
                 <SelectContent>{COUNTRIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
               </Select>
-              <Input value={newDesignPricing.currency} onChange={e => setNewDesignPricing(p => ({ ...p, currency: e.target.value.toUpperCase() }))} placeholder="Currency (e.g. MWK)" />
-              <Input value={newDesignPricing.symbol} onChange={e => setNewDesignPricing(p => ({ ...p, symbol: e.target.value }))} placeholder="Symbol (e.g. MK)" />
-              <Input type="number" value={newDesignPricing.price} onChange={e => setNewDesignPricing(p => ({ ...p, price: parseFloat(e.target.value) }))} placeholder="Price" />
-              {newDesignPricing.pricing_type === 'retainer' && (
-                <Input type="number" value={newDesignPricing.monthly_quota} onChange={e => setNewDesignPricing(p => ({ ...p, monthly_quota: parseInt(e.target.value) }))} placeholder="Monthly Quota" />
-              )}
-              <Input type="number" value={newDesignPricing.max_revisions} onChange={e => setNewDesignPricing(p => ({ ...p, max_revisions: parseInt(e.target.value) }))} placeholder="Max Revisions" />
+              <Input value={newDesignRate.currency} onChange={e => setNewDesignRate(p => ({ ...p, currency: e.target.value.toUpperCase() }))} placeholder="Currency (e.g. MWK)" />
+              <Input value={newDesignRate.symbol} onChange={e => setNewDesignRate(p => ({ ...p, symbol: e.target.value }))} placeholder="Symbol (e.g. MK)" />
+              <Input type="number" value={newDesignRate.max_revisions} onChange={e => setNewDesignRate(p => ({ ...p, max_revisions: parseInt(e.target.value) || 2 }))} placeholder="Max Revisions" />
             </div>
-            <Button onClick={addDesignPricing} className="gap-2 bg-[hsl(var(--primary))] text-primary-foreground">
-              <Plus className="w-4 h-4" /> Add Pricing
+            <Button onClick={addDesignRate} className="gap-2 bg-[hsl(var(--primary))] text-primary-foreground">
+              <Plus className="w-4 h-4" /> Add Service
             </Button>
           </div>
         </CardContent>
       </Card>
+
+      <ConfirmDialog
+        open={!!confirmDeleteRate}
+        onOpenChange={(v) => !v && setConfirmDeleteRate(null)}
+        title="Delete this design service?"
+        description="Clients will no longer be able to order it. This cannot be undone."
+        onConfirm={() => deleteDesignRate(confirmDeleteRate)}
+      />
 
 
       {/* Payment Methods */}

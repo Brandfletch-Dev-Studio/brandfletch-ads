@@ -84,3 +84,17 @@
     @apply font-heading;
   }
 }
+/* ── Nyasadesk chat widget: keep it above the mobile bottom nav ──────────────
+   The widget's own CSS pins the bubble/window to bottom:24px/96px, which sits
+   right behind our fixed 64px bottom nav bar (BottomNav.jsx / AppBottomNav.jsx,
+   shown below the lg breakpoint) — that hid/blocked the nav on mobile. Raise
+   both well clear of it, safe-area aware for notch devices. Desktop (lg+) has
+   no bottom nav, so the widget's default position is left untouched there. */
+@media (max-width: 1023px) {
+  #nyasa-fab {
+    bottom: calc(64px + env(safe-area-inset-bottom, 0px) + 20px) !important;
+  }
+  #nyasa-window {
+    bottom: calc(64px + env(safe-area-inset-bottom, 0px) + 92px) !important;
+  }
+}

@@ -27,11 +27,15 @@ const DESIGN_TYPES = [
 
 const STEPS = ['Design Type', 'Project Details', 'Upload Assets', 'Review & Submit'];
 
-export default function DesignRequestWizard({ subscription, onSuccess, onCancel }) {
-  const [step, setStep] = useState(0);
+export default function DesignRequestWizard({ subscription, order, onSuccess, onCancel }) {
+  // `order` (a paid, one-off DesignServiceRate purchase) takes precedence over
+  // the legacy `subscription` (monthly retainer) prop — the design type is
+  // already fixed by which service the client bought, so we skip that step.
+  const activeOrder = order || subscription;
+  const [step, setStep] = useState(order ? 1 : 0);
   const [uploading, setUploading] = useState(false);
   const [formData, setFormData] = useState({
-    design_type: '',
+    design_type: order?.design_type || '',
     title: '',
     description: '',
     target_audience: '',
@@ -52,21 +56,21 @@ export default function DesignRequestWizard({ subscription, onSuccess, onCancel 
     queryFn: () => base44.auth.me(),
   });
 
-  const quotaRemaining = (subscription?.monthly_quota || 0) - (subscription?.quota_used || 0);
+  const quotaRemaining = (activeOrder?.monthly_quota || 0) - (activeOrder?.quota_used || 0);
 
   const createMutation = useMutation({
     mutationFn: async (data) => {
       const request = await base44.entities.DesignRequest.create({
         ...data,
         user_id: user.id,
-        request_type: 'retainer',
+        request_type: order ? 'per_design' : 'retainer',
         status: 'submitted',
         revision_count: 0,
         submitted_date: new Date().toISOString(),
       });
-      // Increment quota_used on subscription
-      await base44.entities.PlatformSubscription.update(subscription.id, {
-        quota_used: (subscription.quota_used || 0) + 1,
+      // Mark this paid order as used
+      await base44.entities.PlatformSubscription.update(activeOrder.id, {
+        quota_used: (activeOrder.quota_used || 0) + 1,
       });
       return request;
     },
@@ -115,6 +119,7 @@ export default function DesignRequestWizard({ subscription, onSuccess, onCancel 
       {/* Progress Steps */}
       <div className="flex items-center gap-2">
         {STEPS.map((s, i) => (
+          order && i === 0 ? null :
           <div key={i} className="flex items-center gap-2 flex-1">
             <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${i < step ? 'bg-green-500 text-white' : i === step ? 'bg-primary text-white' : 'bg-muted text-muted-foreground'}`}>
               {i < step ? <CheckCircle2 className="w-4 h-4" /> : i + 1}
@@ -289,7 +294,7 @@ export default function DesignRequestWizard({ subscription, onSuccess, onCancel 
 
       {/* Navigation */}
       <div className="flex justify-between">
-        <Button variant="outline" onClick={step === 0 ? onCancel : () => setStep(s => s - 1)}>
+        <Button variant="outline" onClick={step === (order ? 1 : 0) ? onCancel : () => setStep(s => s - 1)}>
           {step === 0 ? 'Cancel' : '← Back'}
         </Button>
         {step < 3 ? (
