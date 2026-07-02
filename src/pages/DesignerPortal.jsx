@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { base44, supabase } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -101,7 +101,13 @@ export default function DesignerPortal() {
     if (!files.length) return;
     setUploading(true);
     try {
-      const results = await Promise.all(files.map(f => base44.integrations.Core.UploadFile({ file: f })));
+      const results = await Promise.all(files.map(async (f) => {
+        const path = `designer-uploads/${Date.now()}-${Math.random().toString(36).slice(2)}-${f.name}`;
+        const { error } = await supabase.storage.from('designs').upload(path, f, { upsert: true });
+        if (error) throw error;
+        const { data: { publicUrl } } = supabase.storage.from('designs').getPublicUrl(path);
+        return { file_url: publicUrl };
+      }));
       const urls = results.map(r => r.file_url);
       const field = type === 'draft' ? 'draft_files' : 'deliverable_files';
       const newStatus = type === 'deliverable' ? 'awaiting_feedback' : selectedRequest.status;
