@@ -104,13 +104,15 @@ function ReferralCodeEditor({ user, className = '', codeClassName = '', variant 
     if (clean === currentCode) { setEditing(false); return; }
     setSaving(true);
     try {
-      const existing = await base44.entities.User.filter({ referral_code: clean }).catch(() => []);
-      if (existing.some(u => u.id !== user.id)) {
-        toast.error('That code is already taken — try another');
-        setSaving(false);
+      // Uniqueness must be checked server-side (with elevated privileges) —
+      // regular users can only SELECT their own row under RLS, so a
+      // client-side entities.User.filter() check would never see other
+      // affiliates' codes and could silently allow duplicates.
+      const res = await base44.functions.invoke('setReferralCode', { code: clean });
+      if (!res?.success) {
+        toast.error(res?.error || 'Failed to update code');
         return;
       }
-      await base44.entities.User.update(user.id, { referral_code: clean });
       toast.success('Referral code updated!');
       setEditing(false);
       await checkAppState();
