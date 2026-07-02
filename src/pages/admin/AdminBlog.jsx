@@ -260,6 +260,8 @@ export default function AdminBlog() {
   const [saving, setSaving] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [uploadingCover, setUploadingCover] = useState(false);
+  const [tagInput, setTagInput] = useState('');
 
   useEffect(() => { fetchPosts(); }, []);
 
@@ -281,6 +283,33 @@ export default function AdminBlog() {
       setLoading(false);
     }
   };
+
+  const uploadCoverImage = async (file) => {
+    if (!file.type.startsWith('image/')) { toast.error('Please select an image file'); return; }
+    if (file.size > 10 * 1024 * 1024) { toast.error('Image must be under 10MB'); return; }
+    setUploadingCover(true);
+    try {
+      const ext = file.name.split('.').pop();
+      const path = `blog/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error: err } = await supabase.storage.from('designs').upload(path, file, { upsert: true });
+      if (err) throw err;
+      const { data: { publicUrl } } = supabase.storage.from('designs').getPublicUrl(path);
+      setEditing(p => ({ ...p, cover_image: publicUrl }));
+      toast.success('Thumbnail uploaded ✓');
+    } catch (err) {
+      toast.error('Upload failed: ' + err.message);
+    } finally {
+      setUploadingCover(false);
+    }
+  };
+
+  const addTag = () => {
+    const t = tagInput.trim().toLowerCase().replace(/[^a-z0-9\- ]/g, '');
+    if (!t) return;
+    setEditing(p => ({ ...p, tags: [...new Set([...(p.tags || []), t])] }));
+    setTagInput('');
+  };
+  const removeTag = (t) => setEditing(p => ({ ...p, tags: (p.tags || []).filter(x => x !== t) }));
 
   const openNew  = () => setEditing({ ...EMPTY_POST });
   const openEdit = (p) => setEditing({ ...p });
