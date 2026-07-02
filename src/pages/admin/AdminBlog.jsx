@@ -336,6 +336,9 @@ export default function AdminBlog() {
         status:       editing.status,
         author_name:  editing.author_name?.trim() || 'Brandfletch Team',
         cover_image:  editing.cover_image?.trim() || null,
+        meta_title:       editing.meta_title?.trim() || null,
+        meta_description: editing.meta_description?.trim() || null,
+        tags:             editing.tags?.length ? editing.tags : [],
         updated_date: now,
         published_at:
           editing.status === 'published' && !editing.published_at ? now : editing.published_at || null,
