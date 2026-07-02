@@ -49,7 +49,7 @@ export default function Designs() {
       setVerifying(true);
       base44.functions.invoke('verifyPaychanguPayment', { tx_ref: txRef, subscription_id: subId, payment_type: 'design' })
         .then(res => {
-          if (res.data?.verified) {
+          if (res?.verified) {
             toast.success('Payment verified! You can now submit your design brief.');
             queryClient.invalidateQueries({ queryKey: ['myDesignOrders'] });
           } else {

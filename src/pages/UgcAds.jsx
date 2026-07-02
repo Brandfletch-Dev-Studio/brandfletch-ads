@@ -264,7 +264,7 @@ export default function UgcAds() {
         order_id: orderId,
         payment_type: 'ugc',
       }).then(res => {
-        if (res?.data?.verified) {
+        if (res?.verified) {
           toast.success('Payment confirmed! Your order is now active.');
           queryClient.invalidateQueries({ queryKey: ['ugcOrders'] });
         } else {
@@ -340,9 +340,9 @@ export default function UgcAds() {
         callback_url: `${appUrl}/ugc-ads?paychangu_tx=${txRef}&order_id=${createdOrder.id}`,
         return_url:   `${appUrl}/ugc-ads`,
       });
-      if (res?.data?.checkout_url) {
+      if (res?.checkout_url) {
         await base44.entities.UgcOrder.update(createdOrder.id, { paychangu_tx_ref: txRef });
-        window.location.href = res.data.checkout_url;
+        window.location.href = res.checkout_url;
       } else {
         toast.error('Could not start payment — please try manual payment.');
       }

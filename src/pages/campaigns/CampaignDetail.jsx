@@ -47,7 +47,7 @@ export default function CampaignDetail() {
       setVerifying(true);
       base44.functions.invoke('verifyPaychanguPayment', { tx_ref: txRef, campaign_id: id, payment_type: 'campaign' })
         .then(res => {
-          if (res.data?.verified) {
+          if (res?.verified) {
             toast.success('Payment verified! Your campaign is under review.');
             loadCampaign();
           } else {

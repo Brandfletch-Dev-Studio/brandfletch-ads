@@ -85,10 +85,10 @@ export default function DesignPayment() {
       
           setPaychanguLoading(false);
       
-          if (res.data?.checkout_url) {
-            window.location.href = res.data.checkout_url;
+          if (res?.checkout_url) {
+            window.location.href = res.checkout_url;
           } else {
-            toast.error(res.data?.error || 'Failed to initiate payment');
+            toast.error(res?.error || 'Failed to initiate payment');
           }
     } catch (err) {
       toast.error(err?.message || "Something went wrong. Please try again.");
