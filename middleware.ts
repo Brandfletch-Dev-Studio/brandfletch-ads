@@ -88,7 +88,61 @@ export default async function middleware(req: Request): Promise<Response> {
   const url = new URL(req.url);
   const { pathname } = url;
 
-  // Only intercept bots on non-asset paths
+  // ── robots.txt — always served, regardless of caller (bot or not) ─────────
+  if (pathname === '/robots.txt') {
+    const body = `User-agent: *
+Allow: /
+
+Sitemap: ${SITE_URL}/sitemap.xml
+`;
+    return new Response(body, {
+      status: 200,
+      headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'public, max-age=86400' },
+    });
+  }
+
+  // ── sitemap.xml — always served; dynamically includes published blog posts ─
+  if (pathname === '/sitemap.xml') {
+    const staticUrls = Object.keys(STATIC_META).map(p => ({
+      loc: `${SITE_URL}${p}`,
+      changefreq: p === '/' ? 'daily' : 'weekly',
+      priority: p === '/' ? '1.0' : '0.7',
+    }));
+
+    let blogUrls: { loc: string; lastmod?: string; changefreq: string; priority: string }[] = [];
+    if (SUPABASE_URL) {
+      try {
+        const res = await fetch(
+          `${SUPABASE_URL}/rest/v1/BlogPost?status=eq.published&select=slug,updated_date&order=published_at.desc`,
+          { headers: { apikey: SUPABASE_ANON, Authorization: `Bearer ${SUPABASE_ANON}` } }
+        );
+        const rows = await res.json() as any[];
+        blogUrls = (rows || []).map(p => ({
+          loc: `${SITE_URL}/blog/${p.slug}`,
+          lastmod: p.updated_date ? new Date(p.updated_date).toISOString().slice(0, 10) : undefined,
+          changefreq: 'monthly',
+          priority: '0.6',
+        }));
+      } catch (_) { /* fall through with static URLs only */ }
+    }
+
+    const allUrls = [...staticUrls, ...blogUrls];
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${allUrls.map(u => `  <url>
+    <loc>${u.loc}</loc>
+${u.lastmod ? `    <lastmod>${u.lastmod}</lastmod>\n` : ''}    <changefreq>${u.changefreq}</changefreq>
+    <priority>${u.priority}</priority>
+  </url>`).join('\n')}
+</urlset>`;
+
+    return new Response(xml, {
+      status: 200,
+      headers: { 'Content-Type': 'application/xml; charset=utf-8', 'Cache-Control': 'public, max-age=3600, s-maxage=3600' },
+    });
+  }
+
+  // Only intercept bots on non-asset paths (OG/Twitter/JSON-LD prerender)
   const isBot  = BOT_UA.test(ua);
   const isPage = !pathname.match(/\.(js|css|png|jpg|svg|ico|woff|woff2|json|map|txt|xml)$/);
 
