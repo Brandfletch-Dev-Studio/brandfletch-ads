@@ -11,7 +11,7 @@
     "product_name": { "type": "string" },
     "service_type": {
       "type": "string",
-      "enum": ["meta_ads", "graphic_design", "web_development", "social_media", "other"]
+      "enum": ["meta_ads", "social_media", "designs", "dev_studio", "studios", "other"]
     },
     "sale_amount": { "type": "number" },
     "sale_currency": { "type": "string" },

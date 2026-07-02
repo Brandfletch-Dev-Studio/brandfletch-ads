@@ -40,13 +40,93 @@ export async function maybeCreateAffiliateCommission(
       return
     }
 
-    if (settings?.one_commission_per_client) {
-      const { data: existing } = await adminClient
-        .from('AffiliateCommission').select('id, is_recurring')
-        .eq('affiliate_id', affiliate.id).eq('referred_user_id', payingUserId)
-      if ((existing || []).some((c: any) => !c.is_recurring)) return
+    const commonFields = {
+      affiliate_id: affiliate.id, affiliate_name: affiliate.full_name || affiliate.email || '',
+      referred_user_id: payingUserId, referred_user_name: payingUser.full_name || '',
+      referred_user_email: payingUser.email || '', referral_code: payingUser.referred_by,
+      product_name: productName, service_type: serviceType, sale_amount: saleAmount,
+      sale_currency: saleCurrency, commission_currency: settings?.default_currency || saleCurrency,
+      status: 'pending',
     }
 
+    // ── Repeat-client handling (recurring commissions) ──────────────────────
+    // one_commission_per_client (default true) means a referred client can
+    // only ever generate ONE full-rate "initial" commission (enforced by a
+    // DB unique index on (affiliate_id, referred_user_id) WHERE is_recurring
+    // = false). Previously, every purchase after that first one was simply
+    // blocked outright — recurring_enabled/recurring_applies_to/
+    // recurring_max_months existed as admin-facing settings but nothing ever
+    // read them, so "recurring commissions" was pure UI decoration.
+    if (settings?.one_commission_per_client) {
+      const { data: existing } = await adminClient
+        .from('AffiliateCommission').select('id, is_recurring, recurring_month')
+        .eq('affiliate_id', affiliate.id).eq('referred_user_id', payingUserId)
+
+      const initial = (existing || []).find((c: any) => !c.is_recurring)
+
+      if (initial) {
+        // This client already generated their one-time initial commission —
+        // this new sale is a repeat/renewal payment. Only eligible for a
+        // (typically smaller) recurring commission if the admin has turned
+        // recurring commissions on and included this department.
+        const recurringOn = settings?.recurring_enabled === true
+        const appliesTo: string[] = settings?.recurring_applies_to || []
+        const deptEligible = appliesTo.length === 0 || appliesTo.includes(serviceType)
+
+        if (!recurringOn || !deptEligible) return
+
+        const priorRecurringCount = (existing || []).filter((c: any) => c.is_recurring).length
+        const nextMonth = priorRecurringCount + 1
+
+        const maxMonths = settings?.recurring_max_months || 0 // 0 = unlimited
+        if (maxMonths > 0 && nextMonth > maxMonths) return
+
+        let recCommissionType = settings?.recurring_type || 'fixed'
+        let recCommissionRate = 0, recCommissionAmount = 0
+        if (recCommissionType === 'percentage') {
+          recCommissionRate = settings?.recurring_percentage || 0
+          recCommissionAmount = Math.round((saleAmount * recCommissionRate) / 100)
+        } else {
+          recCommissionType = 'fixed'
+          recCommissionAmount = settings?.recurring_fixed_amount || 0
+        }
+
+        if (recCommissionAmount <= 0) return
+
+        const { error: recInsertError } = await adminClient.from('AffiliateCommission').insert({
+          ...commonFields,
+          commission_type: recCommissionType,
+          commission_rate: recCommissionRate || null,
+          commission_amount: recCommissionAmount,
+          is_recurring: true,
+          recurring_month: nextMonth,
+          parent_commission_id: initial.id,
+          trigger_event: 'renewal',
+        })
+
+        if (recInsertError) {
+          // 23505 = unique_violation on (affiliate_id, referred_user_id,
+          // recurring_month) WHERE is_recurring = true — the webhook and
+          // verify-payment paths raced for the same renewal; only the first
+          // wins, same pattern as the initial-commission guard below.
+          if (recInsertError.code === '23505') {
+            console.warn(`Duplicate recurring commission insert prevented for affiliate ${affiliate.id} / client ${payingUserId} / month ${nextMonth}`)
+            return
+          }
+          throw recInsertError
+        }
+
+        await adminClient.from('Notification').insert({
+          recipient_id: affiliate.id, title: 'Recurring Commission Earned! 🔁',
+          message: `You earned ${settings?.default_currency || saleCurrency} ${recCommissionAmount.toLocaleString()} in recurring commission from a repeat payment (${payingUser.full_name || payingUser.email || 'referred client'})`,
+          type: 'commission_earned', is_read: false,
+        })
+
+        return
+      }
+    }
+
+    // ── First-ever sale from this referred client ───────────────────────────
     const svcType = settings?.[`${serviceType}_commission_type`] || 'global'
     let commissionType = 'fixed', commissionAmount = 0, commissionRate = 0
 
@@ -65,14 +145,14 @@ export async function maybeCreateAffiliateCommission(
     }
 
     const { error: insertError } = await adminClient.from('AffiliateCommission').insert({
-      affiliate_id: affiliate.id, affiliate_name: affiliate.full_name || affiliate.email || '',
-      referred_user_id: payingUserId, referred_user_name: payingUser.full_name || '',
-      referred_user_email: payingUser.email || '', referral_code: payingUser.referred_by,
-      product_name: productName, service_type: serviceType, sale_amount: saleAmount,
-      sale_currency: saleCurrency, commission_type: commissionType,
-      commission_rate: commissionRate || null, commission_amount: commissionAmount,
-      commission_currency: settings?.default_currency || saleCurrency,
-      is_recurring: false, status: 'pending', trigger_event: 'payment_confirmed',
+      ...commonFields,
+      commission_type: commissionType,
+      commission_rate: commissionRate || null,
+      commission_amount: commissionAmount,
+      is_recurring: false,
+      recurring_month: null,
+      parent_commission_id: null,
+      trigger_event: 'payment_confirmed',
     })
 
     if (insertError) {

@@ -27,9 +27,10 @@
       "type": "string",
       "enum": [
         "meta_ads",
-        "graphic_design",
-        "web_development",
         "social_media",
+        "designs",
+        "dev_studio",
+        "studios",
         "other"
       ]
     },
