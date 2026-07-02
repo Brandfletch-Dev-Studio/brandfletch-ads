@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { base44 } from '@/api/base44Client';
+import { base44, supabase } from '@/api/base44Client';
 import { Upload, CheckCircle2, ArrowLeft, Copy, ExternalLink, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -89,7 +89,10 @@ export default function DesignPayment() {
           const file = e.target.files[0];
           if (!file) return;
           setUploading(true);
-          const { file_url } = await base44.integrations.Core.UploadFile({ file });
+          const path = `payment-proofs/${Date.now()}-${Math.random().toString(36).slice(2)}-${file.name}`;
+          const { error: uploadErr } = await supabase.storage.from('designs').upload(path, file, { upsert: true });
+          if (uploadErr) throw uploadErr;
+          const { data: { publicUrl: file_url } } = supabase.storage.from('designs').getPublicUrl(path);
           setProofFile(file_url);
           setUploading(false);
           toast.success('Proof uploaded!');
