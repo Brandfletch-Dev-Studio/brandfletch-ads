@@ -19,7 +19,7 @@ function emailWrapper(content: string, preheader = ''): string {
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
-<title>Brandfletch Ads</title>
+<title>Brandfletch Media</title>
 <style>
   body,table,td,a{-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%}
   table,td{mso-table-lspace:0;mso-table-rspace:0}
@@ -60,16 +60,16 @@ ${preheader ? `<div style="display:none;max-height:0;overflow:hidden;mso-hide:al
 <div class="card">
   <div class="header">
     <a href="${APP_URL}" style="text-decoration:none;display:inline-flex;align-items:center;gap:10px">
-      <img src="${LOGO_URL}" alt="Brandfletch Ads" width="36" height="36" style="border-radius:8px;display:block;width:36px;height:36px" />
+      <img src="${LOGO_URL}" alt="Brandfletch Media" width="36" height="36" style="border-radius:8px;display:block;width:36px;height:36px" />
       <span style="color:#ffffff;font-size:18px;font-weight:700;letter-spacing:-0.3px;vertical-align:middle">Brandfletch <span style="color:#93c5fd">Ads</span></span>
     </a>
   </div>
   ${content}
   <div class="footer">
-    <p class="footer-brand">Brandfletch Ads</p>
+    <p class="footer-brand">Brandfletch Media</p>
     <p class="footer-text"><a href="mailto:${SUPPORT_EMAIL}" class="footer-link">${SUPPORT_EMAIL}</a></p>
     <p class="footer-text" style="color:#cbd5e1">© ${new Date().getFullYear()} Brandfletch Media. All rights reserved.</p>
-    <p class="footer-text" style="color:#e2e8f0;font-size:11px">You received this email because you have an account on Brandfletch Ads.</p>
+    <p class="footer-text" style="color:#e2e8f0;font-size:11px">You received this email because you have an account on Brandfletch Media.</p>
   </div>
 </div>
 </td></tr>
@@ -464,7 +464,7 @@ Deno.serve(async (req) => {
 
     if (clientUser?.email && config.clientHtml) {
       const { subject, html } = applyTpl(config.clientHtml, config.clientSubject, campaign, clientUser, notes)
-      await sendEmail({ to: clientUser.email, fromName: 'Brandfletch Ads', subject, html })
+      await sendEmail({ to: clientUser.email, fromName: 'Brandfletch Media', subject, html })
       results.client = `sent to ${clientUser.email}`
     }
 
@@ -473,7 +473,7 @@ Deno.serve(async (req) => {
         if (adminUser.email) {
           await sendEmail({
             to: adminUser.email,
-            fromName: 'Brandfletch Ads (Internal)',
+            fromName: 'Brandfletch Media (Internal)',
             subject: config.adminSubject(campaign),
             html: config.adminHtml(campaign, clientUser),
           })

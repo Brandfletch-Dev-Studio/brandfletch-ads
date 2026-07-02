@@ -12,7 +12,7 @@ export async function sendEmail(opts: {
     return { error: 'RESEND_API_KEY not configured' }
   }
 
-  const fromName = opts.fromName || 'Brandfletch Ads'
+  const fromName = opts.fromName || 'Brandfletch Media'
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: {

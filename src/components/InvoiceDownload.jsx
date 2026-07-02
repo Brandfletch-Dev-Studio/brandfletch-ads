@@ -214,7 +214,7 @@ export default function InvoiceDownload({ type, record, user, invoiceNumber, pay
     <div>
       <div class="logo-wrap">
         <div class="logo-box">BF</div>
-        <span class="brand">Brandfletch <span class="brand-accent">Ads</span></span>
+        <span class="brand">Brandfletch <span class="brand-accent">Media</span></span>
       </div>
       <div class="brand-tag">Advertising &amp; Creative Agency</div>
       <div class="co-info">
@@ -316,7 +316,7 @@ export default function InvoiceDownload({ type, record, user, invoiceNumber, pay
     </div>` : ''}
 
     <div class="note">
-      <p>Thank you for choosing <strong>Brandfletch Ads</strong>. For any queries regarding this invoice, contact us at <strong>hello@brandfletch.com</strong> or via WhatsApp.</p>
+      <p>Thank you for choosing <strong>Brandfletch Media</strong>. For any queries regarding this invoice, contact us at <strong>hello@brandfletch.com</strong> or via WhatsApp.</p>
     </div>
 
   </div>
@@ -324,7 +324,7 @@ export default function InvoiceDownload({ type, record, user, invoiceNumber, pay
   <!-- FOOTER -->
   <div class="ftr">
     <div class="fl">
-      <div class="fl-brand">Brandfletch <em>Ads</em></div>
+      <div class="fl-brand">Brandfletch <em>Media</em></div>
       hello@brandfletch.com &nbsp;·&nbsp; brandfletch.com<br/>
       Blantyre, Malawi
     </div>

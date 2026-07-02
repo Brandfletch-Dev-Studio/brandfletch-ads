@@ -36,7 +36,7 @@ function emailWrapper(content: string): string {
 <div class="card">
   <div class="hdr">
     <a href="${APP_URL}" style="display:inline-flex;align-items:center;gap:10px;text-decoration:none">
-      <img src="${LOGO_URL}" width="38" height="38" style="border-radius:9px" alt="Brandfletch Ads"/>
+      <img src="${LOGO_URL}" width="38" height="38" style="border-radius:9px" alt="Brandfletch Media"/>
       <span style="color:#fff;font-size:19px;font-weight:700">Brandfletch <span style="color:#93c5fd">Designs</span></span>
     </a>
   </div>
@@ -272,7 +272,7 @@ Deno.serve(async (req) => {
         if (adminUser.email) {
           await sendEmail({
             to: adminUser.email,
-            fromName: 'Brandfletch Ads (Internal)',
+            fromName: 'Brandfletch Media (Internal)',
             subject: `Design ${event_type === 'submitted' ? 'Request Submitted' : 'Awaiting Feedback'} — ${design.title}`,
             html: emailWrapper(`
               <p style="font-size:15px;font-weight:700;color:#0f172a;margin:0 0 8px">Design Alert: ${event_type === 'submitted' ? 'New Request' : 'Client Feedback Needed'}</p>
