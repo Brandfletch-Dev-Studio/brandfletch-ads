@@ -41,6 +41,7 @@ const STATIC_META: Record<string, { title: string; description: string; image?: 
 function buildHtml(meta: {
   title: string; description: string; image: string;
   url: string; type: string; author?: string; publishedAt?: string;
+  jsonLd?: object;
 }): string {
   return `<!doctype html>
 <html lang="en">
@@ -73,6 +74,7 @@ function buildHtml(meta: {
     <meta name="twitter:title"       content="${meta.title}" />
     <meta name="twitter:description" content="${meta.description}" />
     <meta name="twitter:image"       content="${meta.image}" />
+    ${meta.jsonLd ? `<script type="application/ld+json">${JSON.stringify(meta.jsonLd)}</script>` : ''}
   </head>
   <body>
     <div id="root"></div>
@@ -100,20 +102,42 @@ export default async function middleware(req: Request): Promise<Response> {
     const slug = blogMatch[1];
     try {
       const res = await fetch(
-        `${SUPABASE_URL}/rest/v1/BlogPost?slug=eq.${encodeURIComponent(slug)}&status=eq.published&select=title,excerpt,cover_image,author_name,published_at,category&limit=1`,
+        `${SUPABASE_URL}/rest/v1/BlogPost?slug=eq.${encodeURIComponent(slug)}&status=eq.published&select=title,excerpt,cover_image,author_name,published_at,category,meta_title,meta_description,tags,updated_date&limit=1`,
         { headers: { apikey: SUPABASE_ANON, Authorization: `Bearer ${SUPABASE_ANON}` } }
       );
       const rows = await res.json() as any[];
       if (rows?.length) {
         const p = rows[0];
+        const title = p.meta_title ? `${p.meta_title} — Brandfletch Blog` : `${p.title} — Brandfletch Blog`;
+        const description = p.meta_description || p.excerpt || DEFAULTS.description;
+        const image = p.cover_image || DEFAULTS.image;
+        const jsonLd = {
+          '@context': 'https://schema.org',
+          '@type': 'BlogPosting',
+          headline: p.title,
+          description,
+          image: [image],
+          datePublished: p.published_at || undefined,
+          dateModified: p.updated_date || p.published_at || undefined,
+          author: { '@type': 'Person', name: p.author_name || 'Brandfletch Team' },
+          publisher: {
+            '@type': 'Organization',
+            name: 'Brandfletch Media',
+            logo: { '@type': 'ImageObject', url: `${SITE_URL}/favicon.png` },
+          },
+          mainEntityOfPage: { '@type': 'WebPage', '@id': fullUrl },
+          ...(p.tags?.length ? { keywords: p.tags.join(', ') } : {}),
+          ...(p.category ? { articleSection: p.category } : {}),
+        };
         const html = buildHtml({
-          title:       `${p.title} — Brandfletch Blog`,
-          description: p.excerpt || DEFAULTS.description,
-          image:       p.cover_image || DEFAULTS.image,
+          title,
+          description,
+          image,
           url:         fullUrl,
           type:        'article',
           author:      p.author_name || 'Brandfletch Team',
           publishedAt: p.published_at,
+          jsonLd,
         });
         return new Response(html, {
           status: 200,
