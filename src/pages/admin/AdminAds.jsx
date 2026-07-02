@@ -235,7 +235,7 @@ export default function AdminAds() {
     qc.invalidateQueries({ queryKey: ['app-ads'] });
     auditLog('ad_deleted', 'AppAd', id);
     toast.success("Ad deleted");
-    setDeleteId(null);
+    // no confirm-state to reset (delete has no confirmation step here)
   },
   onError: (err) => toast.error(err?.message || "Failed to delete ad"),
   });

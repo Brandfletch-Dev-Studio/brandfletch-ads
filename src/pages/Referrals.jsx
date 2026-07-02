@@ -8,7 +8,7 @@ import {
   Download, MessageSquare, Loader2,
   Phone, Mail, Bell, CreditCard,
   Gift, ArrowRight, Zap, RefreshCw, BookOpen,
-  Megaphone, Video, Palette, Globe
+  Megaphone, Video, Palette, Globe, Pencil, X
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -78,6 +78,85 @@ function useCopyClipboard() {
     });
   }
   return { copied, copy };
+}
+
+// ─── Editable referral code — lets an affiliate replace the auto-generated
+// BF-XXXXXX code with a memorable custom one (e.g. their name/brand).
+// Validates format + uniqueness against other users before saving.
+function ReferralCodeEditor({ user, className = '', codeClassName = '', variant = 'dark' }) {
+  const { checkAppState } = useAuth();
+  const [editing, setEditing] = useState(false);
+  const [value, setValue]     = useState('');
+  const [saving, setSaving]   = useState(false);
+  const currentCode = user?.referral_code || (user?.id ? `BF-${user.id.slice(-6).toUpperCase()}` : '');
+
+  function startEdit() {
+    setValue(currentCode);
+    setEditing(true);
+  }
+
+  async function save() {
+    const clean = value.trim().toUpperCase().replace(/[^A-Z0-9-]/g, '');
+    if (clean.length < 4 || clean.length > 20) {
+      toast.error('Code must be 4–20 characters (letters, numbers, dashes only)');
+      return;
+    }
+    if (clean === currentCode) { setEditing(false); return; }
+    setSaving(true);
+    try {
+      const existing = await base44.entities.User.filter({ referral_code: clean }).catch(() => []);
+      if (existing.some(u => u.id !== user.id)) {
+        toast.error('That code is already taken — try another');
+        setSaving(false);
+        return;
+      }
+      await base44.entities.User.update(user.id, { referral_code: clean });
+      toast.success('Referral code updated!');
+      setEditing(false);
+      await checkAppState();
+    } catch (err) {
+      toast.error(err?.message || 'Failed to update code');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (editing) {
+    return (
+      <div className={cn('flex items-center gap-1.5', className)}>
+        <Input
+          autoFocus
+          value={value}
+          onChange={e => setValue(e.target.value.toUpperCase())}
+          maxLength={20}
+          className={cn(
+            'font-mono font-bold tracking-widest h-9 w-40',
+            variant === 'dark' ? 'bg-white/10 border-white/20 text-white placeholder:text-white/40' : ''
+          )}
+          onKeyDown={e => { if (e.key === 'Enter') save(); if (e.key === 'Escape') setEditing(false); }}
+        />
+        <button onClick={save} disabled={saving} className={cn('p-1.5 rounded-lg transition-colors', variant === 'dark' ? 'bg-white/15 hover:bg-white/25' : 'bg-secondary hover:bg-muted')}>
+          {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+        </button>
+        <button onClick={() => setEditing(false)} disabled={saving} className={cn('p-1.5 rounded-lg transition-colors', variant === 'dark' ? 'hover:bg-white/15' : 'hover:bg-secondary')}>
+          <X className="w-3.5 h-3.5" />
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className={cn('flex items-center gap-2', className)}>
+      <code className={cn('font-mono font-black tracking-widest', codeClassName)}>{currentCode}</code>
+      <button
+        onClick={startEdit}
+        title="Customize your referral code"
+        className={cn('p-1 rounded-lg transition-colors', variant === 'dark' ? 'text-white/50 hover:text-white hover:bg-white/10' : 'text-muted-foreground hover:text-foreground hover:bg-secondary')}
+      >
+        <Pencil className="w-3.5 h-3.5" />
+      </button>
+    </div>
+  );
 }
 
 // ─── TAB: Dashboard ───────────────────────────────────────────────────
@@ -203,7 +282,7 @@ function DashboardTab({ user, affiliateSettings, referrals = [], commissions = [
               </p>
               <div className="flex flex-wrap gap-3 mt-4">
                 <div className="flex items-center gap-2 bg-white/10 rounded-xl px-3 py-1.5 text-sm font-medium border border-white/15">
-                  <code className="font-mono text-base font-black tracking-widest">{code}</code>
+                  <ReferralCodeEditor user={user} codeClassName="text-base" />
                 </div>
                 <button
                   onClick={() => copy(code, 'hero-code')}
@@ -218,14 +297,6 @@ function DashboardTab({ user, affiliateSettings, referrals = [], commissions = [
                   {copied === 'hero-link' ? <><Check className="w-3.5 h-3.5 text-green-300" /> Copied</> : <><Link2 className="w-3.5 h-3.5" /> Copy link</>}
                 </button>
               </div>
-            </div>
-            <div className="shrink-0 flex flex-col items-center gap-2 bg-white/10 border border-white/15 rounded-2xl p-4">
-              <img
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(baseLink)}&color=ffffff&bgcolor=00000000`}
-                alt="QR Code"
-                className="w-20 h-20 rounded-lg"
-              />
-              <p className="text-xs opacity-60">Your QR code</p>
             </div>
           </div>
         </div>
@@ -509,32 +580,14 @@ function LinksTab({ user }) {
     <div className="space-y-5">
       <div>
         <h2 className="text-base font-semibold font-heading">Your Referral Code</h2>
-        <p className="text-sm text-muted-foreground mt-0.5">Use this code or the links below to refer new clients</p>
+        <p className="text-sm text-muted-foreground mt-0.5">Use this code or the links below to refer new clients — click the pencil to set a custom one</p>
         <div className="mt-3 inline-flex items-center gap-3 bg-secondary px-4 py-2 rounded-xl">
-          <code className="text-lg font-bold font-mono tracking-widest">{code}</code>
+          <ReferralCodeEditor user={user} variant="light" codeClassName="text-lg" />
           <button onClick={() => copy(code, 'code')} className="text-muted-foreground hover:text-foreground transition-colors">
             {copied === 'code' ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
           </button>
         </div>
       </div>
-      <Card className="border-dashed">
-        <CardContent className="p-4 flex flex-col sm:flex-row items-center gap-4">
-          <div className="w-28 h-28 bg-secondary rounded-xl flex items-center justify-center flex-shrink-0">
-            <img
-              src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(baseLink)}&color=000000&bgcolor=ffffff`}
-              alt="QR Code" className="w-24 h-24 rounded"
-            />
-          </div>
-          <div className="flex-1 text-center sm:text-left">
-            <p className="font-medium text-sm">Your QR Code</p>
-            <p className="text-xs text-muted-foreground mt-1 mb-3">Print or share this QR code — scanning it opens your referral signup link</p>
-            <Button size="sm" variant="outline" className="gap-2"
-              onClick={() => window.open(`https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(baseLink)}`, '_blank')}>
-              <Download className="w-3.5 h-3.5" /> Download QR
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
       <p className="text-sm text-muted-foreground">For service-specific links with prefilled messages, see the <strong>Dashboard</strong> tab.</p>
     </div>
   );

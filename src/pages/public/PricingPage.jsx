@@ -500,7 +500,7 @@ export default function PricingPage() {
             </div>
             <MetaAdsPricing
               dbRows={dbRows}
-              loading={loading}
+              loading={false}
               country={country}
               onCountryChange={setCountry}
               onPlanSelect={(plan) => handlePlanCta('meta-ads', plan)}
