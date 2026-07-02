@@ -28,6 +28,23 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   },
 });
 
+// ── File upload (Core.UploadFile shim) ─────────────────────────────────────────
+// The legacy base44 SDK exposed base44.integrations.Core.UploadFile({ file }) → { file_url }.
+// That whole `integrations` namespace was never ported when this app moved to Supabase,
+// which meant every call site using it (campaign wizard creative uploads, payment proof
+// uploads, profile avatars, design chat/wizard attachments, referral assets) was throwing
+// synchronously and silently failing with a generic "Upload failed" toast. Recreated here
+// on top of Supabase Storage so every existing call site keeps working untouched.
+async function uploadFile({ file }) {
+  if (!file) throw new Error('No file provided');
+  const ext = file.name?.split('.').pop() || 'bin';
+  const path = `uploads/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+  const { error } = await supabase.storage.from('designs').upload(path, file, { upsert: true });
+  if (error) throw error;
+  const { data: { publicUrl } } = supabase.storage.from('designs').getPublicUrl(path);
+  return { file_url: publicUrl };
+}
+
 // ── Entity wrapper ────────────────────────────────────────────────────────────
 // Mimics base44.entities.EntityName.list/get/create/update/delete/filter
 
@@ -370,6 +387,7 @@ export const base44 = {
   entities: entitiesProxy,
   auth: authWrapper,
   functions: functionsProxy,
+  integrations: { Core: { UploadFile: uploadFile } },
   supabase,
 };
 
