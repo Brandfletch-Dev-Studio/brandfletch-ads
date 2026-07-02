@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import { shouldNotify } from '@/lib/notificationPrefs';
 
 export default function AdminPayments() {
   // Bug fix: use permission-based guard (finance + admin) instead of role array only
@@ -63,14 +64,17 @@ export default function AdminPayments() {
       if (status === 'confirmed' && txn.campaign_id) {
         await base44.entities.Campaign.update(txn.campaign_id, { status: 'pending_review' });
         if (txn.user_id) {
-          await base44.entities.Notification.create({
-            recipient_id: txn.user_id,
-            type: 'payment_confirmed',
-            title: '\u2705 Payment Confirmed!',
-            message: 'Your payment has been verified. Your campaign is now under review.',
-            campaign_id: txn.campaign_id,
-            is_read: false,
-          });
+          const recipient = await base44.entities.User.get(txn.user_id).catch(() => null);
+          if (shouldNotify(recipient, 'payment_confirmed')) {
+            await base44.entities.Notification.create({
+              recipient_id: txn.user_id,
+              type: 'payment_confirmed',
+              title: '\u2705 Payment Confirmed!',
+              message: 'Your payment has been verified. Your campaign is now under review.',
+              campaign_id: txn.campaign_id,
+              is_read: false,
+            });
+          }
         }
       }
 
