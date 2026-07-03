@@ -30,6 +30,7 @@ import ForgotPassword from '@/pages/ForgotPassword';
 import ResetPassword from '@/pages/ResetPassword';
 import AuthCallback from '@/pages/AuthCallback';
 import ScrollToTop from '@/components/ScrollToTop';
+import { STAFF_ROLES, DEPARTMENTS, getDepartmentForRole, isOperationsRole, isDepartmentManagerRole } from '@/lib/permissions';
 
 // ── App pages (lazy) ──
 const Dashboard            = lazy(() => import('@/pages/Dashboard'));
@@ -148,15 +149,24 @@ class ErrorBoundary extends React.Component {
 }
 
 // ── Helpers ──
-const STAFF_ROLES = [
-  'admin','super_admin','ads_manager','campaign_manager',
-  'finance','sales_manager','creative_ops_director','designer',
-];
+// STAFF_ROLES now lives in permissions.js (single source of truth) — this used
+// to be a second, separately-maintained copy that could silently drift out of
+// sync with the real role list.
 
 function staffHome(role) {
-  if (role === 'designer')              return '/designer';
-  if (role === 'creative_ops_director') return '/creative-ops';
-  if (role === 'ads_manager')           return '/ads-manager';
+  // Portal-only production roles (designer, content_creator, developer) go
+  // straight to their portal.
+  if (isOperationsRole(role)) {
+    const dept = getDepartmentForRole(role);
+    if (dept && DEPARTMENTS[dept].portalPath) return DEPARTMENTS[dept].portalPath;
+  }
+  // Department Managers get their own personal department dashboard.
+  if (isDepartmentManagerRole(role)) {
+    const dept = getDepartmentForRole(role);
+    if (dept) return DEPARTMENTS[dept].dashboardPath;
+  }
+  // Everyone else (Sales/Finance in any department, platform team) lands on
+  // the shared admin overview, filtered to whatever they have access to.
   return '/admin';
 }
 
