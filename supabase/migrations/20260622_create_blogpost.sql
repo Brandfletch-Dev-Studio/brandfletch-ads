@@ -1,4 +1,4 @@
--- BlogPost table for Brandfletch Ads public website
+-- BlogPost table for Brandfletch Media public website
 CREATE TABLE IF NOT EXISTS public."BlogPost" (
   id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   title         TEXT NOT NULL,
