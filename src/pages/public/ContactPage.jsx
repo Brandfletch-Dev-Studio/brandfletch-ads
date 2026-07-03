@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Mail, MapPin, Clock, Send, Phone, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { useSEO } from '@/hooks/useSEO';
 import { ADMIN_WHATSAPP } from '@/lib/constants';
+import { useAuth } from '@/lib/AuthContext';
 
 const CONTACT_METHODS = [
   {
@@ -36,15 +38,53 @@ const CONTACT_METHODS = [
   },
 ];
 
+// Maps every service key naming convention used across the site (pricing
+// page CTAs use meta_ads/ugc_ads/graphic_design/web_design/social_media/
+// branding; affiliate referral links use meta_ads/social_media/designs/
+// dev_studio/studios) to one readable label, so a "Place order"/"Get
+// started"/referral link landing on /contact?service=X&plan=Y always
+// auto-starts the enquiry instead of dropping the context on the floor.
+const SERVICE_LABELS = {
+  meta_ads:        'Meta Ads',
+  ugc_ads:         'UGC Ads',
+  studios:         'UGC Ads',
+  graphic_design:  'Graphic Design',
+  designs:         'Graphic Design',
+  social_media:    'Social Media',
+  web_design:      'Web Development',
+  dev_studio:      'Web Development',
+  branding:        'Branding',
+};
+
 export default function ContactPage() {
   useSEO({
     title:       "Contact Brandfletch Media — Let's Grow Your Business",
     description: "Get in touch with our advertising team. We're ready to help you launch campaigns and grow your business across Africa.",
   });
 
+  const { user } = useAuth();
+  const [searchParams] = useSearchParams();
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
+
+  // Auto-start the order: read ?service=&plan= (set by pricing page CTAs and
+  // referral links) and prefill subject/message so the visitor doesn't land
+  // on a blank generic form after saying "I want to order X".
+  useEffect(() => {
+    const serviceKey = searchParams.get('service');
+    const plan       = searchParams.get('plan');
+    if (!serviceKey) return;
+    const label = SERVICE_LABELS[serviceKey] || serviceKey.replace(/_/g, ' ');
+    setForm(p => ({
+      ...p,
+      name:    p.name || user?.full_name || '',
+      email:   p.email || user?.email || '',
+      subject: p.subject || `${label} — ${plan ? `${plan} plan` : 'order enquiry'}`,
+      message: p.message || `Hi! I'd like to order ${label}${plan ? ` (${plan} plan)` : ''}. Please get in touch with details on how to proceed.`,
+    }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, user?.id]);
 
   const handleChange = e => setForm(p => ({ ...p, [e.target.name]: e.target.value }));
 

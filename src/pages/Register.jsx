@@ -21,13 +21,25 @@ export default function Register() {
 
   const referralCode = new URLSearchParams(window.location.search).get('ref') || '';
 
-  // Pre-fill email if redirected from login page; preserve post-login redirect
+  // Pre-fill email if redirected from login page; preserve post-login redirect.
+  // Also supports referral links carrying a ?service= param (e.g.
+  // /register?ref=CODE&service=meta_ads) — these should auto-land the new
+  // user on the matching order/contact page instead of the bare dashboard,
+  // same mechanism as an explicit ?redirect= param.
   useEffect(() => {
     const params   = new URLSearchParams(window.location.search);
     const prefill  = params.get('email');
     const redirect = params.get('redirect');
-    if (prefill)  setEmail(decodeURIComponent(prefill));
-    if (redirect) sessionStorage.setItem('bf_post_login_redirect', decodeURIComponent(redirect));
+    const service  = params.get('service');
+    const plan     = params.get('plan');
+    if (prefill) setEmail(decodeURIComponent(prefill));
+    if (redirect) {
+      sessionStorage.setItem('bf_post_login_redirect', decodeURIComponent(redirect));
+    } else if (service) {
+      const orderParams = new URLSearchParams({ service });
+      if (plan) orderParams.set('plan', plan);
+      sessionStorage.setItem('bf_post_login_redirect', `/contact?${orderParams.toString()}`);
+    }
   }, []);
 
   useEffect(() => {
