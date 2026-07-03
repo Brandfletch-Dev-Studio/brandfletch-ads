@@ -19,6 +19,7 @@ export default function DesignPayment() {
   const [submitting, setSubmitting] = useState(false);
   const [user, setUser] = useState(null);
   const [isMalawi, setIsMalawi] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [paychanguLoading, setPaychanguLoading] = useState(false);
 
   useEffect(() => { init(); }, []);
@@ -64,6 +65,8 @@ export default function DesignPayment() {
           }
     } catch (err) {
       toast.error(err?.message || "Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -177,6 +180,14 @@ export default function DesignPayment() {
         >
           <Copy className="w-4 h-4 text-muted-foreground" />
         </button>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="p-8 flex items-center justify-center min-h-[50vh]">
+        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
       </div>
     );
   }
