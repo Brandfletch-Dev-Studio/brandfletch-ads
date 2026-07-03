@@ -106,7 +106,7 @@ export default function Designs() {
   if (view === 'subscription') return (
     <div className="p-[15px] space-y-6">
       <Button variant="outline" onClick={() => setView('list')}><ArrowLeft className="w-4 h-4 mr-2" />Back</Button>
-      <DesignSubscription onSubscribe={() => { setView('list'); queryClient.invalidateQueries({ queryKey: ['userSubscription'] }); }} />
+      <DesignSubscription />
     </div>
   );
 
@@ -245,14 +245,24 @@ export default function Designs() {
   );
 }
 
-function RequestDetail({ request, subscription, onClose, onUpdate }) {
+function RequestDetail({ request, onClose, onUpdate }) {
   const [showChat, setShowChat] = useState(false);
   const [revisionComment, setRevisionComment] = useState('');
   const [showRevisionForm, setShowRevisionForm] = useState(false);
-  const queryClient = useQueryClient();
 
+  // BUG FIX: this mutation previously had no onSuccess at all — approving a
+  // design or requesting a revision updated the DB but never told the parent
+  // list to refresh (the `onUpdate` callback the parent passes in for exactly
+  // this purpose was declared but never called), so the client saw no
+  // feedback and the request stayed showing its old status until a manual
+  // page reload. Now invalidates via the parent's onUpdate + toasts.
   const updateMutation = useMutation({
     mutationFn: ({ data }) => base44.entities.DesignRequest.update(request.id, data),
+    onSuccess: (_data, variables) => {
+      onUpdate?.();
+      toast.success(variables?.data?.status === 'approved' ? 'Design approved!' : 'Revision requested');
+    },
+    onError: () => toast.error('Could not update — please try again.'),
   });
 
   const handleApprove = () => {

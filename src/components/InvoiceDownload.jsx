@@ -376,7 +376,7 @@ export default function InvoiceDownload({ type, record, user, invoiceNumber, pay
             setTimeout(() => {
               if (iframe.parentNode) document.body.removeChild(iframe);
             }, 3000);
-          } catch (_) {}
+          } catch (_e) { /* no-op */ }
         }
       }, 1200);
 

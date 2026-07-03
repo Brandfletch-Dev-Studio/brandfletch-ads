@@ -48,6 +48,13 @@ export default function PublicFormView() {
         });
       }
     },
+    // BUG FIX (2026-07-03): this mutation had no onSuccess at all — a
+    // successful submission wrote the Lead record fine, but `setSubmitted`
+    // (the flag that swaps in the "Thank You!" screen) was never called from
+    // anywhere, so both the traditional and multi-step forms just silently
+    // did nothing visible after a real, successful submit.
+    onSuccess: () => setSubmitted(true),
+    onError: () => toast.error('Could not submit — please try again.'),
   });
 
   const handleSubmit = (e) => {

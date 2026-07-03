@@ -60,11 +60,6 @@ function StatusBadge({ status }) {
   );
 }
 
-function PriorityDot({ priority }) {
-  const m = PRIORITY_META[priority] || PRIORITY_META.medium;
-  return <span className={cn('text-xs font-bold', m.color)}>{m.label}</span>;
-}
-
 function initials(name) {
   if (!name) return '?';
   return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0,2);
@@ -97,8 +92,7 @@ function MetricCard({ label, value, sub, icon: Icon, color, trend, onClick }) {
 }
 
 // ── Request Row ──────────────────────────────────────────────────────────────
-function RequestRow({ req, designers, onAssign, onStatusChange, onView }) {
-  const [assigning, setAssigning] = useState(false);
+function RequestRow({ req, designers, onAssign, onView }) {
   const designer = designers.find(d => d.id === req.designer_id);
 
   return (
@@ -217,7 +211,6 @@ export default function CreativeOpsDashboard() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [selectedRequest, setSelectedRequest] = useState(null);
 
   const { data: requests = [], isLoading: reqLoading } = useQuery({
     queryKey: ['cod-design-requests'],
@@ -231,7 +224,6 @@ export default function CreativeOpsDashboard() {
   });
 
   const designers = allUsers.filter(u => u.role === 'designer');
-  const clients   = allUsers.filter(u => u.role === 'user');
 
   const updateMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.DesignRequest.update(id, data),
@@ -259,7 +251,6 @@ export default function CreativeOpsDashboard() {
   // ── Metrics ──────────────────────────────────────────────────────────────
   const actionable  = requests.filter(r => ACTIONABLE.includes(r.status));
   const active      = requests.filter(r => ACTIVE.includes(r.status));
-  const delivered   = requests.filter(r => DONE.includes(r.status));
   const unassigned  = requests.filter(r => !r.designer_id && r.status !== 'draft' && r.status !== 'cancelled');
   const overdue     = requests.filter(r => r.due_date && isAfter(new Date(), new Date(r.due_date)) && !DONE.includes(r.status));
   const thisWeek    = requests.filter(r => r.created_date && isAfter(new Date(r.created_date), subDays(new Date(), 7)));
@@ -396,8 +387,7 @@ export default function CreativeOpsDashboard() {
                     req={req}
                     designers={designers}
                     onAssign={handleAssign}
-                    onStatusChange={(id, status) => updateMutation.mutate({ id, data: { status } })}
-                    onView={r => navigate('/admin/designs')}
+                    onView={() => navigate('/admin/designs')}
                   />
                 ))}
               </div>

@@ -50,14 +50,6 @@ export default function Leads() {
     },
   });
 
-  const stats = {
-    total: leads?.length || 0,
-    newLeads: leads?.filter(l => l.stage === 'new_lead').length || 0,
-    won: leads?.filter(l => l.stage === 'won').length || 0,
-    hotLeads: leads?.filter(l => l.grade === 'A').length || 0,
-    totalValue: leads?.reduce((sum, l) => sum + (l.estimated_value || 0), 0) || 0,
-  };
-
   const updateStageMutation = useMutation({
     mutationFn: async ({ leadId, newStage }) => {
       const user = await base44.auth.me();

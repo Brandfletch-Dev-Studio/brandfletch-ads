@@ -22,7 +22,6 @@ export default function DesignStatusTimeline({ currentStatus }) {
       {TIMELINE.map((step, i) => {
         const isDone = i < currentIndex;
         const isCurrent = i === currentIndex;
-        const isPending = i > currentIndex;
         return (
           <div key={step.status} className="flex items-center gap-3">
             <div className="flex-shrink-0">

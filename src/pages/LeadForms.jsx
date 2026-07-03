@@ -4,41 +4,17 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Edit2, Eye, Share2, Globe, Lock, FileText, CheckCircle, MessageSquare, Layers, FileCheck } from 'lucide-react';
+import { Plus, Edit2, Eye, Share2, Globe, Lock, FileText, CheckCircle, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import FormBuilder from '@/components/lead-forms/FormBuilder';
 import FormPreview from '@/components/lead-forms/FormPreview';
-
-const FIELD_TYPES = [
-  { value: 'text', label: 'Short Text' },
-  { value: 'email', label: 'Email' },
-  { value: 'phone', label: 'Phone Number' },
-  { value: 'textarea', label: 'Long Text' },
-  { value: 'dropdown', label: 'Dropdown' },
-  { value: 'checkbox', label: 'Checkbox' },
-  { value: 'radio', label: 'Radio Buttons' },
-  { value: 'date', label: 'Date' },
-  { value: 'file', label: 'File Upload' },
-];
-
-const FORM_TYPES = [
-  { value: 'contact', label: 'Contact Form' },
-  { value: 'consultation', label: 'Consultation Booking' },
-  { value: 'lead_generation', label: 'Lead Generation' },
-  { value: 'newsletter', label: 'Newsletter Signup' },
-  { value: 'custom', label: 'Custom' },
-];
-
-const FORM_BUILD_TYPES = [
-  { value: 'traditional', label: 'Traditional', icon: FileCheck, description: 'Single-page form with all fields' },
-  { value: 'multi_step', label: 'Multi-Step', icon: Layers, description: 'Break form into multiple steps' },
-  { value: 'conversational', label: 'Conversational', icon: MessageSquare, description: 'Chat-style form experience' },
-];
+import ConfirmDialog from '@/components/ConfirmDialog';
 
 export default function LeadForms() {
   const queryClient = useQueryClient();
   const [editingForm, setEditingForm] = useState(null);
   const [viewingForm, setViewingForm] = useState(null);
+  const [confirmDeleteForm, setConfirmDeleteForm] = useState(null);
 
   const { data: forms, isLoading } = useQuery({
     queryKey: ['myLeadForms'],
@@ -50,21 +26,50 @@ export default function LeadForms() {
     queryFn: () => base44.auth.me(),
   });
 
+  // BUG FIX (2026-07-03): none of these 4 mutations had an onSuccess at all —
+  // saving/deleting/toggling a form updated the DB but never invalidated the
+  // 'myLeadForms' list, so the UI silently kept showing stale data (and the
+  // editor never closed itself after a successful save). Also there was no
+  // Delete button anywhere in the UI even though deleteFormMutation existed —
+  // added one below, gated behind the standard ConfirmDialog pattern.
   const createFormMutation = useMutation({
     mutationFn: (formData) => base44.entities.LeadForm.create(formData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['myLeadForms'] });
+      setEditingForm(null);
+      toast.success('Form created!');
+    },
+    onError: () => toast.error('Could not create the form — please try again.'),
   });
 
   const updateFormMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.LeadForm.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['myLeadForms'] });
+      setEditingForm(null);
+      toast.success('Form updated!');
+    },
+    onError: () => toast.error('Could not update the form — please try again.'),
   });
 
   const deleteFormMutation = useMutation({
     mutationFn: (id) => base44.entities.LeadForm.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['myLeadForms'] });
+      setConfirmDeleteForm(null);
+      toast.success('Form deleted');
+    },
+    onError: () => toast.error('Could not delete the form — please try again.'),
   });
 
   const togglePublishMutation = useMutation({
-    mutationFn: ({ id, is_active }) => 
+    mutationFn: ({ id, is_active }) =>
       base44.entities.LeadForm.update(id, { is_active }),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['myLeadForms'] });
+      toast.success(variables.is_active ? 'Form published!' : 'Form unpublished');
+    },
+    onError: () => toast.error('Could not update the form — please try again.'),
   });
 
   const handleSave = (formData) => {
@@ -205,12 +210,24 @@ export default function LeadForms() {
                   >
                     {form.is_active ? <Lock className="w-3 h-3" /> : <Globe className="w-3 h-3" />}
                   </Button>
+                  <Button size="sm" variant="outline" className="text-destructive hover:text-destructive" onClick={() => setConfirmDeleteForm(form)}>
+                    <Trash2 className="w-3 h-3" />
+                  </Button>
                 </div>
               </CardContent>
             </Card>
           ))}
         </div>
       )}
+
+      <ConfirmDialog
+        open={!!confirmDeleteForm}
+        onOpenChange={(open) => { if (!open) setConfirmDeleteForm(null); }}
+        title="Delete this form?"
+        description={`"${confirmDeleteForm?.form_name}" will be permanently deleted. This can't be undone.`}
+        confirmLabel="Delete"
+        onConfirm={() => deleteFormMutation.mutate(confirmDeleteForm.id)}
+      />
     </div>
   );
 }

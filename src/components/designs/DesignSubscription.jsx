@@ -12,7 +12,7 @@ import { toast } from 'sonner';
  * Replaces the old monthly-retainer subscription picker: every service is a
  * flat, one-off price from DesignServiceRate. No quotas, no recurring billing.
  */
-export default function DesignSubscription({ onSubscribe }) {
+export default function DesignSubscription() {
   const [orderingId, setOrderingId] = useState(null);
   const navigate = useNavigate();
   const queryClient = useQueryClient();

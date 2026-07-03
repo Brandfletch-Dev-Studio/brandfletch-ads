@@ -42,8 +42,6 @@ const GOAL_META = {
 const PACKAGE_LABELS = { starter: 'Starter', growth: 'Growth', business: 'Business', premium: 'Premium', enterprise: 'Enterprise' };
 
 const ACTIONABLE = ['pending_review', 'awaiting_payment', 'changes_requested'];
-const ACTIVE     = ['active'];
-const NEEDS_ADULT = ['approved', 'paused'];
 
 function StatusBadge({ status }) {
   const m = STATUS_META[status] || STATUS_META.draft;
@@ -216,11 +214,6 @@ export default function AdsManagerDashboard() {
     queryFn: () => base44.functions.getAllUsers({}).then(r => r?.users || []).catch(() => []),
   });
 
-  const { data: walletTxns = [] } = useQuery({
-    queryKey: ['am-wallet'],
-    queryFn: () => base44.entities.WalletTransaction.list({ sort: '-created_date', limit: 200 }).catch(() => []),
-  });
-
   const clients = allUsers.filter(u => u.role === 'user');
 
   const updateMutation = useMutation({
@@ -237,7 +230,6 @@ export default function AdsManagerDashboard() {
   const active      = campaigns.filter(c => c.status === 'active');
   const pendingPay  = campaigns.filter(c => c.status === 'awaiting_payment');
   const pendingRev  = campaigns.filter(c => c.status === 'pending_review');
-  const completed   = campaigns.filter(c => c.status === 'completed');
   const thisWeek    = campaigns.filter(c => c.created_date && isAfter(new Date(c.created_date), subDays(new Date(), 7)));
 
   // Revenue

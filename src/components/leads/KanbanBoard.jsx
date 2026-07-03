@@ -89,7 +89,7 @@ function LeadCard({ lead, index }) {
   );
 }
 
-function KanbanColumn({ stage, leads, onStageChange }) {
+function KanbanColumn({ stage, leads }) {
   const config = STAGE_CONFIG[stage];
   const columnLeads = leads.filter(l => l.stage === stage);
 
@@ -154,7 +154,6 @@ export default function KanbanBoard({ leads, onStageChange }) {
               key={stage}
               stage={stage}
               leads={leads}
-              onStageChange={onStageChange}
             />
           ))}
         </div>

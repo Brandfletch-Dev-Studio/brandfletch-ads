@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/lib/AuthContext';
-import { Facebook, Plus, CheckCircle2, XCircle, Clock, ExternalLink, AlertCircle } from 'lucide-react';
+import { Facebook, Plus, CheckCircle2, XCircle, Clock, ExternalLink } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -58,30 +58,12 @@ export default function FacebookPages() {
       setForm({ page_name: '', page_url: '' });
       setUrlTouched(false);
       loadPages(user.id);
-    } catch (err) {
+    } catch (_err) {
       toast.error('Failed to submit page. Please try again.');
     } finally {
       setSubmitting(false);
     }
   }
-
-  const ChecklistItem = ({ label, status, icon: Icon }) => (
-    <div className="flex items-center justify-between py-2.5">
-      <div className="flex items-center gap-2.5">
-        <Icon className="w-4 h-4 text-muted-foreground" />
-        <span className="text-sm">{label}</span>
-      </div>
-      {status ? (
-        <span className="flex items-center gap-1 text-xs font-medium text-green-600">
-          <CheckCircle2 className="w-3.5 h-3.5" /> Verified
-        </span>
-      ) : (
-        <span className="flex items-center gap-1 text-xs font-medium text-amber-600">
-          <AlertCircle className="w-3.5 h-3.5" /> Action Required
-        </span>
-      )}
-    </div>
-  );
 
   if (isLoadingAuth) {
     return (

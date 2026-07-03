@@ -24,10 +24,24 @@ export default function DesignChatComponent({ designRequestId, readOnly = false 
     initialData: [],
   });
 
+  // BUG FIX (2026-07-03): this mutation had no onSuccess/onError at all, and
+  // handleSend called toast.success('Message sent!') unconditionally right
+  // after firing .mutate() (not inside onSuccess) — so a message that failed
+  // to actually send (network blip, DB error) still told the user it was
+  // sent. It also never cleared the message/file input afterwards and never
+  // invalidated the chat query, so the composer stayed pre-filled and the
+  // new message could take a while to actually show up on screen.
   const sendMessageMutation = useMutation({
     mutationFn: async (msgData) => {
       await base44.entities.DesignChat.create(msgData);
     },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['designChat', designRequestId] });
+      setMessage('');
+      setFiles([]);
+      toast.success('Message sent!');
+    },
+    onError: () => toast.error('Message could not be sent — please try again.'),
   });
 
   const scrollToBottom = () => {
@@ -43,9 +57,14 @@ export default function DesignChatComponent({ designRequestId, readOnly = false 
 
     let fileUrls = [];
     if (files.length > 0) {
-      const uploadPromises = files.map(f => base44.integrations.Core.UploadFile({ file: f }));
-      const results = await Promise.all(uploadPromises);
-      fileUrls = results.map(r => r.file_url);
+      try {
+        const uploadPromises = files.map(f => base44.integrations.Core.UploadFile({ file: f }));
+        const results = await Promise.all(uploadPromises);
+        fileUrls = results.map(r => r.file_url);
+      } catch {
+        toast.error('One or more files failed to upload — please try again.');
+        return;
+      }
     }
 
     sendMessageMutation.mutate({
@@ -56,8 +75,6 @@ export default function DesignChatComponent({ designRequestId, readOnly = false 
       file_urls: fileUrls,
       is_read: false,
     });
-
-    toast.success('Message sent!');
   };
 
   const handleFileSelect = (e) => {
@@ -80,7 +97,7 @@ export default function DesignChatComponent({ designRequestId, readOnly = false 
             <p className="text-sm">No messages yet. Start the conversation!</p>
           </div>
         ) : (
-          messages.map((msg, idx) => {
+          messages.map((msg) => {
             const isMe = msg.sender_id === user?.id;
             return (
               <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>

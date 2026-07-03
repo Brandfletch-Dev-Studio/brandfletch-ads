@@ -25,8 +25,6 @@ export default function DeptPortal({ config }) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [selected, setSelected] = useState(null);
-  const [notes, setNotes] = useState('');
-  const [deliverablesUrl, setDeliverablesUrl] = useState('');
 
   const isProductionStaff = user?.role === config.assigneeRole;
 

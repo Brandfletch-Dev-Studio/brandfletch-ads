@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import {
   CheckCircle2, Circle, ChevronRight, X, Rocket,
   User, Building2, Phone, Globe, Loader2, ChevronUp,
@@ -38,7 +38,6 @@ function getCompleted(user, pages, campaigns) {
 
 export default function CompleteProfileChecklist() {
   const { user, checkAppState } = useAuth();
-  const navigate = useNavigate();
 
   const [ready, setReady]       = useState(false);
   const [dismissed, setDismissed] = useState(false);

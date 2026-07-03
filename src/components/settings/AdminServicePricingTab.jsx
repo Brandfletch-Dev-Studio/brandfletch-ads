@@ -48,7 +48,7 @@ export default function AdminServicePricing() {
     try {
       const data = await base44.entities.ServicePricing.list({});
       setPlans(data);
-    } catch (e) { toast.error('Failed to load service pricing'); }
+    } catch (_e) { toast.error('Failed to load service pricing'); }
     setLoading(false);
   }
 
@@ -95,7 +95,7 @@ export default function AdminServicePricing() {
       await base44.entities.ServicePricing.delete(id);
       setPlans(prev => prev.filter(p => p.id !== id));
       toast.success('Plan deleted');
-    } catch (e) { toast.error('Failed to delete'); }
+    } catch (_e) { toast.error('Failed to delete'); }
   }
 
   function startEdit(plan) {
