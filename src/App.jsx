@@ -29,6 +29,10 @@ import Register from '@/pages/Register';
 import ForgotPassword from '@/pages/ForgotPassword';
 import ResetPassword from '@/pages/ResetPassword';
 import AuthCallback from '@/pages/AuthCallback';
+const StudiosManagerDashboard   = lazy(() => import('@/pages/StudiosManagerDashboard'));
+const DevStudioManagerDashboard = lazy(() => import('@/pages/DevStudioManagerDashboard'));
+const StudioPortal              = lazy(() => import('@/pages/StudioPortal'));
+const DevPortal                 = lazy(() => import('@/pages/DevPortal'));
 import ScrollToTop from '@/components/ScrollToTop';
 import { STAFF_ROLES, DEPARTMENTS, getDepartmentForRole, isOperationsRole, isDepartmentManagerRole } from '@/lib/permissions';
 
@@ -66,7 +70,8 @@ const AdminAuditLog        = lazy(() => import('@/pages/admin/AdminAuditLog'));
 const AdminPricing         = lazy(() => import('@/pages/admin/AdminPricing'));
 const AdminReferrals       = lazy(() => import('@/pages/admin/AdminReferrals'));
 const AdminDesigns         = lazy(() => import('@/pages/admin/AdminDesigns'));
-const AdminUgcAds          = lazy(() => import('@/pages/admin/AdminUgcAds'));
+const AdminStudios         = lazy(() => import('@/pages/admin/AdminStudios'));
+const AdminDevStudio       = lazy(() => import('@/pages/admin/AdminDevStudio'));
 const AdminLeads           = lazy(() => import('@/pages/admin/AdminLeads'));
 const AdminBlog            = lazy(() => import('@/pages/admin/AdminBlog'));
 
@@ -294,6 +299,10 @@ const AppRoutes = () => (
           <Route path="/designer"              element={<DesignerPortal />} />
           <Route path="/creative-ops"          element={<CreativeOpsDashboard />} />
           <Route path="/ads-manager"           element={<AdsManagerDashboard />} />
+          <Route path="/studios-manager"       element={<StudiosManagerDashboard />} />
+          <Route path="/devstudio-manager"     element={<DevStudioManagerDashboard />} />
+          <Route path="/studio-portal"         element={<StudioPortal />} />
+          <Route path="/dev-portal"            element={<DevPortal />} />
 
           {/* Admin */}
           <Route path="/admin"                 element={<AdminOverview />} />
@@ -307,7 +316,8 @@ const AppRoutes = () => (
           <Route path="/admin/settings"        element={<AdminSettings />} />
           <Route path="/admin/ads"             element={<AdminAds />} />
           <Route path="/admin/designs"         element={<AdminDesigns />} />
-          <Route path="/admin/ugc-ads"         element={<AdminUgcAds />} />
+          <Route path="/admin/studios"         element={<AdminStudios />} />
+          <Route path="/admin/dev-studio"      element={<AdminDevStudio />} />
           <Route path="/admin/leads"           element={<AdminLeads />} />
           <Route path="/admin/audit-log"       element={<AdminAuditLog />} />
           <Route path="/admin/pricing"         element={<AdminPricing />} />
