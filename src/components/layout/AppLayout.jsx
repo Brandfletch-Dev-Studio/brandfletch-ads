@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 import {
   LayoutDashboard, LayoutGrid, Megaphone, Facebook, Users, Wallet as WalletIcon,
   Settings, X, ChevronRight, BarChart3, Shield, Bell, Tv2, ClipboardList,
-  Tags, Palette, Target, Gift, FileText, Video
+  Tags, Palette, Target, Gift, FileText, Video, Code2
 } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -34,6 +34,18 @@ const designerNav = [
   { path: '/settings',  label: 'Settings',         icon: Settings },
 ];
 
+// ── Studio Portal nav — content creators, portal-only (mirrors designerNav) ──
+const studioPortalNav = [
+  { path: '/studio-portal', label: 'My Projects',  icon: Video },
+  { path: '/settings',      label: 'Settings',      icon: Settings },
+];
+
+// ── Dev Portal nav — developers, portal-only (mirrors designerNav) ──
+const devPortalNav = [
+  { path: '/dev-portal', label: 'My Projects',      icon: Code2 },
+  { path: '/settings',   label: 'Settings',          icon: Settings },
+];
+
 // ── Creative Ops Director nav ─────────────────────────────────────────────────
 // COD has their own dashboard + focused admin access
 const codNav = [
@@ -58,12 +70,33 @@ const adsManagerNav = [
   { path: '/settings',             label: 'Settings',          icon: Settings },
 ];
 
+// ── Studios Manager nav ────────────────────────────────────────────────────
+const studiosManagerNav = [
+  { path: '/studios-manager',  label: 'My Dashboard', icon: LayoutDashboard },
+  { path: '/admin/studios',    label: 'Studio Orders', icon: Video },
+  { path: '/admin/users',      label: 'Studio Team',   icon: Users },
+  { path: '/admin/payments',   label: 'Payments',      icon: WalletIcon },
+  { path: '/admin/reports',    label: 'Reports',       icon: BarChart3 },
+  { path: '/settings',         label: 'Settings',      icon: Settings },
+];
+
+// ── Dev Studio Manager nav ─────────────────────────────────────────────────
+const devstudioManagerNav = [
+  { path: '/devstudio-manager', label: 'My Dashboard',  icon: LayoutDashboard },
+  { path: '/admin/dev-studio',  label: 'Dev Orders',    icon: Code2 },
+  { path: '/admin/users',       label: 'Dev Team',      icon: Users },
+  { path: '/admin/payments',    label: 'Payments',      icon: WalletIcon },
+  { path: '/admin/reports',     label: 'Reports',       icon: BarChart3 },
+  { path: '/settings',          label: 'Settings',      icon: Settings },
+];
+
 // ── Admin nav (all staff except designer/COD/Ads Manager) ────────────────────
 const ALL_ADMIN_NAV = [
   { key: 'overview',      path: '/admin',                label: 'Overview',          icon: LayoutDashboard, permission: null },
   { key: 'campaigns',     path: '/admin/campaigns',      label: 'All Campaigns',     icon: Megaphone,       permission: 'campaigns.view' },
   { key: 'designs',       path: '/admin/designs',        label: 'Design Requests',   icon: Palette,         permission: 'designs.view' },
-  { key: 'ugc_ads',       path: '/admin/ugc-ads',        label: 'UGC Orders',        icon: Video,           permission: 'designs.view' },
+  { key: 'studios',       path: '/admin/studios',        label: 'Studio Orders',     icon: Video,           permission: 'studios.view' },
+  { key: 'devstudio',     path: '/admin/dev-studio',     label: 'Dev Studio Orders', icon: Code2,           permission: 'devstudio.view' },
   { key: 'leads',         path: '/admin/leads',          label: 'Leads & CRM (Soon)',icon: Target,          permission: 'leads.view', disabled: true },
   { key: 'pages',         path: '/admin/pages',          label: 'Page Requests',     icon: Facebook,        permission: 'pages.view' },
   { key: 'users',         path: '/admin/users',          label: 'Team & Users',      icon: Users,           permission: 'users.view' },
@@ -85,24 +118,39 @@ export default function AppLayout() {
   const { user: currentUser } = useAuth();
   const { isStaff, isSuperAdmin, can } = usePermissions();
 
-  const isDesigner = currentUser?.role === 'designer';
-  const isCOD = currentUser?.role === 'creative_ops_director';
-  const isAdsManager = currentUser?.role === 'ads_manager';
-  const isAdminView = location.pathname.startsWith('/admin') || location.pathname.startsWith('/creative-ops') || location.pathname.startsWith('/ads-manager');
+  const isDesigner        = currentUser?.role === 'designer';
+  const isCOD             = currentUser?.role === 'creative_ops_director';
+  const isAdsManager       = currentUser?.role === 'ads_manager';
+  const isStudiosManager   = currentUser?.role === 'studios_manager';
+  const isDevstudioManager = currentUser?.role === 'devstudio_manager';
+  const isContentCreator   = currentUser?.role === 'content_creator';
+  const isDeveloper        = currentUser?.role === 'developer';
+  const isAdminView = location.pathname.startsWith('/admin')
+    || location.pathname.startsWith('/creative-ops')
+    || location.pathname.startsWith('/ads-manager')
+    || location.pathname.startsWith('/studios-manager')
+    || location.pathname.startsWith('/devstudio-manager');
 
   // Determine which nav to show:
-  // - designer → dedicated designer nav (portal + messages + settings)
-  // - creative_ops_director → focused COD nav (their dashboard + design tools)
-  // - ads_manager → focused Ads Manager nav (their dashboard + ads tools)
-  // - other staff on /admin/* → filtered admin nav
+  // - designer / content_creator / developer → dedicated portal-only nav (production roles)
+  // - creative_ops_director / ads_manager / studios_manager / devstudio_manager → their department's focused Manager nav
+  // - other staff on /admin/* (Sales, Finance, platform team) → filtered admin nav
   // - clients (or staff on client routes) → client nav
   let navItems;
   if (isDesigner) {
     navItems = designerNav;
+  } else if (isContentCreator) {
+    navItems = studioPortalNav;
+  } else if (isDeveloper) {
+    navItems = devPortalNav;
   } else if (isCOD) {
     navItems = codNav;
   } else if (isAdsManager) {
     navItems = adsManagerNav;
+  } else if (isStudiosManager) {
+    navItems = studiosManagerNav;
+  } else if (isDevstudioManager) {
+    navItems = devstudioManagerNav;
   } else if (isStaff && isAdminView) {
     navItems = ALL_ADMIN_NAV.filter(item => !item.permission || can(item.permission));
   } else {

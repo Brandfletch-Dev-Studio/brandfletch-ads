@@ -29,7 +29,12 @@ import Register from '@/pages/Register';
 import ForgotPassword from '@/pages/ForgotPassword';
 import ResetPassword from '@/pages/ResetPassword';
 import AuthCallback from '@/pages/AuthCallback';
+const StudiosManagerDashboard   = lazy(() => import('@/pages/StudiosManagerDashboard'));
+const DevStudioManagerDashboard = lazy(() => import('@/pages/DevStudioManagerDashboard'));
+const StudioPortal              = lazy(() => import('@/pages/StudioPortal'));
+const DevPortal                 = lazy(() => import('@/pages/DevPortal'));
 import ScrollToTop from '@/components/ScrollToTop';
+import { STAFF_ROLES, DEPARTMENTS, getDepartmentForRole, isOperationsRole, isDepartmentManagerRole } from '@/lib/permissions';
 
 // ── App pages (lazy) ──
 const Dashboard            = lazy(() => import('@/pages/Dashboard'));
@@ -50,6 +55,8 @@ const CreativeOpsDashboard = lazy(() => import('@/pages/CreativeOpsDashboard'));
 const AdsManagerDashboard  = lazy(() => import('@/pages/AdsManagerDashboard'));
 const Referrals            = lazy(() => import('@/pages/Referrals'));
 const UgcAds               = lazy(() => import('@/pages/UgcAds'));
+const Studios              = lazy(() => import('@/pages/Studios'));
+const DevStudio            = lazy(() => import('@/pages/DevStudio'));
 const AdminOverview        = lazy(() => import('@/pages/admin/AdminOverview'));
 const AdminPortfolio       = lazy(() => import('@/pages/admin/AdminPortfolio'));
 const AdminCampaigns       = lazy(() => import('@/pages/admin/AdminCampaigns'));
@@ -65,7 +72,8 @@ const AdminAuditLog        = lazy(() => import('@/pages/admin/AdminAuditLog'));
 const AdminPricing         = lazy(() => import('@/pages/admin/AdminPricing'));
 const AdminReferrals       = lazy(() => import('@/pages/admin/AdminReferrals'));
 const AdminDesigns         = lazy(() => import('@/pages/admin/AdminDesigns'));
-const AdminUgcAds          = lazy(() => import('@/pages/admin/AdminUgcAds'));
+const AdminStudios         = lazy(() => import('@/pages/admin/AdminStudios'));
+const AdminDevStudio       = lazy(() => import('@/pages/admin/AdminDevStudio'));
 const AdminLeads           = lazy(() => import('@/pages/admin/AdminLeads'));
 const AdminBlog            = lazy(() => import('@/pages/admin/AdminBlog'));
 
@@ -148,15 +156,24 @@ class ErrorBoundary extends React.Component {
 }
 
 // ── Helpers ──
-const STAFF_ROLES = [
-  'admin','super_admin','ads_manager','campaign_manager',
-  'finance','sales_manager','creative_ops_director','designer',
-];
+// STAFF_ROLES now lives in permissions.js (single source of truth) — this used
+// to be a second, separately-maintained copy that could silently drift out of
+// sync with the real role list.
 
 function staffHome(role) {
-  if (role === 'designer')              return '/designer';
-  if (role === 'creative_ops_director') return '/creative-ops';
-  if (role === 'ads_manager')           return '/ads-manager';
+  // Portal-only production roles (designer, content_creator, developer) go
+  // straight to their portal.
+  if (isOperationsRole(role)) {
+    const dept = getDepartmentForRole(role);
+    if (dept && DEPARTMENTS[dept].portalPath) return DEPARTMENTS[dept].portalPath;
+  }
+  // Department Managers get their own personal department dashboard.
+  if (isDepartmentManagerRole(role)) {
+    const dept = getDepartmentForRole(role);
+    if (dept) return DEPARTMENTS[dept].dashboardPath;
+  }
+  // Everyone else (Sales/Finance in any department, platform team) lands on
+  // the shared admin overview, filtered to whatever they have access to.
   return '/admin';
 }
 
@@ -265,6 +282,8 @@ const AppRoutes = () => (
         <Route element={<GuestAppRoute />}>
           <Route path="/campaigns/new" element={<CampaignWizard />} />
           <Route path="/ugc-ads"       element={<UgcAds />} />
+          <Route path="/studios"       element={<Studios />} />
+          <Route path="/dev-studio"    element={<DevStudio />} />
         </Route>
 
         <Route element={<AuthGuard><AppLayout /></AuthGuard>}>
@@ -284,6 +303,10 @@ const AppRoutes = () => (
           <Route path="/designer"              element={<DesignerPortal />} />
           <Route path="/creative-ops"          element={<CreativeOpsDashboard />} />
           <Route path="/ads-manager"           element={<AdsManagerDashboard />} />
+          <Route path="/studios-manager"       element={<StudiosManagerDashboard />} />
+          <Route path="/devstudio-manager"     element={<DevStudioManagerDashboard />} />
+          <Route path="/studio-portal"         element={<StudioPortal />} />
+          <Route path="/dev-portal"            element={<DevPortal />} />
 
           {/* Admin */}
           <Route path="/admin"                 element={<AdminOverview />} />
@@ -297,7 +320,8 @@ const AppRoutes = () => (
           <Route path="/admin/settings"        element={<AdminSettings />} />
           <Route path="/admin/ads"             element={<AdminAds />} />
           <Route path="/admin/designs"         element={<AdminDesigns />} />
-          <Route path="/admin/ugc-ads"         element={<AdminUgcAds />} />
+          <Route path="/admin/studios"         element={<AdminStudios />} />
+          <Route path="/admin/dev-studio"      element={<AdminDevStudio />} />
           <Route path="/admin/leads"           element={<AdminLeads />} />
           <Route path="/admin/audit-log"       element={<AdminAuditLog />} />
           <Route path="/admin/pricing"         element={<AdminPricing />} />

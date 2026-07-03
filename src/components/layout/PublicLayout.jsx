@@ -126,11 +126,12 @@ export default function PublicLayout() {
             </p>
           </div>
           <div>
-            <p className="text-white font-semibold text-sm mb-3">Services</p>
+            <p className="text-white font-semibold text-sm mb-3">Departments</p>
             <ul className="space-y-2 text-sm">
-              {[['Meta Ads','/pricing'],['UGC Ads','/pricing'],['Graphic Design','/pricing'],['Web Development','/pricing'],['Social Media','/pricing']].map(([l,h])=>(
+              {[['Brandfletch Ads','/pricing?tab=meta-ads'],['Brandfletch Designs','/designs'],['Brandfletch Studios','/studios'],['Brandfletch Dev Studio','/dev-studio'],['Brandfletch Payments','/pricing?tab=online-payments']].map(([l,h])=>(
                 <li key={l}><Link to={h} className="hover:text-white transition-colors">{l}</Link></li>
               ))}
+              <li className="text-white/40 text-xs pt-1">Brandfletch Sales &amp; Business Academy — coming soon</li>
             </ul>
           </div>
           <div>

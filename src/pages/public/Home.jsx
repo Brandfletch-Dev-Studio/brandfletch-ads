@@ -1,79 +1,96 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import {
-  ArrowRight, Megaphone, Video, Palette, Globe, CreditCard,
-  Smartphone, CheckCircle, TrendingUp, Target, Star
+  ArrowRight, Megaphone, Palette, CreditCard,
+  CheckCircle, TrendingUp, Target, Star, Camera, Code2, Users2, GraduationCap
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useSEO } from '@/hooks/useSEO';
 
-const SERVICES = [
+const DEPARTMENTS = [
   {
-    id: 'meta-ads',
+    id: 'ads',
     icon: Megaphone,
-    title: 'Meta Ads Management',
-    tagline: 'Your customers are already on Facebook & Instagram.',
-    body: 'We run professionally managed advertising campaigns designed to generate qualified leads, increase visibility, and drive measurable action for your business.',
+    title: 'Brandfletch Ads',
+    tagline: "Your customers are already online — let's reach them.",
+    body: 'Meta Ads and Social Media Management running today, with Google Ads and TikTok Ads coming soon — all professionally managed to generate qualified leads and measurable growth.',
     color: 'from-blue-600 to-blue-800',
     accent: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
     dot: 'bg-blue-500',
+    to: '/pricing?tab=meta-ads',
   },
   {
-    id: 'ugc-ads',
-    icon: Video,
-    title: 'UGC Ad Creatives',
-    tagline: 'People trust people — not brands.',
-    body: 'We match your brand with creators who craft authentic stories that convert. Every creative is built Meta Ads-ready with attention-grabbing hooks and conversion-focused structure.',
-    color: 'from-purple-600 to-purple-800',
-    accent: 'bg-purple-500/10 text-purple-600 dark:text-purple-400',
-    dot: 'bg-purple-500',
-  },
-  {
-    id: 'graphic-design',
+    id: 'designs',
     icon: Palette,
-    title: 'Graphic Design',
+    title: 'Brandfletch Designs',
     tagline: 'First impressions drive decisions.',
-    body: 'From social creatives to ad designs — every piece is built to communicate value and drive action. Retainer packages for consistent output or one-off projects.',
+    body: 'Social creatives, ad designs, and brand assets — every piece built to communicate value and drive action. Retainers for consistent output or one-off projects.',
     color: 'from-pink-600 to-rose-700',
     accent: 'bg-pink-500/10 text-pink-600 dark:text-pink-400',
     dot: 'bg-pink-500',
+    to: '/designs',
   },
   {
-    id: 'web-dev',
-    icon: Globe,
-    title: 'Web Design & Development',
+    id: 'studios',
+    icon: Camera,
+    title: 'Brandfletch Studios',
+    tagline: 'People trust people — not brands.',
+    body: 'UGC ad creatives, content creation & Reels, podcast features, videography and photography — all produced by one in-house creative team.',
+    color: 'from-red-600 to-rose-800',
+    accent: 'bg-red-500/10 text-red-600 dark:text-red-400',
+    dot: 'bg-red-500',
+    to: '/studios',
+  },
+  {
+    id: 'dev-studio',
+    icon: Code2,
+    title: 'Brandfletch Dev Studio',
     tagline: 'A professional online presence changes everything.',
-    body: 'We build websites that become growth tools — conversion-focused, mobile-ready, and built to turn visitors into leads. From starter sites to full digital platforms.',
-    color: 'from-teal-600 to-teal-800',
-    accent: 'bg-teal-500/10 text-teal-600 dark:text-teal-400',
-    dot: 'bg-teal-500',
+    body: 'Websites, apps, workflow automations, and AI agents. Fixed packages for the essentials, custom quotes for bespoke builds.',
+    color: 'from-indigo-600 to-violet-800',
+    accent: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400',
+    dot: 'bg-indigo-500',
+    to: '/dev-studio',
   },
   {
-    id: 'social-media',
-    icon: Smartphone,
-    title: 'Social Media Management',
-    tagline: 'Stay visible while you run your business.',
-    body: 'Content strategy, branded posts, Reels, and community management — handled consistently so your social presence becomes a real marketing channel.',
-    color: 'from-orange-500 to-orange-700',
-    accent: 'bg-orange-500/10 text-orange-600 dark:text-orange-400',
-    dot: 'bg-orange-500',
-  },
-  {
-    id: 'online-payments',
+    id: 'payments',
     icon: CreditCard,
-    title: 'Online Payments',
+    title: 'Brandfletch Payments',
     tagline: 'Online payments, simplified.',
-    body: 'Practical payment solutions for businesses and individuals — including dollar-based options and MWK conversions at competitive rates for specific transactions.',
+    body: 'Practical payment solutions for businesses and individuals — including dollar-based options and MWK conversions at competitive rates.',
     color: 'from-green-600 to-emerald-700',
     accent: 'bg-green-500/10 text-green-600 dark:text-green-400',
     dot: 'bg-green-500',
+    to: '/pricing?tab=online-payments',
+  },
+  {
+    id: 'sales',
+    icon: Users2,
+    title: 'Brandfletch Sales',
+    tagline: 'An outsourced sales team, on demand.',
+    body: 'A dedicated sales team for businesses that need help converting leads into customers.',
+    color: 'from-amber-600 to-orange-700',
+    accent: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
+    dot: 'bg-amber-500',
+    comingSoon: true,
+  },
+  {
+    id: 'academy',
+    icon: GraduationCap,
+    title: 'Brandfletch Business Academy',
+    tagline: 'Learn the systems behind the growth.',
+    body: 'Courses and programs built to teach business owners the marketing, sales, and operations skills we use every day.',
+    color: 'from-cyan-600 to-sky-800',
+    accent: 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400',
+    dot: 'bg-cyan-500',
+    comingSoon: true,
   },
 ];
 
 const STATS = [
   { value: '500+', label: 'Businesses served' },
-  { value: '6',    label: 'Core services' },
+  { value: '5',    label: 'Live departments' },
   { value: '5',    label: 'African countries' },
   { value: '98%',  label: 'Client satisfaction' },
 ];
@@ -225,38 +242,51 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── SERVICES ─────────────────────────────────────────────────────────── */}
+      {/* ── DEPARTMENTS ──────────────────────────────────────────────────────── */}
       <section className="py-20 bg-muted/30">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14">
             <Badge className="mb-4 bg-[hsl(var(--accent))]/10 text-[hsl(var(--accent))] border-[hsl(var(--accent))]/20 text-xs">
-              Our Services
+              Our Departments
             </Badge>
             <h2 className="text-3xl sm:text-4xl font-display font-extrabold text-foreground">
-              Everything your brand needs to grow
+              Every department your brand needs to grow
             </h2>
             <p className="mt-3 text-muted-foreground max-w-xl mx-auto text-sm">
-              Six focused services — each one designed to support the next, all working toward more customers for your business.
+              Five departments live today, with Brandfletch Sales and Business Academy on the way — each one built to support the next.
             </p>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {SERVICES.map(s => {
+            {DEPARTMENTS.map(s => {
               const Icon = s.icon;
               return (
-                <div key={s.id} className="group bg-card border border-border rounded-2xl overflow-hidden hover:shadow-lg hover:border-[hsl(var(--accent))]/30 transition-all duration-300">
+                <div key={s.id} className={`group bg-card border border-border rounded-2xl overflow-hidden transition-all duration-300 ${s.comingSoon ? 'opacity-70' : 'hover:shadow-lg hover:border-[hsl(var(--accent))]/30'}`}>
                   <div className={`h-1 bg-gradient-to-r ${s.color}`} />
                   <div className="p-6">
-                    <div className={`w-11 h-11 rounded-xl ${s.accent} flex items-center justify-center mb-4`}>
-                      <Icon className="w-5 h-5" />
+                    <div className="flex items-start justify-between mb-4">
+                      <div className={`w-11 h-11 rounded-xl ${s.accent} flex items-center justify-center`}>
+                        <Icon className="w-5 h-5" />
+                      </div>
+                      {s.comingSoon && (
+                        <Badge variant="outline" className="text-[10px] text-muted-foreground border-border">Coming Soon</Badge>
+                      )}
                     </div>
                     <h3 className="font-bold text-base text-foreground mb-1">{s.title}</h3>
                     <p className="text-xs font-semibold text-[hsl(var(--accent))] mb-3 italic">{s.tagline}</p>
                     <p className="text-sm text-muted-foreground leading-relaxed mb-4">{s.body}</p>
-                    <Link to="/pricing">
-                      <button className="text-xs font-semibold text-[hsl(var(--accent))] hover:underline flex items-center gap-1">
-                        See pricing <ArrowRight className="w-3 h-3" />
-                      </button>
-                    </Link>
+                    {s.comingSoon ? (
+                      <Link to="/contact">
+                        <button className="text-xs font-semibold text-muted-foreground hover:text-[hsl(var(--accent))] hover:underline flex items-center gap-1">
+                          Get notified when it launches <ArrowRight className="w-3 h-3" />
+                        </button>
+                      </Link>
+                    ) : (
+                      <Link to={s.to || "/pricing"}>
+                        <button className="text-xs font-semibold text-[hsl(var(--accent))] hover:underline flex items-center gap-1">
+                          See pricing <ArrowRight className="w-3 h-3" />
+                        </button>
+                      </Link>
+                    )}
                   </div>
                 </div>
               );

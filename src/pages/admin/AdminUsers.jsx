@@ -18,29 +18,20 @@ import { useRoleGuard } from '@/hooks/useRoleGuard';
 import { useAuditLog } from '@/hooks/useAuditLog';
 import { useAuth } from '@/lib/AuthContext';
 import { usePermissions } from '@/hooks/usePermissions';
-import { ROLE_LABELS, ROLE_COLORS, STAFF_ROLES } from '@/lib/permissions';
+import { ROLE_LABELS, ROLE_COLORS, STAFF_ROLES, DEPARTMENTS, PLATFORM_ROLES } from '@/lib/permissions';
 
-const INVITABLE_ROLES = [
-  { value: 'campaign_manager',      label: 'Campaign Manager' },
-  { value: 'sales_manager',         label: 'Sales Manager' },
-  { value: 'finance',               label: 'Finance' },
-  { value: 'ads_manager',           label: 'Ads Manager' },
-  { value: 'creative_ops_director', label: 'Creative Ops Director' },
-  { value: 'designer',              label: 'Designer' },
-  { value: 'admin',                 label: 'Super Admin' },
-  { value: 'user',                  label: 'Client' },
+// Built directly from permissions.js's DEPARTMENTS registry + PLATFORM_ROLES
+// so this dropdown can never drift out of sync with the real role list again
+// (previously a separately hand-maintained copy that still had retired roles
+// like 'sales_manager'/'finance' and was missing every department role).
+const STAFF_ROLE_OPTIONS = [
+  { value: 'admin', label: 'CEO' },
+  ...PLATFORM_ROLES.filter(r => r !== 'admin' && r !== 'super_admin').map(v => ({ value: v, label: ROLE_LABELS[v] })),
+  ...Object.values(DEPARTMENTS).flatMap(d => Object.values(d.roles)).map(v => ({ value: v, label: ROLE_LABELS[v] })),
 ];
 
-const ASSIGNABLE_ROLES = [
-  { value: 'user',                  label: 'Client' },
-  { value: 'campaign_manager',      label: 'Campaign Manager' },
-  { value: 'sales_manager',         label: 'Sales Manager' },
-  { value: 'finance',               label: 'Finance' },
-  { value: 'ads_manager',           label: 'Ads Manager' },
-  { value: 'creative_ops_director', label: 'Creative Ops Director' },
-  { value: 'designer',              label: 'Designer' },
-  { value: 'admin',                 label: 'Super Admin' },
-];
+const INVITABLE_ROLES = [...STAFF_ROLE_OPTIONS, { value: 'user', label: 'Client' }];
+const ASSIGNABLE_ROLES = [{ value: 'user', label: 'Client' }, ...STAFF_ROLE_OPTIONS];
 
 // Role hierarchy row sub-component
 function HierarchyRow({ role, desc, level, color }) {
@@ -400,11 +391,14 @@ export default function AdminUsers() {
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground pt-1">
-                {inviteRole === 'admin' && '⚠️ Super Admin has full unrestricted access.'}
-                {inviteRole === 'ads_manager' && 'Can manage campaigns, clients, and approve content.'}
-                {inviteRole === 'campaign_manager' && 'Can create and manage campaigns and communicate with clients.'}
-                {inviteRole === 'finance' && 'Can manage payments and financial settings.'}
-                {inviteRole === 'sales_manager' && 'Can manage leads and sales pipeline.'}
+                {inviteRole === 'admin' && '⚠️ CEO has full unrestricted access across every department.'}
+                {['platform_sales','platform_finance','platform_director_ops'].includes(inviteRole) && 'Platform team — same access as a department\'s own role, but across all 4 departments.'}
+                {inviteRole.endsWith('_manager') && inviteRole !== 'devstudio_manager' && 'Runs their department: full admin access scoped to that department only.'}
+                {inviteRole === 'devstudio_manager' && 'Runs Dev Studio: full admin access scoped to that department only.'}
+                {inviteRole.endsWith('_sales') && 'Manages clients and leads, scoped to their department only.'}
+                {inviteRole.endsWith('_finance') && 'Manages payments and pricing, scoped to their department only.'}
+                {['campaign_manager','designer','content_creator','developer'].includes(inviteRole) && 'Hands-on production role — works from their portal, not the admin dashboard.'}
+                {inviteRole === 'creative_ops_director' && 'Runs the Designs department: full admin access scoped to Designs.'}
               </p>
             </div>
             <div className="flex gap-2 pt-1">

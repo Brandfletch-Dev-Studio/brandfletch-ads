@@ -50,9 +50,20 @@ Deno.serve(async (req) => {
       })
     }
 
-    // Parse tx_ref: BF-DESIGN-[id]-[ts] or BF-CAMP-[id]-[ts]
+    // Parse tx_ref: BF-{TYPE}-{id}-{ts}, e.g. BF-UGC-a1b2c3d4-e5f6-47ab-89cd-0123456789ab-1720000000000
+    // IDs are UUIDs, which contain hyphens themselves — naively using
+    // parts[2] only grabbed the first 8-char fragment of the UUID, never
+    // the real id, so this webhook's `.eq('id', ...)` lookups never
+    // matched any row for ANY payment type (DESIGN/UGC/CAMP). That means
+    // the async webhook safety-net (Paychangu calling us server-to-server,
+    // independent of the customer's browser redirect) has silently never
+    // confirmed a single payment — only the synchronous verifyPaychanguPayment
+    // callback (triggered when the customer's browser actually returns to
+    // the app) ever worked. Reconstruct the full id by taking everything
+    // between the type and the trailing numeric timestamp.
     const parts = tx_ref.split('-')
-    const paymentType = parts[1] // DESIGN or CAMP
+    const paymentType = parts[1] // DESIGN, UGC, CAMP, or DEVSTUDIO
+    const refId = parts.slice(2, -1).join('-')
 
     // Re-verify with Paychangu API
     const verifyRes = await fetch(`https://api.paychangu.com/verify-payment/${tx_ref}`, {
@@ -67,8 +78,8 @@ Deno.serve(async (req) => {
     const txData = verifyData.data
 
     // ── Design subscription ──
-    if (paymentType === 'DESIGN' && parts[2]) {
-      const subscriptionId = parts[2]
+    if (paymentType === 'DESIGN' && refId) {
+      const subscriptionId = refId
       const { data: subscription } = await adminClient
         .from('PlatformSubscription').select('*').eq('id', subscriptionId).single()
 
@@ -109,8 +120,8 @@ Deno.serve(async (req) => {
     // previously only recognized DESIGN/CAMP — UGC payments fell through
     // untouched (order stayed 'pending_payment' forever server-side even
     // though Paychangu had actually charged the customer).
-    if (paymentType === 'UGC' && parts[2]) {
-      const orderId = parts[2]
+    if (paymentType === 'UGC' && refId) {
+      const orderId = refId
       const { data: order } = await adminClient
         .from('UgcOrder').select('*').eq('id', orderId).single()
 
@@ -143,9 +154,44 @@ Deno.serve(async (req) => {
       }
     }
 
+    // ── Dev Studio order ──
+    if (paymentType === 'DEVSTUDIO' && refId) {
+      const orderId = refId
+      const { data: order } = await adminClient
+        .from('DevStudioOrder').select('*').eq('id', orderId).single()
+
+      if (order && (order as any).payment_status !== 'paid') {
+        await adminClient.from('DevStudioOrder').update({
+          status: 'awaiting_brief',
+          payment_status: 'paid',
+          payment_method: 'Paychangu',
+          payment_reference: tx_ref,
+        }).eq('id', orderId)
+
+        await adminClient.from('WalletTransaction').insert({
+          user_id: (order as any).user_id, type: 'payment',
+          amount: txData.amount, currency: txData.currency,
+          payment_method: 'Paychangu', payment_reference: tx_ref,
+          status: 'completed', description: `Dev Studio order via Paychangu (webhook) - ${(order as any).package || (order as any).service_type || ''}`,
+        })
+
+        await adminClient.from('Notification').insert({
+          recipient_id: (order as any).user_id,
+          title: 'Dev Studio Order Payment Confirmed',
+          message: 'Your payment was received — our team will begin work shortly.',
+          type: 'payment_confirmed', is_read: false,
+        })
+
+        await maybeCreateAffiliateCommission(
+          adminClient, (order as any).user_id, 'dev_studio',
+          `Dev Studio Order - ${(order as any).package || (order as any).service_type || ''}`, txData.amount, txData.currency,
+        )
+      }
+    }
+
     // ── Campaign ──
-    if (paymentType === 'CAMP' && parts[2]) {
-      const campaignId = parts[2]
+    if (paymentType === 'CAMP' && refId) {
+      const campaignId = refId
       const { data: campaign } = await adminClient.from('Campaign').select('*').eq('id', campaignId).single()
 
       if (campaign && (campaign as any).status === 'awaiting_payment') {
