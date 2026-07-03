@@ -2,7 +2,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import {
   ArrowRight, Megaphone, Video, Palette, Globe, CreditCard,
-  Smartphone, CheckCircle, TrendingUp, Target, Star
+  Smartphone, CheckCircle, TrendingUp, Target, Star, Camera, Code2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -60,6 +60,28 @@ const SERVICES = [
     dot: 'bg-orange-500',
   },
   {
+    id: 'studios',
+    icon: Camera,
+    title: 'Studios',
+    tagline: 'Content that keeps your brand top of mind.',
+    body: 'Reels, podcast features, videography and photography — produced by our in-house creative team for brands that need more than just ads.',
+    color: 'from-red-600 to-rose-800',
+    accent: 'bg-red-500/10 text-red-600 dark:text-red-400',
+    dot: 'bg-red-500',
+    to: '/studios',
+  },
+  {
+    id: 'dev-studio',
+    icon: Code2,
+    title: 'Dev Studio',
+    tagline: 'Websites, apps, and automation — built to grow with you.',
+    body: 'From full websites to custom apps, workflow automations, and AI agents. Fixed packages for the essentials, custom quotes for bespoke builds.',
+    color: 'from-indigo-600 to-violet-800',
+    accent: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400',
+    dot: 'bg-indigo-500',
+    to: '/dev-studio',
+  },
+  {
     id: 'online-payments',
     icon: CreditCard,
     title: 'Online Payments',
@@ -73,7 +95,7 @@ const SERVICES = [
 
 const STATS = [
   { value: '500+', label: 'Businesses served' },
-  { value: '6',    label: 'Core services' },
+  { value: '8',    label: 'Core services' },
   { value: '5',    label: 'African countries' },
   { value: '98%',  label: 'Client satisfaction' },
 ];
@@ -236,7 +258,7 @@ export default function Home() {
               Everything your brand needs to grow
             </h2>
             <p className="mt-3 text-muted-foreground max-w-xl mx-auto text-sm">
-              Six focused services — each one designed to support the next, all working toward more customers for your business.
+              Eight focused services — each one designed to support the next, all working toward more customers for your business.
             </p>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -252,7 +274,7 @@ export default function Home() {
                     <h3 className="font-bold text-base text-foreground mb-1">{s.title}</h3>
                     <p className="text-xs font-semibold text-[hsl(var(--accent))] mb-3 italic">{s.tagline}</p>
                     <p className="text-sm text-muted-foreground leading-relaxed mb-4">{s.body}</p>
-                    <Link to="/pricing">
+                    <Link to={s.to || "/pricing"}>
                       <button className="text-xs font-semibold text-[hsl(var(--accent))] hover:underline flex items-center gap-1">
                         See pricing <ArrowRight className="w-3 h-3" />
                       </button>

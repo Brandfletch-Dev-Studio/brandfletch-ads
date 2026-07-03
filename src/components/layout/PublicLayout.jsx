@@ -128,7 +128,7 @@ export default function PublicLayout() {
           <div>
             <p className="text-white font-semibold text-sm mb-3">Services</p>
             <ul className="space-y-2 text-sm">
-              {[['Meta Ads','/pricing'],['UGC Ads','/pricing'],['Graphic Design','/pricing'],['Web Development','/pricing'],['Social Media','/pricing']].map(([l,h])=>(
+              {[['Meta Ads','/pricing'],['UGC Ads','/pricing'],['Graphic Design','/pricing'],['Web Development','/pricing'],['Social Media','/pricing'],['Studios','/studios'],['Dev Studio','/dev-studio']].map(([l,h])=>(
                 <li key={l}><Link to={h} className="hover:text-white transition-colors">{l}</Link></li>
               ))}
             </ul>
