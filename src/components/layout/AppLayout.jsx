@@ -4,32 +4,34 @@ import { cn } from '@/lib/utils';
 import {
   LayoutDashboard, LayoutGrid, Megaphone, Facebook, Users, Wallet as WalletIcon,
   Settings, X, ChevronRight, BarChart3, Shield, Bell, Tv2, ClipboardList,
-  Tags, Palette, Target, Gift, FileText, Video, Code2, Clapperboard
+  Tags, Palette, Target, Gift, FileText, Video, Code2
 } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
 import { usePermissions } from '@/hooks/usePermissions';
 import { ROLE_LABELS } from '@/lib/permissions';
+import { CLIENT_DEPARTMENTS, findActiveDepartment } from '@/lib/clientDepartments';
 
 import BrandLogo from '@/components/BrandLogo';
 import TopBar from '@/components/layout/TopBar';
 import AppBottomNav from '@/components/layout/AppBottomNav';
 
 // ── Client nav (role='user') ─────────────────────────────────────────────────
-// Repackaged around departments (2026-07-03) instead of a flat per-service
-// list — the 4 live departments lead so they double as the mobile bottom
-// nav's quick-access icons (AppBottomNav takes the first 4). Dashboard and
-// everything else is one tap away via "More" (opens the full sidebar).
+// Two-layered nav (2026-07-03), driven by src/lib/clientDepartments.js:
+//   Layer 1 — this flat list's first 4 entries (one per department) double
+//   as the mobile bottom nav's quick-access icons (AppBottomNav takes the
+//   first 4) and are ALWAYS present, so a client can jump to any department
+//   from anywhere. Facebook Pages / Audiences / Leads are no longer flat
+//   top-level items — they now live only inside the Ads department's own
+//   subNav (see CLIENT_DEPARTMENTS), reachable once you're inside Ads.
+//   Layer 2 — once a client is actually inside a department's pages, the
+//   sidebar/drawer switches to that department's own subNav instead of this
+//   flat list (see the `activeDept` branch in the render below) — like
+//   walking into that department's own dedicated mini-menu.
 const clientNav = [
-  { path: '/campaigns', label: 'Ads',              icon: Megaphone },
-  { path: '/designs',   label: 'Designs',          icon: Palette },
-  { path: '/studios',   label: 'Studios',          icon: Clapperboard },
-  { path: '/dev-studio', label: 'Dev Studio',      icon: Code2 },
-  { path: '/dashboard', label: 'Dashboard',        icon: LayoutDashboard },
-  { path: '/leads',     label: 'Leads (Coming Soon)', icon: Target, disabled: true },
-  { path: '/pages',     label: 'Facebook Pages',   icon: Facebook },
-  { path: '/audiences', label: 'Audiences',        icon: Users },
-  { path: '/referrals', label: 'Refer & Earn',     icon: Gift },
-  { path: '/settings',  label: 'Settings',         icon: Settings },
+  ...CLIENT_DEPARTMENTS.map(d => ({ path: d.homePath, label: d.label, icon: d.icon, matchPaths: d.matchPaths })),
+  { path: '/dashboard', label: 'Dashboard',    icon: LayoutDashboard },
+  { path: '/referrals', label: 'Refer & Earn', icon: Gift },
+  { path: '/settings',  label: 'Settings',     icon: Settings },
 ];
 
 // ── Designer nav — ONLY their portal, messages, settings ────────────────────
@@ -136,6 +138,13 @@ export default function AppLayout() {
     || location.pathname.startsWith('/studios-manager')
     || location.pathname.startsWith('/devstudio-manager');
 
+  // Layer 2 of the client nav: when a client (never staff — staff have their
+  // own dedicated navs above) is inside one of a department's own pages,
+  // the sidebar/drawer below switches to that department's subNav instead
+  // of the flat clientNav list.
+  const activeDept = !isStaff ? findActiveDepartment(location.pathname) : null;
+  const DeptIcon = activeDept?.icon;
+
   // Determine which nav to show:
   // - designer / content_creator / developer → dedicated portal-only nav (production roles)
   // - creative_ops_director / ads_manager / studios_manager / devstudio_manager → their department's focused Manager nav
@@ -161,6 +170,37 @@ export default function AppLayout() {
   } else {
     navItems = clientNav;
   }
+
+  // Renders one sidebar/drawer row — a normal Link, or a greyed-out
+  // disabled row for "coming soon" items. Shared by every nav branch below.
+  const renderNavItem = ({ path, label, icon: Icon, disabled }) => {
+    const active = path === '/admin'
+      ? location.pathname === '/admin'
+      : location.pathname === path || location.pathname.startsWith(path + '/');
+    if (disabled) {
+      return (
+        <div key={path}
+          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-[hsl(var(--sidebar-foreground))] opacity-40 cursor-not-allowed">
+          <Icon className="w-4 h-4 flex-shrink-0" />
+          <span className="flex-1">{label}</span>
+        </div>
+      );
+    }
+    return (
+      <Link key={path} to={path} onClick={() => setSidebarOpen(false)}
+        className={cn(
+          "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all group",
+          active
+            ? "bg-[hsl(var(--sidebar-primary))] text-white"
+            : "text-[hsl(var(--sidebar-foreground))] hover:bg-[hsl(var(--sidebar-accent))] hover:text-white"
+        )}
+      >
+        <Icon className="w-4 h-4 flex-shrink-0" />
+        <span className="flex-1">{label}</span>
+        {active && <ChevronRight className="w-3 h-3 opacity-70" />}
+      </Link>
+    );
+  };
 
   return (
     <div className="flex h-screen bg-background overflow-hidden">
@@ -192,35 +232,28 @@ export default function AppLayout() {
 
         {/* Nav items */}
         <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-          {navItems.map(({ path, label, icon: Icon, disabled }) => {
-            const active = path === '/admin'
-              ? location.pathname === '/admin'
-              : location.pathname === path || location.pathname.startsWith(path + '/');
-            if (disabled) {
-              return (
-                <div key={path}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-[hsl(var(--sidebar-foreground))] opacity-40 cursor-not-allowed">
-                  <Icon className="w-4 h-4 flex-shrink-0" />
-                  <span className="flex-1">{label}</span>
-                </div>
-              );
-            }
+          {activeDept ? (
+            <>
+              {/* Department header — you're "inside" this department now */}
+              <div className="flex items-center gap-2 px-3 pb-2 mb-1">
+                <DeptIcon className="w-4 h-4 text-[hsl(var(--sidebar-primary))]" />
+                <span className="text-xs font-semibold uppercase tracking-wide text-[hsl(var(--sidebar-foreground))]/70">
+                  {activeDept.label}
+                </span>
+              </div>
+              {activeDept.subNav.map(item => renderNavItem(item))}
 
-            return (
-              <Link key={path} to={path} onClick={() => setSidebarOpen(false)}
-                className={cn(
-                  "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all group",
-                  active
-                    ? "bg-[hsl(var(--sidebar-primary))] text-white"
-                    : "text-[hsl(var(--sidebar-foreground))] hover:bg-[hsl(var(--sidebar-accent))] hover:text-white"
-                )}
-              >
-                <Icon className="w-4 h-4 flex-shrink-0" />
-                <span className="flex-1">{label}</span>
-                {active && <ChevronRight className="w-3 h-3 opacity-70" />}
-              </Link>
-            );
-          })}
+              {/* Divider — jump to another department or back to the global menu */}
+              <div className="pt-3 mt-3 border-t border-[hsl(var(--sidebar-border))] space-y-1">
+                <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wide text-[hsl(var(--sidebar-foreground))]/50">
+                  Switch Department
+                </p>
+                {clientNav.filter(item => item.path !== activeDept.homePath).map(item => renderNavItem(item))}
+              </div>
+            </>
+          ) : (
+            navItems.map(item => renderNavItem(item))
+          )}
 
           {/* Admin ↔ Client view switcher — super admin only */}
           {isSuperAdmin && !isDesigner && (

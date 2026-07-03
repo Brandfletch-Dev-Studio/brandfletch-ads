@@ -10,16 +10,21 @@ import { cn } from '@/lib/utils';
 export default function AppBottomNav({ navItems, activePath, onMore }) {
   const items = (navItems || []).filter(item => !item.disabled).slice(0, 4);
 
-  const isActive = (path) =>
-    path === '/admin'
+  // Department items carry `matchPaths` (see clientDepartments.js) so the
+  // icon stays highlighted across every page inside that department, not
+  // just its literal home path — e.g. Ads stays active while on Facebook
+  // Pages or Audiences, both "inside" the Ads department.
+  const isActive = (item) =>
+    item.path === '/admin'
       ? activePath === '/admin'
-      : activePath === path || activePath.startsWith(path + '/');
+      : (item.matchPaths || [item.path]).some(p => activePath === p || activePath.startsWith(p + '/'));
 
   return (
     <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-[hsl(var(--sidebar-background))] border-t border-[hsl(var(--sidebar-border))] safe-area-bottom z-50">
       <nav className="grid h-16" style={{ gridTemplateColumns: `repeat(${items.length + 1}, minmax(0, 1fr))` }}>
-        {items.map(({ path, label, icon: Icon }) => {
-          const active = isActive(path);
+        {items.map((item) => {
+          const { path, label, icon: Icon } = item;
+          const active = isActive(item);
           return (
             <Link
               key={path}
