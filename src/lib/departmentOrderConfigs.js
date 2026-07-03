@@ -58,6 +58,23 @@ export const STUDIOS_CONFIG = {
     { value: 'videography',       label: 'Videography' },
     { value: 'photography',       label: 'Photography' },
   ],
+  // Customer checkout wizard config (DeptOrderWizard). UGC Ads keeps its own
+  // dedicated flow at /ugc-ads (multi-tier packages, live & unaffected) — this
+  // powers the *other* 4 Studios services, which are single-priced via
+  // ServiceRate. tx_ref prefix + payment_type reuse the existing 'ugc'
+  // handling in the Paychangu edge functions (they only care about the
+  // UgcOrder row, not which service_type it is).
+  orderableServiceTypes: ['content_creation', 'podcast', 'videography', 'photography'],
+  txRefPrefix:     'UGC',
+  paymentType:     'ugc',
+  briefFields: [
+    { key: 'brand_name',           label: 'Brand / Business Name',           type: 'text',     required: true,  placeholder: "e.g. Chisomo's Boutique" },
+    { key: 'product_service',      label: 'What are we creating this for?',  type: 'text',     required: true,  placeholder: 'e.g. Product launch, weekly episode, event coverage' },
+    { key: 'target_audience',      label: 'Target Audience',                 type: 'text',     required: false, placeholder: 'e.g. Women 18-35 in Malawi' },
+    { key: 'key_messages',         label: 'Project Details',                 type: 'textarea', required: true,  placeholder: 'Tell us what you need, the vibe, and any must-haves.' },
+    { key: 'reference_links',      label: 'Reference / Inspiration Links',   type: 'text',     required: false, placeholder: 'https://...' },
+    { key: 'special_requirements', label: 'Special Requirements',            type: 'textarea', required: false, placeholder: "Any specific dos/don'ts, locations, dates, props?" },
+  ],
 };
 
 export const DEVSTUDIO_CONFIG = {
@@ -76,5 +93,16 @@ export const DEVSTUDIO_CONFIG = {
     { value: 'app',        label: 'App' },
     { value: 'automation', label: 'Automation' },
     { value: 'ai_agent',   label: 'AI Agent' },
+  ],
+  orderableServiceTypes: ['website', 'app', 'automation', 'ai_agent'],
+  txRefPrefix:     'DEVSTUDIO',
+  paymentType:     'devstudio',
+  briefFields: [
+    { key: 'project_name',         label: 'Project Name',              type: 'text',     required: true,  placeholder: 'e.g. Brandfletch Client Portal' },
+    { key: 'project_goal',         label: 'What problem are we solving?', type: 'textarea', required: true,  placeholder: 'What should this project achieve?' },
+    { key: 'target_audience',      label: 'Who is it for?',            type: 'text',     required: false, placeholder: 'e.g. Internal staff, public customers' },
+    { key: 'key_features',         label: 'Key Features / Requirements', type: 'textarea', required: true,  placeholder: 'List the must-have features or pages.' },
+    { key: 'reference_links',      label: 'Reference Sites / Apps',    type: 'text',     required: false, placeholder: 'https://...' },
+    { key: 'special_requirements', label: 'Special Requirements',      type: 'textarea', required: false, placeholder: 'Integrations, deadlines, tech preferences?' },
   ],
 };

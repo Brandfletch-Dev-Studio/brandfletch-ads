@@ -55,6 +55,8 @@ const CreativeOpsDashboard = lazy(() => import('@/pages/CreativeOpsDashboard'));
 const AdsManagerDashboard  = lazy(() => import('@/pages/AdsManagerDashboard'));
 const Referrals            = lazy(() => import('@/pages/Referrals'));
 const UgcAds               = lazy(() => import('@/pages/UgcAds'));
+const Studios              = lazy(() => import('@/pages/Studios'));
+const DevStudio            = lazy(() => import('@/pages/DevStudio'));
 const AdminOverview        = lazy(() => import('@/pages/admin/AdminOverview'));
 const AdminPortfolio       = lazy(() => import('@/pages/admin/AdminPortfolio'));
 const AdminCampaigns       = lazy(() => import('@/pages/admin/AdminCampaigns'));
@@ -280,6 +282,8 @@ const AppRoutes = () => (
         <Route element={<GuestAppRoute />}>
           <Route path="/campaigns/new" element={<CampaignWizard />} />
           <Route path="/ugc-ads"       element={<UgcAds />} />
+          <Route path="/studios"       element={<Studios />} />
+          <Route path="/dev-studio"    element={<DevStudio />} />
         </Route>
 
         <Route element={<AuthGuard><AppLayout /></AuthGuard>}>

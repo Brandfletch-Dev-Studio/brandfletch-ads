@@ -124,6 +124,43 @@ Deno.serve(async (req) => {
       }
     }
 
+    // ── Dev Studio order payment ──
+    if (payment_type === 'devstudio' && order_id) {
+      const { data: order } = await userClient.from('DevStudioOrder').select('*').eq('id', order_id).single()
+
+      if (order && (order as any).payment_status !== 'paid') {
+        await userClient.from('DevStudioOrder').update({
+          status: 'awaiting_brief',
+          payment_status: 'paid',
+          payment_method: 'Paychangu',
+          payment_reference: tx_ref,
+        }).eq('id', order_id)
+
+        await adminClient.from('WalletTransaction').insert({
+          user_id: user.id,
+          type: 'payment',
+          amount: txData.amount,
+          currency: txData.currency,
+          payment_method: 'Paychangu',
+          payment_reference: tx_ref,
+          status: 'completed',
+          description: `Dev Studio order via Paychangu - ${(order as any)?.package || (order as any)?.service_type || ''}`,
+        })
+
+        await adminClient.from('Notification').insert({
+          recipient_id: user.id,
+          title: 'Dev Studio Order Payment Confirmed',
+          message: 'Your payment was received — our team will begin work shortly.',
+          type: 'payment_confirmed', is_read: false,
+        })
+
+        await maybeCreateAffiliateCommission(
+          adminClient, user.id, 'dev_studio',
+          `Dev Studio Order - ${(order as any)?.package || (order as any)?.service_type || ''}`, txData.amount, txData.currency,
+        )
+      }
+    }
+
     // ── Design subscription payment ──
     if (payment_type === 'design' && subscription_id) {
       const startDate = new Date()
