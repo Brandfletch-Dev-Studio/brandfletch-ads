@@ -625,8 +625,11 @@ export default function UgcAds() {
               </Card>
             )}
 
-            {/* Manual payment methods (non-Malawi) */}
-            {!isMalawi && paymentMethods.length > 0 && (
+            {/* Manual payment methods — offered alongside Paychangu for
+                everyone, including Malawi. Previously gated behind
+                "!isMalawi", so Malawi orders (the majority) never saw this
+                option on screen even once the fetch was fixed to load it. */}
+            {paymentMethods.length > 0 && (
               <Card>
                 <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">Select Payment Method</CardTitle></CardHeader>
                 <CardContent className="space-y-3">
