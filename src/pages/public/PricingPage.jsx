@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { supabase, base44 } from '@/api/base44Client';
 import { LOCAL_PRICES } from '@/lib/pricing';
+import { UGC_OVERVIEW, UGC_PACKAGES, getMwkPriceLabel } from '@/lib/ugcPackages';
 import { useAuth } from '@/lib/AuthContext';
 import { useSEO } from '@/hooks/useSEO';
 
@@ -21,46 +22,26 @@ const TABS = [
 ];
 
 // ── Static plans (non-Meta-Ads services) ─────────────────────────────────────
+// UGC Ads packages/pricing/messaging are imported from '@/lib/ugcPackages'
+// — the single source of truth shared with the UGC ordering wizard
+// (UgcAds.jsx), so this page and the order flow can never drift apart.
+const UGC_PLAN = {
+  title: UGC_OVERVIEW.title,
+  desc: UGC_OVERVIEW.desc,
+  billing: 'one-off',
+  included: UGC_OVERVIEW.included,
+  packages: Object.entries(UGC_PACKAGES).map(([key, pkg]) => ({
+    name: pkg.name,
+    price: getMwkPriceLabel(key),
+    priceNote: pkg.priceNote,
+    badge: pkg.badge,
+    features: pkg.features,
+    cta: 'Place order', ctaLink: '/contact',
+  })),
+};
+
 const STATIC_PLANS = {
-  'ugc-ads': {
-    title: 'UGC Ads — Brandfletch Studios',
-    desc: "We don't just create videos. We create UGC ads designed to help businesses attract customers. Every creative is built Meta Ads-ready.",
-    billing: 'one-off',
-    included: [
-      'Content creator matching',
-      'Feature on Brandfletch Studios network',
-      'Creator social media feature',
-      'Brand story development',
-      'Offer packaging',
-      'Meta Ads-ready creatives (hooks, messaging, conversion structure)',
-    ],
-    packages: [
-      {
-        name: 'Starter',
-        price: 'MK 100,000',
-        priceNote: 'per campaign',
-        badge: null,
-        features: ['1 UGC ad creative','Creator matching','Brand story development','Offer packaging session','Meta Ads-ready format','Creator social media feature'],
-        cta: 'Place order', ctaLink: '/contact',
-      },
-      {
-        name: 'Growth',
-        price: 'MK 250,000',
-        priceNote: 'per campaign',
-        badge: 'Best value',
-        features: ['3 UGC ad creatives','Multiple message angles','Creator matching','Full brand story development','Offer packaging session','Meta Ads-ready formats','Creator social media feature','A/B testing angles'],
-        cta: 'Place order', ctaLink: '/contact',
-      },
-      {
-        name: 'Brand Campaign',
-        price: 'MK 750,000',
-        priceNote: 'per campaign',
-        badge: 'Scaling brands',
-        features: ['10 UGC ad creatives','Full advertising content library','Multiple creators','Complete brand story development','Offer packaging session','Meta Ads-ready formats','Creator social media features','Designed for scaling campaigns'],
-        cta: 'Place order', ctaLink: '/contact',
-      },
-    ],
-  },
+  'ugc-ads': UGC_PLAN,
   'graphic-design': {
     title: 'Graphic Design — Brandfletch Designs',
     desc: 'Consistent, professional design output on a monthly retainer. One-off projects also available — contact us for a quote.',

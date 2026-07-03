@@ -19,84 +19,8 @@ import {
   Play, ChevronRight,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { } from '@/lib/pricing';
+import { UGC_PACKAGES, getPriceForCountry } from '@/lib/ugcPackages';
 import InvoiceDownload from '@/components/InvoiceDownload';
-
-// ── UGC Pricing ──────────────────────────────────────────────────────────────
-const UGC_PACKAGES = {
-  starter: {
-    name: 'Starter',
-    videos: 1,
-    badge: null,
-    features: [
-      '1 UGC ad creative',
-      'Creator matching',
-      'Brand story development',
-      'Offer packaging session',
-      'Meta Ads-ready format',
-      'Creator social media feature',
-    ],
-    prices: {
-      Malawi:        { amount: 100000,  currency: 'MWK', symbol: 'MK' },
-      Zambia:        { amount: 3500,    currency: 'ZMW', symbol: 'ZK' },
-      'South Africa':{ amount: 1800,    currency: 'ZAR', symbol: 'R'  },
-      Kenya:         { amount: 14000,   currency: 'KES', symbol: 'KSh'},
-      Tanzania:      { amount: 230000,  currency: 'TZS', symbol: 'TSh'},
-      default:       { amount: 60,      currency: 'USD', symbol: '$'  },
-    },
-  },
-  growth: {
-    name: 'Growth',
-    videos: 3,
-    badge: 'Best Value',
-    features: [
-      '3 UGC ad creatives',
-      'Multiple message angles',
-      'Creator matching',
-      'Full brand story development',
-      'Offer packaging session',
-      'Meta Ads-ready formats',
-      'Creator social media feature',
-      'A/B testing angles',
-    ],
-    prices: {
-      Malawi:        { amount: 250000,  currency: 'MWK', symbol: 'MK' },
-      Zambia:        { amount: 8500,    currency: 'ZMW', symbol: 'ZK' },
-      'South Africa':{ amount: 4500,    currency: 'ZAR', symbol: 'R'  },
-      Kenya:         { amount: 33000,   currency: 'KES', symbol: 'KSh'},
-      Tanzania:      { amount: 570000,  currency: 'TZS', symbol: 'TSh'},
-      default:       { amount: 150,     currency: 'USD', symbol: '$'  },
-    },
-  },
-  brand_campaign: {
-    name: 'Brand Campaign',
-    videos: 10,
-    badge: 'Scaling Brands',
-    features: [
-      '10 UGC ad creatives',
-      'Full advertising content library',
-      'Multiple creators',
-      'Complete brand story development',
-      'Offer packaging session',
-      'Meta Ads-ready formats',
-      'Creator social media features',
-      'Designed for scaling campaigns',
-    ],
-    prices: {
-      Malawi:        { amount: 750000,  currency: 'MWK', symbol: 'MK' },
-      Zambia:        { amount: 26000,   currency: 'ZMW', symbol: 'ZK' },
-      'South Africa':{ amount: 13500,   currency: 'ZAR', symbol: 'R'  },
-      Kenya:         { amount: 100000,  currency: 'KES', symbol: 'KSh'},
-      Tanzania:      { amount: 1700000, currency: 'TZS', symbol: 'TSh'},
-      default:       { amount: 450,     currency: 'USD', symbol: '$'  },
-    },
-  },
-};
-
-function getPriceForCountry(pkg, country) {
-  const p = UGC_PACKAGES[pkg];
-  return p.prices[country] || p.prices.default;
-}
 
 const STATUS_CONFIG = {
   pending_payment:      { label: 'Awaiting Payment',   color: 'bg-yellow-100 text-yellow-700',  dot: 'bg-yellow-500'  },
