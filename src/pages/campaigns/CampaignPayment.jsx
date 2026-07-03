@@ -38,14 +38,16 @@ export default function CampaignPayment() {
       || camp?.currency === 'MWK';
     setIsMalawi(isMW);
 
-    if (!isMW) {
-      if (camp?.country) {
-        const methods = await base44.entities.PaymentMethod.filter({ country: camp.country, is_active: true }, 'sort_order');
-        setPaymentMethods(methods);
-      } else {
-        const methods = await base44.entities.PaymentMethod.filter({ is_active: true }, 'sort_order');
-        setPaymentMethods(methods);
-      }
+    // Always offer manual payment methods (bank transfer / mobile money
+    // proof) alongside Paychangu, for every country including Malawi — this
+    // was previously gated behind "!isMW", which silently left Malawi
+    // clients (the majority of orders) with zero manual payment methods.
+    if (camp?.country) {
+      const methods = await base44.entities.PaymentMethod.filter({ country: camp.country, is_active: true }, 'sort_order');
+      setPaymentMethods(methods.length ? methods : await base44.entities.PaymentMethod.filter({ is_active: true }, 'sort_order'));
+    } else {
+      const methods = await base44.entities.PaymentMethod.filter({ is_active: true }, 'sort_order');
+      setPaymentMethods(methods);
     }
   }
 
@@ -140,7 +142,13 @@ export default function CampaignPayment() {
     );
   }
 
-  if (!campaign) return <div className="p-8 text-center text-muted-foreground">Loading...</div>;
+  if (!campaign) {
+    return (
+      <div className="p-8 flex items-center justify-center min-h-[50vh]">
+        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 lg:p-8 max-w-xl mx-auto space-y-6">

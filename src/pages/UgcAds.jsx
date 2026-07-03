@@ -202,15 +202,20 @@ export default function UgcAds() {
     if (user?.country) setCountry(user.country);
   }, [user?.id]);
 
-  // Load payment methods when we reach payment step
+  // Load payment methods when we reach payment step.
+  // Always fetch — manual payment (bank transfer / mobile money proof) is
+  // offered alongside Paychangu for EVERY country including Malawi, so this
+  // must never be gated behind an "isMW" check (that previously left
+  // Malawi orders — the majority of orders — with zero manual methods).
   useEffect(() => {
     if (step === 3 && country) {
-      const isMW = country === 'Malawi';
-      if (!isMW) {
-        base44.entities.PaymentMethod.filter({ country, is_active: true }, { sort: 'sort_order' })
-          .then(setPaymentMethods)
-          .catch(() => setPaymentMethods([]));
-      }
+      base44.entities.PaymentMethod.filter({ country, is_active: true }, { sort: 'sort_order' })
+        .then(methods => {
+          if (methods.length) { setPaymentMethods(methods); return; }
+          // Fall back to any active method if none are scoped to this country
+          return base44.entities.PaymentMethod.filter({ is_active: true }, { sort: 'sort_order' }).then(setPaymentMethods);
+        })
+        .catch(() => setPaymentMethods([]));
     }
   }, [step, country]);
 
@@ -286,11 +291,12 @@ export default function UgcAds() {
       let proofUrl = null;
       if (proofFile) {
         setUploading(true);
-        const { data } = await base44.storage.uploadFile(proofFile, {
-          folder: 'ugc_payment_proofs',
-          public: true,
-        });
-        proofUrl = data?.url;
+        // base44.storage.uploadFile never existed on the client (same class
+        // of gap as the systemic UploadFile shim fix elsewhere) — every
+        // manual payment proof upload here was silently throwing. Use the
+        // real shim method instead.
+        const { file_url } = await base44.integrations.Core.UploadFile({ file: proofFile });
+        proofUrl = file_url;
         setUploading(false);
       }
 
