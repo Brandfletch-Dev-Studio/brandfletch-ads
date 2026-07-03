@@ -87,6 +87,18 @@ export default function Register() {
         return;
       }
 
+      // ── Email confirmation is disabled project-wide — Supabase returns an
+      // active session immediately on signUp(), so the user is already
+      // logged in. Skip the "check your email" screen entirely and go
+      // straight to wherever they were headed. The check-email screen below
+      // only shows as a fallback in case confirmation ever gets re-enabled.
+      if (data?.session) {
+        const _r = sessionStorage.getItem('bf_post_login_redirect');
+        sessionStorage.removeItem('bf_post_login_redirect');
+        navigate(_r || '/dashboard', { replace: true });
+        return;
+      }
+
       setShowCheckEmail(true);
     } catch (err) {
       // Supabase occasionally does throw for existing accounts in some configs
