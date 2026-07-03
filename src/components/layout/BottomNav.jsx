@@ -30,7 +30,9 @@ export default function BottomNav({ isStaff }) {
     location.pathname.startsWith('/designer') ||
     location.pathname.startsWith('/notifications') ||
     location.pathname.startsWith('/settings') ||
-    location.pathname.startsWith('/ugc-ads');
+    location.pathname.startsWith('/ugc-ads') ||
+    location.pathname.startsWith('/studios') ||
+    location.pathname.startsWith('/dev-studio');
   if (isAppRoute) return null;
 
   // If user is logged in, swap 'Contact' for 'Dashboard'

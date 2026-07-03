@@ -64,7 +64,18 @@ export const STUDIOS_CONFIG = {
   // ServiceRate. tx_ref prefix + payment_type reuse the existing 'ugc'
   // handling in the Paychangu edge functions (they only care about the
   // UgcOrder row, not which service_type it is).
-  orderableServiceTypes: ['content_creation', 'podcast', 'videography', 'photography'],
+  // 'ugc_ads' included here so past/active UGC orders show up in the same
+  // "My Orders" history as the other 4 Studios services — one unified view
+  // per department. It's excluded from the ServiceRate-driven "new order"
+  // tile grid below (no ServiceRate row exists for it); instead
+  // externalServiceLink surfaces it as its own tile that deep-links to the
+  // dedicated /ugc-ads package wizard (multi-tier packages, untouched).
+  orderableServiceTypes: ['ugc_ads', 'content_creation', 'podcast', 'videography', 'photography'],
+  externalServiceLink: {
+    label: 'UGC Ad Creatives',
+    description: 'Starter, Growth & Brand Campaign packages — book via our dedicated UGC flow.',
+    to: '/ugc-ads',
+  },
   txRefPrefix:     'UGC',
   paymentType:     'ugc',
   briefFields: [

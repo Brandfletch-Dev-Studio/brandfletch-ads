@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 import {
   LayoutDashboard, LayoutGrid, Megaphone, Facebook, Users, Wallet as WalletIcon,
   Settings, X, ChevronRight, BarChart3, Shield, Bell, Tv2, ClipboardList,
-  Tags, Palette, Target, Gift, FileText, Video, Code2
+  Tags, Palette, Target, Gift, FileText, Video, Code2, Clapperboard
 } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -15,11 +15,16 @@ import TopBar from '@/components/layout/TopBar';
 import AppBottomNav from '@/components/layout/AppBottomNav';
 
 // ── Client nav (role='user') ─────────────────────────────────────────────────
+// Repackaged around departments (2026-07-03) instead of a flat per-service
+// list — the 4 live departments lead so they double as the mobile bottom
+// nav's quick-access icons (AppBottomNav takes the first 4). Dashboard and
+// everything else is one tap away via "More" (opens the full sidebar).
 const clientNav = [
-  { path: '/dashboard', label: 'Dashboard',       icon: LayoutDashboard },
-  { path: '/campaigns', label: 'Campaigns',        icon: Megaphone },
+  { path: '/campaigns', label: 'Ads',              icon: Megaphone },
   { path: '/designs',   label: 'Designs',          icon: Palette },
-  { path: '/ugc-ads',   label: 'UGC Ads',           icon: Video },
+  { path: '/studios',   label: 'Studios',          icon: Clapperboard },
+  { path: '/dev-studio', label: 'Dev Studio',      icon: Code2 },
+  { path: '/dashboard', label: 'Dashboard',        icon: LayoutDashboard },
   { path: '/leads',     label: 'Leads (Coming Soon)', icon: Target, disabled: true },
   { path: '/pages',     label: 'Facebook Pages',   icon: Facebook },
   { path: '/audiences', label: 'Audiences',        icon: Users },

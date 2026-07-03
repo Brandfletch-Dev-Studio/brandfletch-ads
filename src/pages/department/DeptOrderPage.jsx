@@ -10,7 +10,7 @@
 // config, not by writing a new page.
 
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -22,7 +22,7 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import {
   ArrowRight, ArrowLeft, CheckCircle2, Upload, Copy,
-  ExternalLink, Loader2, Mail,
+  ExternalLink, Loader2, Mail, Sparkles,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import InvoiceDownload from '@/components/InvoiceDownload';
@@ -333,6 +333,21 @@ export default function DeptOrderPage({ config, routePath, icon: Icon, tagline }
               <h2 className="text-base font-semibold text-foreground mb-1">Choose a service</h2>
               <p className="text-sm text-muted-foreground">Prices shown for {country}.</p>
             </div>
+            {config.externalServiceLink && (
+              <Link to={config.externalServiceLink.to}
+                className="flex items-center justify-between gap-3 border border-dashed border-[hsl(var(--accent))]/40 rounded-xl p-4 hover:bg-[hsl(var(--accent))]/5 transition-colors">
+                <div className="flex items-start gap-3">
+                  <div className="w-9 h-9 rounded-lg bg-[hsl(var(--accent))]/10 flex items-center justify-center shrink-0">
+                    <Sparkles className="w-4 h-4 text-[hsl(var(--accent))]" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-sm">{config.externalServiceLink.label}</p>
+                    <p className="text-xs text-muted-foreground">{config.externalServiceLink.description}</p>
+                  </div>
+                </div>
+                <ArrowRight className="w-4 h-4 text-[hsl(var(--accent))] shrink-0" />
+              </Link>
+            )}
             {orderableRates.length === 0 ? (
               <Card className="border-dashed">
                 <CardContent className="pt-6 pb-6 text-center space-y-2">
