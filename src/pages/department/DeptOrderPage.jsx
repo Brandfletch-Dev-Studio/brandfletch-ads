@@ -10,7 +10,7 @@
 // config, not by writing a new page.
 
 import { useState, useEffect } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -44,7 +44,10 @@ function formatMoney(amount, currency, symbol) {
 
 export default function DeptOrderPage({ config, routePath, icon: Icon, tagline }) {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const draftKey = `bf_dept_draft_${config.department}`;
+  const [resumePending, setResumePending] = useState(searchParams.get('resume') === '1');
 
   const [view, setView] = useState('list'); // list | new_order | detail
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -71,6 +74,33 @@ export default function DeptOrderPage({ config, routePath, icon: Icon, tagline }
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
   });
+
+  // Resume a guest checkout after login/registration — restores the
+  // service/brief they'd already filled in (saved before bouncing to
+  // /login) and jumps straight to creating the order + payment/quote.
+  useEffect(() => {
+    if (!resumePending || !user) return;
+    const draftRaw = sessionStorage.getItem(draftKey);
+    if (draftRaw) {
+      try {
+        const draft = JSON.parse(draftRaw);
+        if (draft.selectedRate) setSelectedRate(draft.selectedRate);
+        if (draft.country) setCountry(draft.country);
+        if (draft.brief) setBrief(draft.brief);
+      } catch { /* ignore corrupt draft */ }
+      sessionStorage.removeItem(draftKey);
+    }
+    setView('new_order');
+    setStep(2);
+    window.history.replaceState({}, '', routePath);
+  }, [resumePending, user]);
+
+  useEffect(() => {
+    if (!resumePending || !user || !selectedRate) return;
+    if (!config.briefFields.every(f => !f.required || brief[f.key]?.trim())) return;
+    setResumePending(false);
+    createOrder.mutate();
+  }, [resumePending, user, selectedRate, brief]);
 
   const { data: rates = [] } = useQuery({
     queryKey: ['serviceRates', config.department],
@@ -413,7 +443,17 @@ export default function DeptOrderPage({ config, routePath, icon: Icon, tagline }
               </CardContent>
             </Card>
             <Button
-              onClick={() => { if (!briefValid()) { toast.error('Please fill in all required fields.'); return; } createOrder.mutate(); }}
+              onClick={() => {
+                if (!briefValid()) { toast.error('Please fill in all required fields.'); return; }
+                if (!user) {
+                  sessionStorage.setItem(draftKey, JSON.stringify({ selectedRate, country, brief }));
+                  const resumeUrl = `${routePath}?resume=1`;
+                  sessionStorage.setItem('bf_post_login_redirect', resumeUrl);
+                  navigate('/login?redirect=' + encodeURIComponent(resumeUrl));
+                  return;
+                }
+                createOrder.mutate();
+              }}
               disabled={createOrder.isPending}
               className="w-full h-11 font-semibold bg-[hsl(var(--accent))] text-white hover:bg-[hsl(var(--accent))]/90"
             >
