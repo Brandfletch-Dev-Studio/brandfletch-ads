@@ -11,8 +11,9 @@ import { usePermissions } from '@/hooks/usePermissions';
 const SERVICES = [
   { label: 'Meta Ads',       desc: 'Run Facebook & Instagram ads that actually convert',  href: '/pricing?tab=meta-ads' },
   { label: 'UGC Ads',        desc: 'Authentic video creatives from real African creators', href: '/pricing?tab=ugc-ads' },
-  { label: 'Graphic Design', desc: 'Scroll-stopping visuals for your brand',               href: '/pricing?tab=graphic-design' },
-  { label: 'Web Design',     desc: 'Fast, professional sites built for conversion',        href: '/pricing?tab=web-design' },
+  { label: 'Studios',        desc: 'Content creation, podcast, videography & photography',  href: '/pricing?tab=studios' },
+  { label: 'Designs',        desc: 'Scroll-stopping visuals for your brand',               href: '/pricing?tab=graphic-design' },
+  { label: 'Dev Studio',     desc: 'Websites, apps, automations & AI agents',              href: '/pricing?tab=dev-studio' },
 ];
 
 const QUICK_LINKS = [

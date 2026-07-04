@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useAuth } from '@/lib/AuthContext';
-import { ADMIN_WHATSAPP } from '@/lib/constants';
 
 import StepName from './wizard/StepName';
 import StepCreative from './wizard/StepCreative';
@@ -167,27 +166,9 @@ export default function CampaignWizard() {
     }
 
     toast.success('Campaign created! Proceed to payment.');
-    // Notify admin via WhatsApp (non-blocking)
-    try {
-      const settings = await base44.entities.PublicSettings.list({ limit: 1 }).catch(() => []);
-      const adminPhone = settings?.[0]?.admin_whatsapp || settings?.[0]?.admin_phone || ADMIN_WHATSAPP;
-      if (adminPhone) {
-        base44.functions.invoke('sendWhatsApp', {
-          to: adminPhone,
-          message: [
-            '📢 *New Campaign Submitted — Brandfletch Media*',
-            '',
-            `*Client:* ${user?.full_name || user?.email}`,
-            `*Campaign:* ${data.campaign_name || data.page_name || 'Untitled'}`,
-            `*Package:* ${data.package} | ${data.duration}`,
-            `*Country:* ${data.country}`,
-            `*Amount:* ${data.currency} ${data.total_cost?.toLocaleString()}`,
-            '',
-            'Review it in the admin panel.',
-          ].join('\n'),
-        }).catch(() => {});
-      }
-    } catch {}
+    // NOTE: admin WhatsApp notification removed — sendWhatsApp edge function
+    // has no API credentials (see memory). Admin gets an in-app notification
+    // + email via campaignEmailAlerts instead.
     navigate(`/campaigns/${campaign.id}/payment`);
     setSubmitting(false);
   }
