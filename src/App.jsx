@@ -214,7 +214,7 @@ function AuthPageRoute({ children }) {
 // Public pages are NOT wrapped by this — they render freely for everyone.
 function AuthGuard({ children }) {
   const { isLoadingAuth, authError, user } = useAuth();
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
 
   if (isLoadingAuth) return <PageSpinner />;
 
@@ -225,7 +225,12 @@ function AuthGuard({ children }) {
   }
 
   if (!user) {
-    return <Navigate to={defaultAuthRoute()} replace />;
+    // Preserve exactly where they were headed (e.g. a guest-created order's
+    // payment page) so Login/Register can bounce them straight back after
+    // auth instead of dropping them on the dashboard. Login.jsx, Register.jsx
+    // and AuthCallback.jsx already read this `redirect` param generically.
+    const target = pathname + search;
+    return <Navigate to={`${defaultAuthRoute()}?redirect=${encodeURIComponent(target)}`} replace />;
   }
 
   return children;

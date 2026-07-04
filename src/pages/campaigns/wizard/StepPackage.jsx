@@ -3,6 +3,7 @@ import { base44 } from '@/api/base44Client';
 import { PACKAGES, DURATIONS, calculatePriceFromList, calculateEstimatedResults } from '@/lib/pricing';
 import { cn } from '@/lib/utils';
 import { CheckCircle2, TrendingUp, Sliders } from 'lucide-react';
+import { detectCountry, PRICING_COUNTRIES } from '@/lib/geoCountry';
 import { COUNTRIES } from '@/lib/constants';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
@@ -16,12 +17,24 @@ export default function StepPackage({ data, update }) {
 
   useEffect(() => {
     base44.entities.PackagePricing.list({}).then(list => setDbPricing(list || [])).catch(() => {});
+
+    // Country detection for pricing: profile → cached IP → live IP lookup →
+    // Malawi default. Guests (no profile) previously always fell through to
+    // a blank country and got charged the raw USD price — this makes sure
+    // everyone sees real local-currency pricing from the first render.
     base44.auth.me().then(u => {
       if (u?.role === 'admin') setIsAdmin(true);
-      if (!selectedCountry && u?.country) {
-        setSelectedCountry(u.country);
-        update({ country: u.country });
-      }
+      if (selectedCountry) return;
+      detectCountry(u?.country).then(country => {
+        setSelectedCountry(country);
+        update({ country });
+      });
+    }).catch(() => {
+      if (selectedCountry) return;
+      detectCountry(null).then(country => {
+        setSelectedCountry(country);
+        update({ country });
+      });
     });
   }, []);
 
@@ -98,25 +111,23 @@ export default function StepPackage({ data, update }) {
         <p className="text-muted-foreground text-sm">Choose the budget that works for your business.</p>
       </div>
 
-      {/* Country selector — admin only */}
+      {/* Country selector — auto-detected from IP/profile, editable by
+          everyone so a wrong guess (or a guest with no profile at all) can
+          always be corrected before picking a package. Admins get the full
+          country list (for pricing new markets); everyone else picks from
+          the countries we actually have local pricing for. */}
       <div>
         <Label className="mb-2 block">Your Country (for pricing)</Label>
-        {isAdmin ? (
-          <Select value={selectedCountry} onValueChange={handleCountryChange}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select your country" />
-            </SelectTrigger>
-            <SelectContent>
-              {COUNTRIES.map(c => (
-                <SelectItem key={c} value={c}>{c}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        ) : (
-          <div className="flex h-9 w-full items-center rounded-md border border-input bg-secondary/50 px-3 text-sm text-muted-foreground">
-            {selectedCountry || 'No country set on your profile'}
-          </div>
-        )}
+        <Select value={selectedCountry} onValueChange={handleCountryChange}>
+          <SelectTrigger>
+            <SelectValue placeholder="Select your country" />
+          </SelectTrigger>
+          <SelectContent>
+            {(isAdmin ? COUNTRIES : PRICING_COUNTRIES).map(c => (
+              <SelectItem key={c} value={c}>{c}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <Tabs defaultValue="preset" className="w-full">
