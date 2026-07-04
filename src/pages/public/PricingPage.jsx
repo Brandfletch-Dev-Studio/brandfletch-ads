@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 import { supabase, base44 } from '@/api/base44Client';
 import { LOCAL_PRICES } from '@/lib/pricing';
 import { UGC_OVERVIEW, UGC_PACKAGES, getMwkPriceLabel } from '@/lib/ugcPackages';
-import { detectCountry, PRICING_COUNTRIES } from '@/lib/geoCountry';
+import { detectCountry } from '@/lib/geoCountry';
 import { useAuth } from '@/lib/AuthContext';
 import { useSEO } from '@/hooks/useSEO';
 
@@ -245,7 +245,7 @@ function DollarCalculator({ defaultRate }) {
 // Pulls live prices from the ServiceRate table (admin sets them per
 // country in each department's admin Pricing tab). Services that are
 // inactive or price=0 show as "Coming soon" with a "Request a quote" CTA.
-function ServiceRatePricing({ department, orderLink, country, onCountryChange }) {
+function ServiceRatePricing({ department, orderLink, country }) {
   const [rates, setRates] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -273,24 +273,6 @@ function ServiceRatePricing({ department, orderLink, country, onCountryChange })
 
   return (
     <div>
-      {/* Country selector */}
-      <div className="flex flex-wrap items-center gap-3 mb-8">
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold text-muted-foreground">Country:</span>
-          <div className="flex flex-wrap gap-1">
-            {PRICING_COUNTRIES.map(cc => (
-              <button key={cc} onClick={() => onCountryChange(cc)}
-                className={cn('px-3 py-1.5 rounded-lg text-xs font-medium transition-all border',
-                  country === cc
-                    ? 'bg-[hsl(var(--primary))] text-white border-[hsl(var(--primary))]'
-                    : 'border-border text-muted-foreground hover:text-foreground hover:bg-muted'
-                )}
-              >{cc}</button>
-            ))}
-          </div>
-        </div>
-      </div>
-
       {loading ? (
         <div className="flex items-center justify-center py-16 gap-3 text-muted-foreground">
           <Loader2 className="w-5 h-5 animate-spin" />
@@ -363,8 +345,7 @@ function ServiceRatePricing({ department, orderLink, country, onCountryChange })
 }
 
 // ── Meta Ads section — pulls from DB ─────────────────────────────────────────
-function MetaAdsPricing({ dbRows, loading, country, onCountryChange, onPlanSelect }) {
-  const COUNTRIES = ['Malawi', 'Zambia', 'South Africa', 'Kenya', 'Tanzania'];
+function MetaAdsPricing({ dbRows, loading, country, onPlanSelect }) {
   const PKG_ORDER = ['starter', 'growth', 'business', 'premium'];
   const DURATION_OPTS = [
     { key: 'monthly', label: 'Monthly' },
@@ -398,22 +379,8 @@ function MetaAdsPricing({ dbRows, loading, country, onCountryChange, onPlanSelec
 
   return (
     <div>
-      {/* Country + Duration selectors */}
+      {/* Duration selector — country is auto-detected, no manual picker needed */}
       <div className="flex flex-wrap items-center gap-3 mb-8">
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold text-muted-foreground">Country:</span>
-          <div className="flex flex-wrap gap-1">
-            {COUNTRIES.map(c => (
-              <button key={c} onClick={() => onCountryChange(c)}
-                className={cn('px-3 py-1.5 rounded-lg text-xs font-medium transition-all border',
-                  country === c
-                    ? 'bg-[hsl(var(--primary))] text-white border-[hsl(var(--primary))]'
-                    : 'border-border text-muted-foreground hover:text-foreground hover:bg-muted'
-                )}
-              >{c}</button>
-            ))}
-          </div>
-        </div>
         <div className="flex items-center gap-2 ml-auto">
           <span className="text-xs font-semibold text-muted-foreground">Billing:</span>
           <div className="flex gap-1">
@@ -563,7 +530,7 @@ export default function PricingPage() {
             <div className="mb-10">
               <h2 className="text-2xl sm:text-3xl font-display font-extrabold text-foreground mb-2">Meta Ads Management</h2>
               <p className="text-muted-foreground max-w-2xl text-sm leading-relaxed">
-                Professionally managed Facebook & Instagram campaigns designed to generate qualified leads. Prices shown per country — select yours below.
+                Professionally managed Facebook & Instagram campaigns designed to generate qualified leads. Prices shown in your local currency, detected automatically.
               </p>
               <Badge className="mt-3 text-[10px] bg-muted text-muted-foreground border-border">📅 Monthly, weekly, or daily billing</Badge>
             </div>
@@ -571,7 +538,6 @@ export default function PricingPage() {
               dbRows={dbRows}
               loading={false}
               country={country}
-              onCountryChange={setCountry}
               onPlanSelect={(plan) => handlePlanCta('meta-ads', plan)}
             />
           </>
@@ -590,7 +556,6 @@ export default function PricingPage() {
               department="studios"
               orderLink="/studios"
               country={country}
-              onCountryChange={setCountry}
             />
             <div className="mt-8 bg-[hsl(var(--accent))]/5 border border-[hsl(var(--accent))]/20 rounded-2xl p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
@@ -619,7 +584,6 @@ export default function PricingPage() {
               department="dev_studio"
               orderLink="/dev-studio"
               country={country}
-              onCountryChange={setCountry}
             />
             {/* Show the existing hardcoded website packages as a fallback
                 while ServiceRate website rows are inactive/zero. */}
