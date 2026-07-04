@@ -11,8 +11,10 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import RichTextEditor from '@/components/RichTextEditor';
 import { Badge } from '@/components/ui/badge';
-import { supabase } from '@/api/base44Client';
+import { supabase, base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
+import { useAuth } from '@/lib/AuthContext';
+import { isStaffRole, ROLE_LABELS } from '@/lib/permissions';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
@@ -28,7 +30,7 @@ const CATEGORIES = ['Strategy','Tips','Case Study','News','Product Update','Guid
 const EMPTY_POST = {
   title: '', slug: '', excerpt: '', content: '', content_html: '',
   category: '', emoji: '📣', status: 'draft',
-  author_name: 'Brandfletch Team', cover_image: '',
+  author_id: '', author_name: '', cover_image: '',
   meta_title: '', meta_description: '', tags: [],
 };
 
@@ -253,6 +255,7 @@ function AnalyticsTab({ posts }) {
 
 // ── Main component ────────────────────────────────────────────────────────────
 export default function AdminBlog() {
+  const { user } = useAuth();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -264,8 +267,26 @@ export default function AdminBlog() {
   const [deleting, setDeleting] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
   const [tagInput, setTagInput] = useState('');
+  const [staffUsers, setStaffUsers] = useState([]);
 
-  useEffect(() => { fetchPosts(); }, []);
+  useEffect(() => {
+    fetchPosts();
+    fetchStaff();
+  }, []);
+
+  // Fetch staff users for the author selector dropdown
+  const fetchStaff = async () => {
+    try {
+      const result = await base44.functions.getAllUsers({});
+      const all = result?.users || [];
+      // Only staff roles can be attributed as authors (not clients)
+      const staff = all.filter(u => isStaffRole(u.role));
+      setStaffUsers(staff);
+    } catch (err) {
+      console.error('AdminBlog fetchStaff:', err);
+      // Non-blocking — author dropdown will just show the current user
+    }
+  };
 
   const fetchPosts = async () => {
     setLoading(true);
@@ -313,7 +334,11 @@ export default function AdminBlog() {
   };
   const removeTag = (t) => setEditing(p => ({ ...p, tags: (p.tags || []).filter(x => x !== t) }));
 
-  const openNew  = () => setEditing({ ...EMPTY_POST });
+  const openNew  = () => setEditing({
+    ...EMPTY_POST,
+    author_id:   user?.id || '',
+    author_name: user?.full_name || user?.email || 'Brandfletch Team',
+  });
   const openEdit = (p) => setEditing({ ...p });
 
   const handleSave = async () => {
@@ -336,6 +361,7 @@ export default function AdminBlog() {
         category:     editing.category || null,
         emoji:        editing.emoji || '📣',
         status:       editing.status,
+        author_id:    editing.author_id || null,
         author_name:  editing.author_name?.trim() || 'Brandfletch Team',
         cover_image:  editing.cover_image?.trim() || null,
         meta_title:       editing.meta_title?.trim() || null,
@@ -689,8 +715,40 @@ export default function AdminBlog() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <Label>Author</Label>
-                  <Input value={editing.author_name || ''} onChange={e => setEditing(p => ({...p, author_name: e.target.value}))} className="mt-1" />
+                  <Label>Author <span className="text-xs text-muted-foreground font-normal">— staff member</span></Label>
+                  <Select
+                    value={editing.author_id || 'custom'}
+                    onValueChange={v => {
+                      if (v === 'custom') {
+                        setEditing(p => ({...p, author_id: ''}));
+                      } else {
+                        const staff = staffUsers.find(u => u.id === v);
+                        setEditing(p => ({
+                          ...p,
+                          author_id: v,
+                          author_name: staff?.full_name || staff?.email || 'Brandfletch Team',
+                        }));
+                      }
+                    }}
+                  >
+                    <SelectTrigger className="mt-1"><SelectValue placeholder="Select staff member" /></SelectTrigger>
+                    <SelectContent>
+                      {staffUsers.map(u => (
+                        <SelectItem key={u.id} value={u.id}>
+                          {u.full_name || u.email} {u.role ? `· ${ROLE_LABELS[u.role] || u.role}` : ''}
+                        </SelectItem>
+                      ))}
+                      <SelectItem value="custom">Other (type manually)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {(!editing.author_id) && (
+                    <Input
+                      value={editing.author_name || ''}
+                      onChange={e => setEditing(p => ({...p, author_name: e.target.value}))}
+                      placeholder="Author display name"
+                      className="mt-2 text-sm"
+                    />
+                  )}
                 </div>
                 <div>
                   <Label>Tags <span className="text-xs text-muted-foreground font-normal">(optional)</span></Label>
