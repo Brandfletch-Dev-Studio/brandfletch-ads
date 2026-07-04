@@ -28,6 +28,7 @@ export default function CampaignWizard() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [searchParams] = useSearchParams();
+  const [resumePending, setResumePending] = useState(searchParams.get('resume') === '1');
   const [step, setStep] = useState(1);
   const [data, setData] = useState({
     campaign_name: '',
@@ -63,6 +64,32 @@ export default function CampaignWizard() {
     }
     init();
   }, [user?.id]);
+
+  // Resume a guest checkout after they've logged in/registered — restores
+  // the full wizard state they'd already filled in (saved to sessionStorage
+  // before bouncing to /login) and jumps straight to Summary + submit, so
+  // they aren't asked to redo the whole wizard.
+  useEffect(() => {
+    if (!resumePending || !user) return;
+    const draftRaw = sessionStorage.getItem('bf_campaign_draft');
+    if (draftRaw) {
+      try {
+        const draft = JSON.parse(draftRaw);
+        setData(d => ({ ...d, ...draft }));
+      } catch { /* ignore corrupt draft */ }
+      sessionStorage.removeItem('bf_campaign_draft');
+    }
+    setStep(6);
+    window.history.replaceState({}, '', '/campaigns/new');
+  }, [resumePending, user]);
+
+  // Once the draft is restored, auto-submit straight to payment so the
+  // user isn't asked to click "Proceed to Payment" again.
+  useEffect(() => {
+    if (!resumePending || !user || !data.campaign_name || !data.package) return;
+    setResumePending(false);
+    handleSubmit();
+  }, [resumePending, user, data.campaign_name, data.package]);
 
   function update(fields) {
     setData(d => ({ ...d, ...fields }));
@@ -238,7 +265,18 @@ export default function CampaignWizard() {
             </Button>
           ) : step === 6 ? (
             <Button
-              onClick={handleSubmit}
+              onClick={() => {
+                if (!user) {
+                  // Guest — save the full wizard state, send them to auth,
+                  // then bounce straight back to Summary + auto-submit.
+                  sessionStorage.setItem('bf_campaign_draft', JSON.stringify(data));
+                  const resumeUrl = '/campaigns/new?resume=1';
+                  sessionStorage.setItem('bf_post_login_redirect', resumeUrl);
+                  navigate('/login?redirect=' + encodeURIComponent(resumeUrl));
+                  return;
+                }
+                handleSubmit();
+              }}
               disabled={submitting}
               className="gap-2 bg-[hsl(var(--accent))] hover:bg-[hsl(217,91%,48%)] text-white font-semibold"
             >
