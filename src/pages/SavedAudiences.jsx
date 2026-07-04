@@ -136,7 +136,6 @@ function AudienceDialog({ open, onClose, onSave, initial }) {
     name: '', countries: [], worldwide: false,
     age_min: 18, age_max: 65, gender: 'all'
   });
-  const [countryInput, setCountryInput] = useState('');
 
   useEffect(() => {
     if (initial) setForm({

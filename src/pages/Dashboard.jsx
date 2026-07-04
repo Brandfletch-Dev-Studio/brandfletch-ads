@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/lib/AuthContext';
 import { Palette, Target, Megaphone, Clock } from 'lucide-react';
@@ -10,15 +10,11 @@ import CompleteProfileChecklist from '@/components/dashboard/OnboardingChecklist
 
 export default function Dashboard() {
   const { user, isLoadingAuth } = useAuth();
-  const navigate = useNavigate();
 
   const [designs, setDesigns] = useState([]);
   const [leads, setLeads] = useState([]);
   const [campaigns, setCampaigns] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showLandingPageOrder, setShowLandingPageOrder] = useState(false);
-  const [landingForm, setLandingForm] = useState({ name: '', description: '', url: '' });
-  const [submittingOrder, setSubmittingOrder] = useState(false);
 
   useEffect(() => {
     // Fix #1: wait for auth to finish loading before attempting data fetch
@@ -61,47 +57,6 @@ export default function Dashboard() {
   const pendingCampaigns = campaigns.filter(c => ['pending_review', 'awaiting_payment', 'draft'].includes(c.status)).length;
   const activeDesigns = designs.filter(d => d.status === 'in_progress' || d.status === 'submitted').length;
   const activeLeads = leads.filter(l => !['won', 'lost'].includes(l.stage)).length;
-
-  const formatCost = (c) => {
-    const cost = c.total_cost || 0;
-    const currency = c.currency || 'USD';
-    if (currency === 'MWK') return `MK${cost.toLocaleString()}`;
-    if (currency === 'KES') return `KSh${cost.toLocaleString()}`;
-    if (currency === 'ZMW') return `ZK${cost.toLocaleString()}`;
-    if (currency === 'ZAR') return `R${cost.toLocaleString()}`;
-    if (currency === 'TZS') return `TSh${cost.toLocaleString()}`;
-    if (currency === 'USD') return `$${cost.toFixed(2)}`;
-    return `${currency} ${cost.toLocaleString()}`;
-  };
-
-  const CAMPAIGN_STATUS_LABELS = {
-    draft: 'Draft', awaiting_payment: 'Awaiting Payment',
-    pending_review: 'Pending Review', approved: 'Approved',
-    active: 'Active', paused: 'Paused', completed: 'Completed',
-    rejected: 'Rejected', refunded: 'Refunded',
-  };
-
-  async function handleLandingPageOrder(e) {
-    e.preventDefault();
-    setSubmittingOrder(true);
-    try {
-      await base44.entities.ServiceOrder.create({
-        user_id: user.id,
-        user_name: user.full_name,
-        user_email: user.email,
-        service_type: 'landing_page',
-        ...landingForm,
-        status: 'pending',
-      });
-      toast.success("Landing page order submitted! We'll be in touch shortly.");
-      setShowLandingPageOrder(false);
-      setLandingForm({ name: '', description: '', url: '' });
-    } catch (err) {
-      toast.error('Failed to submit order. Please try again.');
-    } finally {
-      setSubmittingOrder(false);
-    }
-  }
 
   // Show skeleton while auth is loading OR data is loading
   if (isLoadingAuth || loading || !user) {

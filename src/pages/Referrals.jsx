@@ -642,7 +642,6 @@ function DashboardTab({ user, affiliateSettings, referrals = [], commissions = [
 function LinksTab({ user }) {
   const { copied, copy } = useCopyClipboard();
   const code     = user?.referral_code || (user?.id ? `BF-${user.id.slice(-6).toUpperCase()}` : '');
-  const baseLink = typeof window !== 'undefined' ? `${window.location.origin}/register?ref=${code}` : '';
 
   return (
     <div className="space-y-5">

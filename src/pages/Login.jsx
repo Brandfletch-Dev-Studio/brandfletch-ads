@@ -51,7 +51,7 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
 
       if (signInError) {
         const msg = signInError.message?.toLowerCase() || '';

@@ -52,13 +52,11 @@ export default function DesignerPortal() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [selectedRequest, setSelectedRequest] = useState(null);
-  const [showChat, setShowChat] = useState(false);
   const [designerNotes, setDesignerNotes] = useState('');
   const [uploading, setUploading] = useState(false);
   const [activeTab, setActiveTab] = useState('projects');
 
   const isDesigner = user?.role === 'designer';
-  const isCOD = user?.role === 'creative_ops_director' || user?.role === 'admin' || user?.role === 'super_admin';
 
   // Designers see only their assigned projects.
   // COD and admins see all design requests.

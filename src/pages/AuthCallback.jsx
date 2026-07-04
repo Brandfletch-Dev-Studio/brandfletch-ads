@@ -25,7 +25,7 @@ export default function AuthCallback() {
       const type = params.get("type") || "signup";
 
       if (tokenHash) {
-        const { data, error } = await supabase.auth.verifyOtp({
+        const { error } = await supabase.auth.verifyOtp({
           token_hash: tokenHash,
           type,
         });

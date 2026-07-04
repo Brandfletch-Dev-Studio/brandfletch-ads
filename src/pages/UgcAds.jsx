@@ -85,7 +85,6 @@ function OrderTracker({ order }) {
 // ── Package selector card ─────────────────────────────────────────────────────
 function PackageCard({ pkg, pkgKey, country, selected, onSelect }) {
   const price = getPriceForCountry(pkgKey, country);
-  const popular = pkg.badge === 'Best Value';
   return (
     <div
       onClick={() => onSelect(pkgKey)}
@@ -135,9 +134,10 @@ function PackageCard({ pkg, pkgKey, country, selected, onSelect }) {
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 export default function UgcAds() {
-  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [resumePending, setResumePending] = useState(searchParams.get('resume') === '1');
 
   // View: list | new_order | brief | payment | detail
   const [view, setView]     = useState('list');
@@ -170,6 +170,35 @@ export default function UgcAds() {
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
   });
+
+  // Resume a guest checkout after they've logged in/registered — restores the
+  // package + brief they'd already filled in (saved to sessionStorage before
+  // bouncing to /login) and jumps straight to creating the order + payment.
+  useEffect(() => {
+    if (!resumePending || !user) return;
+    const draftRaw = sessionStorage.getItem('bf_ugc_draft');
+    if (draftRaw) {
+      try {
+        const draft = JSON.parse(draftRaw);
+        if (draft.selectedPkg) setSelectedPkg(draft.selectedPkg);
+        if (draft.country) setCountry(draft.country);
+        if (draft.brief) setBrief(draft.brief);
+      } catch { /* ignore corrupt draft */ }
+      sessionStorage.removeItem('bf_ugc_draft');
+    }
+    setView('new_order');
+    setStep(2);
+    window.history.replaceState({}, '', '/ugc-ads');
+  }, [resumePending, user]);
+
+  // Once the draft is restored and we have everything needed, auto-submit
+  // straight to payment so the user isn't asked to click "Continue" again.
+  useEffect(() => {
+    if (!resumePending || !user || !selectedPkg) return;
+    if (!brief.brand_name || !brief.product_service || !brief.target_audience || !brief.campaign_goal || !brief.key_messages) return;
+    setResumePending(false);
+    createOrder.mutate();
+  }, [resumePending, user, selectedPkg, brief]);
 
   const { data: orders = [], isLoading: loadingOrders } = useQuery({
     queryKey: ['ugcOrders'],
@@ -275,7 +304,7 @@ export default function UgcAds() {
       } else {
         toast.error('Could not start payment — please try manual payment.');
       }
-    } catch (e) {
+    } catch (_e) {
       toast.error('Payment gateway error — please try again.');
     } finally {
       setPaychanguLoading(false);
@@ -412,7 +441,6 @@ export default function UgcAds() {
 
   // ── New order wizard
   if (view === 'new_order') {
-    const price = selectedPkg ? getPriceForCountry(selectedPkg, country) : null;
     return (
       <div className="max-w-2xl mx-auto px-4 py-8 space-y-6">
         {/* Header */}
@@ -550,6 +578,14 @@ export default function UgcAds() {
               onClick={() => {
                 if (!brief.brand_name || !brief.product_service || !brief.target_audience || !brief.campaign_goal || !brief.key_messages) {
                   toast.error('Please fill in all required fields.'); return;
+                }
+                if (!user) {
+                  // Guest — save progress, send them to auth, then bounce straight back to payment.
+                  sessionStorage.setItem('bf_ugc_draft', JSON.stringify({ selectedPkg, country, brief }));
+                  const resumeUrl = '/ugc-ads?resume=1';
+                  sessionStorage.setItem('bf_post_login_redirect', resumeUrl);
+                  navigate('/login?redirect=' + encodeURIComponent(resumeUrl));
+                  return;
                 }
                 createOrder.mutate();
               }}
