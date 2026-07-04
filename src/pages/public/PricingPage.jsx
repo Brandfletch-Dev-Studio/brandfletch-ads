@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { Check, ArrowRight, MessageSquare } from 'lucide-react';
+import { Check, ArrowRight, MessageSquare, Loader2, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { supabase, base44 } from '@/api/base44Client';
 import { LOCAL_PRICES } from '@/lib/pricing';
 import { UGC_OVERVIEW, UGC_PACKAGES, getMwkPriceLabel } from '@/lib/ugcPackages';
+import { detectCountry, PRICING_COUNTRIES } from '@/lib/geoCountry';
 import { useAuth } from '@/lib/AuthContext';
 import { useSEO } from '@/hooks/useSEO';
 
@@ -15,8 +16,9 @@ const DEFAULT_RATE = 5000;
 const TABS = [
   { key: 'meta-ads',        label: 'Meta Ads' },
   { key: 'ugc-ads',         label: 'UGC Ads' },
-  { key: 'graphic-design',  label: 'Graphic Design' },
-  { key: 'web-design',      label: 'Web Design' },
+  { key: 'studios',         label: 'Studios' },
+  { key: 'graphic-design',  label: 'Designs' },
+  { key: 'dev-studio',      label: 'Dev Studio' },
   { key: 'social-media',    label: 'Social Media' },
   { key: 'online-payments', label: 'Online Payments' },
 ];
@@ -36,7 +38,7 @@ const UGC_PLAN = {
     priceNote: pkg.priceNote,
     badge: pkg.badge,
     features: pkg.features,
-    cta: 'Place order', ctaLink: '/contact',
+    cta: 'Place order', ctaLink: '/ugc-ads',
   })),
 };
 
@@ -51,19 +53,19 @@ const STATIC_PLANS = {
         name: 'Starter',
         price: 'MK 100,000', priceNote: '/month', badge: null,
         features: ['10 design requests/month','Static designs only','Posters, flyers, social posts, banners','1 concurrent request','24–48 hour turnaround','Revisions included'],
-        cta: 'Get started', ctaLink: '/contact',
+        cta: 'Get started', ctaLink: '/designs',
       },
       {
         name: 'Growth',
         price: 'MK 180,000', priceNote: '/month', badge: 'Most popular',
         features: ['15 design requests/month','Static designs + motion graphics','Animated posts, simple GIFs','2 concurrent requests','12–24 hour turnaround','1–2 short video edits/month','Priority queue'],
-        cta: 'Get started', ctaLink: '/contact',
+        cta: 'Get started', ctaLink: '/designs',
       },
       {
         name: 'Premium',
         price: 'MK 280,000', priceNote: '/month', badge: null,
         features: ['20 design requests/month','Full suite: static, motion & video','3 concurrent requests','6–12 hour priority turnaround','Unlimited video content (within cap)','Brand consistency management','Dedicated designer'],
-        cta: 'Get started', ctaLink: '/contact',
+        cta: 'Get started', ctaLink: '/designs',
       },
     ],
   },
@@ -76,21 +78,21 @@ const STATIC_PLANS = {
         name: 'Starter Website',
         price: 'MK 150,000', priceNote: 'one-off', badge: null,
         features: ['Up to 5 pages','Professional business website','Mobile responsive design','Contact form','WhatsApp integration','Basic SEO setup','Social media links','Website launch support'],
-        cta: 'Place order', ctaLink: '/contact',
+        cta: 'Place order', ctaLink: '/dev-studio',
         ideal: 'Small businesses, personal brands & startups',
       },
       {
         name: 'Growth Website',
         price: 'MK 350,000', priceNote: 'one-off', badge: 'Most popular',
         features: ['Up to 10 pages','Custom website design','Modern UI/UX','Lead capture forms','WhatsApp/business integrations','Blog/news section','SEO optimisation','Analytics setup','Conversion-focused structure'],
-        cta: 'Place order', ctaLink: '/contact',
+        cta: 'Place order', ctaLink: '/dev-studio',
         ideal: 'Growing businesses that need more than just a website',
       },
       {
         name: 'Business Pro',
         price: 'MK 750,000', priceNote: 'one-off', badge: 'Serious brands',
         features: ['Unlimited pages','Fully custom design','Advanced UI/UX','Booking systems / custom features','E-commerce functionality','Payment integrations','Advanced SEO','Speed optimisation','Analytics + tracking','Priority support'],
-        cta: 'Place order', ctaLink: '/contact',
+        cta: 'Place order', ctaLink: '/dev-studio',
         ideal: 'Established businesses & brands',
       },
     ],
@@ -98,7 +100,7 @@ const STATIC_PLANS = {
       title: 'Need a web app, LMS, marketplace, or complex system?',
       desc: "These go far beyond standard website pricing. We build them — let's talk scope and pricing.",
       cta: 'Request a custom quote',
-      link: '/contact',
+      link: '/dev-studio',
     },
   },
   'social-media': {
@@ -239,6 +241,127 @@ function DollarCalculator({ defaultRate }) {
   );
 }
 
+// ── Studios / Dev Studio section — ServiceRate-driven ───────────────────────
+// Pulls live prices from the ServiceRate table (admin sets them per
+// country in each department's admin Pricing tab). Services that are
+// inactive or price=0 show as "Coming soon" with a "Request a quote" CTA.
+function ServiceRatePricing({ department, orderLink, country, onCountryChange }) {
+  const [rates, setRates] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    base44.entities.ServiceRate
+      .filter({ department, is_active: true, country }, { sort: 'sort_order' })
+      .then(rows => { setRates(rows || []); setLoading(false); })
+      .catch(() => { setRates([]); setLoading(false); });
+  }, [department, country]);
+
+  const symbol = rates[0]?.symbol || 'MK';
+
+  // Group by service_key — one card per service
+  const services = [];
+  const seen = new Set();
+  for (const r of rates) {
+    if (!seen.has(r.service_key)) {
+      seen.add(r.service_key);
+      const svcRates = rates.filter(x => x.service_key === r.service_key);
+      const hasPlans = svcRates.length > 1 || svcRates[0]?.plan_name;
+      services.push({ service_key: r.service_key, service_name: r.service_name, rates: svcRates, hasPlans });
+    }
+  }
+
+  return (
+    <div>
+      {/* Country selector */}
+      <div className="flex flex-wrap items-center gap-3 mb-8">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-semibold text-muted-foreground">Country:</span>
+          <div className="flex flex-wrap gap-1">
+            {PRICING_COUNTRIES.map(cc => (
+              <button key={cc} onClick={() => onCountryChange(cc)}
+                className={cn('px-3 py-1.5 rounded-lg text-xs font-medium transition-all border',
+                  country === cc
+                    ? 'bg-[hsl(var(--primary))] text-white border-[hsl(var(--primary))]'
+                    : 'border-border text-muted-foreground hover:text-foreground hover:bg-muted'
+                )}
+              >{cc}</button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="flex items-center justify-center py-16 gap-3 text-muted-foreground">
+          <Loader2 className="w-5 h-5 animate-spin" />
+          <span className="text-sm">Loading prices…</span>
+        </div>
+      ) : services.length === 0 ? (
+        <div className="text-center py-16">
+          <div className="max-w-md mx-auto bg-card border border-border rounded-2xl p-8">
+            <Sparkles className="w-8 h-8 text-[hsl(var(--accent))] mx-auto mb-3" />
+            <h3 className="font-display font-bold text-lg text-foreground mb-2">Pricing coming soon</h3>
+            <p className="text-sm text-muted-foreground mb-6">
+              We're finalising pricing for {country}. In the meantime, reach out and we'll craft a quote tailored to your project.
+            </p>
+            <Link to={orderLink}>
+              <Button className="bg-[hsl(var(--primary))] text-white hover:bg-[hsl(var(--primary))]/90 gap-2">
+                Request a quote <ArrowRight className="w-4 h-4" />
+              </Button>
+            </Link>
+          </div>
+        </div>
+      ) : (
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {services.map(svc => {
+            // If the service has multiple plan rows, show each as a card;
+            // if it's a single-row service (no plan_name), show one card.
+            const cards = svc.hasPlans
+              ? svc.rates.map(r => ({
+                  name: r.plan_name || svc.service_name,
+                  price: r.billing_type === 'custom_quote' ? 'Custom' : `${r.symbol}${Number(r.price).toLocaleString()}`,
+                  priceNote: r.billing_type === 'custom_quote' ? 'quote' : (r.billing_type === 'subscription' ? '/month' : 'one-off'),
+                  features: [],
+                  cta: r.billing_type === 'custom_quote' ? 'Request a quote' : 'Place order',
+                  ctaLink: orderLink,
+                  badge: null,
+                }))
+              : [{
+                  name: svc.service_name,
+                  price: svc.rates[0].billing_type === 'custom_quote' ? 'Custom' : `${svc.rates[0].symbol}${Number(svc.rates[0].price).toLocaleString()}`,
+                  priceNote: svc.rates[0].billing_type === 'custom_quote' ? 'quote' : (svc.rates[0].billing_type === 'subscription' ? '/month' : 'one-off'),
+                  features: [],
+                  cta: svc.rates[0].billing_type === 'custom_quote' ? 'Request a quote' : 'Place order',
+                  ctaLink: orderLink,
+                  badge: null,
+                }];
+            return cards.map((plan, i) => (
+              <div key={svc.service_key + '-' + i}
+                className="relative flex flex-col bg-card border rounded-2xl overflow-hidden transition-all duration-200 hover:shadow-lg border-border"
+              >
+                <div className="h-1 bg-muted" />
+                <div className="p-6 flex flex-col flex-1">
+                  <h3 className="font-display font-bold text-lg text-foreground mb-1">{plan.name}</h3>
+                  <div className="mb-4">
+                    <span className="text-2xl font-extrabold text-foreground">{plan.price}</span>
+                    {plan.priceNote && <span className="text-sm text-muted-foreground ml-1">{plan.priceNote}</span>}
+                  </div>
+                  <div className="flex-1 mb-6" />
+                  <Link to={plan.ctaLink}>
+                    <Button className="w-full font-semibold bg-[hsl(var(--primary))] text-white hover:bg-[hsl(var(--primary))]/90">
+                      {plan.cta} <ArrowRight className="ml-1.5 w-4 h-4" />
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            ));
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Meta Ads section — pulls from DB ─────────────────────────────────────────
 function MetaAdsPricing({ dbRows, loading, country, onCountryChange, onPlanSelect }) {
   const COUNTRIES = ['Malawi', 'Zambia', 'South Africa', 'Kenya', 'Tanzania'];
@@ -268,7 +391,7 @@ function MetaAdsPricing({ dbRows, loading, country, onCountryChange, onPlanSelec
       badge:     META_PKG_BADGES[pkg] || null,
       features:  META_PKG_FEATURES[pkg] || [],
       cta:       pkg === 'premium' ? 'Talk to us' : 'Get started',
-      ctaLink:   pkg === 'premium' ? '/contact' : `/register?service=meta-ads&package=${pkg}&duration=${duration}`,
+      ctaLink:   pkg === 'premium' ? '/contact' : '/campaigns/new',
       pkgSlug:   pkg,
     };
   });
@@ -376,65 +499,30 @@ export default function PricingPage() {
       .then(({ data }) => { if (data?.length) setDbRows(data); })
       .catch(() => {/* fail silently */});
 
-    // Country detection: profile → localStorage cache → live IP (last resort)
-    if (user?.country) {
-      const COUNTRIES = ['Malawi','Zambia','South Africa','Kenya','Tanzania'];
-      const match = COUNTRIES.find(c => c.toLowerCase() === user.country.toLowerCase());
-      if (match) { setCountry(match); return; }
-    }
-    try {
-      const cached = JSON.parse(localStorage.getItem('bf_ip_country') || 'null');
-      if (cached?.country && cached.expires > Date.now()) {
-        const COUNTRIES = ['Malawi','Zambia','South Africa','Kenya','Tanzania'];
-        const match = COUNTRIES.find(c => c.toLowerCase() === cached.country.toLowerCase());
-        if (match) setCountry(match);
-        return;
-      }
-    } catch {}
-    const ctrl = new AbortController();
-    fetch('https://ipapi.co/json/', { signal: ctrl.signal })
-      .then(r => r.json())
-      .then(d => {
-        const name = d.country_name || '';
-        localStorage.setItem('bf_ip_country', JSON.stringify({ country: name, expires: Date.now() + 86_400_000 }));
-        const COUNTRIES = ['Malawi','Zambia','South Africa','Kenya','Tanzania'];
-        const match = COUNTRIES.find(c => c.toLowerCase() === name.toLowerCase());
-        if (match) setCountry(match);
-      })
-      .catch(() => {});
-    return () => ctrl.abort();
+    // Country detection — shared helper (profile → cached IP → live IP → default)
+    detectCountry(user?.country).then(setCountry);
   }, [user?.country]);
 
-  // CTA handler — authenticated users go to /contact with plan params,
-  // guests are sent to /login with a redirect back to this page so the
-  // order context is preserved after they authenticate.
+  // CTA handler — routes to the real order flow for each service.
+  // Guest-checkout flows (UGC, Studios, Dev Studio, Designs, Campaigns)
+  // handle their own auth gating internally, so we can navigate directly
+  // without pre-checking login state. Social Media has no wizard yet —
+  // falls back to /contact.
   function handlePlanCta(serviceType, plan) {
-    const serviceMap = {
-      'meta-ads':      'meta_ads',
-      'ugc-ads':       'ugc_ads',
-      'graphic-design':'graphic_design',
-      'social-media':  'social_media',
-      'web-design':    'web_design',
-      'branding':      'branding',
+    const orderRoutes = {
+      'meta-ads':       '/campaigns/new',
+      'ugc-ads':        '/ugc-ads',
+      'graphic-design': '/designs',
+      'web-design':     '/dev-studio',
+      'social-media':   '/contact',
+      'studios':        '/studios',
+      'dev-studio':     '/dev-studio',
     };
-    const mapped = serviceMap[serviceType] || serviceType;
-    const slug   = plan?.pkgSlug || plan?.slug || '';
-    const orderParams = new URLSearchParams();
-    orderParams.set('service', mapped);
-    if (slug) orderParams.set('plan', slug);
-    const orderUrl = '/contact?' + orderParams.toString();
-
-    if (user) {
-      // Logged in — go straight to the contact/order page
-      navigate(orderUrl);
-    } else {
-      // Guest — redirect to login, then bounce back to the order URL
-      const loginUrl = '/login?redirect=' + encodeURIComponent(orderUrl);
-      navigate(loginUrl);
-    }
+    const route = orderRoutes[serviceType] || '/contact';
+    navigate(route);
   }
 
-  const service = STATIC_PLANS[activeTab];
+  const service = STATIC_PLANS[activeTab];  // null for ServiceRate-driven tabs (studios, dev-studio)
 
   return (
     <div className="min-h-screen bg-background">
@@ -486,6 +574,68 @@ export default function PricingPage() {
               onCountryChange={setCountry}
               onPlanSelect={(plan) => handlePlanCta('meta-ads', plan)}
             />
+          </>
+        )}
+
+        {/* ── STUDIOS (ServiceRate-driven) ── */}
+        {activeTab === 'studios' && (
+          <>
+            <div className="mb-10">
+              <h2 className="text-2xl sm:text-3xl font-display font-extrabold text-foreground mb-2">Brandfletch Studios</h2>
+              <p className="text-muted-foreground max-w-2xl text-sm leading-relaxed">
+                Content creation, podcast features, videography and photography — produced by our creative team. UGC Ad Creatives have their own dedicated packages.
+              </p>
+            </div>
+            <ServiceRatePricing
+              department="studios"
+              orderLink="/studios"
+              country={country}
+              onCountryChange={setCountry}
+            />
+            <div className="mt-8 bg-[hsl(var(--accent))]/5 border border-[hsl(var(--accent))]/20 rounded-2xl p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div>
+                <p className="font-bold text-foreground text-sm mb-1">Looking for UGC Ad Creatives?</p>
+                <p className="text-xs text-muted-foreground">Starter, Growth & Brand Campaign packages — book via our dedicated UGC flow.</p>
+              </div>
+              <Link to="/ugc-ads" className="flex-shrink-0">
+                <Button variant="outline" size="sm" className="gap-2 whitespace-nowrap">
+                  <ArrowRight className="w-4 h-4" /> View UGC packages
+                </Button>
+              </Link>
+            </div>
+          </>
+        )}
+
+        {/* ── DEV STUDIO (ServiceRate-driven) ── */}
+        {activeTab === 'dev-studio' && (
+          <>
+            <div className="mb-10">
+              <h2 className="text-2xl sm:text-3xl font-display font-extrabold text-foreground mb-2">Brandfletch Dev Studio</h2>
+              <p className="text-muted-foreground max-w-2xl text-sm leading-relaxed">
+                Websites, apps, automations and AI agents — built to grow your business. Fixed-price packages below, or request a custom quote for complex projects.
+              </p>
+            </div>
+            <ServiceRatePricing
+              department="dev_studio"
+              orderLink="/dev-studio"
+              country={country}
+              onCountryChange={setCountry}
+            />
+            {/* Show the existing hardcoded website packages as a fallback
+                while ServiceRate website rows are inactive/zero. */}
+            <div className="mt-10">
+              <p className="text-xs font-semibold text-muted-foreground mb-4">Website packages (standard pricing):</p>
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {STATIC_PLANS['web-design']?.packages.map(plan => (
+                  <PlanCard
+                    key={plan.name}
+                    plan={{ ...plan, ctaLink: '/dev-studio' }}
+                    popular={plan.badge?.toLowerCase().includes('pop') ?? false}
+                    onCta={() => handlePlanCta('dev-studio', plan)}
+                  />
+                ))}
+              </div>
+            </div>
           </>
         )}
 
