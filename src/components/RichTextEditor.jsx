@@ -24,9 +24,33 @@ const TOOLBAR_ACTIONS = [
   { cmd: 'removeFormat',  icon: '✕ Format',           title: 'Clear Formatting' },
 ];
 
+// Some browsers (mainly mobile Safari) ignore document.execCommand('defaultParagraphSeparator')
+// and wrap each Enter-created line in an unstyled <div> instead of a <p> — which has no
+// margin, so paragraphs render tightly packed with no visible break. Normalize any direct-child
+// <div> into a real <p> so it always gets the .bf-article p spacing on the public blog page.
+function normalizeParagraphs(html) {
+  if (!html || !html.includes('<div')) return html;
+  const container = document.createElement('div');
+  container.innerHTML = html;
+  container.querySelectorAll(':scope > div').forEach(div => {
+    const p = document.createElement('p');
+    p.innerHTML = div.innerHTML;
+    div.replaceWith(p);
+  });
+  return container.innerHTML;
+}
+
 export default function RichTextEditor({ value, onChange, placeholder }) {
   const editorRef = useRef(null);
   const isInternalChange = useRef(false);
+
+  // Force the browser to wrap each Enter-created line in a real <p> tag
+  // (default behavior varies by browser — Chrome uses <div>, some mobile
+  // browsers just insert a <br> — neither matches the .bf-article p { margin }
+  // spacing the public blog page expects). Must be set before any typing.
+  useEffect(() => {
+    try { document.execCommand('defaultParagraphSeparator', false, 'p'); } catch { /* unsupported, ignore */ }
+  }, []);
 
   // Sync external value → DOM (only when value changes from outside)
   useEffect(() => {
@@ -39,11 +63,27 @@ export default function RichTextEditor({ value, onChange, placeholder }) {
 
   const handleInput = useCallback(() => {
     isInternalChange.current = true;
-    const html = editorRef.current?.innerHTML || '';
+    const html = normalizeParagraphs(editorRef.current?.innerHTML || '');
     onChange(html === '<br>' || html === '<p><br></p>' ? '' : html);
     // Reset flag after React processes the update
     setTimeout(() => { isInternalChange.current = false; }, 0);
   }, [onChange]);
+
+  const handlePaste = useCallback((e) => {
+    e.preventDefault();
+    const text = e.clipboardData?.getData('text/plain') || '';
+    if (!text) return;
+    // Split on blank lines / single newlines into paragraphs, escape HTML,
+    // and insert as real <p> tags so pasted content behaves the same as typed content.
+    const escape = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const html = text
+      .split(/\r?\n/)
+      .filter(line => line.trim() !== '')
+      .map(line => `<p>${escape(line)}</p>`)
+      .join('');
+    document.execCommand('insertHTML', false, html || escape(text));
+    handleInput();
+  }, [handleInput]);
 
   const execCmd = useCallback((action, e) => {
     e.preventDefault();
@@ -86,6 +126,7 @@ export default function RichTextEditor({ value, onChange, placeholder }) {
         contentEditable
         suppressContentEditableWarning
         onInput={handleInput}
+        onPaste={handlePaste}
         className={cn(
           'min-h-[320px] p-4 text-foreground text-sm leading-relaxed focus:outline-none',
           'prose prose-sm max-w-none',
@@ -97,7 +138,6 @@ export default function RichTextEditor({ value, onChange, placeholder }) {
           '[&_blockquote]:border-l-4 [&_blockquote]:border-primary [&_blockquote]:pl-4 [&_blockquote]:text-muted-foreground',
         )}
         data-placeholder={placeholder || 'Write your blog post here…'}
-        style={{ WebkitUserModify: 'read-write-plaintext-only' }}
       />
       <style>{`
         [contenteditable]:empty:before {
