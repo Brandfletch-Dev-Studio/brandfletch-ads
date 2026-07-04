@@ -255,7 +255,7 @@ export default function DeptOrderPage({ config, routePath, icon: Icon, tagline }
 
   if (verifying) return (
     <div className="flex flex-col items-center justify-center min-h-64 gap-4 text-muted-foreground">
-      <Loader2 className="w-8 h-8 animate-spin text-[hsl(var(--accent))]" />
+      <Loader2 className="w-8 h-8 animate-spin text-[hsl(var(--primary))]" />
       <p className="text-sm font-medium">Verifying your payment…</p>
     </div>
   );
@@ -282,7 +282,7 @@ export default function DeptOrderPage({ config, routePath, icon: Icon, tagline }
             <CardContent className="pt-5 text-center space-y-3">
               <p className="text-sm font-medium text-yellow-800">Complete your payment to get started</p>
               <Button onClick={() => { setCreatedOrder(selectedOrder); setStep(3); setView('new_order'); }}
-                className="bg-[hsl(var(--accent))] text-white hover:bg-[hsl(var(--accent))]/90">
+                className="bg-[hsl(var(--primary))] text-white hover:bg-[hsl(var(--primary))]/90">
                 Pay Now <ArrowRight className="w-4 h-4 ml-1.5" />
               </Button>
             </CardContent>
@@ -330,7 +330,7 @@ export default function DeptOrderPage({ config, routePath, icon: Icon, tagline }
           <p className="text-sm text-muted-foreground">
             Our {config.title} team will review your brief and follow up with a custom quote shortly.
           </p>
-          <Button onClick={() => { setView('list'); resetWizard(); }} className="bg-[hsl(var(--accent))] text-white hover:bg-[hsl(var(--accent))]/90">
+          <Button onClick={() => { setView('list'); resetWizard(); }} className="bg-[hsl(var(--primary))] text-white hover:bg-[hsl(var(--primary))]/90">
             Back to my orders
           </Button>
         </div>
@@ -352,7 +352,7 @@ export default function DeptOrderPage({ config, routePath, icon: Icon, tagline }
 
         <div className="flex gap-2">
           {(isCustomQuote ? ['Service', 'Brief'] : ['Service', 'Brief', 'Payment']).map((s, i) => (
-            <div key={s} className={cn('flex-1 h-1.5 rounded-full transition-all', i < step ? 'bg-[hsl(var(--accent))]' : 'bg-border')} />
+            <div key={s} className={cn('flex-1 h-1.5 rounded-full transition-all', i < step ? 'bg-[hsl(var(--primary))]' : 'bg-border')} />
           ))}
         </div>
 
@@ -365,17 +365,17 @@ export default function DeptOrderPage({ config, routePath, icon: Icon, tagline }
             </div>
             {config.externalServiceLink && (
               <Link to={config.externalServiceLink.to}
-                className="flex items-center justify-between gap-3 border border-dashed border-[hsl(var(--accent))]/40 rounded-xl p-4 hover:bg-[hsl(var(--accent))]/5 transition-colors">
+                className="flex items-center justify-between gap-3 border border-dashed border-[hsl(var(--primary))]/40 rounded-xl p-4 hover:bg-[hsl(var(--primary))]/5 transition-colors">
                 <div className="flex items-start gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-[hsl(var(--accent))]/10 flex items-center justify-center shrink-0">
-                    <Sparkles className="w-4 h-4 text-[hsl(var(--accent))]" />
+                  <div className="w-9 h-9 rounded-lg bg-[hsl(var(--primary))]/10 flex items-center justify-center shrink-0">
+                    <Sparkles className="w-4 h-4 text-[hsl(var(--primary))]" />
                   </div>
                   <div>
                     <p className="font-semibold text-sm">{config.externalServiceLink.label}</p>
                     <p className="text-xs text-muted-foreground">{config.externalServiceLink.description}</p>
                   </div>
                 </div>
-                <ArrowRight className="w-4 h-4 text-[hsl(var(--accent))] shrink-0" />
+                <ArrowRight className="w-4 h-4 text-[hsl(var(--primary))] shrink-0" />
               </Link>
             )}
             {orderableRates.length === 0 ? (
@@ -385,7 +385,7 @@ export default function DeptOrderPage({ config, routePath, icon: Icon, tagline }
                   <p className="text-sm text-muted-foreground">
                     These services aren't open for booking yet. Reach out and we'll set you up directly.
                   </p>
-                  <a href="mailto:support@brandfletch.com" className="inline-flex items-center gap-1.5 text-sm text-[hsl(var(--accent))] hover:underline">
+                  <a href="mailto:support@brandfletch.com" className="inline-flex items-center gap-1.5 text-sm text-[hsl(var(--primary))] hover:underline">
                     <Mail className="w-3.5 h-3.5" /> support@brandfletch.com
                   </a>
                 </CardContent>
@@ -398,14 +398,14 @@ export default function DeptOrderPage({ config, routePath, icon: Icon, tagline }
                   return (
                     <div key={rate.id} onClick={() => setSelectedRate(rate)}
                       className={cn('border rounded-xl p-4 cursor-pointer transition-all',
-                        selected ? 'border-[hsl(var(--accent))] bg-[hsl(var(--accent))]/5' : 'border-border hover:border-[hsl(var(--accent))]/30'
+                        selected ? 'border-[hsl(var(--primary))] bg-[hsl(var(--primary))]/5' : 'border-border hover:border-[hsl(var(--primary))]/30'
                       )}>
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="font-semibold text-sm">{label}</p>
                           {rate.plan_name && <p className="text-xs text-muted-foreground">{rate.plan_name}</p>}
                         </div>
-                        <span className="font-bold text-[hsl(var(--accent))]">{formatMoney(rate.price, rate.currency, rate.symbol)}</span>
+                        <span className="font-bold text-[hsl(var(--primary))]">{formatMoney(rate.price, rate.currency, rate.symbol)}</span>
                       </div>
                     </div>
                   );
@@ -413,7 +413,7 @@ export default function DeptOrderPage({ config, routePath, icon: Icon, tagline }
               </div>
             )}
             <Button onClick={() => setStep(2)} disabled={!selectedRate}
-              className="w-full h-11 font-semibold bg-[hsl(var(--accent))] text-white hover:bg-[hsl(var(--accent))]/90">
+              className="w-full h-11 font-semibold bg-[hsl(var(--primary))] text-white hover:bg-[hsl(var(--primary))]/90">
               Continue to Brief <ArrowRight className="w-4 h-4 ml-1.5" />
             </Button>
           </div>
@@ -455,7 +455,7 @@ export default function DeptOrderPage({ config, routePath, icon: Icon, tagline }
                 createOrder.mutate();
               }}
               disabled={createOrder.isPending}
-              className="w-full h-11 font-semibold bg-[hsl(var(--accent))] text-white hover:bg-[hsl(var(--accent))]/90"
+              className="w-full h-11 font-semibold bg-[hsl(var(--primary))] text-white hover:bg-[hsl(var(--primary))]/90"
             >
               {createOrder.isPending
                 ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Saving…</>
@@ -475,15 +475,15 @@ export default function DeptOrderPage({ config, routePath, icon: Icon, tagline }
               <p className="text-sm text-muted-foreground">Complete payment to get started.</p>
             </div>
 
-            <Card className="border-[hsl(var(--accent))]/20 bg-[hsl(var(--accent))]/5">
+            <Card className="border-[hsl(var(--primary))]/20 bg-[hsl(var(--primary))]/5">
               <CardContent className="pt-4 space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Service</span>
                   <span className="font-semibold">{createdOrder.package}</span>
                 </div>
-                <div className="flex justify-between text-sm border-t border-[hsl(var(--accent))]/10 pt-2">
+                <div className="flex justify-between text-sm border-t border-[hsl(var(--primary))]/10 pt-2">
                   <span className="font-semibold text-foreground">Total</span>
-                  <span className="font-extrabold text-lg text-[hsl(var(--accent))]">
+                  <span className="font-extrabold text-lg text-[hsl(var(--primary))]">
                     {createdOrder.currency} {Number(createdOrder.amount).toLocaleString()}
                   </span>
                 </div>
@@ -506,8 +506,8 @@ export default function DeptOrderPage({ config, routePath, icon: Icon, tagline }
               <Card>
                 <CardContent className="pt-5 space-y-3">
                   <div className="flex items-center gap-2 mb-2">
-                    <div className="w-8 h-8 rounded-lg bg-[hsl(var(--accent))]/10 flex items-center justify-center">
-                      <ExternalLink className="w-4 h-4 text-[hsl(var(--accent))]" />
+                    <div className="w-8 h-8 rounded-lg bg-[hsl(var(--primary))]/10 flex items-center justify-center">
+                      <ExternalLink className="w-4 h-4 text-[hsl(var(--primary))]" />
                     </div>
                     <div>
                       <p className="text-sm font-semibold">Pay with Paychangu</p>
@@ -515,7 +515,7 @@ export default function DeptOrderPage({ config, routePath, icon: Icon, tagline }
                     </div>
                   </div>
                   <Button onClick={handlePaychangu} disabled={paychanguLoading}
-                    className="w-full h-10 font-semibold bg-[hsl(var(--accent))] text-white hover:bg-[hsl(var(--accent))]/90">
+                    className="w-full h-10 font-semibold bg-[hsl(var(--primary))] text-white hover:bg-[hsl(var(--primary))]/90">
                     {paychanguLoading
                       ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Opening payment…</>
                       : <>Pay {createdOrder.currency} {Number(createdOrder.amount).toLocaleString()} <ExternalLink className="w-4 h-4 ml-1.5" /></>
@@ -533,7 +533,7 @@ export default function DeptOrderPage({ config, routePath, icon: Icon, tagline }
                     {paymentMethods.map(m => (
                       <div key={m.id} onClick={() => setSelectedMethod(m)}
                         className={cn('border rounded-xl p-3 cursor-pointer transition-all',
-                          selectedMethod?.id === m.id ? 'border-[hsl(var(--accent))] bg-[hsl(var(--accent))]/5' : 'border-border hover:border-[hsl(var(--accent))]/30'
+                          selectedMethod?.id === m.id ? 'border-[hsl(var(--primary))] bg-[hsl(var(--primary))]/5' : 'border-border hover:border-[hsl(var(--primary))]/30'
                         )}>
                         <div className="flex items-center justify-between">
                           <p className="text-sm font-medium">{m.method_name}</p>
@@ -589,12 +589,12 @@ export default function DeptOrderPage({ config, routePath, icon: Icon, tagline }
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-            {Icon && <Icon className="w-6 h-6 text-[hsl(var(--accent))]" />} {config.title}
+            {Icon && <Icon className="w-6 h-6 text-[hsl(var(--primary))]" />} {config.title}
           </h1>
           {tagline && <p className="text-sm text-muted-foreground mt-1">{tagline}</p>}
         </div>
         <Button onClick={() => setView('new_order')}
-          className="bg-[hsl(var(--accent))] text-white hover:bg-[hsl(var(--accent))]/90 font-semibold gap-2">
+          className="bg-[hsl(var(--primary))] text-white hover:bg-[hsl(var(--primary))]/90 font-semibold gap-2">
           New Order <ArrowRight className="w-4 h-4" />
         </Button>
       </div>
@@ -615,7 +615,7 @@ export default function DeptOrderPage({ config, routePath, icon: Icon, tagline }
             const label = config.serviceTypeOptions.find(s => s.value === order.service_type)?.label;
             return (
               <div key={order.id} onClick={() => { setSelectedOrder(order); setView('detail'); }}
-                className="border border-border rounded-xl p-4 cursor-pointer hover:border-[hsl(var(--accent))]/30 transition-all flex items-center justify-between gap-4">
+                className="border border-border rounded-xl p-4 cursor-pointer hover:border-[hsl(var(--primary))]/30 transition-all flex items-center justify-between gap-4">
                 <div>
                   <p className="font-semibold text-sm">{order.order_ref}</p>
                   <p className="text-xs text-muted-foreground mt-0.5">{label} · {order.package}</p>

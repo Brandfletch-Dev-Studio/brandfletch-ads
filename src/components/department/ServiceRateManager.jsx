@@ -233,7 +233,7 @@ function RateForm({ value, onChange, onCancel, onSave, saving }) {
       </div>
       <div className="flex justify-end gap-2 pt-1">
         <Button size="sm" variant="ghost" className="h-8 text-xs gap-1" onClick={onCancel}><X className="w-3.5 h-3.5" /> Cancel</Button>
-        <Button size="sm" className="h-8 text-xs gap-1 bg-[hsl(var(--accent))] text-white hover:bg-[hsl(var(--accent))]/90" onClick={onSave} disabled={saving}>
+        <Button size="sm" className="h-8 text-xs gap-1 bg-[hsl(var(--primary))] text-white hover:bg-[hsl(var(--primary))]/90" onClick={onSave} disabled={saving}>
           {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />} Save
         </Button>
       </div>

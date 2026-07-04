@@ -56,24 +56,24 @@ function OrderTracker({ order }) {
             <div className="flex flex-col items-center gap-1 flex-shrink-0">
               <div className={cn(
                 'w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all',
-                done   ? 'bg-[hsl(var(--accent))] border-[hsl(var(--accent))]' :
-                active ? 'border-[hsl(var(--accent))] bg-background' :
+                done   ? 'bg-[hsl(var(--primary))] border-[hsl(var(--primary))]' :
+                active ? 'border-[hsl(var(--primary))] bg-background' :
                          'border-border bg-muted'
               )}>
                 {done
                   ? <CheckCircle2 className="w-4 h-4 text-white" />
-                  : <div className={cn('w-2.5 h-2.5 rounded-full', active ? 'bg-[hsl(var(--accent))]' : 'bg-muted-foreground/30')} />
+                  : <div className={cn('w-2.5 h-2.5 rounded-full', active ? 'bg-[hsl(var(--primary))]' : 'bg-muted-foreground/30')} />
                 }
               </div>
               <span className={cn(
                 'text-[10px] font-medium text-center leading-tight whitespace-nowrap',
-                active ? 'text-[hsl(var(--accent))]' : done ? 'text-foreground' : 'text-muted-foreground'
+                active ? 'text-[hsl(var(--primary))]' : done ? 'text-foreground' : 'text-muted-foreground'
               )}>
                 {cfg.label}
               </span>
             </div>
             {i < STAGES.length - 1 && (
-              <div className={cn('flex-1 h-0.5 mx-1', done ? 'bg-[hsl(var(--accent))]' : 'bg-border')} />
+              <div className={cn('flex-1 h-0.5 mx-1', done ? 'bg-[hsl(var(--primary))]' : 'bg-border')} />
             )}
           </div>
         );
@@ -91,12 +91,12 @@ function PackageCard({ pkg, pkgKey, country, selected, onSelect }) {
       className={cn(
         'relative cursor-pointer border-2 rounded-2xl p-5 transition-all hover:shadow-md',
         selected
-          ? 'border-[hsl(var(--accent))] bg-[hsl(var(--accent))]/5 shadow-md ring-1 ring-[hsl(var(--accent))]/20'
-          : 'border-border hover:border-[hsl(var(--accent))]/40'
+          ? 'border-[hsl(var(--primary))] bg-[hsl(var(--primary))]/5 shadow-md ring-1 ring-[hsl(var(--primary))]/20'
+          : 'border-border hover:border-[hsl(var(--primary))]/40'
       )}
     >
       {pkg.badge && (
-        <Badge className="absolute -top-2.5 right-4 bg-[hsl(var(--accent))] text-white text-[10px] font-bold px-2.5">
+        <Badge className="absolute -top-2.5 right-4 bg-[hsl(var(--primary))] text-white text-[10px] font-bold px-2.5">
           {pkg.badge}
         </Badge>
       )}
@@ -115,16 +115,16 @@ function PackageCard({ pkg, pkgKey, country, selected, onSelect }) {
       <ul className="space-y-1.5">
         {pkg.features.slice(0, 4).map(f => (
           <li key={f} className="flex items-center gap-2 text-xs text-muted-foreground">
-            <CheckCircle2 className="w-3.5 h-3.5 text-[hsl(var(--accent))] flex-shrink-0" />
+            <CheckCircle2 className="w-3.5 h-3.5 text-[hsl(var(--primary))] flex-shrink-0" />
             {f}
           </li>
         ))}
         {pkg.features.length > 4 && (
-          <li className="text-xs text-[hsl(var(--accent))] font-medium">+{pkg.features.length - 4} more included</li>
+          <li className="text-xs text-[hsl(var(--primary))] font-medium">+{pkg.features.length - 4} more included</li>
         )}
       </ul>
       {selected && (
-        <div className="mt-3 pt-3 border-t border-[hsl(var(--accent))]/20 flex items-center gap-1.5 text-xs font-semibold text-[hsl(var(--accent))]">
+        <div className="mt-3 pt-3 border-t border-[hsl(var(--primary))]/20 flex items-center gap-1.5 text-xs font-semibold text-[hsl(var(--primary))]">
           <CheckCircle2 className="w-3.5 h-3.5" /> Selected
         </div>
       )}
@@ -360,7 +360,7 @@ export default function UgcAds() {
 
   if (verifying) return (
     <div className="flex flex-col items-center justify-center min-h-64 gap-4 text-muted-foreground">
-      <Loader2 className="w-8 h-8 animate-spin text-[hsl(var(--accent))]" />
+      <Loader2 className="w-8 h-8 animate-spin text-[hsl(var(--primary))]" />
       <p className="text-sm font-medium">Verifying your payment…</p>
     </div>
   );
@@ -392,7 +392,7 @@ export default function UgcAds() {
             <CardContent className="pt-5 text-center space-y-3">
               <p className="text-sm font-medium text-yellow-800">Complete your payment to start production</p>
               <Button onClick={() => { setCreatedOrder(selectedOrder); setStep(3); setView('new_order'); }}
-                className="bg-[hsl(var(--accent))] text-white hover:bg-[hsl(var(--accent))]/90">
+                className="bg-[hsl(var(--primary))] text-white hover:bg-[hsl(var(--primary))]/90">
                 Pay Now <ArrowRight className="w-4 h-4 ml-1.5" />
               </Button>
             </CardContent>
@@ -460,7 +460,7 @@ export default function UgcAds() {
           {['Package','Brief','Payment'].map((s, i) => (
             <div key={s} className={cn(
               'flex-1 h-1.5 rounded-full transition-all',
-              i < step ? 'bg-[hsl(var(--accent))]' : 'bg-border'
+              i < step ? 'bg-[hsl(var(--primary))]' : 'bg-border'
             )} />
           ))}
         </div>
@@ -493,7 +493,7 @@ export default function UgcAds() {
             <Button
               onClick={() => setStep(2)}
               disabled={!selectedPkg}
-              className="w-full h-11 font-semibold bg-[hsl(var(--accent))] text-white hover:bg-[hsl(var(--accent))]/90"
+              className="w-full h-11 font-semibold bg-[hsl(var(--primary))] text-white hover:bg-[hsl(var(--primary))]/90"
             >
               Continue to Brief <ArrowRight className="w-4 h-4 ml-1.5" />
             </Button>
@@ -558,7 +558,7 @@ export default function UgcAds() {
                 <div className="flex items-start gap-3 p-3 rounded-lg border border-border bg-muted/40">
                   <input type="checkbox" id="has_script" checked={brief.script_provided}
                     onChange={e => setBrief(b => ({...b, script_provided: e.target.checked}))}
-                    className="mt-0.5 w-4 h-4 accent-[hsl(var(--accent))]" />
+                    className="mt-0.5 w-4 h-4 accent-[hsl(var(--primary))]" />
                   <div>
                     <label htmlFor="has_script" className="text-sm font-medium cursor-pointer">I have a script ready</label>
                     <p className="text-xs text-muted-foreground mt-0.5">Check this to paste your script below</p>
@@ -590,7 +590,7 @@ export default function UgcAds() {
                 createOrder.mutate();
               }}
               disabled={createOrder.isPending}
-              className="w-full h-11 font-semibold bg-[hsl(var(--accent))] text-white hover:bg-[hsl(var(--accent))]/90"
+              className="w-full h-11 font-semibold bg-[hsl(var(--primary))] text-white hover:bg-[hsl(var(--primary))]/90"
             >
               {createOrder.isPending
                 ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Saving Brief…</>
@@ -609,15 +609,15 @@ export default function UgcAds() {
             </div>
 
             {/* Summary */}
-            <Card className="border-[hsl(var(--accent))]/20 bg-[hsl(var(--accent))]/5">
+            <Card className="border-[hsl(var(--primary))]/20 bg-[hsl(var(--primary))]/5">
               <CardContent className="pt-4 space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Package</span>
                   <span className="font-semibold">{UGC_PACKAGES[createdOrder.package]?.name} ({createdOrder.num_videos} videos)</span>
                 </div>
-                <div className="flex justify-between text-sm border-t border-[hsl(var(--accent))]/10 pt-2">
+                <div className="flex justify-between text-sm border-t border-[hsl(var(--primary))]/10 pt-2">
                   <span className="font-semibold text-foreground">Total</span>
-                  <span className="font-extrabold text-lg text-[hsl(var(--accent))]">
+                  <span className="font-extrabold text-lg text-[hsl(var(--primary))]">
                     {createdOrder.currency} {createdOrder.amount.toLocaleString()}
                   </span>
                 </div>
@@ -642,8 +642,8 @@ export default function UgcAds() {
               <Card>
                 <CardContent className="pt-5 space-y-3">
                   <div className="flex items-center gap-2 mb-2">
-                    <div className="w-8 h-8 rounded-lg bg-[hsl(var(--accent))]/10 flex items-center justify-center">
-                      <ExternalLink className="w-4 h-4 text-[hsl(var(--accent))]" />
+                    <div className="w-8 h-8 rounded-lg bg-[hsl(var(--primary))]/10 flex items-center justify-center">
+                      <ExternalLink className="w-4 h-4 text-[hsl(var(--primary))]" />
                     </div>
                     <div>
                       <p className="text-sm font-semibold">Pay with Paychangu</p>
@@ -651,7 +651,7 @@ export default function UgcAds() {
                     </div>
                   </div>
                   <Button onClick={handlePaychangu} disabled={paychanguLoading}
-                    className="w-full h-10 font-semibold bg-[hsl(var(--accent))] text-white hover:bg-[hsl(var(--accent))]/90">
+                    className="w-full h-10 font-semibold bg-[hsl(var(--primary))] text-white hover:bg-[hsl(var(--primary))]/90">
                     {paychanguLoading
                       ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Opening payment…</>
                       : <>Pay {createdOrder.currency} {createdOrder.amount.toLocaleString()} <ExternalLink className="w-4 h-4 ml-1.5" /></>
@@ -673,7 +673,7 @@ export default function UgcAds() {
                     {paymentMethods.map(m => (
                       <div key={m.id} onClick={() => setSelectedMethod(m)}
                         className={cn('border rounded-xl p-3 cursor-pointer transition-all',
-                          selectedMethod?.id === m.id ? 'border-[hsl(var(--accent))] bg-[hsl(var(--accent))]/5' : 'border-border hover:border-[hsl(var(--accent))]/30'
+                          selectedMethod?.id === m.id ? 'border-[hsl(var(--primary))] bg-[hsl(var(--primary))]/5' : 'border-border hover:border-[hsl(var(--primary))]/30'
                         )}>
                         <div className="flex items-center justify-between">
                           <p className="text-sm font-medium">{m.method_name}</p>
@@ -735,14 +735,14 @@ export default function UgcAds() {
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-            <Video className="w-6 h-6 text-[hsl(var(--accent))]" /> UGC Ads
+            <Video className="w-6 h-6 text-[hsl(var(--primary))]" /> UGC Ads
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
             User-generated content ads crafted by real creators — built for Meta Ads performance.
           </p>
         </div>
         <Button onClick={() => setView('new_order')}
-          className="bg-[hsl(var(--accent))] text-white hover:bg-[hsl(var(--accent))]/90 font-semibold gap-2">
+          className="bg-[hsl(var(--primary))] text-white hover:bg-[hsl(var(--primary))]/90 font-semibold gap-2">
           <Play className="w-4 h-4" /> Order UGC Ads
         </Button>
       </div>
@@ -756,15 +756,15 @@ export default function UgcAds() {
       ) : orders.length === 0 ? (
         <Card className="border-dashed">
           <CardContent className="py-16 text-center space-y-4">
-            <div className="w-16 h-16 rounded-2xl bg-[hsl(var(--accent))]/10 flex items-center justify-center mx-auto">
-              <Video className="w-8 h-8 text-[hsl(var(--accent))]" />
+            <div className="w-16 h-16 rounded-2xl bg-[hsl(var(--primary))]/10 flex items-center justify-center mx-auto">
+              <Video className="w-8 h-8 text-[hsl(var(--primary))]" />
             </div>
             <div>
               <p className="font-semibold text-foreground">No UGC orders yet</p>
               <p className="text-sm text-muted-foreground mt-1">Order your first UGC ad campaign and let real creators tell your brand story.</p>
             </div>
             <Button onClick={() => setView('new_order')}
-              className="bg-[hsl(var(--accent))] text-white hover:bg-[hsl(var(--accent))]/90 gap-2 mx-auto">
+              className="bg-[hsl(var(--primary))] text-white hover:bg-[hsl(var(--primary))]/90 gap-2 mx-auto">
               <Play className="w-4 h-4" /> Order UGC Ads
             </Button>
           </CardContent>
@@ -778,8 +778,8 @@ export default function UgcAds() {
               <Card key={order.id} className="hover:shadow-sm transition-shadow cursor-pointer"
                 onClick={() => { setSelectedOrder(order); setView('detail'); }}>
                 <CardContent className="py-4 flex items-center gap-4 flex-wrap">
-                  <div className="w-10 h-10 rounded-xl bg-[hsl(var(--accent))]/10 flex items-center justify-center flex-shrink-0">
-                    <Video className="w-5 h-5 text-[hsl(var(--accent))]" />
+                  <div className="w-10 h-10 rounded-xl bg-[hsl(var(--primary))]/10 flex items-center justify-center flex-shrink-0">
+                    <Video className="w-5 h-5 text-[hsl(var(--primary))]" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
