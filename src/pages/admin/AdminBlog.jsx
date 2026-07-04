@@ -205,7 +205,8 @@ function AnalyticsTab({ posts }) {
         <div className="px-5 py-4 border-b border-border">
           <h3 className="font-semibold text-sm">All Posts Performance</h3>
         </div>
-        <table className="w-full text-sm">
+        <div className="overflow-x-auto">
+        <table className="w-full text-sm min-w-[420px]">
           <thead className="bg-muted/40 border-b border-border">
             <tr>
               <th className="text-left px-4 py-3 text-muted-foreground font-medium">Post</th>
@@ -244,6 +245,7 @@ function AnalyticsTab({ posts }) {
             })}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   );
@@ -415,21 +417,26 @@ export default function AdminBlog() {
   };
 
   return (
-    <div className="p-4 lg:p-6 space-y-5 w-full">
+    <div className="p-4 lg:p-6 space-y-5 w-full max-w-full overflow-x-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Blog Management</h1>
-          <p className="text-muted-foreground text-sm">Create, manage, and analyse your public blog posts.</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+            <FileText className="w-5 h-5" />
+          </div>
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl font-bold truncate">Blog Management</h1>
+            <p className="text-muted-foreground text-xs sm:text-sm">Create, manage, and analyse your public blog posts.</p>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" asChild>
-            <a href="/blog" target="_blank" rel="noopener" className="flex items-center gap-1.5">
+        <div className="flex items-center gap-2 shrink-0">
+          <Button variant="outline" size="sm" asChild className="flex-1 sm:flex-none">
+            <a href="/blog" target="_blank" rel="noopener" className="flex items-center justify-center gap-1.5">
               <ExternalLink className="w-3.5 h-3.5" /> View blog
             </a>
           </Button>
-          <Button onClick={openNew}>
-            <Plus className="w-4 h-4 mr-2" /> New Post
+          <Button onClick={openNew} size="sm" className="flex-1 sm:flex-none">
+            <Plus className="w-4 h-4 mr-1.5" /> New Post
           </Button>
         </div>
       </div>
@@ -473,17 +480,17 @@ export default function AdminBlog() {
           </div>
 
           {/* Filters */}
-          <div className="flex gap-3 flex-wrap">
-            <div className="relative max-w-xs flex-1">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="relative flex-1 sm:max-w-xs">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input placeholder="Search posts…" value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
             </div>
-            <div className="flex gap-1">
+            <div className="flex gap-1.5 flex-wrap">
               {['all','published','draft','archived'].map(s => (
                 <button
                   key={s}
                   onClick={() => setStatusFilter(s)}
-                  className={`px-3 py-1.5 rounded-lg text-sm font-medium capitalize transition-colors ${statusFilter===s ? 'bg-primary text-primary-foreground' : 'bg-secondary text-foreground hover:bg-secondary/70'}`}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium capitalize transition-colors whitespace-nowrap ${statusFilter===s ? 'bg-primary text-primary-foreground' : 'bg-secondary text-foreground hover:bg-secondary/70'}`}
                 >
                   {s}
                 </button>
@@ -588,7 +595,7 @@ export default function AdminBlog() {
       {/* ── Create / Edit dialog ── */}
       {editing !== null && (
         <Dialog open onOpenChange={() => !saving && setEditing(null)}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-4 sm:p-6 w-[calc(100%-2rem)] sm:w-full">
             <DialogHeader>
               <DialogTitle>{editing.id ? 'Edit Post' : 'New Blog Post'}</DialogTitle>
             </DialogHeader>
@@ -619,7 +626,7 @@ export default function AdminBlog() {
                 <Input value={editing.slug} onChange={e => setEditing(p => ({...p, slug: slugify(e.target.value)}))} placeholder="url-friendly-slug" className="mt-1 font-mono text-sm" />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <Label>Category</Label>
                   <Select value={editing.category || ''} onValueChange={v => setEditing(p => ({...p, category: v}))}>
@@ -649,8 +656,8 @@ export default function AdminBlog() {
 
               <div>
                 <Label>Cover / Thumbnail Image <span className="text-xs text-muted-foreground font-normal">(used on blog cards, post header, and social share previews)</span></Label>
-                <div className="mt-1 flex gap-3 items-start">
-                  <label className={`shrink-0 w-28 h-20 rounded-lg border-2 border-dashed border-border hover:border-primary/50 flex items-center justify-center cursor-pointer overflow-hidden bg-muted/30 transition-colors ${uploadingCover ? 'opacity-60 pointer-events-none' : ''}`}>
+                <div className="mt-1 flex flex-col sm:flex-row gap-3 items-start">
+                  <label className={`shrink-0 w-full sm:w-28 h-20 rounded-lg border-2 border-dashed border-border hover:border-primary/50 flex items-center justify-center cursor-pointer overflow-hidden bg-muted/30 transition-colors ${uploadingCover ? 'opacity-60 pointer-events-none' : ''}`}>
                     <input
                       type="file"
                       accept="image/*"
@@ -680,7 +687,7 @@ export default function AdminBlog() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <Label>Author</Label>
                   <Input value={editing.author_name || ''} onChange={e => setEditing(p => ({...p, author_name: e.target.value}))} className="mt-1" />
