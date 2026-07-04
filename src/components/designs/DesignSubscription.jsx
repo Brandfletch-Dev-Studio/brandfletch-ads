@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { Card, CardContent } from '@/components/ui/card';
@@ -15,6 +15,8 @@ import { toast } from 'sonner';
 export default function DesignSubscription() {
   const [orderingId, setOrderingId] = useState(null);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const resumePending = searchParams.get('resume') === '1';
   const queryClient = useQueryClient();
 
   const { data: user } = useQuery({
@@ -58,9 +60,38 @@ export default function DesignSubscription() {
   });
 
   function handleOrder(rate) {
+    if (!user) {
+      // Guest — save which service they picked, send them to auth, then
+      // bounce straight back here to finish the order (mirrors the same
+      // guest-checkout pattern used on /ugc-ads, /studios, /dev-studio).
+      sessionStorage.setItem('bf_design_draft', JSON.stringify({ rateId: rate.id }));
+      const resumeUrl = '/designs?resume=1';
+      sessionStorage.setItem('bf_post_login_redirect', resumeUrl);
+      navigate('/login?redirect=' + encodeURIComponent(resumeUrl));
+      return;
+    }
     setOrderingId(rate.id);
     createOrderMutation.mutate(rate);
   }
+
+  // Resume a guest checkout after they've logged in/registered — restores
+  // the service they picked and jumps straight to creating the order +
+  // payment, without asking them to pick it again.
+  useEffect(() => {
+    if (!resumePending || !user || !rates?.length) return;
+    const draftRaw = sessionStorage.getItem('bf_design_draft');
+    sessionStorage.removeItem('bf_design_draft');
+    window.history.replaceState({}, '', '/designs');
+    if (!draftRaw) return;
+    try {
+      const draft = JSON.parse(draftRaw);
+      const rate = rates.find(r => r.id === draft.rateId);
+      if (rate) {
+        setOrderingId(rate.id);
+        createOrderMutation.mutate(rate);
+      }
+    } catch { /* ignore corrupt draft */ }
+  }, [resumePending, user, rates]);
 
   return (
     <div className="space-y-6">

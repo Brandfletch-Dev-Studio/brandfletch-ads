@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -34,7 +35,11 @@ const STATUS_COLORS = {
 };
 
 export default function Designs() {
-  const [view, setView] = useState('list'); // list | wizard | subscription | detail
+  const [searchParams] = useSearchParams();
+  // A guest who picked a design service got bounced to login mid-checkout —
+  // land them straight back on the catalog (not the default list view) so
+  // DesignSubscription's own resume effect can pick up where they left off.
+  const [view, setView] = useState(searchParams.get('resume') === '1' ? 'subscription' : 'list'); // list | wizard | subscription | detail
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [selectedOrder, setSelectedOrder] = useState(null); // paid design_order being fulfilled in the wizard
   const [verifying, setVerifying] = useState(false);

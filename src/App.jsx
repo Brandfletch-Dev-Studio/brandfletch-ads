@@ -284,6 +284,7 @@ const AppRoutes = () => (
           <Route path="/ugc-ads"       element={<UgcAds />} />
           <Route path="/studios"       element={<Studios />} />
           <Route path="/dev-studio"    element={<DevStudio />} />
+          <Route path="/designs"       element={<Designs />} />
         </Route>
 
         <Route element={<AuthGuard><AppLayout /></AuthGuard>}>
@@ -294,7 +295,6 @@ const AppRoutes = () => (
           <Route path="/campaigns/:id/payment" element={<CampaignPayment />} />
           <Route path="/audiences"             element={<SavedAudiences />} />
           <Route path="/settings"              element={<ProfileSettings />} />
-          <Route path="/designs"               element={<Designs />} />
           <Route path="/designs/payment"       element={<DesignPayment />} />
           <Route path="/leads"                 element={<LeadsComingSoon />} />
           <Route path="/leads/forms"           element={<LeadForms />} />
