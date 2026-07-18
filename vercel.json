@@ -9,11 +9,17 @@
       "destination": "https://brandfletch.com/auth/callback",
       "permanent": false,
       "has": [
-        { "type": "host", "value": "(?!brandfletch\\.com).*" }
+        {
+          "type": "host",
+          "value": "(?!brandfletch\\.com).*"
+        }
       ]
     }
   ],
   "rewrites": [
-    { "source": "/(.*)", "destination": "/" }
+    {
+      "source": "/((?!api/).*)",
+      "destination": "/"
+    }
   ]
 }

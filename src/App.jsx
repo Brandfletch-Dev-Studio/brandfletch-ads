@@ -54,6 +54,7 @@ const AdminAds             = lazy(() => import('@/pages/admin/AdminAds'));
 const AdminAuditLog        = lazy(() => import('@/pages/admin/AdminAuditLog'));
 const AdminReferrals       = lazy(() => import('@/pages/admin/AdminReferrals'));
 const AdminBlog            = lazy(() => import('@/pages/admin/AdminBlog'));
+const MetaOnboarding     = lazy(() => import('@/pages/campaigns/MetaOnboarding'));
 
 
 // ── ErrorBoundary ─────────────────────────────────────────────────────────────
@@ -270,6 +271,7 @@ const AppRoutes = () => (
           <Route path="/campaigns"             element={<CampaignsList />} />
           <Route path="/campaigns/:id"         element={<CampaignDetail />} />
           <Route path="/campaigns/:id/payment" element={<CampaignPayment />} />
+          <Route path="/campaigns/:id/onboarding" element={<MetaOnboarding />} />
           <Route path="/audiences"             element={<SavedAudiences />} />
           <Route path="/settings"              element={<ProfileSettings />} />
           <Route path="/referrals"             element={<Referrals />} />

@@ -112,7 +112,7 @@ export default function CampaignPayment() {
     });
 
     toast.success("Payment submitted! We'll verify your payment shortly.");
-    navigate(`/campaigns/${id}`);
+    navigate(`/campaigns/${id}/onboarding`);
     setSubmitting(false);
   }
 

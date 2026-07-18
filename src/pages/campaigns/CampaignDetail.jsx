@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/lib/AuthContext';
-import { ArrowLeft, ExternalLink, Package, Users, FileImage, RefreshCw } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Package, Users, FileImage, RefreshCw, Facebook, Clock, ArrowRight } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -48,12 +48,13 @@ export default function CampaignDetail() {
       base44.functions.invoke('verifyPaychanguPayment', { tx_ref: txRef, campaign_id: id, payment_type: 'campaign' })
         .then(res => {
           if (res?.verified) {
-            toast.success('Payment verified! Your campaign is under review.');
-            loadCampaign();
+            toast.success('Payment verified! Starting Facebook onboarding…');
+            window.history.replaceState({}, '', `/campaigns/${id}`);
+            navigate(`/campaigns/${id}/onboarding`);
           } else {
             toast.error('Payment could not be verified. Please contact support.');
+            window.history.replaceState({}, '', `/campaigns/${id}`);
           }
-          window.history.replaceState({}, '', `/campaigns/${id}`);
         })
         .finally(() => setVerifying(false));
     }
@@ -161,6 +162,50 @@ export default function CampaignDetail() {
           <p className="font-semibold text-blue-800">Campaign Approved — Launching Soon</p>
           <p className="text-sm text-blue-700 mt-0.5">Your campaign has been approved and will be set live shortly.</p>
         </div>
+      )}
+
+      {/* Facebook onboarding CTA — shown when payment is done but FB page not yet connected */}
+      {['pending_review', 'approved'].includes(campaign.status) && !campaign.fb_page_id && (
+        <Card className="border-2 border-blue-400 bg-blue-50 dark:bg-blue-950/30">
+          <CardContent className="p-5 flex items-center justify-between gap-4 flex-wrap">
+            <div>
+              <p className="font-semibold text-blue-800 dark:text-blue-400 flex items-center gap-2">
+                <Facebook className="w-5 h-5" /> Connect your Facebook Page
+              </p>
+              <p className="text-sm text-blue-700 dark:text-blue-500 mt-1">
+                Your payment is confirmed. Next step: connect your Facebook Page so we can launch your ads.
+              </p>
+            </div>
+            <Link to={`/campaigns/${id}/onboarding`}>
+              <Button className="gap-2 bg-blue-600 hover:bg-blue-700 text-white">
+                Start Onboarding <ArrowRight className="w-4 h-4" />
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Onboarding in progress — show resume button */}
+      {campaign.onboarding_step && campaign.onboarding_step !== 'payment' &&
+       campaign.onboarding_status !== 'campaign_created' &&
+       ['pending_review', 'approved'].includes(campaign.status) && campaign.fb_page_id && (
+        <Card className="border-2 border-amber-400 bg-amber-50 dark:bg-amber-950/30">
+          <CardContent className="p-5 flex items-center justify-between gap-4 flex-wrap">
+            <div>
+              <p className="font-semibold text-amber-800 dark:text-amber-400 flex items-center gap-2">
+                <Clock className="w-5 h-5" /> Facebook onboarding in progress
+              </p>
+              <p className="text-sm text-amber-700 dark:text-amber-500 mt-1 capitalize">
+                Current step: {campaign.onboarding_step?.replace(/_/g, ' ')} — {campaign.onboarding_status?.replace(/_/g, ' ')}
+              </p>
+            </div>
+            <Link to={`/campaigns/${id}/onboarding`}>
+              <Button variant="outline" className="gap-2 border-amber-400 text-amber-700">
+                Resume Onboarding <ArrowRight className="w-4 h-4" />
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
       )}
       {campaign.status === 'active' && (
         <div className="p-4 bg-green-50 border border-green-200 rounded-xl">
