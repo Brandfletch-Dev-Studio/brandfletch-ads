@@ -43,7 +43,7 @@ export default function AboutPage() {
               We started in Malawi, frustrated by how hard it was for local businesses to run effective Facebook campaigns without a big agency. Everything was either too expensive, too complex, or not built for our currencies and realities.
             </p>
             <p className="text-muted-foreground leading-relaxed mb-6">
-              So we built Brandfletch Media — a full-stack advertising platform that handles campaign creation, creative design, payment, and reporting in one place. Today we serve businesses in Malawi, Zambia, Kenya, South Africa, and Tanzania.
+              So we built Brandfletch Media — an advertising platform that handles campaign creation, payment, and reporting in one place. Today we serve businesses in Malawi, Zambia, Kenya, South Africa, and Tanzania.
             </p>
             <Link to="/register">
               <Button className="bg-[hsl(var(--accent))] hover:bg-[hsl(var(--accent))]/90 text-white">

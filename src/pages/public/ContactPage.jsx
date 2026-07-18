@@ -38,22 +38,12 @@ const CONTACT_METHODS = [
   },
 ];
 
-// Maps every service key naming convention used across the site (pricing
-// page CTAs use meta_ads/ugc_ads/graphic_design/web_design/social_media/
-// branding; affiliate referral links use meta_ads/social_media/designs/
-// dev_studio/studios) to one readable label, so a "Place order"/"Get
-// started"/referral link landing on /contact?service=X&plan=Y always
-// auto-starts the enquiry instead of dropping the context on the floor.
+// Maps service keys used in site CTAs and affiliate referral links to
+// readable labels, so a "Place order"/"Get started"/referral link landing
+// on /contact?service=X&plan=Y auto-starts the enquiry instead of
+// dropping the context on the floor.
 const SERVICE_LABELS = {
   meta_ads:        'Meta Ads',
-  ugc_ads:         'UGC Ads',
-  studios:         'UGC Ads',
-  graphic_design:  'Graphic Design',
-  designs:         'Graphic Design',
-  social_media:    'Social Media',
-  web_design:      'Web Development',
-  dev_studio:      'Web Development',
-  branding:        'Branding',
 };
 
 export default function ContactPage() {
@@ -179,11 +169,8 @@ export default function ContactPage() {
               </CardHeader>
               <CardContent className="text-sm text-muted-foreground space-y-1.5">
                 {[
-                  'Campaign packages and pricing',
-                  'UGC ad creative production',
-                  'Graphic design retainers',
-                  'Website design & development',
-                  'Social media management',
+                  'Meta Ads campaign packages and pricing',
+                  'Facebook & Instagram advertising',
                   'Online payment solutions',
                   'Partnership enquiries',
                 ].map(q => (
@@ -229,7 +216,7 @@ export default function ContactPage() {
                     </div>
                     <div className="space-y-1.5">
                       <Label htmlFor="subject">Subject</Label>
-                      <Input id="subject" name="subject" value={form.subject} onChange={handleChange} placeholder="e.g. UGC ad package enquiry" required />
+                      <Input id="subject" name="subject" value={form.subject} onChange={handleChange} placeholder="e.g. Meta Ads package enquiry" required />
                     </div>
                     <div className="space-y-1.5">
                       <Label htmlFor="message">Message</Label>

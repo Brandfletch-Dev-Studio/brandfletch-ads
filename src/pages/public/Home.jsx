@@ -1,9 +1,9 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import {
-  ArrowRight, Megaphone, Palette, CreditCard,
-  CheckCircle, TrendingUp, Target, Star, Camera, Code2, Users2, GraduationCap,
-  Globe, Smartphone
+  ArrowRight, Megaphone, CreditCard,
+  CheckCircle, TrendingUp, Target, Star, Users2, GraduationCap,
+  Smartphone
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -15,7 +15,7 @@ const DEPARTMENTS = [
     icon: Megaphone,
     title: 'Brandfletch Ads',
     tagline: "Your customers are already online — let's reach them.",
-    body: 'Meta Ads and Social Media Management running today, with Google Ads and TikTok Ads coming soon — all professionally managed to generate qualified leads and measurable growth.',
+    body: 'Professionally managed Meta Ads campaigns running today, with Google Ads and TikTok Ads coming soon — all designed to generate qualified leads and measurable growth.',
     color: 'from-blue-600 to-blue-800',
     accent: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
     dot: 'bg-blue-500',
@@ -58,14 +58,14 @@ const DEPARTMENTS = [
 
 const STATS = [
   { value: '500+', label: 'Businesses served' },
-  { value: '5',    label: 'Live departments' },
+  { value: '2',    label: 'Live departments' },
   { value: '5',    label: 'African countries' },
   { value: '98%',  label: 'Client satisfaction' },
 ];
 
 const HOW = [
   { step: '01', title: 'Book a discovery call', desc: 'We understand your business, your offer, and your growth goals.' },
-  { step: '02', title: 'We build your strategy', desc: 'Campaigns, creatives, and content — all designed around your target customer.' },
+  { step: '02', title: 'We build your strategy', desc: 'Campaigns and creatives — all designed around your target customer.' },
   { step: '03', title: 'We launch & optimise', desc: 'Your campaigns go live. We track performance and iterate for maximum results.' },
   { step: '04', title: 'You track everything', desc: 'Real-time updates in your client dashboard — see exactly what we\'re doing and how it\'s performing.' },
 ];
@@ -73,7 +73,7 @@ const HOW = [
 export default function Home() {
   useSEO({
     title:       'Brandfletch Media — Digital Advertising for African Businesses',
-    description: 'We build and run advertising systems for African businesses — from Meta Ads and UGC creatives to social media and professional design.',
+    description: 'We build and run Meta Ads campaigns for African businesses — professionally managed Facebook & Instagram advertising that generates qualified leads and measurable growth.',
   });
 
   const { user } = useAuth();
@@ -100,7 +100,7 @@ export default function Home() {
             {/* Eyebrow pill */}
             <div className="inline-flex items-center gap-2 bg-white/10 border border-white/15 text-white/80 text-xs font-semibold px-4 py-2 rounded-full mb-8 tracking-wide uppercase">
               <span className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--accent))] animate-pulse" />
-              Meta Ads · UGC · Design · Social Media
+              Meta Ads · Facebook · Instagram
             </div>
 
             {/* Headline */}
@@ -119,7 +119,7 @@ export default function Home() {
 
             {/* Sub-copy */}
             <p className="text-lg sm:text-xl text-white/65 max-w-2xl mx-auto leading-relaxed mb-10">
-              We build and run advertising systems for African businesses — from Meta Ads and UGC creatives to social media and professional design. Everything you need, in one place.
+              We build and run Meta Ads campaigns for African businesses — professionally managed Facebook & Instagram advertising that generates qualified leads and measurable growth. Everything you need, in one place.
             </p>
 
             {/* CTA row */}
@@ -171,15 +171,14 @@ export default function Home() {
                 <span className="text-[hsl(var(--accent))]">It's the whole system.</span>
               </h2>
               <p className="text-muted-foreground leading-relaxed mb-6">
-                Most businesses don't fail at running ads — they fail at the pieces around it. A weak creative. An unclear offer. No trust signal. We solve all of that. The advertising campaign is the engine, and every other service we offer is what makes it run.
+                Most businesses don't fail at running ads — they fail at the pieces around it. A weak creative. An unclear offer. No follow-through. We solve all of that with professionally managed Meta Ads campaigns built to convert.
               </p>
               <ul className="space-y-3">
                 {[
-                  { icon: Target, text: 'UGC creatives that build trust before the click' },
-                  { icon: Palette, text: 'Designs that communicate value at a glance' },
-                  { icon: Globe, text: 'Websites that convert visitors into leads' },
-                  { icon: Smartphone, text: 'Social media that keeps your brand visible' },
-                  { icon: TrendingUp, text: 'Ads that put it all in front of the right people' },
+                  { icon: Target, text: 'Precise audience targeting that reaches your ideal customers' },
+                  { icon: TrendingUp, text: 'Meta Ads campaigns optimised for qualified leads, not just clicks' },
+                  { icon: Megaphone, text: 'Facebook & Instagram creatives built to convert' },
+                  { icon: Smartphone, text: 'Mobile-first campaigns for African markets' },
                 ].map(({ icon: Icon, text }) => (
                   <li key={text} className="flex items-start gap-3">
                     <span className="mt-0.5 w-5 h-5 rounded-full bg-[hsl(var(--accent))]/10 flex items-center justify-center flex-shrink-0">
@@ -218,10 +217,10 @@ export default function Home() {
               Our Departments
             </Badge>
             <h2 className="text-3xl sm:text-4xl font-display font-extrabold text-foreground">
-              Every department your brand needs to grow
+              Built to grow your business
             </h2>
             <p className="mt-3 text-muted-foreground max-w-xl mx-auto text-sm">
-              Five departments live today, with Brandfletch Sales and Business Academy on the way — each one built to support the next.
+              Meta Ads live today, with more services on the way — each one built to support the next.
             </p>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -300,7 +299,7 @@ export default function Home() {
             {[...Array(5)].map((_, i) => <Star key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" />)}
           </div>
           <blockquote className="text-xl sm:text-2xl font-display font-bold text-foreground mb-5 leading-relaxed">
-            "We went from zero online presence to consistent leads within 6 weeks. The UGC creatives performed 3× better than anything we'd tried before."
+            "We went from zero online presence to consistent leads within 6 weeks. The Meta Ads campaigns performed 3× better than anything we'd tried before."
           </blockquote>
           <p className="text-sm text-muted-foreground font-medium">— Business owner, Blantyre, Malawi</p>
         </div>
