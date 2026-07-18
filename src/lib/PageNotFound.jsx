@@ -10,10 +10,6 @@ import { usePermissions } from '@/hooks/usePermissions';
 // are no DOM anchors for these ids. ?tab= is read by PricingPage on mount.
 const SERVICES = [
   { label: 'Meta Ads',       desc: 'Run Facebook & Instagram ads that actually convert',  href: '/pricing?tab=meta-ads' },
-  { label: 'UGC Ads',        desc: 'Authentic video creatives from real African creators', href: '/pricing?tab=ugc-ads' },
-  { label: 'Studios',        desc: 'Content creation, podcast, videography & photography',  href: '/pricing?tab=studios' },
-  { label: 'Designs',        desc: 'Scroll-stopping visuals for your brand',               href: '/pricing?tab=graphic-design' },
-  { label: 'Dev Studio',     desc: 'Websites, apps, automations & AI agents',              href: '/pricing?tab=dev-studio' },
 ];
 
 const QUICK_LINKS = [

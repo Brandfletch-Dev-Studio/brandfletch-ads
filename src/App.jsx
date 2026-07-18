@@ -6,6 +6,7 @@ import React, { lazy, Suspense } from 'react';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 
+import PageNotFound from "@/lib/PageNotFound";
 // Layout
 import AppLayout from '@/components/layout/AppLayout';
 
