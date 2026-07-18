@@ -7,7 +7,7 @@ export function useSEO({ title, description, image, url, type = 'website', autho
   const SITE = 'https://brandfletch.com';
   const DEFAULTS = {
     title:       'Brandfletch Media — Digital Advertising for African Businesses',
-    description: 'We build and run advertising systems for African businesses — Meta Ads, UGC, design, and social media.',
+    description: 'We build and run Meta Ads campaigns for African businesses — professionally managed Facebook & Instagram advertising that generates qualified leads.',
     image:       `${SITE}/og-default.jpg`,
   };
 

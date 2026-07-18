@@ -32,15 +32,12 @@ function compactNum(val) {
 
 
 // Maps to Brandfletch's sole service: Meta Ads (AffiliateSettings columns).
-// All other services (Designs, Dev Studio, Studios, UGC, Social Media) have
-// been removed from the platform — only meta_ads remains.
+// Only meta_ads remains on the platform.
 const SERVICE_LABELS = {
   meta_ads:     'Meta Ads',
 };
 
-// Commission Rates are grouped by department for display — Ads (Meta Ads +
-// Social Media share the "Ads" department but keep individual rates),
-// Designs, Dev Studio, Studios each map 1:1 to their single product.
+// Single department: Ads (Meta Ads only).
 const DEPARTMENTS = [
   { id: 'ads',        label: 'Ads',        icon: Megaphone, gradient: 'from-blue-500 to-blue-600',   services: ['meta_ads'] },
 ];
@@ -333,7 +330,7 @@ function DashboardTab({ user, affiliateSettings, referrals = [], commissions = [
               if (items.length === 0) return null;
               const Icon = dept.icon;
 
-              // Single-product department (Designs / Dev Studio / Studios) —
+              // Single-service department —
               // collapse into one clean card, same layout as before.
               if (items.length === 1) {
                 const item = items[0];
@@ -360,7 +357,7 @@ function DashboardTab({ user, affiliateSettings, referrals = [], commissions = [
                 );
               }
 
-              // Multi-product department (Ads = Meta Ads + Social Media) —
+              // Multi-service department —
               // one category header, individual rate per product underneath.
               return (
                 <div key={dept.id}

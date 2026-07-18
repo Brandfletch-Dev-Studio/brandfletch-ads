@@ -57,7 +57,6 @@ export default function AdminUsers() {
   const auditLog = useAuditLog();
   const { isSuperAdmin, can } = usePermissions();
   const { user: currentUser } = useAuth();
-  const isDesignDeptHead = currentUser?.role === 'creative_ops_director';
 
   const [users, setUsers] = useState([]);
   const [search, setSearch] = useState('');
@@ -78,11 +77,7 @@ export default function AdminUsers() {
         const result = await base44.functions.getAllUsers({});
         if (cancelled) return;
         const u = result?.users || [];
-        // COD can only see design dept members (designers + other CODs) + client accounts
-        const filtered = currentUser?.role === 'creative_ops_director'
-          ? u.filter(x => ['designer', 'creative_ops_director', 'user'].includes(x.role))
-          : u;
-        setUsers(filtered);
+        setUsers(u);
       } catch (err) {
         console.error('AdminUsers: Failed to load users:', err);
         if (!cancelled) toast.error('Could not load users — ' + (err?.message || 'try refreshing'));
@@ -262,16 +257,6 @@ export default function AdminUsers() {
                 </div>
               </div>
 
-              {/* DESIGN DEPARTMENT */}
-              <div className="mt-3 mb-1">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground px-1 mb-1.5 flex items-center gap-1.5">
-                  <span className="inline-block w-2 h-2 rounded-full bg-pink-400" /> Design Department
-                </p>
-                <div className="border-l-2 border-pink-200 ml-2 pl-2 space-y-1">
-                  <HierarchyRow role="creative_ops_director" desc="Heads design dept — manages designers & approves work" level={0} color="bg-pink-100 border-pink-300 text-pink-800" />
-                  <HierarchyRow role="designer"              desc="Assigned design queue — no broader admin access"       level={1} color="bg-rose-100 border-rose-300 text-rose-800" />
-                </div>
-              </div>
 
               {/* SHARED ROLES */}
               <div className="mt-3">
@@ -329,7 +314,7 @@ export default function AdminUsers() {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          {(isDesignDeptHead ? ASSIGNABLE_ROLES.filter(r => ['designer','creative_ops_director'].includes(r.value)) : ASSIGNABLE_ROLES).map(r => (
+                          {ASSIGNABLE_ROLES.map(r => (
                             <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
                           ))}
                         </SelectContent>
@@ -392,13 +377,11 @@ export default function AdminUsers() {
               </Select>
               <p className="text-xs text-muted-foreground pt-1">
                 {inviteRole === 'admin' && '⚠️ CEO has full unrestricted access across every department.'}
-                {['platform_sales','platform_finance','platform_director_ops'].includes(inviteRole) && 'Platform team — same access as a department\'s own role, but across all 4 departments.'}
-                {inviteRole.endsWith('_manager') && inviteRole !== 'devstudio_manager' && 'Runs their department: full admin access scoped to that department only.'}
-                {inviteRole === 'devstudio_manager' && 'Runs Dev Studio: full admin access scoped to that department only.'}
+                {['platform_sales','platform_finance','platform_director_ops'].includes(inviteRole) && 'Platform team — same access as a department\'s own role, but across all departments.'}
+                {inviteRole.endsWith('_manager') && 'Runs their department: full admin access scoped to that department only.'}
                 {inviteRole.endsWith('_sales') && 'Manages clients and leads, scoped to their department only.'}
                 {inviteRole.endsWith('_finance') && 'Manages payments and pricing, scoped to their department only.'}
-                {['campaign_manager','designer','content_creator','developer'].includes(inviteRole) && 'Hands-on production role — works from their portal, not the admin dashboard.'}
-                {inviteRole === 'creative_ops_director' && 'Runs the Designs department: full admin access scoped to Designs.'}
+                {inviteRole === 'campaign_manager' && 'Hands-on production role — works from their portal, not the admin dashboard.'}
               </p>
             </div>
             <div className="flex gap-2 pt-1">
