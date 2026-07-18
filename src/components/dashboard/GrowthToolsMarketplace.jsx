@@ -1,21 +1,11 @@
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Palette, ArrowRight, Zap, MessageCircle, FileText, Bot } from 'lucide-react';
+import { ArrowRight, Zap, MessageCircle, FileText, Bot } from 'lucide-react';
 
 export default function GrowthToolsMarketplace() {
   const tools = [
     {
-      id: 'designs',
-      title: 'Brandfletch Designs',
-      icon: Palette,
-      description: 'Need a poster, flyer, social media graphic, banner or advert creative? Order professional designs directly from our creative team.',
-      cta: 'Order Design',
-      link: '/designs',
-      color: 'from-purple-500 to-pink-500',
-      bgColor: 'bg-purple-50',
-      textColor: 'text-purple-700',
-    },
     {
       id: 'whatsapp',
       title: 'WhatsApp Marketing',

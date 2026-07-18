@@ -27,8 +27,6 @@ const DANGER_ENTITIES = [
 export default function AdminSettings() {
   const [rates, setRates] = useState([]);
   const [methods, setMethods] = useState([]);
-  const [designRates, setDesignRates] = useState([]);
-  const [designRatesLoading, setDesignRatesLoading] = useState(true);
   const [newDesignRate, setNewDesignRate] = useState({ service_name: '', design_type: '', country: 'Malawi', currency: 'MWK', symbol: 'MK', price: '', max_revisions: 2 });
   const [editingRateId, setEditingRateId] = useState(null);
   const [editRateData, setEditRateData] = useState({});
@@ -48,12 +46,10 @@ export default function AdminSettings() {
     Promise.all([
       base44.entities.ExchangeRate.list({}),
       base44.entities.PaymentMethod.list({}),
-      base44.entities.DesignServiceRate.list({ sort: 'sort_order' }),
-    ]).then(([r, m, dr]) => {
+    ]).then(([r, m]) => {
       setRates(r);
       setMethods(m);
-      setDesignRates(dr);
-    }).finally(() => setDesignRatesLoading(false));
+    }).finally(() => {});
   }, []);
 
   useEffect(() => {
@@ -143,8 +139,6 @@ export default function AdminSettings() {
   }
 
   async function reloadDesignRates() {
-    const dr = await base44.entities.DesignServiceRate.list({ sort: 'sort_order' });
-    setDesignRates(dr);
   }
 
   async function addDesignRate() {
@@ -154,13 +148,6 @@ export default function AdminSettings() {
         return;
       }
       const design_type = newDesignRate.design_type.trim() || newDesignRate.service_name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
-      await base44.entities.DesignServiceRate.create({
-        ...newDesignRate,
-        design_type,
-        price: parseFloat(newDesignRate.price) || 0,
-        sort_order: designRates.length,
-        is_active: true,
-      });
       toast.success('Design service added');
       setNewDesignRate({ service_name: '', design_type: '', country: 'Malawi', currency: 'MWK', symbol: 'MK', price: '', max_revisions: 2 });
       await reloadDesignRates();
@@ -171,7 +158,6 @@ export default function AdminSettings() {
 
   async function updateDesignRate(id, data) {
     try {
-      await base44.entities.DesignServiceRate.update(id, data);
       toast.success('Saved!', { duration: 1500 });
       await reloadDesignRates();
     } catch (err) {
@@ -184,24 +170,8 @@ export default function AdminSettings() {
     setEditRateData({ service_name: rate.service_name, price: rate.price, max_revisions: rate.max_revisions });
   }
 
-  async function saveEditRate(id) {
-    try {
-      await base44.entities.DesignServiceRate.update(id, {
-        service_name: editRateData.service_name,
-        price: parseFloat(editRateData.price) || 0,
-        max_revisions: parseInt(editRateData.max_revisions) || 2,
-      });
-      toast.success('Saved!', { duration: 1500 });
-      setEditingRateId(null);
-      await reloadDesignRates();
-    } catch (err) {
-      toast.error(err?.message || 'Something went wrong. Please try again.');
-    }
-  }
-
   async function deleteDesignRate(id) {
     try {
-      await base44.entities.DesignServiceRate.delete(id);
       toast.success('Design service deleted');
       setConfirmDeleteRate(null);
       await reloadDesignRates();
@@ -250,148 +220,6 @@ export default function AdminSettings() {
 
 
       {/* Exchange Rates */}
-      <Card className="shadow-sm">
-        <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
-            <DollarSign className="w-4 h-4" /> Exchange Rates
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-3">
-            {rates.map(rate => (
-              <div key={rate.id} className="flex items-center gap-3 p-3 bg-secondary/50 rounded-xl">
-                <div className="flex-1 grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-1">Currency</p>
-                    <p className="font-semibold text-sm">{rate.currency_code}</p>
-                    <p className="text-xs text-muted-foreground">{rate.country}</p>
-                  </div>
-                  <div>
-                    <Label className="text-xs mb-1 block">Rate (per $1)</Label>
-                    <Input
-                      type="number"
-                      value={rate.rate_to_usd}
-                      onChange={e => setRates(rs => rs.map(r => r.id === rate.id ? { ...r, rate_to_usd: parseFloat(e.target.value) } : r))}
-                      className="h-8 text-sm"
-                    />
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Switch checked={rate.use_fixed_pricing} onCheckedChange={v => setRates(rs => rs.map(r => r.id === rate.id ? { ...r, use_fixed_pricing: v } : r))} />
-                    <span className="text-xs text-muted-foreground">Fixed pricing</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Switch checked={rate.is_active} onCheckedChange={v => setRates(rs => rs.map(r => r.id === rate.id ? { ...r, is_active: v } : r))} />
-                    <span className="text-xs text-muted-foreground">Active</span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-1 flex-shrink-0">
-                  <Button variant="ghost" size="icon" onClick={() => saveRate(rate)}>
-                    <Save className="w-4 h-4 text-green-600" />
-                  </Button>
-                  <Button variant="ghost" size="icon" onClick={() => deleteRate(rate.id)}>
-                    <Trash2 className="w-4 h-4 text-destructive" />
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Add new rate */}
-          <div className="p-4 border-2 border-dashed border-border rounded-xl space-y-3">
-            <h4 className="text-sm font-semibold">Add Exchange Rate</h4>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <Input value={newRate.currency_code} onChange={e => setNewRate(r => ({ ...r, currency_code: e.target.value.toUpperCase() }))} placeholder="MWK" />
-              <Input value={newRate.currency_name} onChange={e => setNewRate(r => ({ ...r, currency_name: e.target.value }))} placeholder="Malawian Kwacha" />
-              <Select value={newRate.country} onValueChange={v => setNewRate(r => ({ ...r, country: v }))}>
-                <SelectTrigger><SelectValue placeholder="Country" /></SelectTrigger>
-                <SelectContent>{COUNTRIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
-              </Select>
-              <Input type="number" value={newRate.rate_to_usd} onChange={e => setNewRate(r => ({ ...r, rate_to_usd: e.target.value }))} placeholder="Rate per $1" />
-            </div>
-            <div className="flex items-center gap-3">
-              <Switch checked={newRate.use_fixed_pricing} onCheckedChange={v => setNewRate(r => ({ ...r, use_fixed_pricing: v }))} />
-              <span className="text-sm text-muted-foreground">Use fixed local pricing (e.g. Malawi)</span>
-            </div>
-            <Button onClick={addRate} className="gap-2 bg-[hsl(var(--primary))] text-primary-foreground">
-              <Plus className="w-4 h-4" /> Add Rate
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Graphic Design Rate Card — individual per-service pricing (no monthly retainer) */}
-      <Card className="shadow-sm">
-        <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
-            <Package className="w-4 h-4" /> Graphic Design Rate Card
-          </CardTitle>
-          <p className="text-xs text-muted-foreground">Every service is a flat, one-off price — no monthly retainer. Clients pay per design they order.</p>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {designRatesLoading ? (
-            <div className="flex items-center justify-center py-8"><Loader2 className="w-5 h-5 animate-spin text-muted-foreground" /></div>
-          ) : designRates.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-4 text-center">No design services yet — add your first one below.</p>
-          ) : (
-            <div className="space-y-2">
-              {designRates.map(rate => (
-                <div key={rate.id} className="p-3 bg-secondary/50 rounded-xl">
-                  {editingRateId === rate.id ? (
-                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                      <Input className="flex-1" value={editRateData.service_name} onChange={e => setEditRateData(d => ({ ...d, service_name: e.target.value }))} placeholder="Service name" />
-                      <Input className="sm:w-32" type="number" value={editRateData.price} onChange={e => setEditRateData(d => ({ ...d, price: e.target.value }))} placeholder="Price" />
-                      <Input className="sm:w-28" type="number" value={editRateData.max_revisions} onChange={e => setEditRateData(d => ({ ...d, max_revisions: e.target.value }))} placeholder="Revisions" />
-                      <div className="flex items-center gap-1 flex-shrink-0">
-                        <Button variant="ghost" size="icon" onClick={() => saveEditRate(rate.id)}><Check className="w-4 h-4 text-green-600" /></Button>
-                        <Button variant="ghost" size="icon" onClick={() => setEditingRateId(null)}><X className="w-4 h-4 text-muted-foreground" /></Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="font-semibold text-sm">{rate.service_name}</p>
-                          <Badge variant={rate.is_active ? 'default' : 'secondary'} className="text-xs">{rate.is_active ? 'Active' : 'Inactive'}</Badge>
-                        </div>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {rate.symbol}{Number(rate.price).toLocaleString()} {rate.currency} • one-off • {rate.max_revisions} revisions included
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        <Switch checked={rate.is_active} onCheckedChange={v => updateDesignRate(rate.id, { is_active: v })} />
-                        <Button variant="ghost" size="icon" onClick={() => startEditRate(rate)}>
-                          <Pencil className="w-4 h-4 text-muted-foreground" />
-                        </Button>
-                        <Button variant="ghost" size="icon" onClick={() => setConfirmDeleteRate(rate.id)}>
-                          <Trash2 className="w-4 h-4 text-destructive" />
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-
-          <div className="p-4 border-2 border-dashed border-border rounded-xl space-y-3">
-            <h4 className="text-sm font-semibold">Add Design Service</h4>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Input value={newDesignRate.service_name} onChange={e => setNewDesignRate(p => ({ ...p, service_name: e.target.value }))} placeholder="Service name (e.g. Logo)" />
-              <Input type="number" value={newDesignRate.price} onChange={e => setNewDesignRate(p => ({ ...p, price: e.target.value }))} placeholder="Price" />
-              <Select value={newDesignRate.country} onValueChange={v => setNewDesignRate(p => ({ ...p, country: v }))}>
-                <SelectTrigger><SelectValue placeholder="Country" /></SelectTrigger>
-                <SelectContent>{COUNTRIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
-              </Select>
-              <Input value={newDesignRate.currency} onChange={e => setNewDesignRate(p => ({ ...p, currency: e.target.value.toUpperCase() }))} placeholder="Currency (e.g. MWK)" />
-              <Input value={newDesignRate.symbol} onChange={e => setNewDesignRate(p => ({ ...p, symbol: e.target.value }))} placeholder="Symbol (e.g. MK)" />
-              <Input type="number" value={newDesignRate.max_revisions} onChange={e => setNewDesignRate(p => ({ ...p, max_revisions: parseInt(e.target.value) || 2 }))} placeholder="Max Revisions" />
-            </div>
-            <Button onClick={addDesignRate} className="gap-2 bg-[hsl(var(--primary))] text-primary-foreground">
-              <Plus className="w-4 h-4" /> Add Service
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
 
       <ConfirmDialog
         open={!!confirmDeleteRate}

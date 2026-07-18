@@ -1,13 +1,11 @@
 import { useLocation, Link } from 'react-router-dom';
-import { Home, LayoutGrid, DollarSign, BookOpen, Phone, LayoutDashboard } from 'lucide-react';
+import { Home, DollarSign, BookOpen, Phone, LayoutDashboard } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/AuthContext';
 
 // Public bottom nav — shown to ALL visitors on mobile (lg:hidden)
-// Authenticated users get a 5th item linking to their dashboard
 const PUBLIC_NAV = [
   { path: '/',          label: 'Home',      icon: Home },
-  { path: '/portfolio', label: 'Portfolio', icon: LayoutGrid },
   { path: '/pricing',   label: 'Pricing',   icon: DollarSign },
   { path: '/blog',      label: 'Blog',      icon: BookOpen },
   { path: '/contact',   label: 'Contact',   icon: Phone },
@@ -17,27 +15,18 @@ export default function BottomNav({ isStaff }) {
   const location = useLocation();
   const { user } = useAuth();
 
-  // Never show on staff/admin routes
   if (isStaff) return null;
 
-  // If the current path is an authenticated app route, don't render
-  // (AppLayout renders its own bottom nav for those routes)
   const isAppRoute = location.pathname.startsWith('/dashboard') ||
     location.pathname.startsWith('/campaigns') ||
-    location.pathname.startsWith('/designs') ||
     location.pathname.startsWith('/referrals') ||
     location.pathname.startsWith('/admin') ||
-    location.pathname.startsWith('/designer') ||
     location.pathname.startsWith('/notifications') ||
-    location.pathname.startsWith('/settings') ||
-    location.pathname.startsWith('/ugc-ads') ||
-    location.pathname.startsWith('/studios') ||
-    location.pathname.startsWith('/dev-studio');
+    location.pathname.startsWith('/settings');
   if (isAppRoute) return null;
 
-  // If user is logged in, swap 'Contact' for 'Dashboard'
   const navItems = user
-    ? [...PUBLIC_NAV.slice(0, 4), { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard }]
+    ? [...PUBLIC_NAV.slice(0, 3), { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard }]
     : PUBLIC_NAV;
 
   return (

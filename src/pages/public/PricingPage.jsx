@@ -1,137 +1,16 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { Check, ArrowRight, MessageSquare, Loader2, Sparkles } from 'lucide-react';
+import { Check, ArrowRight, MessageSquare, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { supabase, base44 } from '@/api/base44Client';
 import { LOCAL_PRICES } from '@/lib/pricing';
-import { UGC_OVERVIEW, UGC_PACKAGES, getMwkPriceLabel } from '@/lib/ugcPackages';
 import { detectCountry } from '@/lib/geoCountry';
 import { useAuth } from '@/lib/AuthContext';
 import { useSEO } from '@/hooks/useSEO';
 
 const DEFAULT_RATE = 5000;
-
-const TABS = [
-  { key: 'meta-ads',        label: 'Meta Ads' },
-  { key: 'ugc-ads',         label: 'UGC Ads' },
-  { key: 'studios',         label: 'Studios' },
-  { key: 'graphic-design',  label: 'Designs' },
-  { key: 'dev-studio',      label: 'Dev Studio' },
-  { key: 'social-media',    label: 'Social Media' },
-  { key: 'online-payments', label: 'Online Payments' },
-];
-
-// ── Static plans (non-Meta-Ads services) ─────────────────────────────────────
-// UGC Ads packages/pricing/messaging are imported from '@/lib/ugcPackages'
-// — the single source of truth shared with the UGC ordering wizard
-// (UgcAds.jsx), so this page and the order flow can never drift apart.
-const UGC_PLAN = {
-  title: UGC_OVERVIEW.title,
-  desc: UGC_OVERVIEW.desc,
-  billing: 'one-off',
-  included: UGC_OVERVIEW.included,
-  packages: Object.entries(UGC_PACKAGES).map(([key, pkg]) => ({
-    name: pkg.name,
-    price: getMwkPriceLabel(key),
-    priceNote: pkg.priceNote,
-    badge: pkg.badge,
-    features: pkg.features,
-    cta: 'Place order', ctaLink: '/ugc-ads',
-  })),
-};
-
-const STATIC_PLANS = {
-  'ugc-ads': UGC_PLAN,
-  'graphic-design': {
-    title: 'Graphic Design — Brandfletch Designs',
-    desc: 'Consistent, professional design output on a monthly retainer. One-off projects also available — contact us for a quote.',
-    billing: 'monthly',
-    packages: [
-      {
-        name: 'Starter',
-        price: 'MK 100,000', priceNote: '/month', badge: null,
-        features: ['10 design requests/month','Static designs only','Posters, flyers, social posts, banners','1 concurrent request','24–48 hour turnaround','Revisions included'],
-        cta: 'Get started', ctaLink: '/designs',
-      },
-      {
-        name: 'Growth',
-        price: 'MK 180,000', priceNote: '/month', badge: 'Most popular',
-        features: ['15 design requests/month','Static designs + motion graphics','Animated posts, simple GIFs','2 concurrent requests','12–24 hour turnaround','1–2 short video edits/month','Priority queue'],
-        cta: 'Get started', ctaLink: '/designs',
-      },
-      {
-        name: 'Premium',
-        price: 'MK 280,000', priceNote: '/month', badge: null,
-        features: ['20 design requests/month','Full suite: static, motion & video','3 concurrent requests','6–12 hour priority turnaround','Unlimited video content (within cap)','Brand consistency management','Dedicated designer'],
-        cta: 'Get started', ctaLink: '/designs',
-      },
-    ],
-  },
-  'web-design': {
-    title: 'Web Design & Development — Brandfletch Dev Studio',
-    desc: 'Websites designed around business growth — not just being online. Every package is built to attract and convert visitors into customers.',
-    billing: 'one-off',
-    packages: [
-      {
-        name: 'Starter Website',
-        price: 'MK 150,000', priceNote: 'one-off', badge: null,
-        features: ['Up to 5 pages','Professional business website','Mobile responsive design','Contact form','WhatsApp integration','Basic SEO setup','Social media links','Website launch support'],
-        cta: 'Place order', ctaLink: '/dev-studio',
-        ideal: 'Small businesses, personal brands & startups',
-      },
-      {
-        name: 'Growth Website',
-        price: 'MK 350,000', priceNote: 'one-off', badge: 'Most popular',
-        features: ['Up to 10 pages','Custom website design','Modern UI/UX','Lead capture forms','WhatsApp/business integrations','Blog/news section','SEO optimisation','Analytics setup','Conversion-focused structure'],
-        cta: 'Place order', ctaLink: '/dev-studio',
-        ideal: 'Growing businesses that need more than just a website',
-      },
-      {
-        name: 'Business Pro',
-        price: 'MK 750,000', priceNote: 'one-off', badge: 'Serious brands',
-        features: ['Unlimited pages','Fully custom design','Advanced UI/UX','Booking systems / custom features','E-commerce functionality','Payment integrations','Advanced SEO','Speed optimisation','Analytics + tracking','Priority support'],
-        cta: 'Place order', ctaLink: '/dev-studio',
-        ideal: 'Established businesses & brands',
-      },
-    ],
-    customNote: {
-      title: 'Need a web app, LMS, marketplace, or complex system?',
-      desc: "These go far beyond standard website pricing. We build them — let's talk scope and pricing.",
-      cta: 'Request a custom quote',
-      link: '/dev-studio',
-    },
-  },
-  'social-media': {
-    title: 'Social Media Management — Brandfletch Media',
-    desc: 'We help businesses stay visible, build trust, and turn social media into a real growth channel.',
-    billing: 'monthly',
-    packages: [
-      {
-        name: 'Starter',
-        price: 'MK 150,000', priceNote: '/month', badge: null,
-        features: ['16 branded posts/month','Social media page management','Content planning','Caption writing','Content scheduling','Basic community management','Monthly performance insights'],
-        cta: 'Get started', ctaLink: '/contact',
-        ideal: 'Businesses that need consistency and a professional presence',
-      },
-      {
-        name: 'Growth',
-        price: 'MK 300,000', priceNote: '/month', badge: 'Popular',
-        features: ['32 branded posts/month','Full social media management','Content strategy','Short-form content / Reels','Caption & CTA optimisation','Audience engagement','Monthly content calendar','Performance report'],
-        cta: 'Get started', ctaLink: '/contact',
-        ideal: 'Businesses actively growing their online presence',
-      },
-      {
-        name: 'Brand Growth',
-        price: 'MK 450,000', priceNote: '/month', badge: 'Full service',
-        features: ['60+ monthly content pieces','Full social media management','Reels/short-form videos','Brand storytelling','Content campaigns','Community management','Growth strategy','Analytics & optimisation'],
-        cta: 'Get started', ctaLink: '/contact',
-        ideal: 'Brands that want social media as a marketing channel',
-      },
-    ],
-  },
-};
 
 // ── Pkg features (static descriptions for Meta Ads) ─────────────────────────
 const META_PKG_FEATURES = {
@@ -199,147 +78,26 @@ function DollarCalculator({ defaultRate }) {
   useEffect(() => { if (defaultRate) setRate(defaultRate); }, [defaultRate]);
 
   return (
-    <div className="max-w-xl mx-auto">
-      <div className="bg-card border border-border rounded-2xl p-8 shadow-sm">
-        <h3 className="font-display font-bold text-xl text-foreground mb-2">Dollar → MWK Calculator</h3>
-        <p className="text-sm text-muted-foreground mb-6">Enter a USD amount to see the MWK equivalent at our current rate.</p>
-        <div className="space-y-4">
-          <div>
-            <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Amount (USD)</label>
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold text-sm">$</span>
-              <input type="number" min="0" step="0.01" value={usd} onChange={e => setUsd(e.target.value)}
-                placeholder="e.g. 50"
-                className="w-full pl-8 pr-4 py-3 border border-input rounded-lg bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(var(--accent))]/40" />
-            </div>
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Exchange rate (MK per $1)</label>
-            <div className="flex items-center gap-2 px-3 py-3 border border-border rounded-lg bg-muted/40">
-              <span className="text-muted-foreground font-semibold text-sm">MK</span>
-              <span className="text-foreground font-bold text-sm">{rate.toLocaleString()}</span>
-            </div>
-          </div>
-          {mwk !== null && !isNaN(mwk) && (
-            <div className="bg-[hsl(var(--accent))]/10 border border-[hsl(var(--accent))]/20 rounded-xl p-5 text-center">
-              <p className="text-xs text-muted-foreground mb-1">You will pay approximately</p>
-              <p className="text-3xl font-display font-extrabold text-[hsl(var(--accent))]">MK {mwk.toLocaleString()}</p>
-              <p className="text-xs text-muted-foreground mt-1">for ${parseFloat(usd).toFixed(2)} USD at MK {rate.toLocaleString()}/USD</p>
-            </div>
-          )}
+    <div className="max-w-md mx-auto">
+      <div className="bg-card border border-border rounded-2xl p-6">
+        <label className="text-sm font-medium text-muted-foreground block mb-2">Amount (USD)</label>
+        <div className="flex gap-3 items-center">
+          <input
+            type="number"
+            value={usd}
+            onChange={e => setUsd(e.target.value)}
+            placeholder="Enter USD amount"
+            className="flex-1 px-4 py-2.5 rounded-lg border border-border bg-background text-foreground text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-[hsl(var(--accent))]/40"
+          />
+          <span className="text-muted-foreground text-sm">× {rate.toLocaleString()}</span>
         </div>
-        <div className="mt-6 pt-5 border-t border-border">
-          <p className="text-xs text-muted-foreground mb-3">Need to make a payment or set up online payment access?</p>
-          <Link to="/contact">
-            <Button variant="outline" size="sm" className="w-full gap-2">
-              <MessageSquare className="w-4 h-4" /> Start a discussion
-            </Button>
-          </Link>
-        </div>
+        {mwk !== null && (
+          <div className="mt-4 p-4 bg-[hsl(var(--accent))]/5 rounded-lg text-center">
+            <span className="text-2xl font-extrabold text-foreground">MK {mwk.toLocaleString()}</span>
+            <p className="text-xs text-muted-foreground mt-1">Approximate MWK equivalent</p>
+          </div>
+        )}
       </div>
-    </div>
-  );
-}
-
-// ── Studios / Dev Studio section — ServiceRate-driven ───────────────────────
-// Pulls live prices from the ServiceRate table (admin sets them per
-// country in each department's admin Pricing tab). Services that are
-// inactive or price=0 show as "Coming soon" with a "Request a quote" CTA.
-function ServiceRatePricing({ department, orderLink, country }) {
-  const [rates, setRates] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    setLoading(true);
-    base44.entities.ServiceRate
-      .filter({ department, is_active: true, country }, { sort: 'sort_order' })
-      .then(rows => { setRates(rows || []); setLoading(false); })
-      .catch(() => { setRates([]); setLoading(false); });
-  }, [department, country]);
-
-  const symbol = rates[0]?.symbol || 'MK';
-
-  // Group by service_key — one card per service
-  const services = [];
-  const seen = new Set();
-  for (const r of rates) {
-    if (!seen.has(r.service_key)) {
-      seen.add(r.service_key);
-      const svcRates = rates.filter(x => x.service_key === r.service_key);
-      const hasPlans = svcRates.length > 1 || svcRates[0]?.plan_name;
-      services.push({ service_key: r.service_key, service_name: r.service_name, rates: svcRates, hasPlans });
-    }
-  }
-
-  return (
-    <div>
-      {loading ? (
-        <div className="flex items-center justify-center py-16 gap-3 text-muted-foreground">
-          <Loader2 className="w-5 h-5 animate-spin" />
-          <span className="text-sm">Loading prices…</span>
-        </div>
-      ) : services.length === 0 ? (
-        <div className="text-center py-16">
-          <div className="max-w-md mx-auto bg-card border border-border rounded-2xl p-8">
-            <Sparkles className="w-8 h-8 text-[hsl(var(--accent))] mx-auto mb-3" />
-            <h3 className="font-display font-bold text-lg text-foreground mb-2">Pricing coming soon</h3>
-            <p className="text-sm text-muted-foreground mb-6">
-              We're finalising pricing for {country}. In the meantime, reach out and we'll craft a quote tailored to your project.
-            </p>
-            <Link to={orderLink}>
-              <Button className="bg-[hsl(var(--primary))] text-white hover:bg-[hsl(var(--primary))]/90 gap-2">
-                Request a quote <ArrowRight className="w-4 h-4" />
-              </Button>
-            </Link>
-          </div>
-        </div>
-      ) : (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {services.map(svc => {
-            // If the service has multiple plan rows, show each as a card;
-            // if it's a single-row service (no plan_name), show one card.
-            const cards = svc.hasPlans
-              ? svc.rates.map(r => ({
-                  name: r.plan_name || svc.service_name,
-                  price: r.billing_type === 'custom_quote' ? 'Custom' : `${r.symbol}${Number(r.price).toLocaleString()}`,
-                  priceNote: r.billing_type === 'custom_quote' ? 'quote' : (r.billing_type === 'subscription' ? '/month' : 'one-off'),
-                  features: [],
-                  cta: r.billing_type === 'custom_quote' ? 'Request a quote' : 'Place order',
-                  ctaLink: orderLink,
-                  badge: null,
-                }))
-              : [{
-                  name: svc.service_name,
-                  price: svc.rates[0].billing_type === 'custom_quote' ? 'Custom' : `${svc.rates[0].symbol}${Number(svc.rates[0].price).toLocaleString()}`,
-                  priceNote: svc.rates[0].billing_type === 'custom_quote' ? 'quote' : (svc.rates[0].billing_type === 'subscription' ? '/month' : 'one-off'),
-                  features: [],
-                  cta: svc.rates[0].billing_type === 'custom_quote' ? 'Request a quote' : 'Place order',
-                  ctaLink: orderLink,
-                  badge: null,
-                }];
-            return cards.map((plan, i) => (
-              <div key={svc.service_key + '-' + i}
-                className="relative flex flex-col bg-card border rounded-2xl overflow-hidden transition-all duration-200 hover:shadow-lg border-border"
-              >
-                <div className="h-1 bg-muted" />
-                <div className="p-6 flex flex-col flex-1">
-                  <h3 className="font-display font-bold text-lg text-foreground mb-1">{plan.name}</h3>
-                  <div className="mb-4">
-                    <span className="text-2xl font-extrabold text-foreground">{plan.price}</span>
-                    {plan.priceNote && <span className="text-sm text-muted-foreground ml-1">{plan.priceNote}</span>}
-                  </div>
-                  <div className="flex-1 mb-6" />
-                  <Link to={plan.ctaLink}>
-                    <Button className="w-full font-semibold bg-[hsl(var(--primary))] text-white hover:bg-[hsl(var(--primary))]/90">
-                      {plan.cta} <ArrowRight className="ml-1.5 w-4 h-4" />
-                    </Button>
-                  </Link>
-                </div>
-              </div>
-            ));
-          })}
-        </div>
-      )}
     </div>
   );
 }
@@ -354,11 +112,9 @@ function MetaAdsPricing({ dbRows, loading, country, onPlanSelect }) {
   ];
   const [duration, setDuration] = useState('monthly');
 
-  // Get rows for current country
   const countryRows = dbRows.filter(r => r.country === country);
   const symbol = countryRows[0]?.symbol || LOCAL_PRICES[country]?.symbol || 'MK';
 
-  // Build packages — DB rows take priority, fall back to LOCAL_PRICES
   const packages = PKG_ORDER.map(pkg => {
     const dbRow = countryRows.find(r => r.package === pkg);
     const local  = LOCAL_PRICES[country]?.[pkg];
@@ -379,7 +135,6 @@ function MetaAdsPricing({ dbRows, loading, country, onPlanSelect }) {
 
   return (
     <div>
-      {/* Duration selector — country is auto-detected, no manual picker needed */}
       <div className="flex flex-wrap items-center gap-3 mb-8">
         <div className="flex items-center gap-2 ml-auto">
           <span className="text-xs font-semibold text-muted-foreground">Billing:</span>
@@ -415,7 +170,6 @@ function MetaAdsPricing({ dbRows, loading, country, onPlanSelect }) {
         </div>
       )}
 
-      {/* Source notice */}
       {!loading && countryRows.length > 0 && (
         <p className="text-xs text-muted-foreground text-center mt-4">
           Prices are managed by our team and updated in real time.
@@ -433,63 +187,36 @@ function MetaAdsPricing({ dbRows, loading, country, onPlanSelect }) {
 // ── Main component ────────────────────────────────────────────────────────────
 export default function PricingPage() {
   useSEO({
-    title:       'Pricing — Brandfletch Media Ad Management Packages',
-    description: 'Flexible Meta Ads management, UGC creatives, graphic design, and social media packages. Clear pricing in USD and MWK for African businesses.',
+    title:       'Pricing — Brandfletch Ads Management Packages',
+    description: 'Flexible Meta Ads management packages. Clear pricing in USD and MWK for African businesses.',
   });
 
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const VALID_TABS = TABS.map(t => t.key);
-  const requestedTab = searchParams.get('tab');
-  const [activeTab,  setActiveTab]  = useState(
-    VALID_TABS.includes(requestedTab) ? requestedTab : 'meta-ads'
-  );
-  const [country,    setCountry]    = useState('Malawi');
-  const [dbRows,     setDbRows]     = useState([]);
-  const [mwkRate,    setMwkRate]    = useState(DEFAULT_RATE);
+  const [country, setCountry] = useState('Malawi');
+  const [dbRows, setDbRows] = useState([]);
+  const [mwkRate, setMwkRate] = useState(DEFAULT_RATE);
 
-  // Fetch the live admin-configured MWK exchange rate — falls back to
-  // DEFAULT_RATE if none is configured/active yet.
   useEffect(() => {
     base44.entities.ExchangeRate.filter({ country: 'Malawi', is_active: true })
       .then(rows => { if (rows?.[0]?.rate_to_usd) setMwkRate(rows[0].rate_to_usd); })
-      .catch(() => {/* fail silently, keep DEFAULT_RATE */});
+      .catch(() => {});
   }, []);
 
-  // Fetch Meta Ads prices from DB in background — LOCAL_PRICES already shown instantly
   useEffect(() => {
-    // DB enrichment — silent background fetch, no spinner
     supabase
       .from('PackagePricing')
       .select('*')
       .then(({ data }) => { if (data?.length) setDbRows(data); })
-      .catch(() => {/* fail silently */});
+      .catch(() => {});
 
-    // Country detection — shared helper (profile → cached IP → live IP → default)
     detectCountry(user?.country).then(setCountry);
   }, [user?.country]);
 
-  // CTA handler — routes to the real order flow for each service.
-  // Guest-checkout flows (UGC, Studios, Dev Studio, Designs, Campaigns)
-  // handle their own auth gating internally, so we can navigate directly
-  // without pre-checking login state. Social Media has no wizard yet —
-  // falls back to /contact.
-  function handlePlanCta(serviceType, plan) {
-    const orderRoutes = {
-      'meta-ads':       '/campaigns/new',
-      'ugc-ads':        '/ugc-ads',
-      'graphic-design': '/designs',
-      'web-design':     '/dev-studio',
-      'social-media':   '/contact',
-      'studios':        '/studios',
-      'dev-studio':     '/dev-studio',
-    };
-    const route = orderRoutes[serviceType] || '/contact';
+  function handlePlanCta(plan) {
+    const route = plan.ctaLink || '/campaigns/new';
     navigate(route);
   }
-
-  const service = STATIC_PLANS[activeTab];  // null for ServiceRate-driven tabs (studios, dev-studio)
 
   return (
     <div className="min-h-screen bg-background">
@@ -500,176 +227,37 @@ export default function PricingPage() {
           Simple, honest pricing
         </h1>
         <p className="text-white/60 max-w-xl mx-auto text-base">
-          Every service priced clearly. Pick the tab for the service you need — or mix and match to build your complete growth package.
+          Professionally managed Meta Ads campaigns designed to generate qualified leads. Prices shown in your local currency.
         </p>
       </section>
 
-      {/* Sticky tab bar */}
-      <div className="sticky top-16 z-30 bg-background/95 backdrop-blur border-b border-border">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 overflow-x-auto">
-          <div className="flex gap-1 py-2 min-w-max">
-            {TABS.map(t => (
-              <button key={t.key} onClick={() => setActiveTab(t.key)}
-                className={cn('px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all',
-                  activeTab === t.key
-                    ? 'bg-[hsl(var(--primary))] text-white shadow'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                )}
-              >{t.label}</button>
-            ))}
-          </div>
-        </div>
-      </div>
-
       {/* Content */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
+        {/* META ADS */}
+        <div className="mb-10">
+          <h2 className="text-2xl sm:text-3xl font-display font-extrabold text-foreground mb-2">Meta Ads Management</h2>
+          <p className="text-muted-foreground max-w-2xl text-sm leading-relaxed">
+            Professionally managed Facebook & Instagram campaigns designed to generate qualified leads. Prices shown in your local currency, detected automatically.
+          </p>
+          <Badge className="mt-3 text-[10px] bg-muted text-muted-foreground border-border">📅 Monthly, weekly, or daily billing</Badge>
+        </div>
+        <MetaAdsPricing
+          dbRows={dbRows}
+          loading={false}
+          country={country}
+          onPlanSelect={(plan) => handlePlanCta(plan)}
+        />
 
-        {/* ── META ADS (DB-driven) ── */}
-        {activeTab === 'meta-ads' && (
-          <>
-            <div className="mb-10">
-              <h2 className="text-2xl sm:text-3xl font-display font-extrabold text-foreground mb-2">Meta Ads Management</h2>
-              <p className="text-muted-foreground max-w-2xl text-sm leading-relaxed">
-                Professionally managed Facebook & Instagram campaigns designed to generate qualified leads. Prices shown in your local currency, detected automatically.
-              </p>
-              <Badge className="mt-3 text-[10px] bg-muted text-muted-foreground border-border">📅 Monthly, weekly, or daily billing</Badge>
-            </div>
-            <MetaAdsPricing
-              dbRows={dbRows}
-              loading={false}
-              country={country}
-              onPlanSelect={(plan) => handlePlanCta('meta-ads', plan)}
-            />
-          </>
-        )}
-
-        {/* ── STUDIOS (ServiceRate-driven) ── */}
-        {activeTab === 'studios' && (
-          <>
-            <div className="mb-10">
-              <h2 className="text-2xl sm:text-3xl font-display font-extrabold text-foreground mb-2">Brandfletch Studios</h2>
-              <p className="text-muted-foreground max-w-2xl text-sm leading-relaxed">
-                Content creation, podcast features, videography and photography — produced by our creative team. UGC Ad Creatives have their own dedicated packages.
-              </p>
-            </div>
-            <ServiceRatePricing
-              department="studios"
-              orderLink="/studios"
-              country={country}
-            />
-            <div className="mt-8 bg-[hsl(var(--accent))]/5 border border-[hsl(var(--accent))]/20 rounded-2xl p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div>
-                <p className="font-bold text-foreground text-sm mb-1">Looking for UGC Ad Creatives?</p>
-                <p className="text-xs text-muted-foreground">Starter, Growth & Brand Campaign packages — book via our dedicated UGC flow.</p>
-              </div>
-              <Link to="/ugc-ads" className="flex-shrink-0">
-                <Button variant="outline" size="sm" className="gap-2 whitespace-nowrap">
-                  <ArrowRight className="w-4 h-4" /> View UGC packages
-                </Button>
-              </Link>
-            </div>
-          </>
-        )}
-
-        {/* ── DEV STUDIO (ServiceRate-driven) ── */}
-        {activeTab === 'dev-studio' && (
-          <>
-            <div className="mb-10">
-              <h2 className="text-2xl sm:text-3xl font-display font-extrabold text-foreground mb-2">Brandfletch Dev Studio</h2>
-              <p className="text-muted-foreground max-w-2xl text-sm leading-relaxed">
-                Websites, apps, automations and AI agents — built to grow your business. Fixed-price packages below, or request a custom quote for complex projects.
-              </p>
-            </div>
-            <ServiceRatePricing
-              department="dev_studio"
-              orderLink="/dev-studio"
-              country={country}
-            />
-            {/* Show the existing hardcoded website packages as a fallback
-                while ServiceRate website rows are inactive/zero. */}
-            <div className="mt-10">
-              <p className="text-xs font-semibold text-muted-foreground mb-4">Website packages (standard pricing):</p>
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {STATIC_PLANS['web-design']?.packages.map(plan => (
-                  <PlanCard
-                    key={plan.name}
-                    plan={{ ...plan, ctaLink: '/dev-studio' }}
-                    popular={plan.badge?.toLowerCase().includes('pop') ?? false}
-                    onCta={() => handlePlanCta('dev-studio', plan)}
-                  />
-                ))}
-              </div>
-            </div>
-          </>
-        )}
-
-        {/* ── ONLINE PAYMENTS (calculator) ── */}
-        {activeTab === 'online-payments' && (
-          <>
-            <div className="mb-10">
-              <h2 className="text-2xl sm:text-3xl font-display font-extrabold text-foreground mb-2">Online Payments</h2>
-              <p className="text-muted-foreground max-w-2xl text-sm leading-relaxed">
-                Simple, reliable access to online payment solutions — including dollar-based options. Use the calculator to see your MWK equivalent.
-              </p>
-            </div>
-            <DollarCalculator defaultRate={mwkRate} />
-          </>
-        )}
-
-        {/* ── STATIC SERVICES ── */}
-        {service && (
-          <>
-            <div className="mb-10">
-              <h2 className="text-2xl sm:text-3xl font-display font-extrabold text-foreground mb-2">{service.title}</h2>
-              <p className="text-muted-foreground max-w-2xl text-sm leading-relaxed">{service.desc}</p>
-              {service.billing && (
-                <Badge className="mt-3 text-[10px] bg-muted text-muted-foreground border-border capitalize">
-                  {service.billing === 'monthly' ? '📅 Monthly retainer' : '✅ One-off payment'}
-                </Badge>
-              )}
-            </div>
-
-            {/* UGC included list */}
-            {service.included && (
-              <div className="mb-10 bg-[hsl(var(--accent))]/5 border border-[hsl(var(--accent))]/20 rounded-2xl p-6">
-                <p className="text-sm font-bold text-foreground mb-4">Every UGC package includes:</p>
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {service.included.map(f => (
-                    <div key={f} className="flex items-start gap-2">
-                      <Check className="w-4 h-4 text-[hsl(var(--accent))] flex-shrink-0 mt-0.5" />
-                      <span className="text-sm text-foreground">{f}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {service.packages.map(plan => (
-                <PlanCard
-                  key={plan.name}
-                  plan={plan}
-                  popular={plan.badge?.toLowerCase().includes('pop') ?? false}
-                  onCta={() => handlePlanCta(activeTab, plan)}
-                />
-              ))}
-            </div>
-
-            {service.customNote && (
-              <div className="mt-8 bg-muted border border-border rounded-2xl p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div>
-                  <p className="font-bold text-foreground text-sm mb-1">{service.customNote.title}</p>
-                  <p className="text-xs text-muted-foreground">{service.customNote.desc}</p>
-                </div>
-                <Link to={service.customNote.link} className="flex-shrink-0">
-                  <Button variant="outline" size="sm" className="gap-2 whitespace-nowrap">
-                    <MessageSquare className="w-4 h-4" /> {service.customNote.cta}
-                  </Button>
-                </Link>
-              </div>
-            )}
-          </>
-        )}
+        {/* USD → MWK Calculator */}
+        <div className="mt-16 pt-10 border-t border-border">
+          <div className="mb-10">
+            <h2 className="text-2xl sm:text-3xl font-display font-extrabold text-foreground mb-2">USD → MWK Calculator</h2>
+            <p className="text-muted-foreground max-w-2xl text-sm leading-relaxed">
+              Quick reference for converting USD pricing to Malawian Kwacha at the current rate.
+            </p>
+          </div>
+          <DollarCalculator defaultRate={mwkRate} />
+        </div>
       </section>
 
       {/* Bottom CTA */}
@@ -687,7 +275,3 @@ export default function PricingPage() {
     </div>
   );
 }
-
-
-
-

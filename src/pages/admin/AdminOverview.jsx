@@ -6,11 +6,8 @@ import { Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 
 export default function AdminOverview() {
-  // Block designer role — they should be at /designer, not /admin
   useRoleGuard(null, 'clients.view');
   const [stats, setStats] = useState({
-    totalDesigns: null,
-    totalLeads: null,
     activeCampaigns: null,
     revenue: null,
     totalUsers: null,
@@ -23,9 +20,7 @@ export default function AdminOverview() {
       try {
         // Bug fix: base44.entities.Payment does not exist — use WalletTransaction for revenue
         // Also fix list() call signature — pass options object, not positional args
-        const [designs, leads, campaigns, walletTxns, users] = await Promise.all([
-          base44.entities.DesignRequest.list({ sort: '-created_date', limit: 1000 }).catch(() => []),
-          base44.entities.Lead.list({ sort: '-created_date', limit: 1000 }).catch(() => []),
+        const [campaigns, walletTxns, users] = await Promise.all([
           base44.entities.Campaign.list({ sort: '-created_date', limit: 1000 }).catch(() => []),
           base44.entities.WalletTransaction.list({ sort: '-created_date', limit: 1000 }).catch(() => []),
           base44.functions.getAllUsers({}).then(r => r?.users || []).catch(() => []),
@@ -40,8 +35,6 @@ export default function AdminOverview() {
           .reduce((sum, t) => sum + (t.amount_usd || t.amount || 0), 0);
 
         setStats({
-          totalDesigns: designs.length,
-          totalLeads: leads.length,
           activeCampaigns,
           pendingCampaigns,
           revenue: totalRevenue,
@@ -67,14 +60,6 @@ export default function AdminOverview() {
       icon: Activity,
       color: 'bg-green-100 text-green-700',
       link: '/admin/campaigns',
-    },
-    {
-      title: 'Total Designs',
-      value: fmt(stats.totalDesigns),
-      sub: '',
-      icon: Palette,
-      color: 'bg-purple-100 text-purple-700',
-      link: '/admin/designs',
     },
     {
       title: 'Client Accounts',

@@ -11,8 +11,6 @@ import CompleteProfileChecklist from '@/components/dashboard/OnboardingChecklist
 export default function Dashboard() {
   const { user, isLoadingAuth } = useAuth();
 
-  const [designs, setDesigns] = useState([]);
-  const [leads, setLeads] = useState([]);
   const [campaigns, setCampaigns] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -28,8 +26,6 @@ export default function Dashboard() {
         // Fix #1b: use correct filter API — no extra sort/limit positional args
         // Base44 SDK filter: (query, options?) — sort & limit go in options object
         const [des, lds, camps] = await Promise.all([
-          base44.entities.DesignRequest.filter({ created_by: user.id }, { sort: '-created_date', limit: 5 }).catch(() => []),
-          base44.entities.Lead.filter({ created_by: user.id }, { sort: '-created_date', limit: 5 }).catch(() => []),
           base44.entities.Campaign.filter({ created_by: user.id }, { sort: '-created_date', limit: 5 }).catch(() => []),
         ]);
         setDesigns(des);
@@ -55,8 +51,6 @@ export default function Dashboard() {
 
   const activeCampaigns = campaigns.filter(c => c.status === 'active').length;
   const pendingCampaigns = campaigns.filter(c => ['pending_review', 'awaiting_payment', 'draft'].includes(c.status)).length;
-  const activeDesigns = designs.filter(d => d.status === 'in_progress' || d.status === 'submitted').length;
-  const activeLeads = leads.filter(l => !['won', 'lost'].includes(l.stage)).length;
 
   // Show skeleton while auth is loading OR data is loading
   if (isLoadingAuth || loading || !user) {
@@ -130,43 +124,13 @@ export default function Dashboard() {
             </CardContent>
           </Card>
         </Link>
-        <Link to="/designs">
-          <Card className="hover:shadow-lg transition-all cursor-pointer">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center flex-shrink-0">
-                  <Palette className="w-5 h-5 text-purple-700" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{activeDesigns}</p>
-                  <p className="text-xs text-muted-foreground">Designs</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </Link>
-        <Link to="/leads">
-          <Card className="hover:shadow-lg transition-all cursor-pointer">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center flex-shrink-0">
-                  <Target className="w-5 h-5 text-orange-700" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{activeLeads}</p>
-                  <p className="text-xs text-muted-foreground">Leads</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </Link>
       </div>
 
       {/* Explore Services CTA */}
       <div className="rounded-2xl border border-primary/20 bg-gradient-to-r from-primary/5 to-primary/10 p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <p className="font-semibold text-foreground mb-1">Explore all Brandfletch services</p>
-          <p className="text-sm text-muted-foreground">Ads, designs, websites, UGC content and social media management — transparent pricing, no surprises.</p>
+          <p className="text-sm text-muted-foreground">Meta Ads management — transparent pricing, no surprises.</p>
         </div>
         <Link to="/pricing">
           <Button variant="default" size="sm" className="shrink-0 gap-2 whitespace-nowrap">

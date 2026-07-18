@@ -12,7 +12,7 @@ const NAV = [
   { label: 'About',   to: '/about' },
   { label: 'Pricing', to: '/pricing' },
   { label: 'Blog',      to: '/blog' },
-  { label: 'Portfolio', to: '/portfolio' },
+  
   { label: 'Contact',   to: '/contact' },
 ];
 
@@ -128,7 +128,7 @@ export default function PublicLayout() {
           <div>
             <p className="text-white font-semibold text-sm mb-3">Departments</p>
             <ul className="space-y-2 text-sm">
-              {[['Brandfletch Ads','/pricing?tab=meta-ads'],['Brandfletch Designs','/designs'],['Brandfletch Studios','/studios'],['Brandfletch Dev Studio','/dev-studio'],['Brandfletch Payments','/pricing?tab=online-payments']].map(([l,h])=>(
+              {[['Brandfletch Ads','/pricing'],['Brandfletch Payments','/pricing']].map(([l,h])=>(
                 <li key={l}><Link to={h} className="hover:text-white transition-colors">{l}</Link></li>
               ))}
               <li className="text-white/40 text-xs pt-1">Brandfletch Sales &amp; Business Academy — coming soon</li>

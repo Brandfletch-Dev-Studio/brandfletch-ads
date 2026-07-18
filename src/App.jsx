@@ -3,7 +3,6 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
 import { BrowserRouter as Router, Route, Routes, Navigate, useLocation } from 'react-router-dom';
 import React, { lazy, Suspense } from 'react';
-import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 
@@ -18,10 +17,8 @@ import PricingPage from '@/pages/public/PricingPage';
 import ContactPage from '@/pages/public/ContactPage';
 import BlogIndex from '@/pages/public/BlogIndex';
 import BlogPost from '@/pages/public/BlogPost';
-import PortfolioPage from '@/pages/public/PortfolioPage';
 import PrivacyPolicy from '@/pages/PrivacyPolicy';
 import Terms from '@/pages/Terms';
-import PublicFormView from '@/pages/PublicFormView';
 
 // ── Auth pages ──
 import Login from '@/pages/Login';
@@ -29,10 +26,6 @@ import Register from '@/pages/Register';
 import ForgotPassword from '@/pages/ForgotPassword';
 import ResetPassword from '@/pages/ResetPassword';
 import AuthCallback from '@/pages/AuthCallback';
-const StudiosManagerDashboard   = lazy(() => import('@/pages/StudiosManagerDashboard'));
-const DevStudioManagerDashboard = lazy(() => import('@/pages/DevStudioManagerDashboard'));
-const StudioPortal              = lazy(() => import('@/pages/StudioPortal'));
-const DevPortal                 = lazy(() => import('@/pages/DevPortal'));
 import ScrollToTop from '@/components/ScrollToTop';
 import { STAFF_ROLES, DEPARTMENTS, getDepartmentForRole, isOperationsRole, isDepartmentManagerRole } from '@/lib/permissions';
 
@@ -46,35 +39,19 @@ const CampaignPayment      = lazy(() => import('@/pages/campaigns/CampaignPaymen
 const SavedAudiences       = lazy(() => import('@/pages/SavedAudiences'));
 const ProfileSettings      = lazy(() => import('@/pages/ProfileSettings'));
 const Notifications        = lazy(() => import('@/pages/Notifications'));
-const Designs              = lazy(() => import('@/pages/Designs'));
-const DesignPayment        = lazy(() => import('@/pages/DesignPayment'));
-const LeadsComingSoon      = lazy(() => import('@/pages/LeadsComingSoon'));
-const LeadForms            = lazy(() => import('@/pages/LeadForms'));
-const DesignerPortal       = lazy(() => import('@/pages/DesignerPortal'));
-const CreativeOpsDashboard = lazy(() => import('@/pages/CreativeOpsDashboard'));
 const AdsManagerDashboard  = lazy(() => import('@/pages/AdsManagerDashboard'));
 const Referrals            = lazy(() => import('@/pages/Referrals'));
-const UgcAds               = lazy(() => import('@/pages/UgcAds'));
-const Studios              = lazy(() => import('@/pages/Studios'));
-const DevStudio            = lazy(() => import('@/pages/DevStudio'));
 const AdminOverview        = lazy(() => import('@/pages/admin/AdminOverview'));
-const AdminPortfolio       = lazy(() => import('@/pages/admin/AdminPortfolio'));
 const AdminCampaigns       = lazy(() => import('@/pages/admin/AdminCampaigns'));
 const AdminCampaignDetail  = lazy(() => import('@/pages/admin/AdminCampaignDetail'));
 const AdminPayments        = lazy(() => import('@/pages/admin/AdminPayments'));
 const AdminSettings        = lazy(() => import('@/pages/admin/AdminSettings'));
 const AdminUsers           = lazy(() => import('@/pages/admin/AdminUsers'));
-const AdminPageRequests    = lazy(() => import('@/pages/admin/AdminPageRequests'));
 const AdminReports         = lazy(() => import('@/pages/admin/AdminReports'));
 const AdminNotifications   = lazy(() => import('@/pages/admin/AdminNotifications'));
 const AdminAds             = lazy(() => import('@/pages/admin/AdminAds'));
 const AdminAuditLog        = lazy(() => import('@/pages/admin/AdminAuditLog'));
-const AdminPricing         = lazy(() => import('@/pages/admin/AdminPricing'));
 const AdminReferrals       = lazy(() => import('@/pages/admin/AdminReferrals'));
-const AdminDesigns         = lazy(() => import('@/pages/admin/AdminDesigns'));
-const AdminStudios         = lazy(() => import('@/pages/admin/AdminStudios'));
-const AdminDevStudio       = lazy(() => import('@/pages/admin/AdminDevStudio'));
-const AdminLeads           = lazy(() => import('@/pages/admin/AdminLeads'));
 const AdminBlog            = lazy(() => import('@/pages/admin/AdminBlog'));
 
 
@@ -238,7 +215,7 @@ function AuthGuard({ children }) {
 
 // ── GuestAppRoute ─────────────────────────────────────────────────────────────
 // Like AppLayout but accessible without login. Used for ordering flows that
-// work with or without an account (e.g. /campaigns/new, /ugc-ads).
+// work with or without an account (e.g. /campaigns/new).
 function GuestAppRoute({ children }) {
   return <AppLayout />;
 }
@@ -258,7 +235,6 @@ const AppRoutes = () => (
         <Route path="/register" element={<AuthPageRoute><Register /></AuthPageRoute>} />
 
         {/* ── Public form (no nav chrome) ── */}
-        <Route path="/forms/:formId" element={<PublicFormView />} />
         {/* ── Guest order flow (no nav chrome) ── */}
 
         {/* ── Public marketing pages ─────────────────────────────────────────
@@ -274,7 +250,6 @@ const AppRoutes = () => (
           <Route path="/contact"        element={<ContactPage />} />
           <Route path="/blog"           element={<BlogIndex />} />
           <Route path="/blog/:slug"     element={<BlogPost />} />
-          <Route path="/portfolio"       element={<PortfolioPage />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/terms"          element={<Terms />} />
         </Route>
@@ -286,10 +261,6 @@ const AppRoutes = () => (
         {/* Semi-public ordering flows — accessible with or without login */}
         <Route element={<GuestAppRoute />}>
           <Route path="/campaigns/new" element={<CampaignWizard />} />
-          <Route path="/ugc-ads"       element={<UgcAds />} />
-          <Route path="/studios"       element={<Studios />} />
-          <Route path="/dev-studio"    element={<DevStudio />} />
-          <Route path="/designs"       element={<Designs />} />
         </Route>
 
         <Route element={<AuthGuard><AppLayout /></AuthGuard>}>
@@ -300,39 +271,23 @@ const AppRoutes = () => (
           <Route path="/campaigns/:id/payment" element={<CampaignPayment />} />
           <Route path="/audiences"             element={<SavedAudiences />} />
           <Route path="/settings"              element={<ProfileSettings />} />
-          <Route path="/designs/payment"       element={<DesignPayment />} />
-          <Route path="/leads"                 element={<LeadsComingSoon />} />
-          <Route path="/leads/forms"           element={<LeadForms />} />
           <Route path="/referrals"             element={<Referrals />} />
           <Route path="/notifications"         element={<Notifications />} />
-          <Route path="/designer"              element={<DesignerPortal />} />
-          <Route path="/creative-ops"          element={<CreativeOpsDashboard />} />
           <Route path="/ads-manager"           element={<AdsManagerDashboard />} />
-          <Route path="/studios-manager"       element={<StudiosManagerDashboard />} />
-          <Route path="/devstudio-manager"     element={<DevStudioManagerDashboard />} />
-          <Route path="/studio-portal"         element={<StudioPortal />} />
-          <Route path="/dev-portal"            element={<DevPortal />} />
 
           {/* Admin */}
           <Route path="/admin"                 element={<AdminOverview />} />
           <Route path="/admin/campaigns"       element={<AdminCampaigns />} />
           <Route path="/admin/campaigns/:id"   element={<AdminCampaignDetail />} />
           <Route path="/admin/payments"        element={<AdminPayments />} />
-          <Route path="/admin/pages"           element={<AdminPageRequests />} />
           <Route path="/admin/users"           element={<AdminUsers />} />
           <Route path="/admin/reports"         element={<AdminReports />} />
           <Route path="/admin/notifications"   element={<AdminNotifications />} />
           <Route path="/admin/settings"        element={<AdminSettings />} />
           <Route path="/admin/ads"             element={<AdminAds />} />
-          <Route path="/admin/designs"         element={<AdminDesigns />} />
-          <Route path="/admin/studios"         element={<AdminStudios />} />
-          <Route path="/admin/dev-studio"      element={<AdminDevStudio />} />
-          <Route path="/admin/leads"           element={<AdminLeads />} />
           <Route path="/admin/audit-log"       element={<AdminAuditLog />} />
-          <Route path="/admin/pricing"         element={<AdminPricing />} />
           <Route path="/admin/referrals"       element={<AdminReferrals />} />
           <Route path="/admin/blog"            element={<AdminBlog />} />
-          <Route path="/admin/portfolio"       element={<AdminPortfolio />} />
         </Route>
 
         {/* ── 404 — wrapped in PublicLayout so header/footer show ── */}
