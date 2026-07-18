@@ -216,11 +216,7 @@ function ReferralsTab({ referrals = [], users = [] }) {
 
 
 const SERVICES_ADMIN = [
-  { key: 'meta_ads',     label: 'Meta Ads (Ads)' },
-  { key: 'social_media', label: 'Social Media (Ads)' },
-  { key: 'designs',      label: 'Graphic Design (Designs)' },
-  { key: 'dev_studio',   label: 'Web Development (Dev Studio)' },
-  { key: 'studios',      label: 'UGC Ads (Studios)' },
+  { key: 'meta_ads',     label: 'Meta Ads' },
 ];
 
 // ─── Commissions Tab ──────────────────────────────────────────────────
@@ -653,10 +649,6 @@ function SettingsTab() {
         default_percentage: 5,
         default_currency: 'MWK',
         meta_ads_commission_type: 'global',
-        social_media_commission_type: 'global',
-        designs_commission_type: 'global',
-        dev_studio_commission_type: 'global',
-        studios_commission_type: 'global',
         recurring_enabled: false,
         recurring_type: 'fixed',
         recurring_fixed_amount: 2000,
@@ -697,16 +689,9 @@ function SettingsTab() {
   const s = settings;
   if (isLoading || !s) return <div className="p-8 text-center"><Loader2 className="w-5 h-5 animate-spin mx-auto" /></div>;
 
-  // Grouped into Brandfletch's 4 real departments — Ads covers both Meta Ads
-  // and Social Media (same "Brandfletch Media" ads department), Designs is
-  // graphic design work, Dev Studio is web development, Studios is UGC ad
-  // content (Brandfletch Studios). Each still has its own independent rate.
+  // Meta Ads is the only active service department.
   const SERVICES = [
     { key: 'meta_ads',     label: 'Meta Ads',        group: 'Ads' },
-    { key: 'social_media', label: 'Social Media',    group: 'Ads' },
-    { key: 'designs',      label: 'Graphic Design',  group: 'Designs' },
-    { key: 'dev_studio',   label: 'Web Development',  group: 'Dev Studio' },
-    { key: 'studios',      label: 'UGC Ads',          group: 'Studios' },
   ];
 
   return (
@@ -912,10 +897,6 @@ function SettingsTab() {
                 <div className="flex flex-wrap gap-2">
                   {[
                     { key: 'meta_ads', label: 'Meta Ads' },
-                    { key: 'social_media', label: 'Social Media' },
-                    { key: 'designs', label: 'Graphic Design' },
-                    { key: 'dev_studio', label: 'Web Dev' },
-                    { key: 'studios', label: 'UGC Ads' },
                   ].map(({ key, label }) => {
                     const sel = (s.recurring_applies_to || []).includes(key);
                     return (

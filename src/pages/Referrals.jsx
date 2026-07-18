@@ -8,7 +8,7 @@ import {
   Download, MessageSquare, Loader2,
   Phone, Mail, Bell, CreditCard,
   Gift, ArrowRight, Zap, RefreshCw, BookOpen,
-  Megaphone, Video, Palette, Globe, Pencil, X
+  Megaphone, Pencil, X
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -31,27 +31,18 @@ function compactNum(val) {
 
 
 
-// Maps to Brandfletch's 4 real commission departments (AffiliateSettings
-// columns): meta_ads/social_media sit under the "Ads" department (Brandfletch
-// Media), designs = Brandfletch Designs, dev_studio = Brandfletch Dev Studio,
-// studios = Brandfletch Studios (UGC ad content). 'branding' was never a real
-// service or a configurable rate — dropped.
+// Maps to Brandfletch's sole service: Meta Ads (AffiliateSettings columns).
+// All other services (Designs, Dev Studio, Studios, UGC, Social Media) have
+// been removed from the platform — only meta_ads remains.
 const SERVICE_LABELS = {
   meta_ads:     'Meta Ads',
-  social_media: 'Social Media',
-  designs:      'Graphic Design',
-  dev_studio:   'Web Development',
-  studios:      'UGC Ads',
 };
 
 // Commission Rates are grouped by department for display — Ads (Meta Ads +
 // Social Media share the "Ads" department but keep individual rates),
 // Designs, Dev Studio, Studios each map 1:1 to their single product.
 const DEPARTMENTS = [
-  { id: 'ads',        label: 'Ads',        icon: Megaphone, gradient: 'from-blue-500 to-blue-600',   services: ['meta_ads', 'social_media'] },
-  { id: 'designs',    label: 'Designs',    icon: Palette,   gradient: 'from-pink-500 to-pink-600',   services: ['designs'] },
-  { id: 'dev_studio', label: 'Dev Studio', icon: Globe,     gradient: 'from-orange-500 to-orange-600', services: ['dev_studio'] },
-  { id: 'studios',    label: 'Studios',    icon: Video,     gradient: 'from-purple-500 to-purple-600', services: ['studios'] },
+  { id: 'ads',        label: 'Ads',        icon: Megaphone, gradient: 'from-blue-500 to-blue-600',   services: ['meta_ads'] },
 ];
 
 const TABS = [
@@ -231,30 +222,6 @@ function DashboardTab({ user, affiliateSettings, referrals = [], commissions = [
       cta: 'Get clients with Facebook & Instagram Ads',
       message: (link) =>
         `🚀 *Grow your business with Meta Ads!*\n\nAre you spending money on ads but not seeing results? Brandfletch Media creates and manages high-converting Facebook & Instagram campaigns for businesses.\n\n✅ Done-for-you campaigns\n✅ Real results tracked\n✅ Affordable MWK pricing\n\nSign up here 👇\n${link}`,
-    },
-    social_media: {
-      icon: Share2, gradient: 'from-green-500 to-green-600',
-      cta: 'Full social media management',
-      message: (link) =>
-        `📱 *Let us run your social media!*\n\nBrandfletch Media handles everything — content creation, scheduling, captions, Reels, and community management.\n\n✅ Consistent posting\n✅ Branded content\n✅ Affordable monthly packages\n\nLearn more 👇\n${link}`,
-    },
-    designs: {
-      icon: Palette, gradient: 'from-pink-500 to-pink-600',
-      cta: 'Professional graphic design',
-      message: (link) =>
-        `🎨 *Tired of inconsistent graphics?*\n\nBrandfletch Designs creates professional graphics — social posts, flyers, banners, motion graphics and more.\n\n✅ Fast turnaround\n✅ Unlimited revisions\n✅ MWK pricing\n\nGet started 👇\n${link}`,
-    },
-    dev_studio: {
-      icon: Globe, gradient: 'from-orange-500 to-orange-600',
-      cta: 'Websites built to convert',
-      message: (link) =>
-        `🌐 *Your business needs a proper website!*\n\nBrandfletch Dev Studio builds mobile-first, conversion-focused websites for African businesses — fast, professional, and affordable.\n\n✅ Mobile responsive\n✅ WhatsApp integration\n✅ SEO-ready\n\nSee packages 👇\n${link}`,
-    },
-    studios: {
-      icon: Video, gradient: 'from-purple-500 to-purple-600',
-      cta: 'Video ads that actually convert',
-      message: (link) =>
-        `🎬 *Need video ads that actually convert?*\n\nBrandfletch Studios creates UGC-style video creatives that work on Facebook & Instagram — designed to make customers take action.\n\n✅ Meta Ads-ready format\n✅ Real creators, authentic feel\n✅ Affordable pricing\n\nCheck it out 👇\n${link}`,
     },
   };
 
