@@ -1,13 +1,16 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import {
-  ArrowRight, Megaphone, CreditCard,
+  ArrowRight, Megaphone,
   CheckCircle, TrendingUp, Target, Star, Users2, GraduationCap,
   Smartphone
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useSEO } from '@/hooks/useSEO';
+
+const ADMIN_WHATSAPP = '265980011467';
+const WA_LINK = `https://wa.me/${ADMIN_WHATSAPP}?text=${encodeURIComponent("Hi Brandfletch! I'd like to know more about your upcoming services.")}`;
 
 const DEPARTMENTS = [
   {
@@ -19,18 +22,7 @@ const DEPARTMENTS = [
     color: 'from-blue-600 to-blue-800',
     accent: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
     dot: 'bg-blue-500',
-    to: '/pricing?tab=meta-ads',
-  },
-  {
-    id: 'payments',
-    icon: CreditCard,
-    title: 'Brandfletch Payments',
-    tagline: 'Online payments, simplified.',
-    body: 'Practical payment solutions for businesses and individuals — including dollar-based options and MWK conversions at competitive rates.',
-    color: 'from-green-600 to-emerald-700',
-    accent: 'bg-green-500/10 text-green-600 dark:text-green-400',
-    dot: 'bg-green-500',
-    to: '/pricing?tab=online-payments',
+    to: '/pricing',
   },
   {
     id: 'sales',
@@ -42,6 +34,7 @@ const DEPARTMENTS = [
     accent: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
     dot: 'bg-amber-500',
     comingSoon: true,
+    to: WA_LINK,
   },
   {
     id: 'academy',
@@ -53,12 +46,13 @@ const DEPARTMENTS = [
     accent: 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400',
     dot: 'bg-cyan-500',
     comingSoon: true,
+    to: WA_LINK,
   },
 ];
 
 const STATS = [
   { value: '500+', label: 'Businesses served' },
-  { value: '2',    label: 'Live departments' },
+  { value: '1',    label: 'Live department' },
   { value: '5',    label: 'African countries' },
   { value: '98%',  label: 'Client satisfaction' },
 ];
@@ -242,11 +236,11 @@ export default function Home() {
                     <p className="text-xs font-semibold text-[hsl(var(--accent))] mb-3 italic">{s.tagline}</p>
                     <p className="text-sm text-muted-foreground leading-relaxed mb-4">{s.body}</p>
                     {s.comingSoon ? (
-                      <Link to="/contact">
+                      <a href={s.to} target="_blank" rel="noopener noreferrer">
                         <button className="text-xs font-semibold text-muted-foreground hover:text-[hsl(var(--accent))] hover:underline flex items-center gap-1">
-                          Get notified when it launches <ArrowRight className="w-3 h-3" />
+                          Enquire on WhatsApp <ArrowRight className="w-3 h-3" />
                         </button>
-                      </Link>
+                      </a>
                     ) : (
                       <Link to={s.to || "/pricing"}>
                         <button className="text-xs font-semibold text-[hsl(var(--accent))] hover:underline flex items-center gap-1">

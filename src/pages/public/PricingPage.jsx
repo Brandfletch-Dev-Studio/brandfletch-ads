@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { supabase, base44 } from '@/api/base44Client';
-import { LOCAL_PRICES } from '@/lib/pricing';
+import { LOCAL_PRICES, AD_SPEND, ESTIMATED_REACH } from '@/lib/pricing';
 import { detectCountry } from '@/lib/geoCountry';
 import { useAuth } from '@/lib/AuthContext';
 import { useSEO } from '@/hooks/useSEO';
@@ -13,14 +13,19 @@ import { useSEO } from '@/hooks/useSEO';
 const DEFAULT_RATE = 5000;
 
 // ── Pkg features (static descriptions for Meta Ads) ─────────────────────────
-const META_PKG_FEATURES = {
-  starter:  ['1 active campaign','Basic audience targeting','3 ad creatives/month','Monthly performance report','Email support','Campaign setup & launch'],
-  growth:   ['3 active campaigns','Advanced audience targeting','8 ad creatives/month','Weekly performance reports','Priority support','Audience insights & A/B testing','Retargeting campaigns'],
-  business: ['5 active campaigns','Custom audiences','15 ad creatives/month','Daily reports','Dedicated account manager','A/B testing','Lookalike audiences'],
-  premium:  ['10 active campaigns','Lookalike & custom audiences','Unlimited ad creatives','Real-time performance dashboard','Dedicated account manager','24/7 priority support','Monthly strategy call','Full funnel campaign management'],
-};
+// Same perks across all packages — the service is identical, only the ad spend changes
+const SHARED_PERKS = [
+  'Advanced audience targeting',
+  'Professional ad management',
+  'Facebook & Instagram ads',
+  'Ad creative design included',
+  'Campaign setup & launch',
+  'Performance reports',
+  'Continuous optimisation',
+  'No long-term contracts',
+];
 
-const META_PKG_BADGES = { starter: null, growth: 'Popular', business: 'Most Popular', premium: null };
+const META_PKG_BADGES = { starter: null, growth: 'Popular', business: 'Best Value', premium: null };
 
 // ── Plan card ─────────────────────────────────────────────────────────────────
 function PlanCard({ plan, popular, onCta }) {
@@ -39,12 +44,17 @@ function PlanCard({ plan, popular, onCta }) {
       <div className={cn('h-1', popular ? 'bg-[hsl(var(--accent))]' : 'bg-muted')} />
       <div className="p-6 flex flex-col flex-1">
         <h3 className="font-display font-bold text-lg text-foreground mb-1">{plan.name}</h3>
+        <p className="text-xs font-semibold text-[hsl(var(--accent))] mb-3">
+          Ad spend: {plan.adSpend}
+        </p>
         <div className="mb-4">
           <span className="text-2xl font-extrabold text-foreground">{plan.price}</span>
           {plan.priceNote && <span className="text-sm text-muted-foreground ml-1">{plan.priceNote}</span>}
         </div>
-        {plan.ideal && (
-          <p className="text-xs text-muted-foreground italic mb-4 pb-4 border-b border-border">{plan.ideal}</p>
+        {plan.reach && (
+          <p className="text-xs text-muted-foreground mb-4 pb-4 border-b border-border">
+            Est. reach: {plan.reach} people/day
+          </p>
         )}
         <ul className="space-y-2.5 flex-1 mb-6">
           {plan.features.map(f => (
@@ -123,10 +133,12 @@ function MetaAdsPricing({ dbRows, loading, country, onPlanSelect }) {
 
     return {
       name:      pkg.charAt(0).toUpperCase() + pkg.slice(1),
+      adSpend:   `$${AD_SPEND[pkg]}/day`,
       price:     formatted,
       priceNote: `/${duration}`,
       badge:     META_PKG_BADGES[pkg] || null,
-      features:  META_PKG_FEATURES[pkg] || [],
+      features:  SHARED_PERKS,
+      reach:     ESTIMATED_REACH[pkg] || null,
       cta:       pkg === 'premium' ? 'Talk to us' : 'Get started',
       ctaLink:   pkg === 'premium' ? '/contact' : '/campaigns/new',
       pkgSlug:   pkg,
