@@ -102,7 +102,7 @@ export default function AdminReports() {
     .sort((a, b) => b.usd - a.usd);
 
   // Package breakdown
-  const packageBreakdown = ['starter', 'growth', 'business', 'premium', 'enterprise'].map(pkg => ({
+  const packageBreakdown = ['starter', 'growth', 'premium'].map(pkg => ({
     name: pkg.charAt(0).toUpperCase() + pkg.slice(1),
     key: pkg,
     count: filteredCampaigns.filter(c => c.package === pkg).length,

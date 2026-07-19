@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { COUNTRIES } from '@/lib/constants';
 import { toast } from 'sonner';
 import EmailTemplatesTab from '@/components/settings/EmailTemplatesTab';
+import PackagePricingTab from '@/components/settings/PackagePricingTab';
 import ConfirmDialog from '@/components/ConfirmDialog';
 
 const DANGER_ENTITIES = [
@@ -304,6 +305,9 @@ export default function AdminSettings() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Package Pricing */}
+      <PackagePricingTab />
 
       {/* Email Templates */}
       <EmailTemplatesTab />

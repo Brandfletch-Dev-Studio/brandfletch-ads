@@ -99,8 +99,8 @@ export default function StepPackage({ data, update }) {
   const packageColors = {
     starter: 'from-blue-500 to-blue-600',
     growth: 'from-indigo-500 to-indigo-600',
-    business: 'from-purple-500 to-purple-600',
-    premium: 'from-amber-500 to-amber-600',
+    
+    premium: 'from-purple-500 to-purple-600',
     enterprise: 'from-slate-600 to-slate-700',
   };
 
