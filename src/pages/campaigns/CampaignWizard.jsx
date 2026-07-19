@@ -66,7 +66,7 @@ export default function CampaignWizard() {
 
   // Resume a guest checkout after they've logged in/registered — restores
   // the full wizard state they'd already filled in (saved to sessionStorage
-  // before bouncing to /login) and jumps straight to Summary + submit, so
+  // before bouncing to /register) and jumps straight to Summary + submit, so
   // they aren't asked to redo the whole wizard.
   useEffect(() => {
     if (!resumePending || !user) return;
@@ -253,7 +253,7 @@ export default function CampaignWizard() {
                   sessionStorage.setItem('bf_campaign_draft', JSON.stringify(data));
                   const resumeUrl = '/campaigns/new?resume=1';
                   sessionStorage.setItem('bf_post_login_redirect', resumeUrl);
-                  navigate('/login?redirect=' + encodeURIComponent(resumeUrl));
+                  navigate('/register?redirect=' + encodeURIComponent(resumeUrl));
                   return;
                 }
                 handleSubmit();
