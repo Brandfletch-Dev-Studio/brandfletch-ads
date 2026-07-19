@@ -128,10 +128,9 @@ export default function PublicLayout() {
           <div>
             <p className="text-white font-semibold text-sm mb-3">Departments</p>
             <ul className="space-y-2 text-sm">
-              {[['Brandfletch Ads','/pricing']].map(([l,h])=>(
-                <li key={l}><Link to={h} className="hover:text-white transition-colors">{l}</Link></li>
+              {[['Ads','/pricing'],['Designs','/designs'],['Studios','/studios'],['Sales','/sales'],['Academy','/academy'],['Dev Studio','/dev-studio']].map(([l,h])=>(
+                <li key={l}><Link to={h} className="hover:text-white transition-colors">Brandfletch {l}</Link></li>
               ))}
-              <li className="text-white/40 text-xs pt-1">Brandfletch Sales &amp; Business Academy — coming soon</li>
             </ul>
           </div>
           <div>

@@ -20,6 +20,12 @@ import BlogIndex from '@/pages/public/BlogIndex';
 import BlogPost from '@/pages/public/BlogPost';
 import PrivacyPolicy from '@/pages/PrivacyPolicy';
 import Terms from '@/pages/Terms';
+import DesignsPage from '@/pages/public/DesignsPage';
+import StudiosPage from '@/pages/public/StudiosPage';
+import SalesPage from '@/pages/public/SalesPage';
+import AcademyPage from '@/pages/public/AcademyPage';
+import DevStudioPage from '@/pages/public/DevStudioPage';
+import QuotePage from '@/pages/public/QuotePage';
 
 // ── Auth pages ──
 import Login from '@/pages/Login';
@@ -254,6 +260,12 @@ const AppRoutes = () => (
           <Route path="/blog/:slug"     element={<BlogPost />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/terms"          element={<Terms />} />
+          <Route path="/designs"       element={<DesignsPage />} />
+          <Route path="/studios"       element={<StudiosPage />} />
+          <Route path="/sales"         element={<SalesPage />} />
+          <Route path="/academy"       element={<AcademyPage />} />
+          <Route path="/dev-studio"    element={<DevStudioPage />} />
+          <Route path="/quote/:department" element={<QuotePage />} />
         </Route>
 
         {/* ── Authenticated app pages ────────────────────────────────────────
