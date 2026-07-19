@@ -118,7 +118,6 @@ function MetaAdsPricing({ dbRows, loading, country, onPlanSelect }) {
   const DURATION_OPTS = [
     { key: 'monthly', label: 'Monthly' },
     { key: 'weekly',  label: 'Weekly' },
-    { key: 'daily',   label: 'Daily'  },
   ];
   const [duration, setDuration] = useState('monthly');
 
@@ -251,7 +250,7 @@ export default function PricingPage() {
           <p className="text-muted-foreground max-w-2xl text-sm leading-relaxed">
             Professionally managed Facebook & Instagram campaigns designed to generate qualified leads. Prices shown in your local currency, detected automatically.
           </p>
-          <Badge className="mt-3 text-[10px] bg-muted text-muted-foreground border-border">📅 Monthly, weekly, or daily billing</Badge>
+          <Badge className="mt-3 text-[10px] bg-muted text-muted-foreground border-border">📅 Monthly or weekly billing</Badge>
         </div>
         <MetaAdsPricing
           dbRows={dbRows}
