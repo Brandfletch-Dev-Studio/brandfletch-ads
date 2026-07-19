@@ -113,6 +113,14 @@ export default async function handler(req, res) {
       last_checked_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
+
+    // Build assets object — extensible for Instagram, Pixel, Catalog, etc.
+    if (hasAccess) {
+      updateData.assets = {
+        page: { id: page_id, name: pageName, connected: true },
+        // Future: instagram, pixel, catalog — added without redesigning the flow
+      };
+    }
     if (!hasAccess && !updateData.polling_started_at) {
       updateData.polling_started_at = new Date().toISOString();
     }

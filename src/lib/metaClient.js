@@ -47,4 +47,8 @@ export const metaClient = {
   // Step 5: Create the Meta ad campaign
   createCampaign: (campaign_id, onboarding_id, page_id) =>
     callApi('/api/meta-create-campaign', { body: { campaign_id, onboarding_id, page_id } }),
+
+  // Future: Add additional Meta assets (Instagram, Pixel, Catalog, etc.)
+  // addAsset: (onboarding_id, asset_type, asset_data) =>
+  //   callApi('/api/meta-add-asset', { body: { onboarding_id, asset_type, ...asset_data } }),
 };

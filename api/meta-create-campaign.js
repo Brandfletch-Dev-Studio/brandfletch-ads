@@ -128,7 +128,7 @@ export default async function handler(req, res) {
     await supabase.from('MetaOnboarding').update({
       ad_campaign_id: adCampaignId,
       ad_campaign_status: 'created',
-      step: 'campaign_creation',
+      step: 'live',
       status: 'campaign_created',
       updated_at: new Date().toISOString(),
     }).eq('id', onboarding_id);

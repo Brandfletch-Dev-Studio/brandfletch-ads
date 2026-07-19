@@ -218,6 +218,8 @@ export default function MetaOnboarding() {
               onboardingId={onboardingId}
               campaignId={id}
               pageInfo={pageInfo}
+              businessInfo={businessInfo}
+              campaign={campaign}
               onComplete={handleCampaignComplete}
               onError={handleError}
             />

@@ -4,16 +4,16 @@
  * Calls the backend to create the Meta ad campaign using the Marketing API.
  * Shows progress and transitions to "Live" status on success.
  *
- * Props: { onboardingId, campaignId, pageInfo, onComplete, onError }
+ * Props: { onboardingId, campaignId, pageInfo, businessInfo, campaign, onComplete, onError }
  */
 import { useState, useEffect } from 'react';
-import { Rocket, Loader2, CheckCircle2, AlertCircle, Zap } from 'lucide-react';
+import { Rocket, Loader2, CheckCircle2, AlertCircle, Zap, Facebook } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { metaClient } from '@/lib/metaClient';
 
-export default function CampaignCreationStep({ onboardingId, campaignId, pageInfo, onComplete, onError }) {
+export default function CampaignCreationStep({ onboardingId, campaignId, pageInfo, businessInfo, campaign, onComplete, onError }) {
   const [status, setStatus] = useState('creating'); // creating | success | error
   const [error, setError] = useState(null);
   const [result, setResult] = useState(null);
@@ -44,8 +44,8 @@ export default function CampaignCreationStep({ onboardingId, campaignId, pageInf
           <Rocket className="w-12 h-12 text-[hsl(var(--primary))] animate-bounce" />
         </div>
         <p className="text-lg font-semibold">Creating your ad campaign…</p>
-        <p className="text-sm text-muted-foreground">
-          Setting up your Meta Ads campaign for {pageInfo?.name} on Brandfletch's ad account.
+        <p className="text-sm text-muted-foreground text-center max-w-sm">
+          Setting up your Meta Ads campaign for <strong>{pageInfo?.name}</strong> on Brandfletch's ad account.
         </p>
         <div className="flex items-center gap-2 mt-2">
           <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
@@ -64,7 +64,7 @@ export default function CampaignCreationStep({ onboardingId, campaignId, pageInf
         <p className="text-lg font-semibold">Campaign Created!</p>
         <p className="text-sm text-muted-foreground">Your ads are being prepared to go live.</p>
         {result?.ad_campaign_id && (
-          <code className="text-xs text-muted-foreground mt-2">Campaign ID: {result.ad_campaign_id}</code>
+          <code className="text-xs text-muted-foreground mt-2 font-mono">Campaign ID: {result.ad_campaign_id}</code>
         )}
       </div>
     );
