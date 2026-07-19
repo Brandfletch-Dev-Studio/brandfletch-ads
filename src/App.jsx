@@ -60,6 +60,7 @@ const AdminAds             = lazy(() => import('@/pages/admin/AdminAds'));
 const AdminAuditLog        = lazy(() => import('@/pages/admin/AdminAuditLog'));
 const AdminReferrals       = lazy(() => import('@/pages/admin/AdminReferrals'));
 const AdminBlog            = lazy(() => import('@/pages/admin/AdminBlog'));
+const AdminBlogEditor      = lazy(() => import('@/pages/admin/AdminBlogEditor'));
 const MetaOnboarding     = lazy(() => import('@/pages/campaigns/MetaOnboarding'));
 
 
@@ -303,6 +304,8 @@ const AppRoutes = () => (
           <Route path="/admin/audit-log"       element={<AdminAuditLog />} />
           <Route path="/admin/referrals"       element={<AdminReferrals />} />
           <Route path="/admin/blog"            element={<AdminBlog />} />
+          <Route path="/admin/blog/new"        element={<AdminBlogEditor />} />
+          <Route path="/admin/blog/:id/edit"   element={<AdminBlogEditor />} />
         </Route>
 
         {/* ── 404 — wrapped in PublicLayout so header/footer show ── */}

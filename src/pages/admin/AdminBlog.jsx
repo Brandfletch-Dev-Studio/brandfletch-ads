@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Plus, Edit2, Trash2, Eye, EyeOff, Search, Globe, FileText,
   Loader2, AlertCircle, ExternalLink, BarChart3, TrendingUp,
@@ -8,13 +9,10 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import RichTextEditor from '@/components/RichTextEditor';
 import { Badge } from '@/components/ui/badge';
 import { supabase, base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
 import { useAuth } from '@/lib/AuthContext';
-import { isStaffRole, ROLE_LABELS } from '@/lib/permissions';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
@@ -27,19 +25,10 @@ import {
 } from 'recharts';
 
 const CATEGORIES = ['Strategy','Tips','Case Study','News','Product Update','Guide'];
-const EMPTY_POST = {
-  title: '', slug: '', excerpt: '', content: '', content_html: '',
-  category: '', emoji: '📣', status: 'draft',
-  author_id: '', author_name: '', cover_image: '',
-  meta_title: '', meta_description: '', tags: [],
-};
 
 // Strip HTML tags for content validation
 const stripHtml = (html = '') => html.replace(/<[^>]+>/g, '').trim();
 
-function slugify(str) {
-  return str.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-}
 
 // ── Stat card ─────────────────────────────────────────────────────────────────
 function StatCard({ label, value, icon: Icon, color, sub, trend }) {
@@ -256,37 +245,20 @@ function AnalyticsTab({ posts }) {
 // ── Main component ────────────────────────────────────────────────────────────
 export default function AdminBlog() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [editing, setEditing] = useState(null);
-  const [saving, setSaving] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [deleting, setDeleting] = useState(false);
-  const [uploadingCover, setUploadingCover] = useState(false);
-  const [tagInput, setTagInput] = useState('');
-  const [staffUsers, setStaffUsers] = useState([]);
 
   useEffect(() => {
     fetchPosts();
-    fetchStaff();
   }, []);
 
-  // Fetch staff users for the author selector dropdown
-  const fetchStaff = async () => {
-    try {
-      const result = await base44.functions.getAllUsers({});
-      const all = result?.users || [];
-      // Only staff roles can be attributed as authors (not clients)
-      const staff = all.filter(u => isStaffRole(u.role));
-      setStaffUsers(staff);
-    } catch (err) {
-      console.error('AdminBlog fetchStaff:', err);
-      // Non-blocking — author dropdown will just show the current user
-    }
-  };
+
 
   const fetchPosts = async () => {
     setLoading(true);
@@ -307,96 +279,6 @@ export default function AdminBlog() {
     }
   };
 
-  const uploadCoverImage = async (file) => {
-    if (!file.type.startsWith('image/')) { toast.error('Please select an image file'); return; }
-    if (file.size > 10 * 1024 * 1024) { toast.error('Image must be under 10MB'); return; }
-    setUploadingCover(true);
-    try {
-      const ext = file.name.split('.').pop();
-      const path = `blog/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-      const { error: err } = await supabase.storage.from('designs').upload(path, file, { upsert: true });
-      if (err) throw err;
-      const { data: { publicUrl } } = supabase.storage.from('designs').getPublicUrl(path);
-      setEditing(p => ({ ...p, cover_image: publicUrl }));
-      toast.success('Thumbnail uploaded ✓');
-    } catch (err) {
-      toast.error('Upload failed: ' + err.message);
-    } finally {
-      setUploadingCover(false);
-    }
-  };
-
-  const addTag = () => {
-    const t = tagInput.trim().toLowerCase().replace(/[^a-z0-9\- ]/g, '');
-    if (!t) return;
-    setEditing(p => ({ ...p, tags: [...new Set([...(p.tags || []), t])] }));
-    setTagInput('');
-  };
-  const removeTag = (t) => setEditing(p => ({ ...p, tags: (p.tags || []).filter(x => x !== t) }));
-
-  const openNew  = () => setEditing({
-    ...EMPTY_POST,
-    author_id:   user?.id || '',
-    author_name: user?.full_name || user?.email || 'Brandfletch Team',
-  });
-  const openEdit = (p) => setEditing({ ...p });
-
-  const handleSave = async () => {
-    if (!editing.title?.trim()) { toast.error('Title is required'); return; }
-    if (!editing.slug?.trim())  { toast.error('Slug is required'); return; }
-
-    // Validate content — strip HTML and check for actual text
-    const contentText = stripHtml(editing.content || '');
-    if (!contentText) { toast.error('Content cannot be empty'); return; }
-
-    setSaving(true);
-    try {
-      const now = new Date().toISOString();
-      const payload = {
-        title:        editing.title.trim(),
-        slug:         editing.slug.trim(),
-        excerpt:      editing.excerpt?.trim() || '',
-        content:      editing.content,
-        content_html: editing.content,       // keep in sync
-        category:     editing.category || null,
-        emoji:        editing.emoji || '📣',
-        status:       editing.status,
-        author_id:    editing.author_id || null,
-        author_name:  editing.author_name?.trim() || 'Brandfletch Team',
-        cover_image:  editing.cover_image?.trim() || null,
-        meta_title:       editing.meta_title?.trim() || null,
-        meta_description: editing.meta_description?.trim() || null,
-        tags:             editing.tags?.length ? editing.tags : [],
-        updated_date: now,
-        published_at:
-          editing.status === 'published' && !editing.published_at ? now : editing.published_at || null,
-      };
-
-      if (editing.id) {
-        const { error: err } = await supabase.from('BlogPost').update(payload).eq('id', editing.id);
-        if (err) throw err;
-        toast.success('Post updated ✓');
-      } else {
-        const { error: err } = await supabase.from('BlogPost').insert({ ...payload, created_date: now });
-        if (err) throw err;
-        toast.success('Post created ✓');
-      }
-
-      setEditing(null);
-      fetchPosts();
-    } catch (err) {
-      console.error('AdminBlog handleSave:', err);
-      if (err.code === '23505') {
-        toast.error('Slug already exists — use a different slug');
-      } else if (err.code === '42501' || err.message?.includes('row-level security')) {
-        toast.error('Permission denied — you must be logged in as an admin to create posts');
-      } else {
-        toast.error(err.message || 'Save failed — check console for details');
-      }
-    } finally {
-      setSaving(false);
-    }
-  };
 
   const handleDelete = async () => {
     if (!deleteConfirm) return;
@@ -461,7 +343,7 @@ export default function AdminBlog() {
               <ExternalLink className="w-3.5 h-3.5" /> View blog
             </a>
           </Button>
-          <Button onClick={openNew} size="sm" className="flex-1 sm:flex-none">
+          <Button onClick={() => navigate('/admin/blog/new')} size="sm" className="flex-1 sm:flex-none">
             <Plus className="w-4 h-4 mr-1.5" /> New Post
           </Button>
         </div>
@@ -592,7 +474,7 @@ export default function AdminBlog() {
                       )}
                     </div>
                     <div className="flex items-center gap-1">
-                      <Button size="icon" variant="ghost" className="w-7 h-7" onClick={() => openEdit(p)}>
+                      <Button size="icon" variant="ghost" className="w-7 h-7" onClick={() => navigate(`/admin/blog/${p.id}/edit`)}>
                         <Edit2 className="w-3.5 h-3.5 text-muted-foreground" />
                       </Button>
                       <Button size="icon" variant="ghost" className="w-7 h-7" onClick={() => setDeleteConfirm(p)}>
@@ -617,238 +499,6 @@ export default function AdminBlog() {
           )}
         </TabsContent>
       </Tabs>
-
-      {/* ── Create / Edit dialog ── */}
-      {editing !== null && (
-        <Dialog open onOpenChange={() => !saving && setEditing(null)}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-4 sm:p-6 w-[calc(100%-2rem)] sm:w-full">
-            <DialogHeader>
-              <DialogTitle>{editing.id ? 'Edit Post' : 'New Blog Post'}</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 py-2">
-
-              <div className="grid grid-cols-4 gap-3">
-                <div className="col-span-3">
-                  <Label>Title <span className="text-destructive">*</span></Label>
-                  <Input
-                    value={editing.title}
-                    onChange={e => setEditing(p => ({
-                      ...p,
-                      title: e.target.value,
-                      slug: p.id ? p.slug : slugify(e.target.value),
-                    }))}
-                    placeholder="Post title"
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label>Emoji</Label>
-                  <Input value={editing.emoji} onChange={e => setEditing(p => ({...p, emoji: e.target.value}))} className="mt-1 text-center text-xl" maxLength={4} />
-                </div>
-              </div>
-
-              <div>
-                <Label>Slug <span className="text-destructive">*</span> <span className="text-xs text-muted-foreground font-normal">— URL: /blog/<strong>{editing.slug || 'your-slug'}</strong></span></Label>
-                <Input value={editing.slug} onChange={e => setEditing(p => ({...p, slug: slugify(e.target.value)}))} placeholder="url-friendly-slug" className="mt-1 font-mono text-sm" />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <Label>Category</Label>
-                  <Select value={editing.category || ''} onValueChange={v => setEditing(p => ({...p, category: v}))}>
-                    <SelectTrigger className="mt-1"><SelectValue placeholder="Pick a category" /></SelectTrigger>
-                    <SelectContent>
-                      {CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label>Status</Label>
-                  <Select value={editing.status} onValueChange={v => setEditing(p => ({...p, status: v}))}>
-                    <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="draft">Draft</SelectItem>
-                      <SelectItem value="published">Published</SelectItem>
-                      <SelectItem value="archived">Archived</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div>
-                <Label>Excerpt <span className="text-xs text-muted-foreground font-normal">(shown in post cards)</span></Label>
-                <Textarea value={editing.excerpt || ''} onChange={e => setEditing(p => ({...p, excerpt: e.target.value}))} placeholder="Brief description…" rows={2} className="mt-1" />
-              </div>
-
-              <div>
-                <Label>Cover / Thumbnail Image <span className="text-xs text-muted-foreground font-normal">(used on blog cards, post header, and social share previews)</span></Label>
-                <div className="mt-1 flex flex-col sm:flex-row gap-3 items-start">
-                  <label className={`shrink-0 w-full sm:w-28 h-20 rounded-lg border-2 border-dashed border-border hover:border-primary/50 flex items-center justify-center cursor-pointer overflow-hidden bg-muted/30 transition-colors ${uploadingCover ? 'opacity-60 pointer-events-none' : ''}`}>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={e => e.target.files?.[0] && uploadCoverImage(e.target.files[0])}
-                    />
-                    {uploadingCover ? (
-                      <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
-                    ) : editing.cover_image ? (
-                      <img src={editing.cover_image} alt="Cover preview" className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="flex flex-col items-center gap-1 text-muted-foreground">
-                        <Upload className="w-4 h-4" />
-                        <span className="text-[10px]">Upload</span>
-                      </div>
-                    )}
-                  </label>
-                  <div className="flex-1 space-y-1.5">
-                    <Input
-                      value={editing.cover_image || ''}
-                      onChange={e => setEditing(p => ({...p, cover_image: e.target.value}))}
-                      placeholder="Or paste an image URL…"
-                      className="text-xs font-mono"
-                    />
-                    <p className="text-[11px] text-muted-foreground">Recommended: 1200×630px landscape image, under 10MB.</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <Label>Author <span className="text-xs text-muted-foreground font-normal">— staff member</span></Label>
-                  <Select
-                    value={editing.author_id || 'custom'}
-                    onValueChange={v => {
-                      if (v === 'custom') {
-                        setEditing(p => ({...p, author_id: ''}));
-                      } else {
-                        const staff = staffUsers.find(u => u.id === v);
-                        setEditing(p => ({
-                          ...p,
-                          author_id: v,
-                          author_name: staff?.full_name || staff?.email || 'Brandfletch Team',
-                        }));
-                      }
-                    }}
-                  >
-                    <SelectTrigger className="mt-1"><SelectValue placeholder="Select staff member" /></SelectTrigger>
-                    <SelectContent>
-                      {staffUsers.map(u => (
-                        <SelectItem key={u.id} value={u.id}>
-                          {u.full_name || u.email} {u.role ? `· ${ROLE_LABELS[u.role] || u.role}` : ''}
-                        </SelectItem>
-                      ))}
-                      <SelectItem value="custom">Other (type manually)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {(!editing.author_id) && (
-                    <Input
-                      value={editing.author_name || ''}
-                      onChange={e => setEditing(p => ({...p, author_name: e.target.value}))}
-                      placeholder="Author display name"
-                      className="mt-2 text-sm"
-                    />
-                  )}
-                </div>
-                <div>
-                  <Label>Tags <span className="text-xs text-muted-foreground font-normal">(optional)</span></Label>
-                  <div className="mt-1 flex gap-1.5">
-                    <Input
-                      value={tagInput}
-                      onChange={e => setTagInput(e.target.value)}
-                      onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addTag(); } }}
-                      placeholder="e.g. facebook-ads"
-                      className="text-sm"
-                    />
-                    <Button type="button" variant="outline" size="icon" onClick={addTag} className="shrink-0"><Hash className="w-4 h-4" /></Button>
-                  </div>
-                  {(editing.tags || []).length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 mt-2">
-                      {(editing.tags || []).map(t => (
-                        <Badge key={t} variant="secondary" className="gap-1 text-xs">
-                          {t}
-                          <button type="button" onClick={() => removeTag(t)} className="hover:text-destructive"><XIcon className="w-3 h-3" /></button>
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div>
-                <Label>Content <span className="text-destructive">*</span></Label>
-                <div className="mt-1">
-                  <RichTextEditor
-                    value={editing.content || ''}
-                    onChange={v => setEditing(p => ({...p, content: v, content_html: v}))}
-                    placeholder="Write your blog post here…"
-                  />
-                </div>
-              </div>
-
-              {/* ── SEO section ── */}
-              <div className="border border-border rounded-lg p-4 space-y-3 bg-muted/20">
-                <div className="flex items-center gap-2">
-                  <SearchIcon className="w-4 h-4 text-muted-foreground" />
-                  <h4 className="text-sm font-semibold">Search & Social Preview (SEO)</h4>
-                </div>
-                <p className="text-xs text-muted-foreground -mt-2">Leave blank to auto-use the title and excerpt above.</p>
-
-                <div>
-                  <div className="flex items-center justify-between">
-                    <Label className="text-xs">Meta Title</Label>
-                    <span className={`text-[10px] ${(editing.meta_title || '').length > 60 ? 'text-destructive' : 'text-muted-foreground'}`}>
-                      {(editing.meta_title || '').length}/60
-                    </span>
-                  </div>
-                  <Input
-                    value={editing.meta_title || ''}
-                    onChange={e => setEditing(p => ({...p, meta_title: e.target.value}))}
-                    placeholder={editing.title || 'Post title'}
-                    className="mt-1 text-sm"
-                  />
-                </div>
-
-                <div>
-                  <div className="flex items-center justify-between">
-                    <Label className="text-xs">Meta Description</Label>
-                    <span className={`text-[10px] ${(editing.meta_description || '').length > 160 ? 'text-destructive' : 'text-muted-foreground'}`}>
-                      {(editing.meta_description || '').length}/160
-                    </span>
-                  </div>
-                  <Textarea
-                    value={editing.meta_description || ''}
-                    onChange={e => setEditing(p => ({...p, meta_description: e.target.value}))}
-                    placeholder={editing.excerpt || 'Brief description for Google & social shares…'}
-                    rows={2}
-                    className="mt-1 text-sm"
-                  />
-                </div>
-
-                {/* Live preview */}
-                <div className="border border-border rounded-md p-3 bg-card">
-                  <p className="text-[10px] text-muted-foreground mb-1">Google preview</p>
-                  <p className="text-primary text-sm truncate">{editing.meta_title || editing.title || 'Post title'} — Brandfletch Blog</p>
-                  <p className="text-emerald-600 dark:text-emerald-400 text-xs">brandfletch.com/blog/{editing.slug || 'your-slug'}</p>
-                  <p className="text-muted-foreground text-xs line-clamp-2 mt-0.5">
-                    {editing.meta_description || editing.excerpt || 'Read this article on the Brandfletch Media blog.'}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <DialogFooter className="gap-2 pt-2">
-              <Button variant="outline" onClick={() => setEditing(null)} disabled={saving}>Cancel</Button>
-              <Button onClick={handleSave} disabled={saving}>
-                {saving
-                  ? <><Loader2 className="w-4 h-4 animate-spin mr-2" />Saving…</>
-                  : editing.id ? 'Save Changes' : 'Create Post'
-                }
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
 
       {/* ── Delete confirm ── */}
       {deleteConfirm && (
