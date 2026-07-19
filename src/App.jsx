@@ -38,7 +38,6 @@ import { STAFF_ROLES, DEPARTMENTS, getDepartmentForRole, isOperationsRole, isDep
 
 // ── App pages (lazy) ──
 const Dashboard            = lazy(() => import('@/pages/Dashboard'));
-const FacebookPages        = lazy(() => import('@/pages/FacebookPages'));
 const CampaignsList        = lazy(() => import('@/pages/campaigns/CampaignsList'));
 const CampaignWizard       = lazy(() => import('@/pages/campaigns/CampaignWizard'));
 const CampaignDetail       = lazy(() => import('@/pages/campaigns/CampaignDetail'));
@@ -280,7 +279,6 @@ const AppRoutes = () => (
 
         <Route element={<AuthGuard><AppLayout /></AuthGuard>}>
           <Route path="/dashboard"             element={<Dashboard />} />
-          <Route path="/pages"                 element={<FacebookPages />} />
           <Route path="/campaigns"             element={<CampaignsList />} />
           <Route path="/campaigns/:id"         element={<CampaignDetail />} />
           <Route path="/campaigns/:id/payment" element={<CampaignPayment />} />

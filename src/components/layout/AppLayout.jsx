@@ -28,7 +28,6 @@ const clientNav = [
 const adsManagerNav = [
   { path: '/ads-manager',          label: 'My Dashboard',      icon: LayoutDashboard },
   { path: '/admin/campaigns',      label: 'All Campaigns',     icon: Megaphone },
-  { path: '/admin/pages',          label: 'Page Requests',     icon: Facebook },
   { path: '/admin/users',          label: 'Clients',           icon: Users },
   { path: '/admin/payments',       label: 'Payments',          icon: WalletIcon },
   { path: '/admin/reports',        label: 'Reports',            icon: BarChart3 },
@@ -39,7 +38,6 @@ const adsManagerNav = [
 const ALL_ADMIN_NAV = [
   { key: 'overview',      path: '/admin',                label: 'Overview',          icon: LayoutDashboard, permission: null },
   { key: 'campaigns',     path: '/admin/campaigns',      label: 'All Campaigns',     icon: Megaphone,       permission: 'campaigns.view' },
-  { key: 'pages',         path: '/admin/pages',          label: 'Page Requests',     icon: Facebook,        permission: 'pages.view' },
   { key: 'users',         path: '/admin/users',          label: 'Team & Users',      icon: Users,           permission: 'users.view' },
   { key: 'payments',      path: '/admin/payments',       label: 'Payments',          icon: WalletIcon,      permission: 'payments.view' },
   { key: 'notifications', path: '/admin/notifications',  label: 'Notifications',     icon: Bell,            permission: 'notifications.view' },

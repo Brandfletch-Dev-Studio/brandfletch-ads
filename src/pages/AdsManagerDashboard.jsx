@@ -515,7 +515,6 @@ export default function AdsManagerDashboard() {
                 <CardContent className="space-y-2">
                   {[
                     { label: 'All Campaigns',      path: '/admin/campaigns',  icon: Megaphone },
-                    { label: 'Page Requests',      path: '/admin/pages',      icon: Globe },
                     { label: 'Payments',           path: '/admin/payments',   icon: DollarSign },
                     { label: 'Reports',            path: '/admin/reports',    icon: BarChart3 },
                     { label: 'Team & Users',       path: '/admin/users',      icon: Users },
