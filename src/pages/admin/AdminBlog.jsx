@@ -132,17 +132,19 @@ function AnalyticsTab({ posts }) {
                 const maxViews = topByViews[0]?.view_count || 1;
                 const pct = Math.round(((p.view_count || 0) / maxViews) * 100);
                 return (
-                  <div key={p.id} className="flex items-center gap-3">
-                    <span className="text-xs font-bold text-muted-foreground w-4 shrink-0">{i + 1}</span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{p.title}</p>
-                      <div className="mt-1 h-1.5 rounded-full bg-muted overflow-hidden">
-                        <div className="h-full bg-primary rounded-full" style={{ width: `${pct}%` }} />
+                  <div key={p.id} className="space-y-1">
+                    <div className="flex items-start gap-2 min-w-0">
+                      <span className="text-xs font-bold text-muted-foreground w-4 shrink-0 mt-0.5">{i + 1}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium leading-snug line-clamp-2">{p.title}</p>
+                      </div>
+                      <div className="text-right shrink-0 ml-1">
+                        <p className="text-sm font-semibold">{(p.view_count || 0).toLocaleString()}</p>
+                        <p className="text-[10px] text-muted-foreground">{p.read_count || 0} reads</p>
                       </div>
                     </div>
-                    <div className="text-right shrink-0">
-                      <p className="text-sm font-semibold">{(p.view_count || 0).toLocaleString()}</p>
-                      <p className="text-[10px] text-muted-foreground">{p.read_count || 0} reads</p>
+                    <div className="ml-6 h-1.5 rounded-full bg-muted overflow-hidden">
+                      <div className="h-full bg-primary rounded-full" style={{ width: `${pct}%` }} />
                     </div>
                   </div>
                 );

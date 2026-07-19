@@ -169,11 +169,12 @@ export default function AdminBlogEditor() {
         </Button>
 
         <div className="flex-1 min-w-0">
-          <h1 className="font-semibold text-sm truncate text-foreground">
-            {isNew ? 'New Blog Post' : `Editing: ${post.title || 'Untitled'}`}
+          <h1 className="font-semibold text-sm truncate text-foreground leading-tight">
+            <span className="sm:hidden">{isNew ? 'New Post' : 'Edit Post'}</span>
+            <span className="hidden sm:block">{isNew ? 'New Blog Post' : `Editing: ${post.title || 'Untitled'}`}</span>
           </h1>
-          <p className="text-[11px] text-muted-foreground hidden sm:block">
-            {isNew ? 'Fill in the details below and save or publish' : `/blog/${post.slug || '—'}`}
+          <p className="text-[10px] text-muted-foreground hidden sm:block">
+            {isNew ? 'Fill in the details below' : `/blog/${post.slug || '—'}`}
           </p>
         </div>
 
@@ -372,39 +373,52 @@ export default function AdminBlogEditor() {
 
             <div>
               <Label>Author</Label>
-              <Select
-                value={post.author_id || 'custom'}
-                onValueChange={v => {
-                  if (v === 'custom') {
-                    update('author_id', '');
-                  } else {
-                    const staff = staffUsers.find(u => u.id === v);
-                    setPost(p => ({
-                      ...p,
-                      author_id: v,
-                      author_name: staff?.full_name || staff?.email || 'Brandfletch Team',
-                    }));
-                  }
-                }}
-              >
-                <SelectTrigger className="mt-1"><SelectValue placeholder="Select staff member" /></SelectTrigger>
-                <SelectContent>
-                  {staffUsers.map(u => (
-                    <SelectItem key={u.id} value={u.id}>
-                      {u.full_name || u.email}
-                    </SelectItem>
-                  ))}
-                  <SelectItem value="custom">Other (type manually)</SelectItem>
-                </SelectContent>
-              </Select>
-              {!post.author_id && (
-                <Input
-                  value={post.author_name || ''}
-                  onChange={e => update('author_name', e.target.value)}
-                  placeholder="Author display name"
-                  className="mt-2 text-sm"
-                />
-              )}
+              {/* If author_id is set but not in staff list (e.g. list still loading or external),
+                   treat as 'custom' so the name input shows */}
+              {(() => {
+                const inStaffList = staffUsers.some(u => u.id === post.author_id);
+                const selectVal   = (post.author_id && inStaffList) ? post.author_id : 'custom';
+                return (
+                  <>
+                    <Select
+                      value={selectVal}
+                      onValueChange={v => {
+                        if (v === 'custom') {
+                          update('author_id', '');
+                        } else {
+                          const staff = staffUsers.find(u => u.id === v);
+                          setPost(p => ({
+                            ...p,
+                            author_id: v,
+                            author_name: staff?.full_name || staff?.email || 'Brandfletch Team',
+                          }));
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="mt-1">
+                        <SelectValue placeholder="Select staff member" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {staffUsers.map(u => (
+                          <SelectItem key={u.id} value={u.id}>
+                            {u.full_name || u.email}
+                          </SelectItem>
+                        ))}
+                        <SelectItem value="custom">Other (type manually)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {/* Always show name input when 'custom' is selected or staff list empty */}
+                    {(selectVal === 'custom') && (
+                      <Input
+                        value={post.author_name || ''}
+                        onChange={e => update('author_name', e.target.value)}
+                        placeholder="Author display name"
+                        className="mt-2 text-sm"
+                      />
+                    )}
+                  </>
+                );
+              })()}
             </div>
           </div>
 
