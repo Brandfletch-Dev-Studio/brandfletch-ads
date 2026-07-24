@@ -111,29 +111,29 @@ function ComparisonTable({ dbPricing, country }) {
   const symbol = firstRow?.symbol || local?.symbol || 'MK';
 
   const rows = [
-    { label: 'Ad Budget', getVal: p => `$${AD_SPEND[p]}/day`, highlight: true },
-    { label: 'Monthly Price', getVal: p => {
+    { label: 'Daily Ad Budget', getVal: p => `$${AD_SPEND[p]}/day`, highlight: true },
+    { label: 'Daily Price', getVal: p => {
       const pkgRow = dbPricing.find(r => r.country === country && r.package === p);
-      const price = pkgRow?.monthly ?? local?.[p]?.monthly ?? 0;
+      const price = pkgRow?.daily ?? local?.[p]?.daily ?? 0;
       return price ? `${symbol}${Number(price).toLocaleString()}` : '—';
     }, highlight: true },
     { label: 'Weekly Price', getVal: p => {
       const pkgRow = dbPricing.find(r => r.country === country && r.package === p);
       const price = pkgRow?.weekly ?? local?.[p]?.weekly ?? 0;
       return price ? `${symbol}${Number(price).toLocaleString()}` : '—';
-    }},
-    { label: 'Daily Price', getVal: p => {
+    }, highlight: true },
+    { label: 'Monthly Price', getVal: p => {
       const pkgRow = dbPricing.find(r => r.country === country && r.package === p);
-      const price = pkgRow?.daily ?? local?.[p]?.daily ?? 0;
+      const price = pkgRow?.monthly ?? local?.[p]?.monthly ?? 0;
       return price ? `${symbol}${Number(price).toLocaleString()}` : '—';
-    }},
-    { label: 'Est. Monthly Reach', getVal: p => {
+    }, highlight: true },
+    { label: 'Est. Reach / Day', getVal: p => {
       const pkgRow = dbPricing.find(r => r.country === country && r.package === p);
       const low = pkgRow?.reach_low;
       const high = pkgRow?.reach_high;
       if (low && high) return `${Number(low).toLocaleString()} – ${Number(high).toLocaleString()}`;
       return ESTIMATED_REACH[p];
-    }, highlight: true },
+    }},
     { label: 'Facebook & Instagram Ads', getVal: () => '✓' },
     { label: 'Campaign Setup & Optimization', getVal: () => '✓' },
     { label: 'Monthly Performance Report', getVal: () => '✓' },
