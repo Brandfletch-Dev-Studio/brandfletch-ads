@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Save, Loader2, Package, Plus, Trash2 } from 'lucide-react';
+import { Save, Loader2, Package, Trash2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,173 +7,201 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import { base44 } from '@/api/base44Client';
 
+// DB schema: one row per (country × package) with columns:
+//   package, country, currency, symbol, daily, weekly, monthly,
+//   reach_low, reach_high, creatives, videos, description
+
 const COUNTRIES = ['Malawi', 'Zambia', 'South Africa', 'Kenya', 'Tanzania'];
 const CURRENCY_MAP = {
-  Malawi: { code: 'MWK', symbol: 'MK' },
-  Zambia: { code: 'ZMW', symbol: 'ZK' },
+  Malawi:         { code: 'MWK', symbol: 'MK' },
+  Zambia:         { code: 'ZMW', symbol: 'ZK' },
   'South Africa': { code: 'ZAR', symbol: 'R' },
-  Kenya: { code: 'KES', symbol: 'KSh' },
-  Tanzania: { code: 'TZS', symbol: 'TSh' },
+  Kenya:          { code: 'KES', symbol: 'KSh' },
+  Tanzania:       { code: 'TZS', symbol: 'TSh' },
 };
-const PACKAGES = ['starter', 'growth', 'premium'];
-const PKG_LABELS = { starter: 'Starter', growth: 'Growth', premium: 'Premium' };
-const AD_SPEND = { starter: 1, growth: 3, premium: 5 };
+const PACKAGES = [
+  { key: 'starter',  label: 'Starter',  daily_usd: 1 },
+  { key: 'growth',   label: 'Growth',   daily_usd: 3 },
+  { key: 'premium',  label: 'Premium',  daily_usd: 5 },
+];
 
-function PackageEditor({ pkg, data, onChange }) {
-  const prefix = pkg;
-  function update(field, value) {
-    onChange(`${prefix}_${field}`, value);
+const EMPTY_PKG = { daily: '', weekly: '', monthly: '', reach_low: '', reach_high: '', creatives: '', videos: '', description: '' };
+
+function PackageCard({ pkg, data, onChange, saving, onSave, onDelete }) {
+  const sym = data.symbol || CURRENCY_MAP[data.country]?.symbol || '';
+
+  function field(name, label, placeholder) {
+    return (
+      <div>
+        <label className="text-xs text-muted-foreground block mb-1">{label}</label>
+        <Input
+          type="number"
+          value={data[name] ?? ''}
+          onChange={e => onChange(name, e.target.value === '' ? '' : Number(e.target.value))}
+          placeholder={placeholder}
+          className="h-8 text-sm"
+        />
+      </div>
+    );
   }
 
   return (
     <div className="border border-border rounded-xl p-4 space-y-3">
-      <div className="flex items-center justify-between mb-2">
+      <div className="flex items-center justify-between mb-1">
         <h4 className="font-semibold text-sm flex items-center gap-2">
-          <span className="w-8 h-8 rounded-lg bg-[hsl(var(--accent))]/10 flex items-center justify-center text-xs font-bold text-[hsl(var(--accent))]">
-            ${AD_SPEND[pkg]}
+          <span className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">
+            ${pkg.daily_usd}
           </span>
-          {PKG_LABELS[pkg]} Package
+          {pkg.label}
         </h4>
-        <span className="text-xs text-muted-foreground">${AD_SPEND[pkg]}/day ad spend</span>
+        <span className="text-xs text-muted-foreground">${pkg.daily_usd}/day ad spend</span>
       </div>
+
       <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className="text-xs text-muted-foreground block mb-1">Monthly Price</label>
-          <Input
-            type="number"
-            value={data[`${prefix}_monthly`] ?? ''}
-            onChange={e => update('monthly', e.target.value ? Number(e.target.value) : '')}
-            placeholder="e.g. 299000"
-            className="h-8 text-sm"
-          />
-        </div>
-        <div>
-          <label className="text-xs text-muted-foreground block mb-1">Weekly Price</label>
-          <Input
-            type="number"
-            value={data[`${prefix}_weekly`] ?? ''}
-            onChange={e => update('weekly', e.target.value ? Number(e.target.value) : '')}
-            placeholder="e.g. 75000"
-            className="h-8 text-sm"
-          />
-        </div>
-        <div>
-          <label className="text-xs text-muted-foreground block mb-1">Reach Low</label>
-          <Input
-            type="number"
-            value={data[`${prefix}_reach_low`] ?? ''}
-            onChange={e => update('reach_low', e.target.value ? Number(e.target.value) : '')}
-            placeholder="e.g. 60000"
-            className="h-8 text-sm"
-          />
-        </div>
-        <div>
-          <label className="text-xs text-muted-foreground block mb-1">Reach High</label>
-          <Input
-            type="number"
-            value={data[`${prefix}_reach_high`] ?? ''}
-            onChange={e => update('reach_high', e.target.value ? Number(e.target.value) : '')}
-            placeholder="e.g. 150000"
-            className="h-8 text-sm"
-          />
-        </div>
-        <div>
-          <label className="text-xs text-muted-foreground block mb-1">Creatives</label>
-          <Input
-            type="number"
-            value={data[`${prefix}_creatives`] ?? ''}
-            onChange={e => update('creatives', e.target.value ? Number(e.target.value) : '')}
-            placeholder="e.g. 4"
-            className="h-8 text-sm"
-          />
-        </div>
-        <div>
-          <label className="text-xs text-muted-foreground block mb-1">Videos</label>
-          <Input
-            type="number"
-            value={data[`${prefix}_videos`] ?? ''}
-            onChange={e => update('videos', e.target.value ? Number(e.target.value) : '')}
-            placeholder="e.g. 1"
-            className="h-8 text-sm"
-          />
-        </div>
+        {field('daily',      `Daily (${sym})`,   'e.g. 6000')}
+        {field('weekly',     `Weekly (${sym})`,  'e.g. 42000')}
+        {field('monthly',    `Monthly (${sym})`, 'e.g. 160000')}
+        {field('reach_low',  'Reach Low/day',    'e.g. 2000')}
+        {field('reach_high', 'Reach High/day',   'e.g. 5000')}
+        {field('creatives',  'Creatives',        'e.g. 2')}
+        {field('videos',     'Videos',           'e.g. 1')}
+      </div>
+
+      <div>
+        <label className="text-xs text-muted-foreground block mb-1">Description</label>
+        <Input
+          value={data.description ?? ''}
+          onChange={e => onChange('description', e.target.value)}
+          placeholder="Short description shown to clients"
+          className="h-8 text-sm"
+        />
+      </div>
+
+      <div className="flex items-center justify-between pt-1">
+        <Button
+          size="sm"
+          onClick={onSave}
+          disabled={saving}
+          className="gap-1 h-8 bg-primary text-primary-foreground"
+        >
+          {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
+          Save {pkg.label}
+        </Button>
+        {data.id && (
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={onDelete}
+            className="gap-1 h-8 text-destructive hover:bg-destructive/10"
+          >
+            <Trash2 className="w-3 h-3" /> Delete
+          </Button>
+        )}
       </div>
     </div>
   );
 }
 
 export default function PackagePricingTab() {
-  const [rows, setRows] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const [allRows, setAllRows]     = useState([]);
+  const [loading, setLoading]     = useState(true);
+  const [savingPkg, setSavingPkg] = useState({});
   const [selectedCountry, setSelectedCountry] = useState('Malawi');
-  const [editData, setEditData] = useState({});
+  const [edits, setEdits] = useState({
+    starter: { ...EMPTY_PKG },
+    growth:  { ...EMPTY_PKG },
+    premium: { ...EMPTY_PKG },
+  });
 
-  async function loadPricing() {
+  async function loadAll() {
     setLoading(true);
     try {
       const list = await base44.entities.PackagePricing.list({});
-      setRows(list || []);
-      const row = list?.find(r => r.country === selectedCountry);
-      if (row) setEditData({ ...row });
+      setAllRows(list || []);
     } catch (err) {
-      console.error('Failed to load pricing', err);
+      console.error('Failed to load PackagePricing', err);
+      toast.error('Failed to load pricing data');
     }
     setLoading(false);
   }
 
-  useEffect(() => { loadPricing(); }, []);
+  useEffect(() => { loadAll(); }, []);
 
   useEffect(() => {
-    const row = rows.find(r => r.country === selectedCountry);
-    if (row) setEditData({ ...row });
-  }, [selectedCountry, rows]);
-
-  function handleFieldChange(field, value) {
-    setEditData(prev => ({ ...prev, [field]: value }));
-  }
-
-  async function handleSave() {
-    setSaving(true);
-    try {
-      const currency = CURRENCY_MAP[selectedCountry];
-      const payload = {
-        ...editData,
-        country: selectedCountry,
-        currency: currency.code,
-        symbol: currency.symbol,
-        package: 'all',
-      };
-
-      if (editData.id) {
-        await base44.entities.PackagePricing.update(editData.id, payload);
-      } else {
-        await base44.entities.PackagePricing.create(payload);
-      }
-      toast.success('Package pricing saved');
-      await loadPricing();
-    } catch (err) {
-      console.error('Save failed', err);
-      toast.error('Failed to save pricing');
+    const next = {};
+    for (const pkg of PACKAGES) {
+      const row = allRows.find(r => r.country === selectedCountry && r.package === pkg.key);
+      next[pkg.key] = row ? { ...row } : { ...EMPTY_PKG, country: selectedCountry, package: pkg.key };
     }
-    setSaving(false);
+    setEdits(next);
+  }, [selectedCountry, allRows]);
+
+  function handleChange(pkg, field, value) {
+    setEdits(prev => ({ ...prev, [pkg]: { ...prev[pkg], [field]: value } }));
   }
 
-  async function handleDelete(id) {
-    if (!confirm('Delete pricing for this country?')) return;
+  async function handleSave(pkgKey) {
+    setSavingPkg(s => ({ ...s, [pkgKey]: true }));
     try {
-      await base44.entities.PackagePricing.delete(id);
-      toast.success('Pricing deleted');
-      await loadPricing();
+      const cur = CURRENCY_MAP[selectedCountry] || { code: 'USD', symbol: '$' };
+      const payload = {
+        ...edits[pkgKey],
+        country:  selectedCountry,
+        currency: cur.code,
+        symbol:   cur.symbol,
+        package:  pkgKey,
+      };
+      // Null out empty numeric fields
+      ['daily','weekly','monthly','reach_low','reach_high','creatives','videos'].forEach(f => {
+        if (payload[f] === '' || payload[f] === undefined) payload[f] = null;
+      });
+      // Remove system fields from payload
+      delete payload.created_date;
+      delete payload.updated_date;
+      delete payload.created_by;
+
+      let saved;
+      if (payload.id) {
+        const { id, ...rest } = payload;
+        saved = await base44.entities.PackagePricing.update(id, rest);
+      } else {
+        const { id, ...rest } = payload;
+        saved = await base44.entities.PackagePricing.create(rest);
+      }
+      setAllRows(prev => {
+        const filtered = prev.filter(r => !(r.country === selectedCountry && r.package === pkgKey));
+        return [...filtered, saved];
+      });
+      const label = pkgKey.charAt(0).toUpperCase() + pkgKey.slice(1);
+      toast.success(`${label} pricing saved!`, { duration: 1500 });
     } catch (err) {
-      toast.error('Failed to delete');
+      console.error('Save failed:', err);
+      toast.error(err?.message || 'Failed to save pricing — ensure you are logged in as admin');
+    }
+    setSavingPkg(s => ({ ...s, [pkgKey]: false }));
+  }
+
+  async function handleDelete(pkgKey) {
+    const row = edits[pkgKey];
+    if (!row?.id) return;
+    if (!confirm(`Delete ${pkgKey} pricing for ${selectedCountry}?`)) return;
+    try {
+      await base44.entities.PackagePricing.delete(row.id);
+      setAllRows(prev => prev.filter(r => r.id !== row.id));
+      toast.success('Deleted');
+    } catch (err) {
+      toast.error(err?.message || 'Failed to delete');
     }
   }
 
   if (loading) {
     return (
       <Card className="shadow-sm">
-        <CardHeader><CardTitle className="text-base flex items-center gap-2"><Package className="w-4 h-4" /> Package Pricing</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Package className="w-4 h-4" /> Package Pricing
+          </CardTitle>
+        </CardHeader>
         <CardContent className="flex items-center justify-center py-8 gap-2 text-muted-foreground">
           <Loader2 className="w-4 h-4 animate-spin" /> Loading pricing…
         </CardContent>
@@ -185,11 +213,11 @@ export default function PackagePricingTab() {
     <Card className="shadow-sm">
       <CardHeader>
         <CardTitle className="text-base flex items-center gap-2">
-          <Package className="w-4 h-4" /> Package Pricing Management
+          <Package className="w-4 h-4" /> Package Pricing by Country
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex items-center gap-3">
+      <CardContent className="space-y-5">
+        <div className="flex items-center gap-3 flex-wrap">
           <label className="text-sm font-medium text-muted-foreground">Country:</label>
           <Select value={selectedCountry} onValueChange={setSelectedCountry}>
             <SelectTrigger className="w-48 h-9"><SelectValue /></SelectTrigger>
@@ -200,29 +228,20 @@ export default function PackagePricingTab() {
           <span className="text-xs text-muted-foreground">
             {CURRENCY_MAP[selectedCountry]?.symbol} ({CURRENCY_MAP[selectedCountry]?.code})
           </span>
-          {editData.id && (
-            <Button variant="ghost" size="sm" className="ml-auto text-destructive gap-1" onClick={() => handleDelete(editData.id)}>
-              <Trash2 className="w-3 h-3" /> Delete
-            </Button>
-          )}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {PACKAGES.map(pkg => (
-            <PackageEditor
-              key={pkg}
+            <PackageCard
+              key={pkg.key}
               pkg={pkg}
-              data={editData}
-              onChange={handleFieldChange}
+              data={{ ...edits[pkg.key], country: selectedCountry }}
+              onChange={(field, value) => handleChange(pkg.key, field, value)}
+              saving={!!savingPkg[pkg.key]}
+              onSave={() => handleSave(pkg.key)}
+              onDelete={() => handleDelete(pkg.key)}
             />
           ))}
-        </div>
-
-        <div className="flex justify-end pt-2">
-          <Button onClick={handleSave} disabled={saving} className="gap-2 bg-[hsl(var(--primary))] text-primary-foreground">
-            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-            Save Pricing
-          </Button>
         </div>
       </CardContent>
     </Card>

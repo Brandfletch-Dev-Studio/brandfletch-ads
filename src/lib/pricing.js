@@ -18,9 +18,9 @@ const USD_PRICES = {
 export const LOCAL_PRICES = {
   Malawi: {
     currency: 'MWK', symbol: 'MK',
-    starter:  { weekly: 75000,   monthly: 299000 },
-    growth:   { weekly: 163000,  monthly: 649000 },
-    premium:  { weekly: 275000,  monthly: 1099000 },
+    starter:  { daily: 6000,  weekly: 42000,  monthly: 160000 },
+    growth:   { daily: 18000, weekly: 105000, monthly: 450000 },
+    premium:  { daily: 25000, weekly: 175000, monthly: 750000 },
   },
   Zambia: {
     currency: 'ZMW', symbol: 'ZK',
@@ -49,6 +49,7 @@ export const LOCAL_PRICES = {
 };
 
 export const DURATIONS = {
+  daily:   { label: 'Daily',   days: 1 },
   weekly:  { label: 'Weekly',  days: 7 },
   monthly: { label: 'Monthly', days: 30 },
 };
@@ -101,7 +102,12 @@ export function calculatePriceFromList(pkg, duration, country, dbPricingList = [
       amount: dbRow[duration],
       currency: dbRow.currency,
       symbol: dbRow.symbol,
-      display: `${dbRow.symbol}${dbRow[duration].toLocaleString()}`,
+      display: `${dbRow.symbol}${Number(dbRow[duration]).toLocaleString()}`,
+      reach_low: dbRow.reach_low,
+      reach_high: dbRow.reach_high,
+      creatives: dbRow.creatives,
+      videos: dbRow.videos,
+      description: dbRow.description,
     };
   }
   return calculatePrice(pkg, duration, country);
