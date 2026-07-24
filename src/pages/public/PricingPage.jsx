@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { base44 } from '@/api/base44Client';
-import { LOCAL_PRICES, AD_SPEND, ESTIMATED_REACH, PACKAGE_FEATURES, SHARED_FEATURES, calculatePriceFromList } from '@/lib/pricing';
+import { LOCAL_PRICES, AD_SPEND, ESTIMATED_REACH, calculatePriceFromList } from '@/lib/pricing';
 import { detectCountry } from '@/lib/geoCountry';
 import { useAuth } from '@/lib/AuthContext';
 import { useSEO } from '@/hooks/useSEO';
@@ -26,21 +26,15 @@ function PlanCard({ pkg, dbPricing, country, onCta }) {
 
   const adSpend = AD_SPEND[pkg];
   const reach = ESTIMATED_REACH[pkg];
-  const dbDeliverables = dbPricing.find(r => r.country === country);
-  const pkgPrefix = pkg; // starter, growth, premium
-  const dbCreatives = dbDeliverables?.[`${pkgPrefix}_creatives`] ?? PACKAGE_FEATURES[pkg].creatives;
-  const dbVideos = dbDeliverables?.[`${pkgPrefix}_videos`] ?? PACKAGE_FEATURES[pkg].videos;
-  const dbReachLow = dbDeliverables?.[`${pkgPrefix}_reach_low`];
-  const dbReachHigh = dbDeliverables?.[`${pkgPrefix}_reach_high`];
-  const reachDisplay = (dbReachLow && dbReachHigh)
-    ? `${dbReachLow.toLocaleString()} – ${dbReachHigh.toLocaleString()}`
+  // Look up per-package DB row for reach data
+  const dbRowForPkg = dbPricing.find(r => r.country === country && r.package === pkg);
+  const reachDisplay = (dbRowForPkg?.reach_low && dbRowForPkg?.reach_high)
+    ? `${Number(dbRowForPkg.reach_low).toLocaleString()} – ${Number(dbRowForPkg.reach_high).toLocaleString()}`
     : reach;
 
   const allFeatures = [
     'Facebook & Instagram Ads Management',
     `Estimated monthly reach: ${reachDisplay} people`,
-    `${dbCreatives} marketing creatives`,
-    `${dbVideos} promotional video${dbVideos > 1 ? 's' : ''}`,
     'Campaign setup and optimization',
     'Monthly performance report',
   ];
@@ -112,28 +106,34 @@ function PlanCard({ pkg, dbPricing, country, onCta }) {
 }
 
 function ComparisonTable({ dbPricing, country }) {
-  const dbRow = dbPricing.find(r => r.country === country);
   const local = LOCAL_PRICES[country];
-  const symbol = dbRow?.symbol || local?.symbol || 'MK';
+  const firstRow = dbPricing.find(r => r.country === country);
+  const symbol = firstRow?.symbol || local?.symbol || 'MK';
 
   const rows = [
     { label: 'Ad Budget', getVal: p => `$${AD_SPEND[p]}/day`, highlight: true },
     { label: 'Monthly Price', getVal: p => {
-      const price = dbRow?.[`${p}_monthly`] ?? local?.[p]?.monthly ?? 0;
+      const pkgRow = dbPricing.find(r => r.country === country && r.package === p);
+      const price = pkgRow?.monthly ?? local?.[p]?.monthly ?? 0;
       return price ? `${symbol}${Number(price).toLocaleString()}` : '—';
     }, highlight: true },
     { label: 'Weekly Price', getVal: p => {
-      const price = dbRow?.[`${p}_weekly`] ?? local?.[p]?.weekly ?? 0;
+      const pkgRow = dbPricing.find(r => r.country === country && r.package === p);
+      const price = pkgRow?.weekly ?? local?.[p]?.weekly ?? 0;
+      return price ? `${symbol}${Number(price).toLocaleString()}` : '—';
+    }},
+    { label: 'Daily Price', getVal: p => {
+      const pkgRow = dbPricing.find(r => r.country === country && r.package === p);
+      const price = pkgRow?.daily ?? local?.[p]?.daily ?? 0;
       return price ? `${symbol}${Number(price).toLocaleString()}` : '—';
     }},
     { label: 'Est. Monthly Reach', getVal: p => {
-      const low = dbRow?.[`${p}_reach_low`];
-      const high = dbRow?.[`${p}_reach_high`];
-      if (low && high) return `${low.toLocaleString()} – ${high.toLocaleString()}`;
+      const pkgRow = dbPricing.find(r => r.country === country && r.package === p);
+      const low = pkgRow?.reach_low;
+      const high = pkgRow?.reach_high;
+      if (low && high) return `${Number(low).toLocaleString()} – ${Number(high).toLocaleString()}`;
       return ESTIMATED_REACH[p];
     }, highlight: true },
-    { label: 'Marketing Creatives', getVal: p => dbRow?.[`${p}_creatives`] ?? PACKAGE_FEATURES[p].creatives },
-    { label: 'Promotional Videos', getVal: p => dbRow?.[`${p}_videos`] ?? PACKAGE_FEATURES[p].videos },
     { label: 'Facebook & Instagram Ads', getVal: () => '✓' },
     { label: 'Campaign Setup & Optimization', getVal: () => '✓' },
     { label: 'Monthly Performance Report', getVal: () => '✓' },
