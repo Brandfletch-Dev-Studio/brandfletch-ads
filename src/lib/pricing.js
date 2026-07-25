@@ -63,9 +63,10 @@ export const AD_SPEND = {
 
 // Estimated monthly reach per package
 export const ESTIMATED_REACH = {
-  starter:  '60,000 – 150,000',
-  growth:   '180,000 – 450,000',
-  premium:  '300,000 – 750,000',
+  // Monthly totals (daily reach × 30 days)
+  starter:  '1.8M – 4.5M',
+  growth:   '5.4M – 13.5M',
+  premium:  '9M – 22.5M',
 };
 
 // Package-specific deliverables

@@ -31,7 +31,7 @@ function PlanCard({ pkg, dbPricing, country, onCta }) {
 
   const features = [
     `$${adSpend}/day Meta ad spend`,
-    `Reach: ${reachDisplay} people/month`,
+    `Total reach: ${reachDisplay}/month`,
     'Facebook & Instagram ads',
     'Campaign setup & management',
     'Performance dashboard',
@@ -108,7 +108,7 @@ function ComparisonTable({ dbPricing, country }) {
       const price = pkgRow?.monthly ?? local?.[p]?.monthly ?? 0;
       return price ? `${symbol}${Number(price).toLocaleString()}` : '—';
     }, highlight: true },
-    { label: 'Est. Reach / Month', getVal: p => {
+    { label: 'Total Monthly Reach', getVal: p => {
       const pkgRow = dbPricing.find(r => r.country === country && r.package === p);
       const low = pkgRow?.reach_low;
       const high = pkgRow?.reach_high;

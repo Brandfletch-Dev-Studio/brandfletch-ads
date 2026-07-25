@@ -3,7 +3,6 @@ import { Home, DollarSign, BookOpen, Phone, LayoutDashboard } from 'lucide-react
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/AuthContext';
 
-// Public bottom nav — shown to ALL visitors on mobile (lg:hidden)
 const PUBLIC_NAV = [
   { path: '/',          label: 'Home',      icon: Home },
   { path: '/pricing',   label: 'Pricing',   icon: DollarSign },
@@ -30,7 +29,7 @@ export default function BottomNav({ isStaff }) {
     : PUBLIC_NAV;
 
   return (
-    <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-[hsl(var(--primary))] border-t border-white/10 safe-area-bottom z-50">
+    <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-[#0A0A0F] border-t border-white/10 safe-area-bottom z-50">
       <nav className="grid grid-cols-5 h-16">
         {navItems.map(({ path, label, icon: Icon }) => {
           const isActive =
@@ -43,18 +42,18 @@ export default function BottomNav({ isStaff }) {
               key={path}
               to={path}
               className={cn(
-                "flex flex-col items-center justify-center gap-1 transition-colors",
+                "flex flex-col items-center justify-center gap-1 transition-colors relative",
                 isActive
-                  ? "text-white"
-                  : "text-white/50 hover:text-white/80"
+                  ? "text-[#4CAF50]"
+                  : "text-white/40 hover:text-white/70"
               )}
             >
               <Icon className={cn("w-5 h-5", isActive && "drop-shadow-sm")} />
-              <span className={cn("text-[10px] font-medium", isActive ? "text-white" : "text-white/50")}>
+              <span className={cn("text-[10px] font-medium", isActive ? "text-[#4CAF50]" : "text-white/40")}>
                 {label}
               </span>
               {isActive && (
-                <span className="absolute bottom-1 w-1 h-1 rounded-full bg-[hsl(var(--accent))]" />
+                <span className="absolute bottom-1 w-1 h-1 rounded-full bg-[#4CAF50]" />
               )}
             </Link>
           );

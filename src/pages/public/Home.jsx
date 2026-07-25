@@ -294,7 +294,7 @@ export default function Home() {
               <hr className="border-gray-800 mb-5" />
               <ul className="space-y-3 text-sm text-gray-300 mb-7 flex-1">
                 <li className="flex items-start gap-2.5"><Check className="w-4 h-4 text-[#4CAF50] shrink-0 mt-0.5" /><span>$1/day Meta ad spend</span></li>
-                <li className="flex items-start gap-2.5"><Check className="w-4 h-4 text-[#4CAF50] shrink-0 mt-0.5" /><span>Reach: 60K–150K/month</span></li>
+                <li className="flex items-start gap-2.5"><Check className="w-4 h-4 text-[#4CAF50] shrink-0 mt-0.5" /><span>Total reach: 1.8M–4.5M/month</span></li>
                 <li className="flex items-start gap-2.5"><Check className="w-4 h-4 text-[#4CAF50] shrink-0 mt-0.5" /><span>Facebook & Instagram ads</span></li>
                 <li className="flex items-start gap-2.5"><Check className="w-4 h-4 text-[#4CAF50] shrink-0 mt-0.5" /><span>Campaign setup & management</span></li>
                 <li className="flex items-start gap-2.5"><Check className="w-4 h-4 text-[#4CAF50] shrink-0 mt-0.5" /><span>Performance dashboard</span></li>
@@ -315,7 +315,7 @@ export default function Home() {
               <hr className="border-white/10 mb-5" />
               <ul className="space-y-3 text-sm text-white mb-7 flex-1">
                 <li className="flex items-start gap-2.5"><Check className="w-4 h-4 text-white shrink-0 mt-0.5 stroke-[3px]" /><span>$3/day Meta ad spend</span></li>
-                <li className="flex items-start gap-2.5"><Check className="w-4 h-4 text-white shrink-0 mt-0.5 stroke-[3px]" /><span>Reach: 180K–450K/month</span></li>
+                <li className="flex items-start gap-2.5"><Check className="w-4 h-4 text-white shrink-0 mt-0.5 stroke-[3px]" /><span>Total reach: 5.4M–13.5M/month</span></li>
                 <li className="flex items-start gap-2.5"><Check className="w-4 h-4 text-white shrink-0 mt-0.5 stroke-[3px]" /><span>Facebook & Instagram ads</span></li>
                 <li className="flex items-start gap-2.5"><Check className="w-4 h-4 text-white shrink-0 mt-0.5 stroke-[3px]" /><span>Campaign setup & management</span></li>
                 <li className="flex items-start gap-2.5"><Check className="w-4 h-4 text-white shrink-0 mt-0.5 stroke-[3px]" /><span>Performance dashboard</span></li>
@@ -333,7 +333,7 @@ export default function Home() {
               <hr className="border-gray-800 mb-5" />
               <ul className="space-y-3 text-sm text-gray-300 mb-7 flex-1">
                 <li className="flex items-start gap-2.5"><Check className="w-4 h-4 text-[#4CAF50] shrink-0 mt-0.5" /><span>$5/day Meta ad spend</span></li>
-                <li className="flex items-start gap-2.5"><Check className="w-4 h-4 text-[#4CAF50] shrink-0 mt-0.5" /><span>Reach: 300K–750K/month</span></li>
+                <li className="flex items-start gap-2.5"><Check className="w-4 h-4 text-[#4CAF50] shrink-0 mt-0.5" /><span>Total reach: 9M–22.5M/month</span></li>
                 <li className="flex items-start gap-2.5"><Check className="w-4 h-4 text-[#4CAF50] shrink-0 mt-0.5" /><span>Facebook & Instagram ads</span></li>
                 <li className="flex items-start gap-2.5"><Check className="w-4 h-4 text-[#4CAF50] shrink-0 mt-0.5" /><span>Campaign setup & management</span></li>
                 <li className="flex items-start gap-2.5"><Check className="w-4 h-4 text-[#4CAF50] shrink-0 mt-0.5" /><span>Performance dashboard</span></li>
