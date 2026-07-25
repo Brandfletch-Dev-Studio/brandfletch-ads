@@ -1,170 +1,148 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import {
-  ArrowRight, Megaphone, Palette, Video, Users2, GraduationCap, Code2,
-  CheckCircle, TrendingUp, Target, Star, Smartphone
+  ArrowRight, Megaphone, Target, TrendingUp, Check, CheckCircle,
+  Users, Smartphone, Eye, MousePointerClick, Zap, Shield, BarChart3,
+  Facebook, Instagram, Star
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useSEO } from '@/hooks/useSEO';
 
-const DEPARTMENTS = [
-  {
-    id: 'ads',
-    icon: Megaphone,
-    title: 'Brandfletch Ads',
-    tagline: "Your customers are already online — let's reach them.",
-    body: 'Professionally managed Meta Ads campaigns running today, with Google Ads and TikTok Ads coming soon — all designed to generate qualified leads and measurable growth.',
-    color: 'from-blue-600 to-blue-800',
-    accent: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
-    dot: 'bg-blue-500',
-    to: '/pricing',
-    live: true,
-  },
-  {
-    id: 'designs',
-    icon: Palette,
-    title: 'Brandfletch Designs',
-    tagline: 'Professional design that makes your business stand out.',
-    body: 'Logos, brand identities, social media graphics, print design, and packaging — design that elevates your brand at every touchpoint.',
-    color: 'from-purple-600 to-pink-700',
-    accent: 'bg-purple-500/10 text-purple-600 dark:text-purple-400',
-    dot: 'bg-purple-500',
-    to: '/designs',
-    live: true,
-  },
-  {
-    id: 'studios',
-    icon: Video,
-    title: 'Brandfletch Studios',
-    tagline: 'Content that captures attention and drives engagement.',
-    body: 'Video production, photography, UGC content, and social media content — the creative engine that powers your marketing.',
-    color: 'from-orange-600 to-red-700',
-    accent: 'bg-orange-500/10 text-orange-600 dark:text-orange-400',
-    dot: 'bg-orange-500',
-    to: '/studios',
-    live: true,
-  },
-  {
-    id: 'sales',
-    icon: Users2,
-    title: 'Brandfletch Sales',
-    tagline: 'An outsourced sales team, on demand.',
-    body: 'A dedicated sales team for businesses that need help converting leads into customers — without the overhead of hiring in-house.',
-    color: 'from-amber-600 to-orange-700',
-    accent: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
-    dot: 'bg-amber-500',
-    to: '/sales',
-    live: true,
-  },
-  {
-    id: 'academy',
-    icon: GraduationCap,
-    title: 'Brandfletch Business Academy',
-    tagline: 'Learn the systems behind the growth.',
-    body: 'Courses and programs built to teach business owners the marketing, sales, and operations skills we use every day.',
-    color: 'from-cyan-600 to-sky-800',
-    accent: 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400',
-    dot: 'bg-cyan-500',
-    to: '/academy',
-    live: true,
-  },
-  {
-    id: 'dev-studio',
-    icon: Code2,
-    title: 'Brandfletch Dev Studio',
-    tagline: 'Websites, apps, automations, and AI agents built to scale.',
-    body: 'From websites and web apps to automations and AI sales agents — the development engine that powers your business.',
-    color: 'from-emerald-600 to-teal-800',
-    accent: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
-    dot: 'bg-emerald-500',
-    to: '/dev-studio',
-    live: true,
-  },
+const HOW_STEPS = [
+  { step: '01', title: 'Create your account', desc: 'Sign up in 2 minutes. No contracts, no setup fees. Pick your ad budget and go.' },
+  { step: '02', title: 'We set up your ads', desc: 'Our team builds your campaigns on Brandfletch ad accounts — targeting, creatives, copy, everything.' },
+  { step: '03', title: 'We manage & optimise', desc: 'We monitor performance daily, test new creatives, and optimise for the best cost-per-lead.' },
+  { step: '04', title: 'Track in your dashboard', desc: 'See impressions, reach, clicks, and results in real-time from your own dashboard.' },
 ];
 
 const STATS = [
-  { value: '500+', label: 'Businesses served' },
-  { value: '6',    label: 'Departments' },
-  { value: '5',    label: 'African countries' },
-  { value: '98%',  label: 'Client satisfaction' },
+  { value: '750K+', label: 'Monthly reach potential' },
+  { value: '500+', label: 'Businesses advertised' },
+  { value: '3x–5x', label: 'Average ad ROI' },
+  { value: '100%', label: 'Done for you' },
 ];
 
-const HOW = [
-  { step: '01', title: 'Book a discovery call', desc: 'We understand your business, your offer, and your growth goals.' },
-  { step: '02', title: 'We build your strategy', desc: 'Campaigns and creatives — all designed around your target customer.' },
-  { step: '03', title: 'We launch & optimise', desc: 'Your campaigns go live. We track performance and iterate for maximum results.' },
-  { step: '04', title: 'You track everything', desc: 'Real-time updates in your client dashboard — see exactly what we\'re doing and how it\'s performing.' },
+const FEATURES = [
+  { icon: Target, title: 'Precise targeting', desc: 'We target your ideal customers by location, age, interests, and buying behaviour.' },
+  { icon: Megaphone, title: 'Professional creatives', desc: 'Our team designs scroll-stopping ad creatives that convert viewers into customers.' },
+  { icon: TrendingUp, title: 'Daily optimisation', desc: 'We don\'t just set and forget. We test, tweak, and scale what works — every single day.' },
+  { icon: BarChart3, title: 'Full transparency', desc: 'Your dashboard shows exactly what you\'re spending, what you\'re reaching, and what results you\'re getting.' },
+  { icon: Shield, title: 'Brandfletch ad accounts', desc: 'Your ads run on our verified Meta ad accounts — no risk of your account getting banned.' },
+  { icon: Zap, title: 'Fast launch', desc: 'From sign-up to live campaigns in as little as 48 hours. No long onboarding process.' },
 ];
+
+const PLATFORMS = [
+  { icon: Facebook, name: 'Facebook Ads', status: 'Live' },
+  { icon: Instagram, name: 'Instagram Ads', status: 'Live' },
+  { icon: Megaphone, name: 'Google Ads', status: 'Coming soon' },
+  { icon: Megaphone, name: 'TikTok Ads', status: 'Coming soon' },
+];
+
+const FAQS = [
+  { q: 'How does it work?', a: 'You sign up, choose your ad budget, and our team handles everything — campaign setup, creative design, targeting, and daily optimisation. Your ads run on Brandfletch\'s verified Meta ad accounts.' },
+  { q: 'Do I need my own Facebook ad account?', a: 'No. Your ads run on Brandfletch\'s verified ad accounts. This means no setup headaches, no risk of account bans, and our team has full access to manage and optimise your campaigns.' },
+  { q: 'How much does it cost?', a: 'You pay a monthly management fee plus your ad budget. Plans start at MK160,000/month (Starter), MK450,000/month (Growth), and MK750,000/month (Premium). The ad budget is separate and goes directly to Facebook/Meta.' },
+  { q: 'When will my ads start running?', a: 'Typically within 48 hours of signing up. Our team builds your campaigns, creates your first set of ad creatives, and launches as soon as you approve.' },
+  { q: 'Can I see how my ads are performing?', a: 'Yes. You get access to a dashboard showing impressions, reach, clicks, spend, and results — updated in real-time. No guessing, no waiting for reports.' },
+  { q: 'Can I cancel anytime?', a: 'Yes. Plans are month-to-month. No long-term contracts, no lock-in. If you\'re not seeing value, you can cancel anytime.' },
+  { q: 'What if I already have my own ad account?', a: 'That\'s fine too. We can either run ads on your existing account or on ours — whichever works better for you. Running on our accounts means we can manage everything without needing access permissions.' },
+];
+
+function FaqItem({ faq, isOpen, onClick }) {
+  return (
+    <div className="border-b border-border">
+      <button
+        onClick={onClick}
+        className="w-full flex items-center justify-between text-left py-5 font-bold text-base text-foreground hover:text-[hsl(var(--primary))] transition-colors"
+      >
+        <span>{faq.q}</span>
+        <span className="text-xl text-[hsl(var(--primary))] ml-4">{isOpen ? '−' : '+'}</span>
+      </button>
+      <div className={`overflow-hidden transition-all duration-300 ${isOpen ? 'max-h-96 pb-5' : 'max-h-0'}`}>
+        <p className="text-sm text-muted-foreground leading-relaxed">{faq.a}</p>
+      </div>
+    </div>
+  );
+}
 
 export default function Home() {
   useSEO({
-    title:       'Brandfletch Media — Digital Systems for African Businesses',
-    description: 'A full-service media company for African businesses — Ads, Design, Studios, Sales, Academy, and Dev Studio. Six departments, one team.',
+    title:       'Brandfletch Ads — Managed Facebook & Instagram Ads for Businesses',
+    description: 'Sign up, set up your ads on Brandfletch ad accounts, and let our team manage everything. Professional Facebook & Instagram ads done for you.',
   });
 
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const [openFaq, setOpenFaq] = useState(null);
 
   return (
     <div className="flex flex-col">
 
       {/* ── HERO ─────────────────────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden bg-[hsl(var(--primary))] text-white min-h-[90vh] flex items-center">
+      <section className="relative overflow-hidden bg-[#0A0A0F] text-white min-h-[90vh] flex items-center">
+        {/* Background pattern */}
         <div className="absolute inset-0 opacity-[0.04]"
           style={{ backgroundImage: 'radial-gradient(rgba(255,255,255,1) 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-[#3B2FC9]/20 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute bottom-0 right-0 w-64 h-64 bg-[#4CAF50]/10 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-[hsl(var(--accent))]/15 rounded-full blur-[120px] pointer-events-none" />
-        <div className="absolute bottom-0 right-0 w-64 h-64 bg-blue-400/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="relative w-full max-w-5xl mx-auto px-4 sm:px-6 py-24 lg:py-32">
+          <div className="max-w-3xl mx-auto text-center">
 
-        <div className="relative w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-24 lg:py-32">
-          <div className="max-w-4xl mx-auto text-center">
-
-            <div className="inline-flex items-center gap-2 bg-white/10 border border-white/15 text-white/80 text-xs font-semibold px-4 py-2 rounded-full mb-8 tracking-wide uppercase">
-              <span className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--accent))] animate-pulse" />
-              Six Departments · One Team
+            <div className="inline-flex items-center gap-2 bg-[#3B2FC9]/20 border border-[#3B2FC9]/40 rounded-full px-4 py-1.5 mb-6 backdrop-blur-sm">
+              <span className="w-2 h-2 rounded-full bg-[#4CAF50] animate-pulse" />
+              <span className="text-xs sm:text-sm font-semibold tracking-wide text-white uppercase">
+                Managed Ads Platform
+              </span>
             </div>
 
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-display font-extrabold leading-[1.05] tracking-tight mb-6">
-              Everything your business needs,
-              <br />
-              <span className="relative inline-block">
-                <span className="text-[hsl(var(--accent))]">under one roof</span>
-                <svg className="absolute -bottom-2 left-0 w-full" viewBox="0 0 400 12" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                  <path d="M2 9C100 3 200 3 398 9" stroke="hsl(var(--accent))" strokeWidth="3" strokeLinecap="round" opacity="0.5"/>
-                </svg>
-              </span>
+            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-display font-extrabold leading-[1.05] tracking-tight mb-6">
+              Your ads, <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#3B2FC9] to-[#5B4FE8]">done for you.</span>
             </h1>
 
-            <p className="text-lg sm:text-xl text-white/65 max-w-2xl mx-auto leading-relaxed mb-10">
-              Brandfletch Media is a full-service company for African businesses — Ads, Design, Studios, Sales, Academy, and Dev Studio. Each department built to support the next.
+            <p className="text-lg sm:text-xl text-gray-300 max-w-2xl mx-auto leading-relaxed mb-10">
+              Sign up, choose your budget, and our team builds, launches, and manages your Facebook & Instagram ads on Brandfletch ad accounts. You just watch the leads come in.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
-              <Link to="/pricing">
-                <Button size="lg" className="bg-[hsl(var(--accent))] text-white hover:bg-[hsl(var(--accent))]/90 font-bold px-10 h-13 text-base shadow-xl shadow-[hsl(var(--accent))]/20 rounded-xl">
-                  Explore our services <ArrowRight className="ml-2 w-4 h-4" />
+              {!user ? (
+                <Button
+                  size="lg"
+                  className="bg-[#4CAF50] hover:bg-[#4CAF50]/90 text-white font-bold px-10 h-14 text-base shadow-xl rounded-xl"
+                  onClick={() => navigate('/register')}
+                >
+                  Get Started Free <ArrowRight className="ml-2 w-4 h-4" />
                 </Button>
-              </Link>
-              <Link to="/contact">
-                <Button size="lg" variant="ghost" className="text-white/80 hover:text-white hover:bg-white/10 font-semibold px-8 h-13 text-base rounded-xl border border-white/15">
-                  Talk to us first
+              ) : (
+                <Button
+                  size="lg"
+                  className="bg-[#4CAF50] hover:bg-[#4CAF50]/90 text-white font-bold px-10 h-14 text-base shadow-xl rounded-xl"
+                  onClick={() => navigate('/dashboard')}
+                >
+                  Go to Dashboard <ArrowRight className="ml-2 w-4 h-4" />
+                </Button>
+              )}
+              <Link to="/pricing">
+                <Button size="lg" variant="ghost" className="text-white/80 hover:text-white hover:bg-white/10 font-semibold px-8 h-14 text-base rounded-xl border border-white/20">
+                  See Pricing
                 </Button>
               </Link>
             </div>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-6 text-white/40 text-xs font-medium">
-              <span className="flex items-center gap-1.5"><CheckCircle className="w-3.5 h-3.5 text-[hsl(var(--accent))]" /> No long-term contracts</span>
+              <span className="flex items-center gap-1.5"><CheckCircle className="w-3.5 h-3.5 text-[#4CAF50]" /> No long-term contracts</span>
               <span className="hidden sm:block w-px h-4 bg-white/15" />
-              <span className="flex items-center gap-1.5"><CheckCircle className="w-3.5 h-3.5 text-[hsl(var(--accent))]" /> Results-focused approach</span>
+              <span className="flex items-center gap-1.5"><CheckCircle className="w-3.5 h-3.5 text-[#4CAF50]" /> No setup fees</span>
               <span className="hidden sm:block w-px h-4 bg-white/15" />
-              <span className="flex items-center gap-1.5"><CheckCircle className="w-3.5 h-3.5 text-[hsl(var(--accent))]" /> Built for African markets</span>
+              <span className="flex items-center gap-1.5"><CheckCircle className="w-3.5 h-3.5 text-[#4CAF50]" /> Cancel anytime</span>
             </div>
           </div>
 
-          <div className="mt-20 grid grid-cols-2 sm:grid-cols-4 gap-px bg-white/10 rounded-2xl overflow-hidden border border-white/10">
+          <div className="mt-20 grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-4xl mx-auto">
             {STATS.map(s => (
-              <div key={s.label} className="bg-white/5 backdrop-blur-sm px-6 py-6 text-center hover:bg-white/10 transition-colors">
-                <p className="text-3xl sm:text-4xl font-display font-extrabold text-white mb-1">{s.value}</p>
+              <div key={s.label} className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl px-4 py-6 text-center">
+                <p className="text-2xl sm:text-3xl font-display font-extrabold text-white mb-1">{s.value}</p>
                 <p className="text-xs text-white/45 font-medium">{s.label}</p>
               </div>
             ))}
@@ -172,92 +150,90 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── LEAD GEN PITCH ────────────────────────────────────────────────────── */}
-      <section className="py-20 bg-background">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div>
-              <Badge className="mb-4 bg-[hsl(var(--accent))]/10 text-[hsl(var(--accent))] border-[hsl(var(--accent))]/20 text-xs">
-                Why Brandfletch Media
-              </Badge>
-              <h2 className="text-3xl sm:text-4xl font-display font-extrabold text-foreground leading-tight mb-5">
-                It's not just one service.<br />
-                <span className="text-[hsl(var(--accent))]">It's the whole system.</span>
-              </h2>
-              <p className="text-muted-foreground leading-relaxed mb-6">
-                Most businesses don't fail at running ads — they fail at the pieces around it. A weak creative. An unclear offer. No follow-through. We solve all of that with six departments that work together as one system.
-              </p>
-              <ul className="space-y-3">
-                {[
-                  { icon: Target, text: 'Precise audience targeting that reaches your ideal customers' },
-                  { icon: TrendingUp, text: 'Campaigns optimised for qualified leads, not just clicks' },
-                  { icon: Megaphone, text: 'Creative, content, and design built to convert' },
-                  { icon: Smartphone, text: 'Mobile-first campaigns for African markets' },
-                ].map(({ icon: Icon, text }) => (
-                  <li key={text} className="flex items-start gap-3">
-                    <span className="mt-0.5 w-5 h-5 rounded-full bg-[hsl(var(--accent))]/10 flex items-center justify-center flex-shrink-0">
-                      <Icon className="w-3 h-3 text-[hsl(var(--accent))]" />
-                    </span>
-                    <span className="text-sm text-foreground">{text}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              {[
-                { label: 'Offer Packaging', desc: 'Your product becomes something customers actually want' },
-                { label: 'Brand Story', desc: 'Turn your business into content people connect with' },
-                { label: 'Meta Ads Ready', desc: 'Every creative built with hooks & conversion structure' },
-                { label: 'Qualified Leads', desc: 'The right people reaching out, not just traffic' },
-              ].map(c => (
-                <div key={c.label} className="bg-card border border-border rounded-xl p-4">
-                  <div className="w-8 h-8 rounded-lg bg-[hsl(var(--accent))]/10 flex items-center justify-center mb-3">
-                    <CheckCircle className="w-4 h-4 text-[hsl(var(--accent))]" />
-                  </div>
-                  <p className="font-semibold text-sm text-foreground mb-1">{c.label}</p>
-                  <p className="text-xs text-muted-foreground leading-relaxed">{c.desc}</p>
+      {/* ── HOW IT WORKS ─────────────────────────────────────────────────────── */}
+      <section className="py-24 bg-white">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <Badge className="mb-4 bg-[#3B2FC9]/10 text-[#3B2FC9] border-[#3B2FC9]/20 text-xs">
+              How It Works
+            </Badge>
+            <h2 className="text-3xl sm:text-5xl font-display font-black text-foreground tracking-tight mb-4">
+              From sign-up to live ads in 4 steps
+            </h2>
+            <p className="text-lg text-muted-foreground">
+              No marketing degree needed. No complicated tools. Just sign up and let our team handle the rest.
+            </p>
+          </div>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {HOW_STEPS.map((h, i) => (
+              <div key={h.step} className="bg-white border border-border rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
+                <div className="w-12 h-12 rounded-xl bg-[#3B2FC9] text-white flex items-center justify-center text-sm font-bold mb-4">
+                  {h.step}
                 </div>
-              ))}
+                <h3 className="font-bold text-base text-foreground mb-2">{h.title}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">{h.desc}</p>
+                {i < HOW_STEPS.length - 1 && (
+                  <div className="hidden lg:flex items-center mt-4 text-[#3B2FC9]">
+                    <ArrowRight className="w-4 h-4" />
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── PLATFORMS ────────────────────────────────────────────────────────── */}
+      <section className="py-16 bg-muted/30 border-y border-border">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6">
+          <div className="text-center mb-10">
+            <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-4">Ads run on</p>
+            <div className="flex flex-wrap items-center justify-center gap-6">
+              {PLATFORMS.map(p => {
+                const Icon = p.icon;
+                return (
+                  <div key={p.name} className="flex items-center gap-2 bg-white border border-border rounded-xl px-5 py-3">
+                    <Icon className="w-5 h-5 text-[#3B2FC9]" />
+                    <span className="text-sm font-bold text-foreground">{p.name}</span>
+                    {p.status === 'Live' ? (
+                      <span className="text-xs font-semibold text-[#4CAF50] bg-[#4CAF50]/10 px-2 py-0.5 rounded-full">Live</span>
+                    ) : (
+                      <span className="text-xs font-semibold text-muted-foreground bg-muted px-2 py-0.5 rounded-full">Soon</span>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
       </section>
 
-      {/* ── DEPARTMENTS ──────────────────────────────────────────────────────── */}
-      <section className="py-20 bg-muted/30">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-14">
-            <Badge className="mb-4 bg-[hsl(var(--accent))]/10 text-[hsl(var(--accent))] border-[hsl(var(--accent))]/20 text-xs">
-              Our Departments
+      {/* ── FEATURES ─────────────────────────────────────────────────────────── */}
+      <section className="py-24 bg-white">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <Badge className="mb-4 bg-[#4CAF50]/10 text-[#4CAF50] border-[#4CAF50]/20 text-xs">
+              What You Get
             </Badge>
-            <h2 className="text-3xl sm:text-4xl font-display font-extrabold text-foreground">
-              Six departments, one goal
+            <h2 className="text-3xl sm:text-5xl font-display font-black text-foreground tracking-tight mb-4">
+              Everything managed. Nothing for you to figure out.
             </h2>
-            <p className="mt-3 text-muted-foreground max-w-xl mx-auto text-sm">
-              Each department is a specialised service — but together, they form a complete growth system for your business.
+            <p className="text-lg text-muted-foreground">
+              You run your business. We run your ads. It's that simple.
             </p>
           </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {DEPARTMENTS.map(s => {
-              const Icon = s.icon;
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {FEATURES.map(f => {
+              const Icon = f.icon;
               return (
-                <div key={s.id} className={`group bg-card border border-border rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-lg hover:border-[hsl(var(--accent))]/30`}>
-                  <div className={`h-1 bg-gradient-to-r ${s.color}`} />
-                  <div className="p-6">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className={`w-11 h-11 rounded-xl ${s.accent} flex items-center justify-center`}>
-                        <Icon className="w-5 h-5" />
-                      </div>
-                    </div>
-                    <h3 className="font-bold text-base text-foreground mb-1">{s.title}</h3>
-                    <p className="text-xs font-semibold text-[hsl(var(--accent))] mb-3 italic">{s.tagline}</p>
-                    <p className="text-sm text-muted-foreground leading-relaxed mb-4">{s.body}</p>
-                    <Link to={s.to}>
-                      <button className="text-xs font-semibold text-[hsl(var(--accent))] hover:underline flex items-center gap-1">
-                        {s.id === 'ads' ? 'See pricing' : 'Learn more'} <ArrowRight className="w-3 h-3" />
-                      </button>
-                    </Link>
+                <div key={f.title} className="bg-white border border-border rounded-2xl p-6 hover:shadow-md hover:border-[#3B2FC9]/30 transition-all">
+                  <div className="w-12 h-12 rounded-xl bg-[#3B2FC9]/10 text-[#3B2FC9] flex items-center justify-center mb-4">
+                    <Icon className="w-6 h-6" />
                   </div>
+                  <h3 className="font-bold text-base text-foreground mb-2">{f.title}</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{f.desc}</p>
                 </div>
               );
             })}
@@ -265,38 +241,95 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── HOW IT WORKS ─────────────────────────────────────────────────────── */}
-      <section className="py-20 bg-background">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-14">
-            <Badge className="mb-4 bg-[hsl(var(--accent))]/10 text-[hsl(var(--accent))] border-[hsl(var(--accent))]/20 text-xs">
-              How it works
-            </Badge>
-            <h2 className="text-3xl sm:text-4xl font-display font-extrabold text-foreground">
-              From discovery to results
+      {/* ── PRICING PREVIEW ──────────────────────────────────────────────────── */}
+      <section className="py-24 bg-[#0A0A0F] text-white">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <span className="bg-[#3B2FC9]/30 border border-[#3B2FC9]/50 text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
+              Ad Packages
+            </span>
+            <h2 className="text-3xl sm:text-5xl font-black tracking-tight text-white mt-4 mb-4">
+              Simple pricing. Real results.
             </h2>
+            <p className="text-gray-400 text-lg">
+              Pick your budget. We handle the rest. No hidden fees, no contracts.
+            </p>
           </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {HOW.map((h, i) => (
-              <div key={h.step} className="relative">
-                {i < HOW.length - 1 && (
-                  <div className="hidden lg:block absolute top-6 left-[calc(100%-0px)] w-full h-px bg-border z-0" />
-                )}
-                <div className="relative z-10 bg-card border border-border rounded-xl p-5">
-                  <div className="w-10 h-10 rounded-full bg-[hsl(var(--primary))] text-white flex items-center justify-center text-xs font-bold mb-4">
-                    {h.step}
-                  </div>
-                  <h3 className="font-bold text-sm text-foreground mb-2">{h.title}</h3>
-                  <p className="text-xs text-muted-foreground leading-relaxed">{h.desc}</p>
-                </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch max-w-5xl mx-auto mb-12">
+            {/* STARTER */}
+            <div className="bg-[#13131F] border border-gray-800 rounded-3xl p-8 flex flex-col">
+              <span className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">STARTER</span>
+              <h3 className="text-3xl font-black text-white mb-1">MK160K<span className="text-xs text-gray-400 font-normal">/month</span></h3>
+              <p className="text-sm text-[#4CAF50] font-semibold mb-6">Get started with ads</p>
+              <hr className="border-gray-800 mb-6" />
+              <ul className="space-y-3 text-sm text-gray-300 mb-8">
+                <li className="flex items-start gap-2.5"><Check className="w-4 h-4 text-[#4CAF50] shrink-0 mt-0.5" /><span>Facebook & Instagram Ads</span></li>
+                <li className="flex items-start gap-2.5"><Check className="w-4 h-4 text-[#4CAF50] shrink-0 mt-0.5" /><span>$1/day ad budget included</span></li>
+                <li className="flex items-start gap-2.5"><Check className="w-4 h-4 text-[#4CAF50] shrink-0 mt-0.5" /><span>Reach: 60K–150K/month</span></li>
+                <li className="flex items-start gap-2.5"><Check className="w-4 h-4 text-[#4CAF50] shrink-0 mt-0.5" /><span>4 ad creatives/month</span></li>
+                <li className="flex items-start gap-2.5"><Check className="w-4 h-4 text-[#4CAF50] shrink-0 mt-0.5" /><span>Campaign optimisation</span></li>
+                <li className="flex items-start gap-2.5"><Check className="w-4 h-4 text-[#4CAF50] shrink-0 mt-0.5" /><span>Performance dashboard</span></li>
+              </ul>
+              <Link to="/pricing" className="block text-center border border-gray-700 hover:border-white text-white py-3 rounded-xl text-sm font-bold transition-all mt-auto">
+                Get Started
+              </Link>
+            </div>
+
+            {/* GROWTH */}
+            <div className="bg-gradient-to-br from-[#3B2FC9] to-[#5B4FE8] rounded-3xl p-8 flex flex-col shadow-2xl scale-105 border-2 border-white/20 relative">
+              <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#4CAF50] text-white px-4 py-1 rounded-full text-xs font-black tracking-widest uppercase">
+                MOST POPULAR
               </div>
-            ))}
+              <span className="text-xs font-bold text-white/70 uppercase tracking-widest mb-2">GROWTH</span>
+              <h3 className="text-3xl font-black text-white mb-1">MK450K<span className="text-xs text-white/70 font-normal">/month</span></h3>
+              <p className="text-sm text-yellow-300 font-semibold mb-6">Scale your reach</p>
+              <hr className="border-white/10 mb-6" />
+              <ul className="space-y-3 text-sm text-white mb-8">
+                <li className="flex items-start gap-2.5"><Check className="w-4 h-4 text-white shrink-0 mt-0.5 stroke-[3px]" /><span>Facebook & Instagram Ads</span></li>
+                <li className="flex items-start gap-2.5"><Check className="w-4 h-4 text-white shrink-0 mt-0.5 stroke-[3px]" /><span>$3/day ad budget included</span></li>
+                <li className="flex items-start gap-2.5"><Check className="w-4 h-4 text-white shrink-0 mt-0.5 stroke-[3px]" /><span>Reach: 180K–450K/month</span></li>
+                <li className="flex items-start gap-2.5"><Check className="w-4 h-4 text-white shrink-0 mt-0.5 stroke-[3px]" /><span>8 ad creatives/month</span></li>
+                <li className="flex items-start gap-2.5"><Check className="w-4 h-4 text-white shrink-0 mt-0.5 stroke-[3px]" /><span>2 promotional videos</span></li>
+                <li className="flex items-start gap-2.5"><Check className="w-4 h-4 text-white shrink-0 mt-0.5 stroke-[3px]" /><span>Advanced optimisation</span></li>
+              </ul>
+              <Link to="/pricing" className="block text-center bg-white text-[#3B2FC9] py-3 rounded-xl text-sm font-bold transition-all hover:bg-gray-100 mt-auto">
+                Get Started
+              </Link>
+            </div>
+
+            {/* PREMIUM */}
+            <div className="bg-[#13131F] border border-gray-800 rounded-3xl p-8 flex flex-col">
+              <span className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">PREMIUM</span>
+              <h3 className="text-3xl font-black text-white mb-1">MK750K<span className="text-xs text-gray-400 font-normal">/month</span></h3>
+              <p className="text-sm text-[#4CAF50] font-semibold mb-6">Maximum impact</p>
+              <hr className="border-gray-800 mb-6" />
+              <ul className="space-y-3 text-sm text-gray-300 mb-8">
+                <li className="flex items-start gap-2.5"><Check className="w-4 h-4 text-[#4CAF50] shrink-0 mt-0.5" /><span>Facebook & Instagram Ads</span></li>
+                <li className="flex items-start gap-2.5"><Check className="w-4 h-4 text-[#4CAF50] shrink-0 mt-0.5" /><span>$5/day ad budget included</span></li>
+                <li className="flex items-start gap-2.5"><Check className="w-4 h-4 text-[#4CAF50] shrink-0 mt-0.5" /><span>Reach: 300K–750K/month</span></li>
+                <li className="flex items-start gap-2.5"><Check className="w-4 h-4 text-[#4CAF50] shrink-0 mt-0.5" /><span>16 ad creatives/month</span></li>
+                <li className="flex items-start gap-2.5"><Check className="w-4 h-4 text-[#4CAF50] shrink-0 mt-0.5" /><span>4 promotional videos</span></li>
+                <li className="flex items-start gap-2.5"><Check className="w-4 h-4 text-[#4CAF50] shrink-0 mt-0.5" /><span>Priority optimisation</span></li>
+              </ul>
+              <Link to="/pricing" className="block text-center border border-gray-700 hover:border-white text-white py-3 rounded-xl text-sm font-bold transition-all mt-auto">
+                Talk to Us
+              </Link>
+            </div>
+          </div>
+
+          <div className="text-center">
+            <Link to="/pricing">
+              <Button size="lg" className="bg-white text-[#3B2FC9] hover:bg-gray-100 font-bold px-8 h-12">
+                See full pricing details <ArrowRight className="ml-2 w-4 h-4" />
+              </Button>
+            </Link>
           </div>
         </div>
       </section>
 
       {/* ── SOCIAL PROOF ─────────────────────────────────────────────────────── */}
-      <section className="py-16 bg-muted/30">
+      <section className="py-20 bg-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center">
           <div className="flex justify-center gap-1 mb-4">
             {[...Array(5)].map((_, i) => <Star key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" />)}
@@ -308,27 +341,49 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── BOTTOM CTA ───────────────────────────────────────────────────────── */}
-      <section className="py-20 bg-[hsl(var(--primary))] text-white relative overflow-hidden">
-        <div className="absolute inset-0 opacity-5"
+      {/* ── FAQ ──────────────────────────────────────────────────────────────── */}
+      <section className="py-24 bg-muted/30">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6">
+          <div className="text-center mb-16">
+            <Badge className="mb-4 bg-[#3B2FC9]/10 text-[#3B2FC9] border-[#3B2FC9]/20 text-xs">
+              FAQ
+            </Badge>
+            <h2 className="text-3xl sm:text-5xl font-display font-black text-foreground tracking-tight">
+              Frequently Asked Questions
+            </h2>
+          </div>
+          <div className="bg-white rounded-2xl border border-border px-6 sm:px-8">
+            {FAQS.map((faq, i) => (
+              <FaqItem key={i} faq={faq} isOpen={openFaq === i} onClick={() => setOpenFaq(openFaq === i ? null : i)} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── CTA ──────────────────────────────────────────────────────────────── */}
+      <section className="py-24 bg-gradient-to-br from-[#3B2FC9] to-[#5B4FE8] text-white relative overflow-hidden">
+        <div className="absolute inset-0 opacity-[0.05]"
           style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.15) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.15) 1px,transparent 1px)', backgroundSize: '32px 32px' }} />
         <div className="relative max-w-3xl mx-auto px-4 sm:px-6 text-center">
-          <h2 className="text-3xl sm:text-4xl font-display font-extrabold mb-4 leading-tight">
-            Ready to turn your business into a<br />
-            <span className="text-[hsl(var(--accent))]">growth machine?</span>
+          <h2 className="text-3xl sm:text-5xl font-black mb-4 leading-tight">
+            Ready to start advertising?
           </h2>
-          <p className="text-white/60 mb-8 text-base leading-relaxed">
-            Explore our departments and find the service that fits your needs — or talk to us and we'll point you in the right direction.
+          <p className="text-white/80 mb-10 text-lg leading-relaxed">
+            Sign up today. Our team will have your ads live within 48 hours.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Link to="/pricing">
-              <Button size="lg" className="bg-[hsl(var(--accent))] text-white hover:bg-[hsl(var(--accent))]/90 font-bold px-10 h-12 text-base">
-                Explore services <ArrowRight className="ml-2 w-4 h-4" />
+            {!user ? (
+              <Button size="lg" className="bg-[#4CAF50] hover:bg-[#4CAF50]/90 text-white font-bold px-10 h-14 text-base" onClick={() => navigate('/register')}>
+                Create Free Account <ArrowRight className="ml-2 w-4 h-4" />
               </Button>
-            </Link>
+            ) : (
+              <Button size="lg" className="bg-[#4CAF50] hover:bg-[#4CAF50]/90 text-white font-bold px-10 h-14 text-base" onClick={() => navigate('/dashboard')}>
+                Go to Dashboard <ArrowRight className="ml-2 w-4 h-4" />
+              </Button>
+            )}
             <Link to="/contact">
-              <Button size="lg" variant="outline" className="border-white/25 text-white bg-white/5 hover:bg-white/10 px-8 h-12 text-base">
-                Start a discussion
+              <Button size="lg" variant="outline" className="border-white/25 text-white bg-white/5 hover:bg-white/10 px-8 h-14 text-base">
+                Talk to Us First
               </Button>
             </Link>
           </div>

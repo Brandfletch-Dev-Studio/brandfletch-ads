@@ -9,11 +9,9 @@ import BottomNav from '@/components/layout/BottomNav';
 
 const NAV = [
   { label: 'Home',    to: '/' },
-  { label: 'About',   to: '/about' },
   { label: 'Pricing', to: '/pricing' },
-  { label: 'Blog',      to: '/blog' },
-  
-  { label: 'Contact',   to: '/contact' },
+  { label: 'About',   to: '/about' },
+  { label: 'Contact', to: '/contact' },
 ];
 
 export default function PublicLayout() {
@@ -25,8 +23,8 @@ export default function PublicLayout() {
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground">
       {/* ── Navbar ── */}
-      <header className="sticky top-0 z-50 border-b border-border/60 bg-[hsl(var(--primary))] backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <header className="sticky top-0 z-50 border-b border-white/10 bg-[#0A0A0F] backdrop-blur-sm">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <Link to="/" onClick={() => setOpen(false)}>
             <BrandLogo size="sidebar" />
           </Link>
@@ -53,10 +51,10 @@ export default function PublicLayout() {
             {user ? (
               <Button
                 size="sm"
-                className="bg-[hsl(var(--accent))] text-white hover:bg-[hsl(var(--accent))]/90 font-semibold"
+                className="bg-[#4CAF50] text-white hover:bg-[#4CAF50]/90 font-semibold"
                 onClick={() => navigate('/dashboard')}
               >
-                Go to dashboard <ArrowRight className="ml-1.5 w-3.5 h-3.5" />
+                Dashboard <ArrowRight className="ml-1.5 w-3.5 h-3.5" />
               </Button>
             ) : (
               <>
@@ -66,7 +64,7 @@ export default function PublicLayout() {
                   </Button>
                 </Link>
                 <Link to="/register">
-                  <Button size="sm" className="bg-[hsl(var(--accent))] text-white hover:bg-[hsl(var(--accent))]/90 font-semibold">
+                  <Button size="sm" className="bg-[#4CAF50] text-white hover:bg-[#4CAF50]/90 font-semibold">
                     Get started <ArrowRight className="ml-1.5 w-3.5 h-3.5" />
                   </Button>
                 </Link>
@@ -85,7 +83,7 @@ export default function PublicLayout() {
 
         {/* Mobile menu */}
         {open && (
-          <div className="md:hidden border-t border-white/10 bg-[hsl(var(--primary))] px-4 pb-4 pt-2 space-y-1">
+          <div className="md:hidden border-t border-white/10 bg-[#0A0A0F] px-4 pb-4 pt-2 space-y-1">
             {NAV.map(n => (
               <Link
                 key={n.to}
@@ -100,12 +98,20 @@ export default function PublicLayout() {
               </Link>
             ))}
             <div className="pt-2 flex flex-col gap-2">
-              <Link to="/login" onClick={() => setOpen(false)}>
-                <Button variant="outline" size="sm" className="w-full border-white/20 text-white hover:bg-white/10 bg-transparent">Log in</Button>
-              </Link>
-              <Link to="/register" onClick={() => setOpen(false)}>
-                <Button size="sm" className="w-full bg-[hsl(var(--accent))] text-white font-semibold">Get started free</Button>
-              </Link>
+              {user ? (
+                <Link to="/dashboard" onClick={() => setOpen(false)}>
+                  <Button size="sm" className="w-full bg-[#4CAF50] text-white font-semibold">Go to dashboard</Button>
+                </Link>
+              ) : (
+                <>
+                  <Link to="/login" onClick={() => setOpen(false)}>
+                    <Button variant="outline" size="sm" className="w-full border-white/20 text-white hover:bg-white/10 bg-transparent">Log in</Button>
+                  </Link>
+                  <Link to="/register" onClick={() => setOpen(false)}>
+                    <Button size="sm" className="w-full bg-[#4CAF50] text-white font-semibold">Get started free</Button>
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         )}
@@ -117,42 +123,30 @@ export default function PublicLayout() {
       </main>
 
       {/* ── Footer ── */}
-      <footer className="bg-[hsl(var(--primary))] text-white/70 border-t border-white/10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 grid grid-cols-2 sm:grid-cols-4 gap-8">
-          <div className="col-span-2 sm:col-span-1">
-            <BrandLogo size="sidebar" />
-            <p className="mt-3 text-sm leading-relaxed text-white/50">
-              We build digital systems that help businesses attract customers, build trust, and grow. 🔥
+      <footer className="bg-[#0A0A0F] text-white/70 border-t border-white/10">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6 pb-8 border-b border-white/10">
+            <div className="flex items-center gap-3">
+              <BrandLogo size="sidebar" />
+            </div>
+            <p className="text-sm text-white/50 max-w-sm text-center md:text-right">
+              Managed Facebook & Instagram ads for businesses in Malawi. Sign up, we handle the rest.
             </p>
           </div>
-          <div>
-            <p className="text-white font-semibold text-sm mb-3">Departments</p>
-            <ul className="space-y-2 text-sm">
-              {[['Ads','/pricing'],['Designs','/designs'],['Studios','/studios'],['Sales','/sales'],['Academy','/academy'],['Dev Studio','/dev-studio']].map(([l,h])=>(
-                <li key={l}><Link to={h} className="hover:text-white transition-colors">Brandfletch {l}</Link></li>
-              ))}
-            </ul>
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-8 text-xs text-white/40">
+            <p>© {new Date().getFullYear()} Brandfletch Ads. All rights reserved.</p>
+            <div className="flex items-center gap-6">
+              <Link to="/pricing" className="hover:text-white transition-colors">Pricing</Link>
+              <Link to="/about" className="hover:text-white transition-colors">About</Link>
+              <Link to="/contact" className="hover:text-white transition-colors">Contact</Link>
+              <Link to="/privacy-policy" className="hover:text-white transition-colors">Privacy</Link>
+              <Link to="/terms" className="hover:text-white transition-colors">Terms</Link>
+            </div>
+            <div className="flex items-center gap-4">
+              <a href="https://app.brandfletch.com" className="hover:text-white transition-colors">Growth Dashboard</a>
+              <a href="https://brandfletch.com" className="hover:text-white transition-colors">Brandfletch</a>
+            </div>
           </div>
-          <div>
-            <p className="text-white font-semibold text-sm mb-3">Company</p>
-            <ul className="space-y-2 text-sm">
-              {[['About','/about'],['Blog','/blog'],['Contact','/contact'],['Privacy Policy','/privacy-policy'],['Terms','/terms']].map(([l,h])=>(
-                <li key={l}><Link to={h} className="hover:text-white transition-colors">{l}</Link></li>
-              ))}
-            </ul>
-          </div>
-          <div>
-            <p className="text-white font-semibold text-sm mb-3">Get started</p>
-            <p className="text-white/50 text-xs mb-3 leading-relaxed">Start with a discovery conversation — we'll create a strategy built around your goals.</p>
-            <Link to="/contact">
-              <Button size="sm" className="bg-[hsl(var(--accent))] text-white hover:bg-[hsl(var(--accent))]/90 font-semibold w-full">
-                Start a discussion
-              </Button>
-            </Link>
-          </div>
-        </div>
-        <div className="border-t border-white/10 text-center py-4 text-xs text-white/40">
-          © {new Date().getFullYear()} Brandfletch Media. All rights reserved.
         </div>
       </footer>
       {/* Bottom padding so content isn't hidden behind the mobile nav */}
