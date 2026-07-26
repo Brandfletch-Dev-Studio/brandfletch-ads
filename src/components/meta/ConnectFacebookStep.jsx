@@ -39,9 +39,19 @@ export default function ConnectFacebookStep({ onboardingId, onPageSelected, onEr
     setLoading(true);
     try {
       const redirectUri = `${window.location.origin}/campaigns/${getCampaignId()}/onboarding`;
-      const user = JSON.parse(localStorage.getItem('bf_user') || '{}');
+      // Try multiple sources for user ID — localStorage, Supabase session, or sessionStorage
+      let userId = '';
+      try {
+        // Try Supabase session first (most reliable)
+        const { supabase } = await import('@/api/base44Client');
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user?.id) userId = session.user.id;
+      } catch (_) {}
+      if (!userId) {
+        try { const u = JSON.parse(localStorage.getItem('bf_user') || '{}'); if (u.id) userId = u.id; } catch (_) {}
+      }
 
-      const res = await metaClient.initiate(getCampaignId(), user.id || 'unknown', redirectUri);
+      const res = await metaClient.initiate(getCampaignId(), userId || 'unknown', redirectUri);
 
       // Store onboarding_id for callback
       sessionStorage.setItem('meta_onboarding_id', res.onboarding_id);
