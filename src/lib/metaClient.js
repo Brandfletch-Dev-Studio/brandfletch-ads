@@ -9,12 +9,36 @@
 const API_BASE = import.meta.env.VITE_API_BASE || ''; // same origin on Vercel
 
 async function callApi(path, options = {}) {
+  const method = options.method || 'POST';
+  const headers = {};
+  // Only set Content-Type for requests with a body
+  if (options.body && method !== 'GET') {
+    headers['Content-Type'] = 'application/json';
+  }
+
+  // Attach Supabase auth token if available (for user verification on server)
+  try {
+    const { supabase } = await import('@/api/base44Client');
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.access_token) {
+      headers['Authorization'] = `Bearer ${session.access_token}`;
+    }
+  } catch (_) {
+    // Non-fatal — server uses service role key anyway
+  }
+
   const res = await fetch(`${API_BASE}${path}`, {
-    method: options.method || 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: options.body ? JSON.stringify(options.body) : undefined,
+    method,
+    headers,
+    body: (options.body && method !== 'GET') ? JSON.stringify(options.body) : undefined,
   });
-  const data = await res.json();
+
+  // Handle non-JSON responses gracefully
+  const text = await res.text();
+  let data;
+  try { data = JSON.parse(text); }
+  catch { data = { error: text || `Request failed (${res.status})` }; }
+
   if (!res.ok) {
     const err = new Error(data.error || `Request failed (${res.status})`);
     err.status = res.status;
