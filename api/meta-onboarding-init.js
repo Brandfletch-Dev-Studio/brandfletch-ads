@@ -4,9 +4,6 @@
  * POST /api/meta-onboarding-init
  * Body: { campaign_id, user_id, redirect_uri }
  * Returns: { oauth_url, onboarding_id }
- *
- * Creates a MetaOnboarding record in Supabase and returns the Facebook
- * OAuth URL with the scopes needed for ad creation.
  */
 import { createClient } from '@supabase/supabase-js';
 
@@ -14,7 +11,6 @@ const GRAPH_BASE = 'https://graph.facebook.com/v21.0';
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL || 'https://cxfebvtsuzcbkpzezqom.supabase.co';
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-// Scopes needed for Meta Ads management via Business Login
 const FB_SCOPES = [
   'pages_manage_ads',
   'pages_read_engagement',
@@ -37,15 +33,13 @@ export default async function handler(req, res) {
     if (!campaign_id || !user_id || !redirect_uri)
       return res.status(400).json({ error: 'Missing required fields: campaign_id, user_id, redirect_uri' });
 
-    // Validate ALL required env vars up front — fail fast with clear messages
     const appId = process.env.META_APP_ID;
     const businessId = process.env.META_BUSINESS_ID;
-    if (!appId) return res.status(500).json({ error: 'Server misconfigured: META_APP_ID is missing. Contact support.' });
+    if (!appId) return res.status(500).json({ error: 'Server misconfigured: META_APP_ID is missing.' });
     if (!SUPABASE_SERVICE_KEY) return res.status(500).json({ error: 'Server misconfigured: SUPABASE_SERVICE_ROLE_KEY is missing.' });
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
-    // Create onboarding record
     const { data: onboarding, error: dbErr } = await supabase
       .from('MetaOnboarding')
       .insert({ campaign_id, user_id, step: 'connect_facebook', status: 'pending', permissions_granted: false })
@@ -53,10 +47,9 @@ export default async function handler(req, res) {
 
     if (dbErr) {
       console.error('Failed to create onboarding record:', dbErr);
-      return res.status(500).json({ error: 'Failed to create onboarding record' });
+      return res.status(500).json({ error: 'Failed to create onboarding record: ' + dbErr.message });
     }
 
-    // Build Facebook OAuth URL — state = onboarding_id for callback lookup
     const state = onboarding.id;
     const oauthUrl = new URL('https://www.facebook.com/v21.0/dialog/oauth');
     oauthUrl.searchParams.set('client_id', appId);
@@ -65,8 +58,6 @@ export default async function handler(req, res) {
     oauthUrl.searchParams.set('state', state);
     oauthUrl.searchParams.set('response_type', 'code');
 
-    // Login for Business — pre-select Brandfletch's Business
-    const businessId = process.env.META_BUSINESS_ID;
     if (businessId) {
       oauthUrl.searchParams.set('extras', JSON.stringify({ setup: { business: businessId } }));
     }
