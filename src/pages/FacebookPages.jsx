@@ -96,7 +96,7 @@ export default function FacebookPages() {
     if (!code || !state) return;
 
     // Clean the URL immediately so refresh doesn't re-trigger
-    navigate('/facebook-pages', { replace: true });
+    navigate('/pages', { replace: true });
 
     const savedRedirectUri = sessionStorage.getItem(REDIRECT_URI_KEY);
     if (!savedRedirectUri) {
@@ -130,7 +130,7 @@ export default function FacebookPages() {
   async function handleConnect() {
     setFlowStep('connecting');
     try {
-      const redirectUri = `${window.location.origin}/facebook-pages`;
+      const redirectUri = `${window.location.origin}/pages`;
       sessionStorage.setItem(REDIRECT_URI_KEY, redirectUri);
 
       let userId = user?.id || '';
