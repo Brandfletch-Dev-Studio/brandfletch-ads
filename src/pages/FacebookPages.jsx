@@ -1,10 +1,10 @@
 /**
- * Facebook Pages — uses the premium Meta onboarding flow
+ * Facebook Pages — Meta OAuth onboarding flow
  *
  * "Connect a Page" → Facebook Login for Business OAuth
  * → Page selection → access verification → saved to FacebookPage table
  *
- * The OAuth callback lands back on this same page (/facebook-pages?code=...&state=...)
+ * The OAuth callback lands back on this same page (/pages?code=...&state=...)
  * and is handled inline here.
  */
 import { useState, useEffect, useCallback } from 'react';
@@ -27,8 +27,6 @@ import { cn } from '@/lib/utils';
 const REDIRECT_URI_KEY = 'bf_fb_pages_redirect_uri';
 const ONBOARDING_ID_KEY = 'bf_fb_pages_onboarding_id';
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
 function StatusBadge({ status }) {
   if (status === 'connected')
     return (
@@ -49,8 +47,6 @@ function StatusBadge({ status }) {
   );
 }
 
-// ── Main component ────────────────────────────────────────────────────────────
-
 export default function FacebookPages() {
   const { user, isLoadingAuth } = useAuth();
   const [searchParams] = useSearchParams();
@@ -59,16 +55,14 @@ export default function FacebookPages() {
   const [pages, setPages] = useState([]);
   const [loadingPages, setLoadingPages] = useState(true);
 
-  // OAuth / connect flow state
-  const [flowStep, setFlowStep] = useState('idle'); // idle | connecting | selecting | verifying | saving | done | error
+  const [flowStep, setFlowStep] = useState('idle');
   const [oauthPages, setOAuthPages] = useState([]);
   const [oauthBusinesses, setOAuthBusinesses] = useState([]);
   const [selectedPage, setSelectedPage] = useState(null);
   const [selectedBusiness, setSelectedBusiness] = useState('');
   const [onboardingId, setOnboardingId] = useState(null);
   const [verifyResult, setVerifyResult] = useState(null);
-
-  // ── Load saved pages ──────────────────────────────────────────────────────
+  const [errorMsg, setErrorMsg] = useState('');
 
   const loadPages = useCallback(async (uid) => {
     try {
@@ -89,23 +83,38 @@ export default function FacebookPages() {
   }, [user?.id, isLoadingAuth, loadPages]);
 
   // ── Handle OAuth callback ────────────────────────────────────────────────
-
   useEffect(() => {
     const code = searchParams.get('code');
     const state = searchParams.get('state');
+    const fbError = searchParams.get('error');
+    const fbErrorDesc = searchParams.get('error_description');
+
+    // Facebook returned an error (e.g. user denied permissions)
+    if (fbError) {
+      navigate('/pages', { replace: true });
+      const msg = fbErrorDesc || fbError || 'Facebook authorization was cancelled or failed.';
+      setErrorMsg(msg);
+      setFlowStep('error');
+      toast.error(msg);
+      return;
+    }
+
     if (!code || !state) return;
 
-    // Clean the URL immediately so refresh doesn't re-trigger
     navigate('/pages', { replace: true });
 
     const savedRedirectUri = sessionStorage.getItem(REDIRECT_URI_KEY);
     if (!savedRedirectUri) {
-      toast.error('Session expired. Please try connecting again.');
+      const msg = 'Session expired. Please try connecting again.';
+      setErrorMsg(msg);
+      setFlowStep('error');
+      toast.error(msg);
       return;
     }
 
     setOnboardingId(state);
     setFlowStep('selecting');
+    setErrorMsg('');
 
     (async () => {
       try {
@@ -113,22 +122,25 @@ export default function FacebookPages() {
         setOAuthPages(res.pages || []);
         setOAuthBusinesses(res.businesses || []);
         if ((res.pages || []).length === 0) {
-          toast.info('No Facebook Pages found on this account. Make sure you have a Business Page.');
+          toast.info('No Facebook Pages found. Make sure you have a Business Page.');
         } else {
           toast.success(`Found ${res.pages.length} Facebook Page${res.pages.length !== 1 ? 's' : ''}`);
         }
       } catch (err) {
-        toast.error(err.message || 'Facebook login failed');
+        console.error('OAuth callback failed:', err);
+        const msg = err.message || 'Facebook login failed. Please try again.';
+        setErrorMsg(msg);
         setFlowStep('error');
+        toast.error(msg);
       }
     })();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  [], [searchParams, navigate]);
 
   // ── Step 1: Start Facebook Login ─────────────────────────────────────────
-
   async function handleConnect() {
     setFlowStep('connecting');
+    setErrorMsg('');
     try {
       const redirectUri = `${window.location.origin}/pages`;
       sessionStorage.setItem(REDIRECT_URI_KEY, redirectUri);
@@ -139,20 +151,20 @@ export default function FacebookPages() {
         if (session?.user?.id) userId = session.user.id;
       }
 
-      // Create a standalone onboarding record (not tied to a specific campaign)
       const res = await metaClient.initiate('standalone', userId || 'unknown', redirectUri);
       sessionStorage.setItem(ONBOARDING_ID_KEY, res.onboarding_id);
 
-      // Redirect to Facebook OAuth
       window.location.href = res.oauth_url;
     } catch (err) {
-      toast.error(err.message || 'Failed to start Facebook login');
-      setFlowStep('idle');
+      console.error('Failed to start Facebook login:', err);
+      const msg = err.message || 'Failed to start Facebook login.';
+      setErrorMsg(msg);
+      setFlowStep('error');
+      toast.error(msg);
     }
   }
 
-  // ── Step 2: Verify access after page selection ───────────────────────────
-
+  // ── Step 2: Verify access ───────────────────────────────────────────────
   async function handleVerifyAccess() {
     if (!selectedPage) { toast.error('Please select a Facebook Page'); return; }
     setFlowStep('verifying');
@@ -166,23 +178,23 @@ export default function FacebookPages() {
       if (res.has_access) {
         await savePageToDb(res);
       } else {
-        setFlowStep('selecting'); // Stay on selection, show instructions
+        setFlowStep('selecting');
       }
     } catch (err) {
-      toast.error(err.message || 'Failed to verify page access');
-      setFlowStep('selecting');
+      console.error('Verify access failed:', err);
+      const msg = err.message || 'Failed to verify page access.';
+      setErrorMsg(msg);
+      setFlowStep('error');
+      toast.error(msg);
     }
   }
 
   // ── Step 3: Save to DB ───────────────────────────────────────────────────
-
   async function savePageToDb(accessResult) {
     setFlowStep('saving');
     try {
-      // Check if page already exists
       const existing = await base44.entities.FacebookPage.filter({ page_id: selectedPage.id });
       if (existing?.length > 0) {
-        // Update existing record
         await base44.entities.FacebookPage.update(existing[0].id, {
           page_name: selectedPage.name || accessResult.page_name,
           connection_status: 'connected',
@@ -203,8 +215,10 @@ export default function FacebookPages() {
       await loadPages(user.id);
     } catch (err) {
       console.error('Failed to save page:', err);
-      toast.error('Failed to save page. Please try again.');
-      setFlowStep('selecting');
+      const msg = err.message || 'Failed to save page.';
+      setErrorMsg(msg);
+      setFlowStep('error');
+      toast.error(msg);
     }
   }
 
@@ -216,9 +230,8 @@ export default function FacebookPages() {
     setSelectedBusiness('');
     setOnboardingId(null);
     setVerifyResult(null);
+    setErrorMsg('');
   }
-
-  // ── Render ────────────────────────────────────────────────────────────────
 
   if (isLoadingAuth || loadingPages) {
     return (
@@ -231,7 +244,6 @@ export default function FacebookPages() {
   return (
     <div className="p-4 lg:p-8 max-w-4xl mx-auto space-y-6">
 
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold font-heading">Facebook Pages</h1>
@@ -244,11 +256,9 @@ export default function FacebookPages() {
         )}
       </div>
 
-      {/* ── Inline connect flow ── */}
       {flowStep !== 'idle' && flowStep !== 'done' && (
         <Card>
           <CardContent className="p-6">
-            {/* Connecting (OAuth redirect loading) */}
             {flowStep === 'connecting' && (
               <div className="flex flex-col items-center py-10 gap-3">
                 <Loader2 className="w-8 h-8 animate-spin text-[hsl(var(--primary))]" />
@@ -256,7 +266,6 @@ export default function FacebookPages() {
               </div>
             )}
 
-            {/* Page selection */}
             {flowStep === 'selecting' && (
               <div className="space-y-5">
                 <div className="flex items-center justify-between">
@@ -269,7 +278,6 @@ export default function FacebookPages() {
                   <Button variant="ghost" size="sm" onClick={resetFlow}>Cancel</Button>
                 </div>
 
-                {/* Access denied instructions */}
                 {verifyResult && !verifyResult.has_access && (
                   <div className="rounded-xl border border-amber-300 bg-amber-50 dark:bg-amber-900/20 p-4 space-y-2">
                     <p className="font-semibold text-sm text-amber-800 dark:text-amber-300">
@@ -367,7 +375,6 @@ export default function FacebookPages() {
               </div>
             )}
 
-            {/* Verifying access */}
             {flowStep === 'verifying' && (
               <div className="flex flex-col items-center py-10 gap-3">
                 <Loader2 className="w-8 h-8 animate-spin text-[hsl(var(--primary))]" />
@@ -376,7 +383,6 @@ export default function FacebookPages() {
               </div>
             )}
 
-            {/* Saving */}
             {flowStep === 'saving' && (
               <div className="flex flex-col items-center py-10 gap-3">
                 <Loader2 className="w-8 h-8 animate-spin text-[hsl(var(--primary))]" />
@@ -384,19 +390,39 @@ export default function FacebookPages() {
               </div>
             )}
 
-            {/* Error */}
             {flowStep === 'error' && (
               <div className="text-center py-8 space-y-4">
                 <XCircle className="w-10 h-10 text-destructive mx-auto" />
                 <p className="font-medium">Something went wrong</p>
-                <Button variant="outline" onClick={resetFlow}>Try Again</Button>
+                {errorMsg && (
+                  <p className="text-sm text-destructive bg-destructive/10 p-3 rounded-lg border border-destructive/20 max-w-md mx-auto text-left">
+                    {errorMsg}
+                  </p>
+                )}
+                <div className="flex items-center justify-center gap-3">
+                  <Button variant="outline" onClick={resetFlow}>Cancel</Button>
+                  <Button onClick={handleConnect} className="gap-2">
+                    <RefreshCw className="w-4 h-4" /> Try Again
+                  </Button>
+                </div>
               </div>
             )}
           </CardContent>
         </Card>
       )}
 
-      {/* ── Connected pages list ── */}
+      {/* Done state */}
+      {flowStep === 'done' && (
+        <Card className="border-green-200 dark:border-green-900">
+          <CardContent className="p-6 text-center space-y-3">
+            <CheckCircle2 className="w-10 h-10 text-green-500 mx-auto" />
+            <p className="font-medium">Page connected successfully!</p>
+            <Button variant="outline" onClick={resetFlow}>Back to pages</Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Connected pages list */}
       {pages.length === 0 && flowStep === 'idle' ? (
         <Card className="border-dashed">
           <CardContent className="p-8 text-center">
