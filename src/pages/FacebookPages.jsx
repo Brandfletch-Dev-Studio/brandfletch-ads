@@ -135,7 +135,7 @@ export default function FacebookPages() {
       }
     })();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  [], [searchParams, navigate]);
+  }, [searchParams, navigate]);
 
   // ── Step 1: Start Facebook Login ─────────────────────────────────────────
   async function handleConnect() {
