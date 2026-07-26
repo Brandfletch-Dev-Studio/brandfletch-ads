@@ -1,21 +1,22 @@
 /**
  * Onboarding Progress Tracker
  *
- * Visual stepper showing the 5 stages of Meta onboarding:
- * Payment → Connect Facebook → Verify Access → Campaign Creation → Live
+ * Visual stepper showing the stages of Meta onboarding:
+ * Payment → Select Page → Connect Facebook → Verify Access → Campaign Creation → Live
  *
  * Each step has an icon, label, and state (complete | active | pending | error).
  * Responsive: horizontal on desktop, scrollable on mobile.
  */
-import { Check, CreditCard, Facebook, ShieldCheck, Rocket, Zap } from 'lucide-react';
+import { Check, CreditCard, FileCheck, Facebook, ShieldCheck, Rocket, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const STEPS = [
-  { id: 'payment',             label: 'Payment',            icon: CreditCard, short: 'Payment' },
-  { id: 'connect_facebook',    label: 'Connect Facebook',  icon: Facebook,   short: 'Connect' },
-  { id: 'verify_access',       label: 'Verify Access',      icon: ShieldCheck, short: 'Verify' },
-  { id: 'campaign_creation',   label: 'Campaign Creation', icon: Rocket,     short: 'Create' },
-  { id: 'live',                label: 'Live',               icon: Zap,        short: 'Live' },
+  { id: 'payment',          label: 'Payment',            icon: CreditCard,  short: 'Payment' },
+  { id: 'page_selection',   label: 'Select Page',        icon: FileCheck,   short: 'Page' },
+  { id: 'connect_facebook', label: 'Connect Facebook',   icon: Facebook,    short: 'Connect' },
+  { id: 'verify_access',    label: 'Verify Access',       icon: ShieldCheck, short: 'Verify' },
+  { id: 'campaign_creation', label: 'Campaign Creation', icon: Rocket,      short: 'Create' },
+  { id: 'live',             label: 'Live',                icon: Zap,         short: 'Live' },
 ];
 
 const STEP_ORDER = STEPS.map(s => s.id);

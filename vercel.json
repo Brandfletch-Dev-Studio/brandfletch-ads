@@ -6,12 +6,12 @@
   "redirects": [
     {
       "source": "/auth/callback",
-      "destination": "https://brandfletch.com/auth/callback",
+      "destination": "https://ads.brandfletch.com/auth/callback",
       "permanent": false,
       "has": [
         {
           "type": "host",
-          "value": "(?!brandfletch\\.com).*"
+          "value": "(?!ads\\.brandfletch\\.com).*"
         }
       ]
     }

@@ -36,10 +36,10 @@ export default async function handler(req, res) {
     if (!code || !state || !redirect_uri)
       return res.status(400).json({ error: 'Missing required fields: code, state, redirect_uri' });
 
-    const appId = process.env.META_APP_ID;
-    const appSecret = process.env.META_APP_SECRET;
-    if (!appId) return res.status(500).json({ error: 'Server misconfigured: META_APP_ID is missing.' });
-    if (!appSecret) return res.status(500).json({ error: 'Server misconfigured: META_APP_SECRET is missing.' });
+    const appId = process.env.META_LOGIN_APP_ID;
+    const appSecret = process.env.META_LOGIN_APP_SECRET;
+    if (!appId) return res.status(500).json({ error: 'Server misconfigured: META_LOGIN_APP_ID is missing.' });
+    if (!appSecret) return res.status(500).json({ error: 'Server misconfigured: META_LOGIN_APP_SECRET is missing.' });
     if (!SUPABASE_SERVICE_KEY) return res.status(500).json({ error: 'Server misconfigured: SUPABASE_SERVICE_ROLE_KEY is missing.' });
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
@@ -89,7 +89,7 @@ export default async function handler(req, res) {
     await supabase.from('MetaOnboarding').update({
       fb_user_access_token: shortLivedToken,
       fb_long_lived_token: longLivedToken,
-      step: 'page_selected', status: 'awaiting_page_selection',
+      step: 'page_selection', status: 'awaiting_page_selection',
       updated_at: new Date().toISOString(),
     }).eq('id', state);
 

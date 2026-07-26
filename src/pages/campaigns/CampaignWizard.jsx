@@ -115,6 +115,7 @@ export default function CampaignWizard() {
         platform:             data.platform || 'meta',
         campaign_name:        data.campaign_name,
         user_id:              user?.id || null,
+        created_by:           user?.id || null,
         page_id:              data.page_id || '',
         page_name:            data.page_name || '',
         goal:                 data.goal || undefined,

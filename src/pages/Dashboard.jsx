@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/lib/AuthContext';
-import { Palette, Target, Megaphone, Clock } from 'lucide-react';
+import { Megaphone, Clock } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -15,22 +15,16 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Fix #1: wait for auth to finish loading before attempting data fetch
-    // Without this guard, user is null on first render and data never loads
     if (isLoadingAuth) return;
     if (!user?.id) return;
 
     async function loadData() {
       setLoading(true);
       try {
-        // Fix #1b: use correct filter API — no extra sort/limit positional args
-        // Base44 SDK filter: (query, options?) — sort & limit go in options object
-        const [des, lds, camps] = await Promise.all([
-          base44.entities.Campaign.filter({ created_by: user.id }, { sort: '-created_date', limit: 5 }).catch(() => []),
-        ]);
-        setDesigns(des);
-        setLeads(lds);
-        setCampaigns(camps);
+        const camps = await base44.entities.Campaign
+          .filter({ created_by: user.id }, { sort: '-created_date', limit: 5 })
+          .catch(() => []);
+        setCampaigns(camps || []);
       } catch (err) {
         console.error('Dashboard load error:', err);
         toast.error('Failed to load dashboard data. Please refresh.');
@@ -39,7 +33,7 @@ export default function Dashboard() {
       }
     }
     loadData();
-  }, [user?.id, isLoadingAuth]); // Fix #1c: depend on isLoadingAuth so it retries once auth resolves
+  }, [user?.id, isLoadingAuth]);
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -50,9 +44,10 @@ export default function Dashboard() {
   };
 
   const activeCampaigns = campaigns.filter(c => c.status === 'active').length;
-  const pendingCampaigns = campaigns.filter(c => ['pending_review', 'awaiting_payment', 'draft'].includes(c.status)).length;
+  const pendingCampaigns = campaigns.filter(c =>
+    ['pending_review', 'awaiting_payment', 'draft'].includes(c.status)
+  ).length;
 
-  // Show skeleton while auth is loading OR data is loading
   if (isLoadingAuth || loading || !user) {
     return (
       <div className="p-4 lg:p-8 space-y-6">
@@ -125,20 +120,6 @@ export default function Dashboard() {
           </Card>
         </Link>
       </div>
-
-      {/* Explore Services CTA */}
-      <div className="rounded-2xl border border-primary/20 bg-gradient-to-r from-primary/5 to-primary/10 p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <p className="font-semibold text-foreground mb-1">Explore all Brandfletch services</p>
-          <p className="text-sm text-muted-foreground">Meta Ads management — transparent pricing, no surprises.</p>
-        </div>
-        <Link to="/pricing">
-          <Button variant="default" size="sm" className="shrink-0 gap-2 whitespace-nowrap">
-            View Pricing →
-          </Button>
-        </Link>
-      </div>
-
-</div>
+    </div>
   );
 }
