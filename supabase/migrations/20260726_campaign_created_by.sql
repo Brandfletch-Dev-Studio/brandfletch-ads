@@ -3,30 +3,25 @@
 -- created_by = auth.uid(), but the insert from the wizard didn't set it
 -- and no trigger existed to auto-populate it.
 --
--- This migration:
--- 1. Ensures the column exists
--- 2. Backfills it from user_id for existing campaigns
--- 3. Adds a trigger to auto-populate it on future inserts
+-- Note: created_by already exists as UUID on the Campaign table (added by
+-- Base44 during initial table creation). We just need to backfill and
+-- add the trigger.
 
--- 1. Ensure created_by column exists
-ALTER TABLE public."Campaign" ADD COLUMN IF NOT EXISTS created_by TEXT;
-
--- 2. Backfill from user_id where created_by is NULL
+-- 1. Backfill from user_id (cast text -> uuid) for existing campaigns
 UPDATE public."Campaign"
-SET created_by = user_id
+SET created_by = user_id::uuid
 WHERE created_by IS NULL AND user_id IS NOT NULL;
 
--- 3. Trigger to auto-set created_by = auth.uid() on insert
--- (in case the app doesn't set it explicitly)
+-- 2. Trigger to auto-set created_by = auth.uid() on insert
 CREATE OR REPLACE FUNCTION public.set_campaign_created_by()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER AS $func$
 BEGIN
   IF NEW.created_by IS NULL THEN
-    NEW.created_by := auth.uid()::text;
+    NEW.created_by := auth.uid();
   END IF;
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$func$ LANGUAGE plpgsql SECURITY DEFINER;
 
 DROP TRIGGER IF EXISTS trg_campaign_set_created_by ON public."Campaign";
 CREATE TRIGGER trg_campaign_set_created_by
