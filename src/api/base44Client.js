@@ -24,7 +24,7 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
-    detectSessionInUrl: true,
+    detectSessionInUrl: false,  // Disabled — was intercepting Facebook OAuth code params on /pages redirect
   },
 });
 
