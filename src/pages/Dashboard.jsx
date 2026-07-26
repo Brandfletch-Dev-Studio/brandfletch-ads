@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/lib/AuthContext';
-import { Palette, Target, Megaphone, Clock } from 'lucide-react';
+import { Palette, Target, Megaphone, Clock, Facebook } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -12,6 +12,7 @@ export default function Dashboard() {
   const { user, isLoadingAuth } = useAuth();
 
   const [campaigns, setCampaigns] = useState([]);
+  const [fbPages, setFbPages] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -25,12 +26,14 @@ export default function Dashboard() {
       try {
         // Fix #1b: use correct filter API — no extra sort/limit positional args
         // Base44 SDK filter: (query, options?) — sort & limit go in options object
-        const [des, lds, camps] = await Promise.all([
+        const [des, lds, camps, fbPagesData] = await Promise.all([
           base44.entities.Campaign.filter({ created_by: user.id }, { sort: '-created_date', limit: 5 }).catch(() => []),
+          base44.entities.FacebookPage.filter({ created_by: user.id }).catch(() => []),
         ]);
         setDesigns(des);
         setLeads(lds);
         setCampaigns(camps);
+        setFbPages(fbPagesData || []);
       } catch (err) {
         console.error('Dashboard load error:', err);
         toast.error('Failed to load dashboard data. Please refresh.');
@@ -91,6 +94,28 @@ export default function Dashboard() {
 
       {/* Onboarding Checklist — shown to new users until all steps complete */}
       <CompleteProfileChecklist />
+
+      {/* Facebook Pages connection prompt — shown if user has no connected pages */}
+      {fbPages.filter(p => p.connection_status === 'connected').length === 0 && (
+        <Card className="border-2 border-blue-200 dark:border-blue-900 bg-blue-50/50 dark:bg-blue-950/20">
+          <CardContent className="p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
+                <Facebook className="w-6 h-6 text-blue-600" />
+              </div>
+              <div>
+                <p className="font-semibold text-foreground mb-0.5">Connect your Facebook Page</p>
+                <p className="text-sm text-muted-foreground">Grant Brandfletch access to manage your ads programmatically. Do this before creating a campaign for a smoother flow.</p>
+              </div>
+            </div>
+            <Link to="/pages">
+              <Button className="gap-2 bg-blue-600 hover:bg-blue-700 text-white shrink-0 whitespace-nowrap">
+                <Facebook className="w-4 h-4" /> Connect Page
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Quick Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
