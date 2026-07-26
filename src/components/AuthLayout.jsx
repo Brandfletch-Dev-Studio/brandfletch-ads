@@ -1,58 +1,39 @@
 import React from "react";
 import BrandLogo from "@/components/BrandLogo";
 
-export default function AuthLayout({ title, subtitle, footer, children, hideBrand }) {
+export default function AuthLayout({ title, subtitle, footer, children, hideBrand, ...rest }) {
   return (
-    <div className="h-screen flex bg-background overflow-hidden">
-      {/* Left panel – decorative (desktop only) */}
-      <div className="hidden lg:flex lg:w-[45%] bg-[hsl(var(--primary))] flex-col items-center justify-center p-12 relative overflow-hidden">
-        <div className="absolute -top-24 -left-24 w-72 h-72 rounded-full bg-white/5" />
-        <div className="absolute -bottom-32 -right-20 w-96 h-96 rounded-full bg-white/5" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-white/[0.03]" />
-
-        <div className="relative z-10 text-center">
-          {!hideBrand && <BrandLogo size="lg" />}
-          {!hideBrand && (
-            <h2 className="text-white text-3xl font-bold font-heading mt-8 leading-tight">
-              Grow your business<br />with smart advertising
-            </h2>
-          )}
-          <p className="text-white/60 mt-4 text-base max-w-xs mx-auto">
-            Launch professionally managed Facebook &amp; Instagram campaigns — no expertise needed.
-          </p>
-          <div className="flex flex-wrap justify-center gap-2 mt-8">
-            {['Facebook Ads', 'Instagram Ads', 'AI Targeting', 'Real-time Reports', 'Africa-first'].map(f => (
-              <span key={f} className="px-3 py-1.5 rounded-full bg-white/10 text-white/80 text-xs font-medium border border-white/10">
-                {f}
-              </span>
-            ))}
-          </div>
-        </div>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-[#13131d] px-4 py-12">
+      {/* Brand Growth System Header (Always outside and white) */}
+      <div className="text-center mb-6">
+        <h1 className="text-xl font-bold text-white">Brandfletch Growth System</h1>
+        <p className="text-sm text-gray-400 mt-1">One login for all Brandfletch platforms</p>
       </div>
 
-      {/* Right panel – form */}
-      <div className="flex-1 flex flex-col items-center justify-center px-4 overflow-y-auto">
+      {/* Centered White Form Card */}
+      <div className="w-full max-w-[440px] bg-white rounded-xl p-6 sm:p-8 shadow-lg">
         {!hideBrand && (
-          <div className="lg:hidden mb-6 w-full max-w-md flex justify-center">
+          <div className="flex justify-center mb-6">
             <BrandLogo size="md" dark />
           </div>
         )}
 
-        <div className="w-full max-w-md py-8">
-          <div className="mb-8 text-center">
-            <h1 className="text-2xl font-bold font-heading text-foreground">{title}</h1>
-            {subtitle && <p className="text-muted-foreground mt-1 text-sm">{subtitle}</p>}
+        {(title || subtitle) && (
+          <div className="mb-6 text-center">
+            {title && <h2 className="text-2xl font-bold text-gray-900 font-heading">{title}</h2>}
+            {subtitle && <p className="text-sm text-gray-500 mt-1">{subtitle}</p>}
           </div>
+        )}
 
-          <div className="bg-card rounded-2xl shadow-sm border border-border p-7">
-            {children}
-          </div>
-
-          {footer && (
-            <p className="text-center text-sm text-muted-foreground mt-5">{footer}</p>
-          )}
-        </div>
+        {children}
       </div>
+
+      {/* Footer Text (Below Card, gray-500) */}
+      {footer && (
+        <div className="mt-6 text-center text-sm text-gray-500">
+          {footer}
+        </div>
+      )}
     </div>
   );
 }
