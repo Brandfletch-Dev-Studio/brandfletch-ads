@@ -14,17 +14,15 @@ export default function Login() {
   const [error, setError]       = useState("");
   const [loading, setLoading]   = useState(false);
   const [showPass, setShowPass] = useState(false);
-  const [notice, setNotice]     = useState(""); // non-error informational banner
+  const [notice, setNotice]     = useState("");
 
   useEffect(() => {
-    // Pre-fill email if redirected from register page (existing account detected)
     const params   = new URLSearchParams(window.location.search);
     const prefill  = params.get('email');
     const reason   = params.get('reason');
     const redirect = params.get('redirect');
 
     if (prefill)  setEmail(decodeURIComponent(prefill));
-    // Persist the intended destination so handleSubmit can use it
     if (redirect) sessionStorage.setItem('bf_post_login_redirect', decodeURIComponent(redirect));
 
     if (reason === 'existing') {
@@ -34,7 +32,6 @@ export default function Login() {
       setNotice("No account found for that email. Create one below for free.");
     }
 
-    // If already logged in redirect away
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         localStorage.setItem('bf_visited', '1');
@@ -56,25 +53,16 @@ export default function Login() {
       if (signInError) {
         const msg = signInError.message?.toLowerCase() || '';
 
-        // "Invalid login credentials" is Supabase's generic error for:
-        //   a) wrong password, OR b) email not found
-        // We attempt to distinguish them to give the right redirect.
         if (msg.includes('invalid login') || msg.includes('invalid credentials') || msg.includes('invalid_credentials')) {
-          // Try to figure out if the user simply doesn't have an account
-          // by attempting a dummy signUp — if identities[] is empty → exists → wrong password
-          // if identities[] has an entry → new user → redirect to register
           const { data: probeData } = await supabase.auth.signUp({
             email,
-            password: crypto.randomUUID(), // throwaway password
+            password: crypto.randomUUID(),
             options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
           });
 
-          // identities empty → account exists → wrong password
           if (probeData?.user?.identities?.length === 0) {
             throw new Error("Incorrect password. Please try again, or use 'Forgot password' to reset it.");
           } else {
-            // identities has entry → no account exists → redirect to register
-            // Clean up the ghost signup attempt immediately
             navigate(`/register?email=${encodeURIComponent(email)}&reason=no_account`, { replace: true });
             return;
           }
@@ -105,31 +93,29 @@ export default function Login() {
       title="Welcome back"
       subtitle="Log in to continue growing your business with Brandfletch Media"
       footer={
-        <>
+        <span className="text-gray-400 text-sm">
           New here?{" "}
           <Link
             to={(() => {
               const r = new URLSearchParams(window.location.search).get('redirect');
               return r ? `/register?redirect=${encodeURIComponent(r)}` : '/register';
             })()}
-            className="text-[hsl(var(--accent))] font-semibold hover:underline"
+            className="text-indigo-400 hover:text-indigo-300 font-semibold hover:underline ml-1"
           >
             Create a free account
           </Link>
-        </>
+        </span>
       }
     >
-      {/* Informational notice (non-error, e.g. redirected from register) */}
       {notice && !error && (
-        <div className="mb-4 p-3 rounded-lg bg-primary/8 border border-primary/20 text-sm flex items-start gap-2">
-          <Info className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-          <span className="text-foreground">{notice}</span>
+        <div className="mb-4 p-3 rounded-lg bg-indigo-50 border border-indigo-100 text-sm flex items-start gap-2">
+          <Info className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
+          <span className="text-indigo-900 font-medium">{notice}</span>
         </div>
       )}
 
-      {/* Error banner */}
       {error && (
-        <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
+        <div className="mb-4 p-3 rounded-lg bg-red-50 text-red-600 text-sm border border-red-100">
           {error}
         </div>
       )}
@@ -138,13 +124,13 @@ export default function Login() {
         <div className="space-y-1.5">
           <Label htmlFor="email">Email</Label>
           <div className="relative">
-            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <Input
               id="email" type="email" autoComplete="email"
-              autoFocus={!email} // only autofocus if email isn't prefilled
+              autoFocus={!email}
               placeholder="you@example.com"
               value={email} onChange={(e) => setEmail(e.target.value)}
-              className="pl-10 h-11" required
+              className="pl-10 h-11 text-black bg-white" required
             />
           </div>
         </div>
@@ -152,23 +138,23 @@ export default function Login() {
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
             <Label htmlFor="password">Password</Label>
-            <Link to="/forgot-password" className="text-xs text-[hsl(var(--accent))] hover:underline">
+            <Link to="/forgot-password" className="text-xs text-[#4f46e5] hover:underline font-semibold">
               Forgot password?
             </Link>
           </div>
           <div className="relative">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <Input
               id="password" type={showPass ? "text" : "password"}
               autoComplete="current-password" placeholder="••••••••"
-              autoFocus={!!email} // autofocus password if email was prefilled
+              autoFocus={!!email}
               value={password} onChange={(e) => setPassword(e.target.value)}
-              className="pl-10 pr-10 h-11" required
+              className="pl-10 pr-10 h-11 text-black bg-white" required
             />
             <button
               type="button" tabIndex={-1}
               onClick={() => setShowPass(p => !p)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
             >
               {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
@@ -177,7 +163,7 @@ export default function Login() {
 
         <Button
           type="submit"
-          className="w-full h-11 font-semibold bg-[hsl(var(--primary))] text-primary-foreground"
+          className="w-full h-11 font-semibold bg-[#4f46e5] hover:bg-[#4338ca] text-white"
           disabled={loading}
         >
           {loading
