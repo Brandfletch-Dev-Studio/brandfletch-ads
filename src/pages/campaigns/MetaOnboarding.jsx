@@ -61,32 +61,8 @@ export default function MetaOnboarding() {
       }
       setCampaign(camp);
 
-      // Check if onboarding already exists for this campaign
-      try {
-        const existing = await metaClient.getStatusByCampaign(id);
-        if (existing) {
-          setOnboardingId(existing.id);
-          setStep(existing.step || 'connect_facebook');
-          setStatus(existing.status || 'pending');
-          setPageInfo(existing.fb_page_id ? {
-            id: existing.fb_page_id,
-            name: existing.fb_page_name,
-          } : null);
-          setBusinessInfo(existing.fb_business_id ? {
-            id: existing.fb_business_id,
-            name: existing.fb_business_name,
-          } : null);
-          if (existing.step === 'campaign_creation' && existing.status === 'campaign_created') {
-            setIsLive(true);
-          }
-        }
-      } catch (_) {
-        // No existing onboarding — start fresh
-      }
-
-      // Handle OAuth callback (code + state in URL) — done DIRECTLY here,
-      // not via window.__metaOnboardingCallback (which was a race condition:
-      // ConnectFacebookStep may not be mounted yet when this runs)
+      // ── Check OAuth callback FIRST — if there's a code in the URL,
+      // process it immediately before loading (potentially stale) existing state
       const code = searchParams.get('code');
       const state = searchParams.get('state');
       if (code && state) {
@@ -116,6 +92,29 @@ export default function MetaOnboarding() {
           setStatus('error');
         }
         return; // Don't continue loading state — we just handled the callback
+      }
+
+      // ── No OAuth callback — check for existing onboarding (resumability) ──
+      try {
+        const existing = await metaClient.getStatusByCampaign(id);
+        if (existing) {
+          setOnboardingId(existing.id);
+          setStep(existing.step || 'connect_facebook');
+          setStatus(existing.status || 'pending');
+          setPageInfo(existing.fb_page_id ? {
+            id: existing.fb_page_id,
+            name: existing.fb_page_name,
+          } : null);
+          setBusinessInfo(existing.fb_business_id ? {
+            id: existing.fb_business_id,
+            name: existing.fb_business_name,
+          } : null);
+          if (existing.step === 'campaign_creation' && existing.status === 'campaign_created') {
+            setIsLive(true);
+          }
+        }
+      } catch (_) {
+        // No existing onboarding — start fresh
       }
     } catch (err) {
       console.error('Failed to load onboarding state:', err);
