@@ -36,10 +36,10 @@ export default async function handler(req, res) {
     if (!code || !state || !redirect_uri)
       return res.status(400).json({ error: 'Missing required fields: code, state, redirect_uri' });
 
-    const appId = process.env.META_APP_ID;
-    const appSecret = process.env.META_APP_SECRET;
-    if (!appId) return res.status(500).json({ error: 'Server misconfigured: META_APP_ID is missing.' });
-    if (!appSecret) return res.status(500).json({ error: 'Server misconfigured: META_APP_SECRET is missing.' });
+    const appId = process.env.META_LOGIN_APP_ID;
+    const appSecret = process.env.META_LOGIN_APP_SECRET;
+    if (!appId) return res.status(500).json({ error: 'Server misconfigured: META_LOGIN_APP_ID is missing.' });
+    if (!appSecret) return res.status(500).json({ error: 'Server misconfigured: META_LOGIN_APP_SECRET is missing.' });
     if (!SUPABASE_SERVICE_KEY) return res.status(500).json({ error: 'Server misconfigured: SUPABASE_SERVICE_ROLE_KEY is missing.' });
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
