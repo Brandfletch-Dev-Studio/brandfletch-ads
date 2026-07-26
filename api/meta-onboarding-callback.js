@@ -13,10 +13,14 @@ const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 async function graphGet(path, params) {
   const url = new URL(`${GRAPH_BASE}${path}`);
-  for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
+  for (const [k, v] of Object.entries(params)) url.searchParams.set(k, String(v));
   const res = await fetch(url.toString());
   const data = await res.json();
-  if (data.error) throw new Error(data.error.message);
+  if (data.error) {
+    const msg = data.error.message || 'Meta API error';
+    console.error('Graph API error:', data.error.code, msg);
+    throw new Error(msg);
+  }
   return data;
 }
 
@@ -34,7 +38,9 @@ export default async function handler(req, res) {
 
     const appId = process.env.META_APP_ID;
     const appSecret = process.env.META_APP_SECRET;
-    if (!appId || !appSecret) return res.status(500).json({ error: 'Meta app credentials not configured' });
+    if (!appId) return res.status(500).json({ error: 'Server misconfigured: META_APP_ID is missing.' });
+    if (!appSecret) return res.status(500).json({ error: 'Server misconfigured: META_APP_SECRET is missing.' });
+    if (!SUPABASE_SERVICE_KEY) return res.status(500).json({ error: 'Server misconfigured: SUPABASE_SERVICE_ROLE_KEY is missing.' });
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
