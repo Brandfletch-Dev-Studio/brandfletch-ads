@@ -43,6 +43,11 @@ export default function MetaOnboarding() {
   const [businessInfo, setBusinessInfo] = useState(null);
   const [isLive, setIsLive] = useState(false);
 
+  // ── OAuth callback state ──
+  const [oauthPages, setOAuthPages] = useState([]);
+  const [oauthBusinesses, setOAuthBusinesses] = useState([]);
+  const [oauthCallbackDone, setOAuthCallbackDone] = useState(false);
+
   // ── Load campaign + resume onboarding state ──────────────────────
   const loadState = useCallback(async () => {
     try {
@@ -79,19 +84,38 @@ export default function MetaOnboarding() {
         // No existing onboarding — start fresh
       }
 
-      // Handle OAuth callback (code + state in URL)
+      // Handle OAuth callback (code + state in URL) — done DIRECTLY here,
+      // not via window.__metaOnboardingCallback (which was a race condition:
+      // ConnectFacebookStep may not be mounted yet when this runs)
       const code = searchParams.get('code');
       const state = searchParams.get('state');
       if (code && state) {
-        // Clean URL
+        // Clean URL immediately so we don't re-process on refresh
         window.history.replaceState({}, '', `/campaigns/${id}/onboarding`);
-        // Trigger callback handler
-        if (window.__metaOnboardingCallback) {
-          setOnboardingId(state);
-          setStep('connect_facebook');
-          setStatus('awaiting_page_selection');
-          window.__metaOnboardingCallback(code, state);
+        setOnboardingId(state);
+        setStep('connect_facebook');
+        setStatus('awaiting_page_selection');
+        setLoading(false);
+
+        // Exchange the OAuth code for pages + businesses
+        try {
+          const redirectUri = `${window.location.origin}/campaigns/${id}/onboarding`;
+          const res = await metaClient.callback(code, state, redirectUri);
+          // Store pages for ConnectFacebookStep to render
+          setOAuthPages(res.pages || []);
+          setOAuthBusinesses(res.businesses || []);
+          setOAuthCallbackDone(true);
+          if ((res.pages || []).length === 0) {
+            toast.info('No Facebook Pages found — make sure you have a Business Page.');
+          } else {
+            toast.success(`Found ${(res.pages || []).length} Facebook Pages`);
+          }
+        } catch (err) {
+          console.error('OAuth callback failed:', err);
+          toast.error(err.message || 'Facebook login failed');
+          setStatus('error');
         }
+        return; // Don't continue loading state — we just handled the callback
       }
     } catch (err) {
       console.error('Failed to load onboarding state:', err);
@@ -198,6 +222,9 @@ export default function MetaOnboarding() {
               onboardingId={onboardingId}
               onPageSelected={handlePageSelected}
               onError={handleError}
+              initialPages={oauthCallbackDone ? oauthPages : undefined}
+              initialBusinesses={oauthCallbackDone ? oauthBusinesses : undefined}
+              skipConnect={oauthCallbackDone}
             />
           )}
 
