@@ -6,7 +6,7 @@
  *
  * Props: { onboardingId, onPageSelected, onError }
  */
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Facebook, Loader2, ArrowRight, Building2, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,13 +17,22 @@ import { cn } from '@/lib/utils';
 import { metaClient } from '@/lib/metaClient';
 import { toast } from 'sonner';
 
-export default function ConnectFacebookStep({ onboardingId, onPageSelected, onError }) {
+export default function ConnectFacebookStep({ onboardingId, onPageSelected, onError, initialPages, initialBusinesses, skipConnect }) {
   const [loading, setLoading] = useState(false);
   const [pages, setPages] = useState([]);
   const [businesses, setBusinesses] = useState([]);
   const [selectedPage, setSelectedPage] = useState(null);
   const [selectedBusiness, setSelectedBusiness] = useState(null);
   const [showPages, setShowPages] = useState(false);
+
+  // ── If pages were already fetched by MetaOnboarding (OAuth callback), show them directly ──
+  useEffect(() => {
+    if (skipConnect && initialPages) {
+      setPages(initialPages);
+      setBusinesses(initialBusinesses || []);
+      setShowPages(true);
+    }
+  }, [skipConnect, initialPages, initialBusinesses]);
 
   // Handle the Facebook Login button
   async function handleConnect() {
@@ -71,10 +80,6 @@ export default function ConnectFacebookStep({ onboardingId, onPageSelected, onEr
     }
   }
 
-  // Expose callback handler to parent
-  if (typeof window !== 'undefined') {
-    window.__metaOnboardingCallback = handleCallback;
-  }
 
   function handlePageSelect() {
     if (!selectedPage) {
