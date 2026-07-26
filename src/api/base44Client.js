@@ -317,7 +317,7 @@ const authWrapper = {
   // Request password reset
   async resetPasswordRequest(email) {
     const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
+      emailRedirectTo: `${window.location.origin}/reset-password`,
     });
     if (error) throw error;
     return data;

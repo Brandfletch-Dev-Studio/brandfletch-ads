@@ -45,10 +45,11 @@ export default async function handler(req, res) {
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
-    // Create onboarding record
+    // Create onboarding record — starts at page_selection (the new first
+    // post-payment step). The OAuth flow is triggered from within that step.
     const { data: onboarding, error: dbErr } = await supabase
       .from('MetaOnboarding')
-      .insert({ campaign_id, user_id, step: 'connect_facebook', status: 'pending', permissions_granted: false })
+      .insert({ campaign_id, user_id, step: 'page_selection', status: 'pending', permissions_granted: false })
       .select().single();
 
     if (dbErr) {
@@ -66,7 +67,6 @@ export default async function handler(req, res) {
     oauthUrl.searchParams.set('response_type', 'code');
 
     // Login for Business — pre-select Brandfletch's Business
-    const businessId = process.env.META_BUSINESS_ID;
     if (businessId) {
       oauthUrl.searchParams.set('extras', JSON.stringify({ setup: { business: businessId } }));
     }

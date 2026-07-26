@@ -89,7 +89,7 @@ export default async function handler(req, res) {
     await supabase.from('MetaOnboarding').update({
       fb_user_access_token: shortLivedToken,
       fb_long_lived_token: longLivedToken,
-      step: 'page_selected', status: 'awaiting_page_selection',
+      step: 'page_selection', status: 'awaiting_page_selection',
       updated_at: new Date().toISOString(),
     }).eq('id', state);
 

@@ -8,10 +8,22 @@ import { Lock, Loader2 } from "lucide-react";
 import AuthLayout from "@/components/AuthLayout";
 import { toast } from "sonner";
 
+/**
+ * Reset Password — handles the Supabase recovery flow.
+ *
+ * Supabase can redirect back with either:
+ *   - token_hash + type=recovery  (implicit / older flow)
+ *   - code + type=recovery         (PKCE flow, current Supabase default)
+ *
+ * With detectSessionInUrl:true on the Supabase client, the PKCE code is
+ * auto-exchanged and a session is established before this component mounts.
+ * So we also check for an existing session as a valid entry state.
+ */
 export default function ResetPassword() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const token_hash = searchParams.get("token_hash");
+  const tokenHash = searchParams.get("token_hash");
+  const code = searchParams.get("code");
   const type = searchParams.get("type") || "recovery";
 
   const [verifying, setVerifying] = useState(true);
@@ -22,27 +34,72 @@ export default function ResetPassword() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const verifyToken = async () => {
-      if (!token_hash) {
-        setVerificationError("Reset token is missing from the URL.");
-        setVerifying(false);
-        return;
+    const verify = async () => {
+      // Case 1: PKCE flow — code is in the URL. The Supabase client with
+      // detectSessionInUrl:true may have already exchanged it, but if not
+      // (or if the component mounts before that completes), we exchange
+      // it explicitly here.
+      if (code) {
+        try {
+          const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+          if (exchangeError) throw exchangeError;
+          setVerifying(false);
+          return;
+        } catch (err) {
+          // The code might have already been consumed by detectSessionInUrl.
+          // Check if we have a valid session anyway.
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session?.user) {
+            setVerifying(false);
+            return;
+          }
+          setVerificationError(
+            err.message || "Invalid or expired reset link. Please request a new password reset."
+          );
+          setVerifying(false);
+          return;
+        }
       }
+
+      // Case 2: Implicit flow — token_hash is in the URL
+      if (tokenHash) {
+        try {
+          const { error: verifyError } = await supabase.auth.verifyOtp({
+            token_hash: tokenHash,
+            type: type,
+          });
+          if (verifyError) throw verifyError;
+          setVerifying(false);
+          return;
+        } catch (err) {
+          setVerificationError(
+            err.message || "Invalid or expired reset token. Please request a new password reset link."
+          );
+          setVerifying(false);
+          return;
+        }
+      }
+
+      // Case 3: No token in URL — check if detectSessionInUrl already
+      // established a session (this happens when Supabase processes the
+      // redirect before React mounts and strips the params)
       try {
-        const { error: verifyError } = await supabase.auth.verifyOtp({
-          token_hash,
-          type: 'recovery'
-        });
-        if (verifyError) throw verifyError;
-        setVerifying(false);
-      } catch (err) {
-        setVerificationError(err.message || "Invalid or expired reset token. Please request a new password reset link.");
-        setVerifying(false);
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          setVerifying(false);
+          return;
+        }
+      } catch (_) {
+        // ignore
       }
+
+      // Case 4: No token, no session — nothing we can do
+      setVerificationError("Reset token is missing. Please request a new password reset link.");
+      setVerifying(false);
     };
 
-    verifyToken();
-  }, [token_hash]);
+    verify();
+  }, [tokenHash, code, type]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -64,7 +121,7 @@ export default function ResetPassword() {
 
       toast.success("Password reset successfully. Please log in with your new password.");
 
-      // Sign out to clean up session
+      // Sign out to clean up the recovery session
       await supabase.auth.signOut();
 
       navigate("/login");

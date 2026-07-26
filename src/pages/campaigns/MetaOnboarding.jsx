@@ -5,10 +5,11 @@
  *
  * Orchestrates the full Facebook onboarding flow:
  * 1. Payment → (entry point, shown as complete)
- * 2. Connect Facebook → Facebook Login for Business + Page selection
- * 3. Verify Access → Auto-check or guided manual grant wizard
- * 4. Campaign Creation → Meta Marketing API campaign setup
- * 5. Live → Success state
+ * 2. Page Selection → list existing FacebookPage records + connect new page
+ * 3. Connect Facebook → Facebook Login for Business (triggered from page selection)
+ * 4. Verify Access → Auto-check or guided manual grant wizard
+ * 5. Campaign Creation → Meta Marketing API campaign setup
+ * 6. Live → Success state
  *
  * The flow is resumable: if the user leaves and returns, the onboarding
  * record is fetched from the backend and the flow resumes at the correct step.
@@ -24,6 +25,7 @@ import { useAuth } from '@/lib/AuthContext';
 import { metaClient } from '@/lib/metaClient';
 
 import OnboardingProgress from '@/components/meta/OnboardingProgress';
+import PageSelectionStep from '@/components/meta/PageSelectionStep';
 import ConnectFacebookStep from '@/components/meta/ConnectFacebookStep';
 import VerifyAccessStep from '@/components/meta/VerifyAccessStep';
 import CampaignCreationStep from '@/components/meta/CampaignCreationStep';
@@ -37,7 +39,7 @@ export default function MetaOnboarding() {
   const [loading, setLoading] = useState(true);
   const [campaign, setCampaign] = useState(null);
   const [onboardingId, setOnboardingId] = useState(null);
-  const [step, setStep] = useState('connect_facebook');
+  const [step, setStep] = useState('page_selection');
   const [status, setStatus] = useState('pending');
   const [pageInfo, setPageInfo] = useState(null);
   const [businessInfo, setBusinessInfo] = useState(null);
@@ -69,7 +71,8 @@ export default function MetaOnboarding() {
         // Clean URL immediately so we don't re-process on refresh
         window.history.replaceState({}, '', `/campaigns/${id}/onboarding`);
         setOnboardingId(state);
-        setStep('connect_facebook');
+        // Stay on page_selection — the OAuth pages will appear there
+        setStep('page_selection');
         setStatus('awaiting_page_selection');
         setLoading(false);
 
@@ -77,7 +80,7 @@ export default function MetaOnboarding() {
         try {
           const redirectUri = `${window.location.origin}/campaigns/${id}/onboarding`;
           const res = await metaClient.callback(code, state, redirectUri);
-          // Store pages for ConnectFacebookStep to render
+          // Store pages for PageSelectionStep to render
           setOAuthPages(res.pages || []);
           setOAuthBusinesses(res.businesses || []);
           setOAuthCallbackDone(true);
@@ -99,7 +102,7 @@ export default function MetaOnboarding() {
         const existing = await metaClient.getStatusByCampaign(id);
         if (existing) {
           setOnboardingId(existing.id);
-          setStep(existing.step || 'connect_facebook');
+          setStep(existing.step || 'page_selection');
           setStatus(existing.status || 'pending');
           setPageInfo(existing.fb_page_id ? {
             id: existing.fb_page_id,
@@ -114,7 +117,7 @@ export default function MetaOnboarding() {
           }
         }
       } catch (_) {
-        // No existing onboarding — start fresh
+        // No existing onboarding — start fresh at page_selection
       }
     } catch (err) {
       console.error('Failed to load onboarding state:', err);
@@ -215,7 +218,23 @@ export default function MetaOnboarding() {
           </CardTitle>
         </CardHeader>
         <CardContent className="pb-6">
-          {/* Step 2: Connect Facebook */}
+          {/* Step 2: Page Selection (first post-payment step) */}
+          {step === 'page_selection' && (
+            <PageSelectionStep
+              onboardingId={onboardingId}
+              userId={user?.id}
+              campaignId={id}
+              initialPages={oauthCallbackDone ? oauthPages : undefined}
+              initialBusinesses={oauthCallbackDone ? oauthBusinesses : undefined}
+              onPageSelected={handlePageSelected}
+              onError={handleError}
+            />
+          )}
+
+          {/* Step 3: Connect Facebook (fallback / legacy) */}
+          {/* Kept for backward compatibility with any in-flight onboarding
+              records that were saved at step='connect_facebook' before the
+              page_selection step existed. New flows start at page_selection. */}
           {step === 'connect_facebook' && (
             <ConnectFacebookStep
               onboardingId={onboardingId}
@@ -227,7 +246,7 @@ export default function MetaOnboarding() {
             />
           )}
 
-          {/* Step 3: Verify Access */}
+          {/* Step 4: Verify Access */}
           {step === 'verify_access' && pageInfo && (
             <VerifyAccessStep
               onboardingId={onboardingId}
@@ -238,7 +257,7 @@ export default function MetaOnboarding() {
             />
           )}
 
-          {/* Step 4: Campaign Creation */}
+          {/* Step 5: Campaign Creation */}
           {step === 'campaign_creation' && !isLive && (
             <CampaignCreationStep
               onboardingId={onboardingId}
