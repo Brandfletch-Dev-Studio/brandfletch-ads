@@ -5,6 +5,14 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// Roles that are allowed to view all users — must stay in sync with src/lib/permissions.js
+const ALLOWED_ROLES = [
+  'super_admin', 'admin',
+  'platform_sales', 'platform_finance', 'platform_director_ops',
+  'ads_manager', 'ads_sales', 'ads_finance',
+  'campaign_manager',
+]
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
@@ -13,7 +21,7 @@ Deno.serve(async (req) => {
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? ''
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
 
-    // Verify the calling user is authenticated + is admin/staff
+    // Verify the calling user is authenticated + has permission to view users
     const userClient = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: req.headers.get('Authorization') ?? '' } },
     })
@@ -24,13 +32,13 @@ Deno.serve(async (req) => {
       })
     }
 
-    // Check that the caller is admin or staff (not a plain client)
+    // Check that the caller has a staff role with users.view permission
     const { data: callerProfile } = await userClient
       .from('User').select('role').eq('id', user.id).single()
 
-    const allowedRoles = ['admin', 'campaign_manager', 'sales_manager', 'finance', 'ads_manager', 'creative_ops_director', 'designer']
-    if (!allowedRoles.includes((callerProfile as any)?.role)) {
-      return new Response(JSON.stringify({ error: 'Forbidden' }), {
+    const callerRole = (callerProfile as any)?.role
+    if (!ALLOWED_ROLES.includes(callerRole)) {
+      return new Response(JSON.stringify({ error: 'Forbidden — insufficient permissions' }), {
         status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
