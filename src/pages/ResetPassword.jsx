@@ -1,13 +1,14 @@
 /**
  * ResetPassword.jsx
  *
- * Handles all Supabase password-reset URL formats:
- *   1. Hash fragment: /reset-password#access_token=...&type=recovery  (Supabase default)
- *   2. Query params:  /reset-password?token_hash=...&type=recovery     (custom template)
- *   3. PKCE code:     /reset-password?code=...                         (PKCE flow)
+ * Handles all Supabase password-reset URL formats.
+ * Since detectSessionInUrl is false in our Supabase client config,
+ * we manually parse the URL hash fragment that Supabase sends.
  *
- * Strategy: Let Supabase's onAuthStateChange pick up the recovery session
- * automatically (it reads hash fragments). We just wait for the PASSWORD_RECOVERY event.
+ * URL formats Supabase uses for recovery:
+ *   1. Hash fragment: /reset-password#access_token=xxx&refresh_token=yyy&type=recovery  (DEFAULT)
+ *   2. Query params:  /reset-password?token_hash=xxx&type=recovery                       (custom template)
+ *   3. PKCE code:     /reset-password?code=xxx                                           (PKCE flow)
  */
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -22,7 +23,7 @@ import { toast } from "sonner";
 export default function ResetPassword() {
   const navigate = useNavigate();
 
-  const [status, setStatus] = useState("waiting"); // waiting | ready | error | success
+  const [status, setStatus] = useState("verifying"); // verifying | ready | error | success
   const [errorMsg, setErrorMsg] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -33,48 +34,68 @@ export default function ResetPassword() {
   const [countdown, setCountdown] = useState(3);
 
   useEffect(() => {
-    // Supabase auto-detects the hash fragment (#access_token=...&type=recovery)
-    // and fires PASSWORD_RECOVERY via onAuthStateChange.
-    // We also manually handle query param formats as a fallback.
+    async function init() {
+      // ── 1. Try hash fragment (Supabase DEFAULT format) ──
+      // #access_token=xxx&refresh_token=yyy&type=recovery&expires_in=3600
+      const hash = window.location.hash.replace(/^#/, "");
+      if (hash) {
+        const hashParams = new URLSearchParams(hash);
+        const accessToken = hashParams.get("access_token");
+        const refreshToken = hashParams.get("refresh_token");
+        const type = hashParams.get("type");
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === "PASSWORD_RECOVERY") {
-        // Supabase has verified the recovery token — user is now in a recovery session
-        setStatus("ready");
-      } else if (event === "SIGNED_IN" && session) {
-        // Some Supabase versions fire SIGNED_IN instead of PASSWORD_RECOVERY
-        // Check if this was a recovery type from the URL
-        const hash = window.location.hash;
-        const params = new URLSearchParams(window.location.search);
-        const isRecovery =
-          hash.includes("type=recovery") ||
-          params.get("type") === "recovery" ||
-          params.get("token_hash");
-        if (isRecovery) {
-          setStatus("ready");
+        if (accessToken && refreshToken) {
+          try {
+            const { error } = await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken,
+            });
+            if (error) throw error;
+            setStatus("ready");
+            return;
+          } catch (err) {
+            setErrorMsg("This password reset link has expired. Please request a new one.");
+            setStatus("error");
+            return;
+          }
+        }
+
+        // Some Supabase setups put token_hash in the fragment instead
+        const tokenHash = hashParams.get("token_hash");
+        if (tokenHash) {
+          try {
+            const { error } = await supabase.auth.verifyOtp({
+              token_hash: tokenHash,
+              type: type || "recovery",
+            });
+            if (error) throw error;
+            setStatus("ready");
+            return;
+          } catch (err) {
+            setErrorMsg("This password reset link has expired. Please request a new one.");
+            setStatus("error");
+            return;
+          }
         }
       }
-    });
 
-    // Fallback: manually handle query param token_hash format
-    const handleQueryParams = async () => {
-      const params = new URLSearchParams(window.location.search);
-      const token_hash = params.get("token_hash");
-      const code = params.get("code");
-      const type = params.get("type") || "recovery";
+      // ── 2. Try query params (custom email template format) ──
+      const query = new URLSearchParams(window.location.search);
+      const token_hash = query.get("token_hash");
+      const code = query.get("code");
+      const type = query.get("type") || "recovery";
 
       if (token_hash) {
         try {
           const { error } = await supabase.auth.verifyOtp({ token_hash, type });
           if (error) throw error;
           setStatus("ready");
+          return;
         } catch (err) {
-          setErrorMsg(
-            "This password reset link has expired. Reset links are valid for 1 hour. Please request a new one."
-          );
+          setErrorMsg("This password reset link has expired. Please request a new one.");
           setStatus("error");
+          return;
         }
-        return;
       }
 
       if (code) {
@@ -82,38 +103,20 @@ export default function ResetPassword() {
           const { error } = await supabase.auth.exchangeCodeForSession(code);
           if (error) throw error;
           setStatus("ready");
+          return;
         } catch (err) {
-          setErrorMsg(
-            "This password reset link has expired or is invalid. Please request a new one."
-          );
+          setErrorMsg("This password reset link has expired or is invalid.");
           setStatus("error");
+          return;
         }
-        return;
       }
 
-      // No query params — wait for onAuthStateChange to handle the hash fragment
-      // Give it 4 seconds before showing an error
-      const timeout = setTimeout(() => {
-        setStatus((current) => {
-          if (current === "waiting") {
-            setErrorMsg(
-              "No reset token found. Please use the exact link from your email — do not copy just part of it."
-            );
-            return "error";
-          }
-          return current;
-        });
-      }, 4000);
+      // ── 3. No token found anywhere ──
+      setErrorMsg("No reset token found. Please use the link from your email.");
+      setStatus("error");
+    }
 
-      return () => clearTimeout(timeout);
-    };
-
-    const cleanup = handleQueryParams();
-
-    return () => {
-      subscription.unsubscribe();
-      if (typeof cleanup === "function") cleanup();
-    };
+    init();
   }, []);
 
   // Countdown redirect after success
@@ -173,8 +176,8 @@ export default function ResetPassword() {
     }
   };
 
-  // ── Waiting for token verification ──
-  if (status === "waiting") {
+  // ── Verifying ──
+  if (status === "verifying") {
     return (
       <AuthLayout title="Verifying reset link" subtitle="Please wait…">
         <div className="flex flex-col items-center py-10 gap-4">
@@ -185,7 +188,7 @@ export default function ResetPassword() {
     );
   }
 
-  // ── Error state ──
+  // ── Error ──
   if (status === "error") {
     return (
       <AuthLayout
@@ -235,7 +238,7 @@ export default function ResetPassword() {
     );
   }
 
-  // ── Password reset form ──
+  // ── Password form ──
   return (
     <AuthLayout
       title="Create new password"
