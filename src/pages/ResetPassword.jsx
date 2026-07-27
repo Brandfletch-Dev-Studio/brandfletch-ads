@@ -1,14 +1,8 @@
 /**
- * ResetPassword.jsx
+ * ResetPassword.jsx — Debug version
  *
- * Handles all Supabase password-reset URL formats.
- * Since detectSessionInUrl is false in our Supabase client config,
- * we manually parse the URL hash fragment that Supabase sends.
- *
- * URL formats Supabase uses for recovery:
- *   1. Hash fragment: /reset-password#access_token=xxx&refresh_token=yyy&type=recovery  (DEFAULT)
- *   2. Query params:  /reset-password?token_hash=xxx&type=recovery                       (custom template)
- *   3. PKCE code:     /reset-password?code=xxx                                           (PKCE flow)
+ * Shows on-screen what URL format was detected so we can see
+ * exactly what Supabase is sending.
  */
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -23,8 +17,9 @@ import { toast } from "sonner";
 export default function ResetPassword() {
   const navigate = useNavigate();
 
-  const [status, setStatus] = useState("verifying"); // verifying | ready | error | success
+  const [status, setStatus] = useState("verifying");
   const [errorMsg, setErrorMsg] = useState("");
+  const [debugInfo, setDebugInfo] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [formError, setFormError] = useState("");
@@ -35,83 +30,114 @@ export default function ResetPassword() {
 
   useEffect(() => {
     async function init() {
-      // ── 1. Try hash fragment (Supabase DEFAULT format) ──
-      // #access_token=xxx&refresh_token=yyy&type=recovery&expires_in=3600
       const hash = window.location.hash.replace(/^#/, "");
-      if (hash) {
-        const hashParams = new URLSearchParams(hash);
-        const accessToken = hashParams.get("access_token");
-        const refreshToken = hashParams.get("refresh_token");
-        const type = hashParams.get("type");
+      const search = window.location.search;
+      const fullUrl = window.location.href;
 
-        if (accessToken && refreshToken) {
-          try {
-            const { error } = await supabase.auth.setSession({
-              access_token: accessToken,
-              refresh_token: refreshToken,
-            });
-            if (error) throw error;
-            setStatus("ready");
-            return;
-          } catch (err) {
-            setErrorMsg("This password reset link has expired. Please request a new one.");
-            setStatus("error");
-            return;
-          }
-        }
+      let debug = `URL: ${fullUrl}\n`;
+      debug += `Hash: ${hash || "(empty)"}\n`;
+      debug += `Search: ${search || "(empty)"}\n`;
 
-        // Some Supabase setups put token_hash in the fragment instead
-        const tokenHash = hashParams.get("token_hash");
-        if (tokenHash) {
-          try {
-            const { error } = await supabase.auth.verifyOtp({
-              token_hash: tokenHash,
-              type: type || "recovery",
-            });
-            if (error) throw error;
-            setStatus("ready");
-            return;
-          } catch (err) {
-            setErrorMsg("This password reset link has expired. Please request a new one.");
-            setStatus("error");
-            return;
-          }
-        }
+      // Parse hash fragment
+      let hashParams = new URLSearchParams(hash);
+      let accessToken = hashParams.get("access_token");
+      let refreshToken = hashParams.get("refresh_token");
+      let hashType = hashParams.get("type");
+      let hashTokenHash = hashParams.get("token_hash");
+      let hashError = hashParams.get("error");
+      let hashErrorDesc = hashParams.get("error_description");
+
+      debug += `Hash access_token: ${accessToken ? "YES (" + accessToken.slice(0, 10) + "...)" : "NO"}\n`;
+      debug += `Hash refresh_token: ${refreshToken ? "YES" : "NO"}\n`;
+      debug += `Hash type: ${hashType || "NO"}\n`;
+      debug += `Hash token_hash: ${hashTokenHash ? "YES" : "NO"}\n`;
+      debug += `Hash error: ${hashError || "NO"}\n`;
+
+      // Parse query params
+      let queryParams = new URLSearchParams(search);
+      let queryTokenHash = queryParams.get("token_hash");
+      let queryCode = queryParams.get("code");
+      let queryType = queryParams.get("type");
+
+      debug += `Query token_hash: ${queryTokenHash ? "YES" : "NO"}\n`;
+      debug += `Query code: ${queryCode ? "YES" : "NO"}\n`;
+      debug += `Query type: ${queryType || "NO"}\n`;
+
+      setDebugInfo(debug);
+
+      // If Supabase returned an error in the hash
+      if (hashError) {
+        setErrorMsg(hashErrorDesc || hashError || "Authentication error from Supabase.");
+        setStatus("error");
+        return;
       }
 
-      // ── 2. Try query params (custom email template format) ──
-      const query = new URLSearchParams(window.location.search);
-      const token_hash = query.get("token_hash");
-      const code = query.get("code");
-      const type = query.get("type") || "recovery";
-
-      if (token_hash) {
+      // ── 1. Hash fragment with access_token + refresh_token (implicit flow) ──
+      if (accessToken && refreshToken) {
         try {
-          const { error } = await supabase.auth.verifyOtp({ token_hash, type });
+          const { error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
           if (error) throw error;
           setStatus("ready");
           return;
         } catch (err) {
-          setErrorMsg("This password reset link has expired. Please request a new one.");
+          setErrorMsg("Failed to verify session: " + (err.message || "Unknown error"));
           setStatus("error");
           return;
         }
       }
 
-      if (code) {
+      // ── 2. Hash fragment with token_hash ──
+      if (hashTokenHash) {
         try {
-          const { error } = await supabase.auth.exchangeCodeForSession(code);
+          const { error } = await supabase.auth.verifyOtp({
+            token_hash: hashTokenHash,
+            type: hashType || "recovery",
+          });
           if (error) throw error;
           setStatus("ready");
           return;
         } catch (err) {
-          setErrorMsg("This password reset link has expired or is invalid.");
+          setErrorMsg("Token verification failed: " + (err.message || "Unknown error"));
           setStatus("error");
           return;
         }
       }
 
-      // ── 3. No token found anywhere ──
+      // ── 3. Query params with token_hash ──
+      if (queryTokenHash) {
+        try {
+          const { error } = await supabase.auth.verifyOtp({
+            token_hash: queryTokenHash,
+            type: queryType || "recovery",
+          });
+          if (error) throw error;
+          setStatus("ready");
+          return;
+        } catch (err) {
+          setErrorMsg("Token verification failed: " + (err.message || "Unknown error"));
+          setStatus("error");
+          return;
+        }
+      }
+
+      // ── 4. Query params with code (PKCE flow) ──
+      if (queryCode) {
+        try {
+          const { error } = await supabase.auth.exchangeCodeForSession(queryCode);
+          if (error) throw error;
+          setStatus("ready");
+          return;
+        } catch (err) {
+          setErrorMsg("Code exchange failed: " + (err.message || "Unknown error"));
+          setStatus("error");
+          return;
+        }
+      }
+
+      // ── 5. Nothing found ──
       setErrorMsg("No reset token found. Please use the link from your email.");
       setStatus("error");
     }
@@ -170,7 +196,7 @@ export default function ResetPassword() {
       setStatus("success");
       await supabase.auth.signOut();
     } catch (err) {
-      setFormError(err.message || "Failed to update password. Please try again.");
+      setFormError(err.message || "Failed to update password.");
     } finally {
       setLoading(false);
     }
@@ -207,6 +233,12 @@ export default function ResetPassword() {
           <p className="text-sm text-foreground bg-red-50 p-4 rounded-lg border border-red-100 leading-relaxed">
             {errorMsg}
           </p>
+
+          {/* DEBUG PANEL — shows what URL was detected */}
+          <pre className="text-left text-[10px] bg-gray-900 text-green-400 p-3 rounded-lg overflow-auto max-h-48 font-mono">
+            {debugInfo}
+          </pre>
+
           <Link
             to="/forgot-password"
             className="inline-flex items-center justify-center w-full h-11 font-semibold rounded-md bg-[#4f46e5] hover:bg-[#4338ca] text-white transition-colors"
