@@ -7,6 +7,9 @@ import { Loader2, CheckCircle, XCircle } from "lucide-react";
  * AuthCallback — handles Supabase email verification links.
  * Supports both PKCE (token_hash) and implicit (hash fragment) flows.
  * After verifying, signs the user in and redirects — no second login needed.
+ *
+ * For recovery (password reset) links that land here, we redirect to /reset-password
+ * after establishing the session.
  */
 export default function AuthCallback() {
   const navigate = useNavigate();
@@ -30,7 +33,6 @@ export default function AuthCallback() {
           type,
         });
         if (error) throw error;
-        // Session is now active — ensure it's persisted
         await ensureSession();
         setStatus("success");
         redirectAfterVerify(type);
@@ -39,13 +41,22 @@ export default function AuthCallback() {
 
       // --- Flow 2: Implicit — access_token in URL hash ---
       if (window.location.hash?.includes("access_token")) {
-        // Supabase SDK parses the hash automatically on getSession()
-        // Give it a moment to process
-        await new Promise(res => setTimeout(res, 800));
-        const ok = await ensureSession();
-        if (ok) {
+        // For implicit flow, the SDK may need detectSessionInUrl to be true.
+        // Since we disabled it, we manually extract and set the session.
+        const hash = window.location.hash.substring(1);
+        const hashParams = new URLSearchParams(hash);
+        const accessToken = hashParams.get("access_token");
+        const refreshToken = hashParams.get("refresh_token");
+        const hashType = hashParams.get("type");
+
+        if (accessToken) {
+          const { error: sessionError } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken || "",
+          });
+          if (sessionError) throw sessionError;
           setStatus("success");
-          redirectAfterVerify("signup");
+          redirectAfterVerify(hashType || "signup");
           return;
         }
       }
@@ -54,9 +65,9 @@ export default function AuthCallback() {
       const ok = await ensureSession();
       if (ok) {
         setStatus("success");
-        { const _r = sessionStorage.getItem("bf_post_login_redirect");
-    sessionStorage.removeItem("bf_post_login_redirect");
-    navigate(_r || "/dashboard", { replace: true }); }
+        const _r = sessionStorage.getItem("bf_post_login_redirect");
+        sessionStorage.removeItem("bf_post_login_redirect");
+        navigate(_r || "/dashboard", { replace: true });
         return;
       }
 
@@ -68,7 +79,6 @@ export default function AuthCallback() {
     }
   };
 
-  // Waits up to 4s for a valid session, returns true if found
   const ensureSession = async () => {
     for (let i = 0; i < 4; i++) {
       const { data: { session } } = await supabase.auth.getSession();
@@ -82,10 +92,9 @@ export default function AuthCallback() {
     if (type === "recovery") {
       navigate("/reset-password", { replace: true });
     } else {
-      // New users go straight to dashboard — profile completion is on the dashboard checklist
-      { const _r = sessionStorage.getItem("bf_post_login_redirect");
-    sessionStorage.removeItem("bf_post_login_redirect");
-    navigate(_r || "/dashboard", { replace: true }); }
+      const _r = sessionStorage.getItem("bf_post_login_redirect");
+      sessionStorage.removeItem("bf_post_login_redirect");
+      navigate(_r || "/dashboard", { replace: true });
     }
   };
 
