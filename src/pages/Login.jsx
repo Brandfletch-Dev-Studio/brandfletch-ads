@@ -31,6 +31,9 @@ export default function Login() {
     if (reason === 'no_account') {
       setNotice("No account found for that email. Create one below for free.");
     }
+    if (params.get('reset') === 'success') {
+      setNotice("Your password has been reset successfully. Log in with your new password.");
+    }
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {

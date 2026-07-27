@@ -314,7 +314,7 @@ const authWrapper = {
     }
   },
 
-  // Request password reset
+  // Request password reset — sends recovery email
   async resetPasswordRequest(email) {
     const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/reset-password`,
@@ -324,9 +324,8 @@ const authWrapper = {
   },
 
   // Reset password with token
-  async resetPassword({ resetToken, newPassword }) {
-    // Supabase handles this via the recovery link flow
-    // The token is already consumed by the URL redirect
+  // Set new password — requires active session from recovery verifyOtp
+  async resetPassword({ newPassword }) {
     const { data, error } = await supabase.auth.updateUser({
       password: newPassword,
     });
