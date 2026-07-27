@@ -1,16 +1,16 @@
 /**
- * ResetPassword.jsx — Redesigned
+ * ResetPassword.jsx
  *
- * Handles the password reset flow from Supabase recovery emails.
- * Supports both token_hash and code URL formats for maximum compatibility.
+ * Handles all Supabase password-reset URL formats:
+ *   1. Hash fragment: /reset-password#access_token=...&type=recovery  (Supabase default)
+ *   2. Query params:  /reset-password?token_hash=...&type=recovery     (custom template)
+ *   3. PKCE code:     /reset-password?code=...                         (PKCE flow)
  *
- * URL formats handled:
- *   /reset-password?token_hash=<hash>&type=recovery  (newer Supabase API)
- *   /reset-password?code=<code>&type=recovery          (older Supabase API)
- *   /reset-password?type=recovery&next=/dashboard      (with redirect target)
+ * Strategy: Let Supabase's onAuthStateChange pick up the recovery session
+ * automatically (it reads hash fragments). We just wait for the PASSWORD_RECOVERY event.
  */
 import React, { useState, useEffect } from "react";
-import { Link, useSearchParams, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,67 +20,107 @@ import AuthLayout from "@/components/AuthLayout";
 import { toast } from "sonner";
 
 export default function ResetPassword() {
-  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
-  const token_hash = searchParams.get("token_hash");
-  const code = searchParams.get("code");
-  const type = searchParams.get("type") || "recovery";
-
-  const [verifying, setVerifying] = useState(true);
-  const [verificationError, setVerificationError] = useState("");
+  const [status, setStatus] = useState("waiting"); // waiting | ready | error | success
+  const [errorMsg, setErrorMsg] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [error, setError] = useState("");
+  const [formError, setFormError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [redirectCountdown, setRedirectCountdown] = useState(3);
+  const [countdown, setCountdown] = useState(3);
 
-  // Verify the reset token on mount
   useEffect(() => {
-    async function verify() {
-      // Need either token_hash or code to proceed
-      if (!token_hash && !code) {
-        setVerificationError("No reset token found. Please use the link from your email.");
-        setVerifying(false);
+    // Supabase auto-detects the hash fragment (#access_token=...&type=recovery)
+    // and fires PASSWORD_RECOVERY via onAuthStateChange.
+    // We also manually handle query param formats as a fallback.
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === "PASSWORD_RECOVERY") {
+        // Supabase has verified the recovery token — user is now in a recovery session
+        setStatus("ready");
+      } else if (event === "SIGNED_IN" && session) {
+        // Some Supabase versions fire SIGNED_IN instead of PASSWORD_RECOVERY
+        // Check if this was a recovery type from the URL
+        const hash = window.location.hash;
+        const params = new URLSearchParams(window.location.search);
+        const isRecovery =
+          hash.includes("type=recovery") ||
+          params.get("type") === "recovery" ||
+          params.get("token_hash");
+        if (isRecovery) {
+          setStatus("ready");
+        }
+      }
+    });
+
+    // Fallback: manually handle query param token_hash format
+    const handleQueryParams = async () => {
+      const params = new URLSearchParams(window.location.search);
+      const token_hash = params.get("token_hash");
+      const code = params.get("code");
+      const type = params.get("type") || "recovery";
+
+      if (token_hash) {
+        try {
+          const { error } = await supabase.auth.verifyOtp({ token_hash, type });
+          if (error) throw error;
+          setStatus("ready");
+        } catch (err) {
+          setErrorMsg(
+            "This password reset link has expired. Reset links are valid for 1 hour. Please request a new one."
+          );
+          setStatus("error");
+        }
         return;
       }
 
-      try {
-        let result;
-        if (token_hash) {
-          // Newer Supabase API — token_hash + type
-          result = await supabase.auth.verifyOtp({ token_hash, type });
-        } else {
-          // Older Supabase API — PKCE code flow
-          result = await supabase.auth.exchangeCodeForSession(code);
+      if (code) {
+        try {
+          const { error } = await supabase.auth.exchangeCodeForSession(code);
+          if (error) throw error;
+          setStatus("ready");
+        } catch (err) {
+          setErrorMsg(
+            "This password reset link has expired or is invalid. Please request a new one."
+          );
+          setStatus("error");
         }
-
-        if (result.error) throw result.error;
-        setVerifying(false);
-      } catch (err) {
-        console.error("[ResetPassword] Token verification failed:", err);
-        let msg = err.message || "This reset link has expired or is invalid.";
-
-        // Map common Supabase errors to user-friendly messages
-        if (msg.includes("expired") || msg.includes("invalid") || msg.includes("Token not found")) {
-          msg = "This password reset link has expired. Reset links are valid for 1 hour. Please request a new one.";
-        }
-
-        setVerificationError(msg);
-        setVerifying(false);
+        return;
       }
-    }
-    verify();
-  }, [token_hash, code, type]);
+
+      // No query params — wait for onAuthStateChange to handle the hash fragment
+      // Give it 4 seconds before showing an error
+      const timeout = setTimeout(() => {
+        setStatus((current) => {
+          if (current === "waiting") {
+            setErrorMsg(
+              "No reset token found. Please use the exact link from your email — do not copy just part of it."
+            );
+            return "error";
+          }
+          return current;
+        });
+      }, 4000);
+
+      return () => clearTimeout(timeout);
+    };
+
+    const cleanup = handleQueryParams();
+
+    return () => {
+      subscription.unsubscribe();
+      if (typeof cleanup === "function") cleanup();
+    };
+  }, []);
 
   // Countdown redirect after success
   useEffect(() => {
-    if (!success) return;
+    if (status !== "success") return;
     const interval = setInterval(() => {
-      setRedirectCountdown((c) => {
+      setCountdown((c) => {
         if (c <= 1) {
           clearInterval(interval);
           navigate("/login");
@@ -90,18 +130,17 @@ export default function ResetPassword() {
       });
     }, 1000);
     return () => clearInterval(interval);
-  }, [success, navigate]);
+  }, [status, navigate]);
 
-  // Password strength check
-  const getPasswordStrength = () => {
-    if (!newPassword) return { score: 0, label: "", color: "" };
+  // Password strength
+  const getStrength = () => {
+    if (!newPassword) return { score: 0, label: "", color: "", textColor: "" };
     let score = 0;
     if (newPassword.length >= 6) score++;
     if (newPassword.length >= 10) score++;
     if (/[A-Z]/.test(newPassword) && /[a-z]/.test(newPassword)) score++;
     if (/[0-9]/.test(newPassword)) score++;
     if (/[^A-Za-z0-9]/.test(newPassword)) score++;
-
     const levels = [
       { label: "Very weak", color: "bg-red-500", textColor: "text-red-600" },
       { label: "Weak", color: "bg-orange-500", textColor: "text-orange-600" },
@@ -109,46 +148,33 @@ export default function ResetPassword() {
       { label: "Good", color: "bg-blue-500", textColor: "text-blue-600" },
       { label: "Strong", color: "bg-green-500", textColor: "text-green-600" },
     ];
-    return { score, ...levels[score - 1] || levels[0] };
+    return { score, ...(levels[score - 1] || levels[0]) };
   };
 
-  const strength = getPasswordStrength();
+  const strength = getStrength();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
-
-    if (newPassword.length < 6) {
-      setError("Password must be at least 6 characters.");
-      return;
-    }
-    if (newPassword !== confirmPassword) {
-      setError("Passwords do not match.");
-      return;
-    }
+    setFormError("");
+    if (newPassword.length < 6) { setFormError("Password must be at least 6 characters."); return; }
+    if (newPassword !== confirmPassword) { setFormError("Passwords do not match."); return; }
 
     setLoading(true);
     try {
-      const { error: updateError } = await supabase.auth.updateUser({
-        password: newPassword,
-      });
-      if (updateError) throw updateError;
-
-      setSuccess(true);
-      toast.success("Password updated successfully!");
-
-      // Sign out the recovery session
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) throw error;
+      toast.success("Password updated!");
+      setStatus("success");
       await supabase.auth.signOut();
     } catch (err) {
-      console.error("[ResetPassword] Password update failed:", err);
-      setError(err.message || "Failed to update password. Please try again.");
+      setFormError(err.message || "Failed to update password. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  // ── Loading state ──
-  if (verifying) {
+  // ── Waiting for token verification ──
+  if (status === "waiting") {
     return (
       <AuthLayout title="Verifying reset link" subtitle="Please wait…">
         <div className="flex flex-col items-center py-10 gap-4">
@@ -160,16 +186,13 @@ export default function ResetPassword() {
   }
 
   // ── Error state ──
-  if (verificationError) {
+  if (status === "error") {
     return (
       <AuthLayout
         title="Link expired or invalid"
         subtitle="We couldn't verify your reset link"
         footer={
-          <Link
-            to="/forgot-password"
-            className="text-gray-400 hover:text-white font-medium hover:underline flex items-center justify-center gap-1.5"
-          >
+          <Link to="/forgot-password" className="text-gray-400 hover:text-white font-medium hover:underline flex items-center justify-center gap-1.5">
             <AlertCircle className="w-4 h-4" /> Request a new reset link
           </Link>
         }
@@ -179,7 +202,7 @@ export default function ResetPassword() {
             <AlertCircle className="w-9 h-9 text-red-600" />
           </div>
           <p className="text-sm text-foreground bg-red-50 p-4 rounded-lg border border-red-100 leading-relaxed">
-            {verificationError}
+            {errorMsg}
           </p>
           <Link
             to="/forgot-password"
@@ -195,21 +218,16 @@ export default function ResetPassword() {
     );
   }
 
-  // ── Success state ──
-  if (success) {
+  // ── Success ──
+  if (status === "success") {
     return (
       <AuthLayout title="Password updated!" subtitle="You can now log in with your new password">
         <div className="flex flex-col items-center py-10 gap-4">
           <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
             <CheckCircle2 className="w-9 h-9 text-green-600" />
           </div>
-          <p className="text-sm text-muted-foreground">
-            Redirecting to login in {redirectCountdown}…
-          </p>
-          <Link
-            to="/login"
-            className="text-sm text-[#4f46e5] hover:text-[#4338ca] font-medium hover:underline"
-          >
+          <p className="text-sm text-muted-foreground">Redirecting to login in {countdown}…</p>
+          <Link to="/login" className="text-sm text-[#4f46e5] hover:text-[#4338ca] font-medium hover:underline">
             Go to login now →
           </Link>
         </div>
@@ -229,110 +247,60 @@ export default function ResetPassword() {
       }
     >
       <form onSubmit={handleSubmit} className="space-y-5">
-        {error && (
+        {formError && (
           <div className="flex items-start gap-2 p-3 rounded-lg bg-red-50 text-red-600 text-sm border border-red-100">
             <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
-            <span>{error}</span>
+            <span>{formError}</span>
           </div>
         )}
 
-        {/* New Password */}
         <div className="space-y-2">
           <Label htmlFor="password">New Password</Label>
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <Input
-              id="password"
-              type={showPassword ? "text" : "password"}
-              autoComplete="new-password"
-              autoFocus
-              placeholder="••••••••"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              className="pl-10 pr-10 h-11"
-              required
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-foreground transition-colors"
-            >
+            <Input id="password" type={showPassword ? "text" : "password"} autoComplete="new-password"
+              autoFocus placeholder="••••••••" value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)} className="pl-10 pr-10 h-11" required />
+            <button type="button" onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-foreground">
               {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
           </div>
-
-          {/* Password strength bar */}
           {newPassword && (
             <div className="flex items-center gap-2">
               <div className="flex-1 flex gap-1">
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <div
-                    key={i}
-                    className={`h-1 flex-1 rounded-full transition-colors ${
-                      i <= strength.score ? strength.color : "bg-gray-200"
-                    }`}
-                  />
+                {[1,2,3,4,5].map((i) => (
+                  <div key={i} className={`h-1 flex-1 rounded-full transition-colors ${i <= strength.score ? strength.color : "bg-gray-200"}`} />
                 ))}
               </div>
-              <span className={`text-xs font-medium ${strength.textColor || "text-muted-foreground"}`}>
-                {strength.label}
-              </span>
+              <span className={`text-xs font-medium ${strength.textColor}`}>{strength.label}</span>
             </div>
           )}
         </div>
 
-        {/* Confirm Password */}
         <div className="space-y-2">
           <Label htmlFor="confirmPassword">Confirm Password</Label>
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <Input
-              id="confirmPassword"
-              type={showConfirm ? "text" : "password"}
-              autoComplete="new-password"
-              placeholder="••••••••"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className="pl-10 pr-10 h-11"
-              required
-            />
-            <button
-              type="button"
-              onClick={() => setShowConfirm(!showConfirm)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-foreground transition-colors"
-            >
+            <Input id="confirmPassword" type={showConfirm ? "text" : "password"} autoComplete="new-password"
+              placeholder="••••••••" value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)} className="pl-10 pr-10 h-11" required />
+            <button type="button" onClick={() => setShowConfirm(!showConfirm)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-foreground">
               {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
           </div>
-
-          {/* Password match indicator */}
           {confirmPassword && (
             <div className="flex items-center gap-1.5 text-xs">
-              {newPassword === confirmPassword ? (
-                <>
-                  <ShieldCheck className="w-3.5 h-3.5 text-green-600" />
-                  <span className="text-green-600">Passwords match</span>
-                </>
-              ) : (
-                <span className="text-red-600">Passwords do not match</span>
-              )}
+              {newPassword === confirmPassword
+                ? <><ShieldCheck className="w-3.5 h-3.5 text-green-600" /><span className="text-green-600">Passwords match</span></>
+                : <span className="text-red-600">Passwords do not match</span>}
             </div>
           )}
         </div>
 
-        <Button
-          type="submit"
-          className="w-full h-11 font-semibold bg-[#4f46e5] hover:bg-[#4338ca] text-white transition-colors"
-          disabled={loading}
-        >
-          {loading ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Updating password…
-            </>
-          ) : (
-            "Reset password"
-          )}
+        <Button type="submit" className="w-full h-11 font-semibold bg-[#4f46e5] hover:bg-[#4338ca] text-white" disabled={loading}>
+          {loading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Updating password…</> : "Reset password"}
         </Button>
       </form>
     </AuthLayout>
