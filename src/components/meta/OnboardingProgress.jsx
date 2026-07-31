@@ -1,21 +1,17 @@
 /**
- * Onboarding Progress Tracker
+ * Onboarding Progress Tracker — Simplified (Agency-Powered)
  *
- * Visual stepper showing the 5 stages of Meta onboarding:
- * Payment → Connect Facebook → Verify Access → Campaign Creation → Live
+ * 3 stages: Payment → Connect Facebook → In Review
  *
- * Each step has an icon, label, and state (complete | active | pending | error).
- * Responsive: horizontal on desktop, scrollable on mobile.
+ * Props: { currentStep, status }
  */
-import { Check, CreditCard, Facebook, ShieldCheck, Rocket, Zap } from 'lucide-react';
+import { Check, CreditCard, Facebook, ClipboardCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const STEPS = [
-  { id: 'payment',             label: 'Payment',            icon: CreditCard, short: 'Payment' },
-  { id: 'connect_facebook',    label: 'Connect Facebook',  icon: Facebook,   short: 'Connect' },
-  { id: 'verify_access',       label: 'Verify Access',      icon: ShieldCheck, short: 'Verify' },
-  { id: 'campaign_creation',   label: 'Campaign Creation', icon: Rocket,     short: 'Create' },
-  { id: 'live',                label: 'Live',               icon: Zap,        short: 'Live' },
+  { id: 'payment',          label: 'Payment',         icon: CreditCard,    short: 'Payment' },
+  { id: 'connect_facebook', label: 'Connect Facebook', icon: Facebook,      short: 'Connect' },
+  { id: 'in_review',        label: 'In Review',        icon: ClipboardCheck, short: 'Review' },
 ];
 
 const STEP_ORDER = STEPS.map(s => s.id);

@@ -165,7 +165,7 @@ export default function CampaignDetail() {
       )}
 
       {/* Facebook onboarding CTA — shown when payment is done but FB page not yet connected */}
-      {['pending_review', 'approved'].includes(campaign.status) && !campaign.fb_page_id && (
+      {['pending_review', 'approved'].includes(campaign.status) && !campaign.fb_page_name && (
         <Card className="border-2 border-blue-400 bg-blue-50 dark:bg-blue-950/30">
           <CardContent className="p-5 flex items-center justify-between gap-4 flex-wrap">
             <div>
@@ -186,9 +186,9 @@ export default function CampaignDetail() {
       )}
 
       {/* Onboarding in progress — show resume button */}
-      {campaign.onboarding_step && campaign.onboarding_step !== 'payment' &&
+      {campaign.onboarding_step && campaign.onboarding_step && campaign.onboarding_step !== 'partner_access_granted' &&
        campaign.onboarding_status !== 'campaign_created' &&
-       ['pending_review', 'approved'].includes(campaign.status) && campaign.fb_page_id && (
+       ['pending_review', 'approved'].includes(campaign.status) && campaign.fb_page_name && (
         <Card className="border-2 border-amber-400 bg-amber-50 dark:bg-amber-950/30">
           <CardContent className="p-5 flex items-center justify-between gap-4 flex-wrap">
             <div>

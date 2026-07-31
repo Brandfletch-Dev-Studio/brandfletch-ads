@@ -443,7 +443,9 @@ export default function AdminCampaignDetail() {
         </CardHeader>
         <CardContent className="space-y-2">
           {[
-            { label: 'Facebook Page', value: campaign.page_name },
+            { label: 'Facebook Page (Wizard)', value: campaign.page_name },
+            { label: 'Connected FB Page', value: campaign.fb_page_name },
+            { label: 'FB Page URL', value: campaign.fb_page_url },
             { label: 'Package', value: campaign.package ? campaign.package.charAt(0).toUpperCase() + campaign.package.slice(1) : null },
             { label: 'Duration', value: campaign.duration ? campaign.duration.charAt(0).toUpperCase() + campaign.duration.slice(1) : null },
             { label: 'Country', value: campaign.country },

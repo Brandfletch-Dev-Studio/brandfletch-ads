@@ -1,57 +1,40 @@
 /**
- * Meta Onboarding — Main Orchestrator
+ * Meta Onboarding — Simplified (Agency-Powered)
  *
  * Route: /campaigns/:id/onboarding
  *
- * Orchestrates the full Facebook onboarding flow:
+ * Flow:
  * 1. Payment → (entry point, shown as complete)
- * 2. Connect Facebook → Facebook Login for Business + Page selection
- * 3. Verify Access → Auto-check or guided manual grant wizard
- * 4. Campaign Creation → Meta Marketing API campaign setup
- * 5. Live → Success state
+ * 2. Connect Facebook → User grants partner access in Meta Business Settings
+ *    and enters their Facebook Page name/URL
+ * 3. In Review → Campaign goes to admin dashboard for manual setup
  *
- * The flow is resumable: if the user leaves and returns, the onboarding
- * record is fetched from the backend and the flow resumes at the correct step.
+ * No OAuth, no token exchange, no API calls, no programmatic campaign creation.
+ * The Brandfletch team manually sets up campaigns in Meta Ads Manager.
  */
 import { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Loader2, PartyPopper } from 'lucide-react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { ArrowLeft, PartyPopper } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { base44 } from '@/api/base44Client';
-import { useAuth } from '@/lib/AuthContext';
-import { metaClient } from '@/lib/metaClient';
 
 import OnboardingProgress from '@/components/meta/OnboardingProgress';
 import ConnectFacebookStep from '@/components/meta/ConnectFacebookStep';
-import VerifyAccessStep from '@/components/meta/VerifyAccessStep';
-import CampaignCreationStep from '@/components/meta/CampaignCreationStep';
 
 export default function MetaOnboarding() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const { user } = useAuth();
 
   const [loading, setLoading] = useState(true);
   const [campaign, setCampaign] = useState(null);
-  const [onboardingId, setOnboardingId] = useState(null);
   const [step, setStep] = useState('connect_facebook');
-  const [status, setStatus] = useState('pending');
-  const [pageInfo, setPageInfo] = useState(null);
-  const [businessInfo, setBusinessInfo] = useState(null);
-  const [isLive, setIsLive] = useState(false);
+  const [done, setDone] = useState(false);
 
-  // ── OAuth callback state ──
-  const [oauthPages, setOAuthPages] = useState([]);
-  const [oauthBusinesses, setOAuthBusinesses] = useState([]);
-  const [oauthCallbackDone, setOAuthCallbackDone] = useState(false);
-
-  // ── Load campaign + resume onboarding state ──────────────────────
-  const loadState = useCallback(async () => {
+  // ── Load campaign ──────────────────────────────────────────────────
+  const loadCampaign = useCallback(async () => {
     try {
-      // Fetch campaign
       const results = await base44.entities.Campaign.filter({ id });
       const camp = results?.[0];
       if (!camp) {
@@ -61,119 +44,90 @@ export default function MetaOnboarding() {
       }
       setCampaign(camp);
 
-      // ── Check OAuth callback FIRST — if there's a code in the URL,
-      // process it immediately before loading (potentially stale) existing state
-      const code = searchParams.get('code');
-      const state = searchParams.get('state');
-      if (code && state) {
-        // Clean URL immediately so we don't re-process on refresh
-        window.history.replaceState({}, '', `/campaigns/${id}/onboarding`);
-        setOnboardingId(state);
-        setStep('connect_facebook');
-        setStatus('awaiting_page_selection');
-        setLoading(false);
-
-        // Exchange the OAuth code for pages + businesses
-        try {
-          const redirectUri = `${window.location.origin}/campaigns/${id}/onboarding`;
-          const res = await metaClient.callback(code, state, redirectUri);
-          // Store pages for ConnectFacebookStep to render
-          setOAuthPages(res.pages || []);
-          setOAuthBusinesses(res.businesses || []);
-          setOAuthCallbackDone(true);
-          if ((res.pages || []).length === 0) {
-            toast.info('No Facebook Pages found — make sure you have a Business Page.');
-          } else {
-            toast.success(`Found ${(res.pages || []).length} Facebook Pages`);
-          }
-        } catch (err) {
-          console.error('OAuth callback failed:', err);
-          toast.error(err.message || 'Facebook login failed');
-          setStatus('error');
-        }
-        return; // Don't continue loading state — we just handled the callback
-      }
-
-      // ── No OAuth callback — check for existing onboarding (resumability) ──
-      try {
-        const existing = await metaClient.getStatusByCampaign(id);
-        if (existing) {
-          setOnboardingId(existing.id);
-          setStep(existing.step || 'connect_facebook');
-          setStatus(existing.status || 'pending');
-          setPageInfo(existing.fb_page_id ? {
-            id: existing.fb_page_id,
-            name: existing.fb_page_name,
-          } : null);
-          setBusinessInfo(existing.fb_business_id ? {
-            id: existing.fb_business_id,
-            name: existing.fb_business_name,
-          } : null);
-          if (existing.step === 'campaign_creation' && existing.status === 'campaign_created') {
-            setIsLive(true);
-          }
-        }
-      } catch (_) {
-        // No existing onboarding — start fresh
+      // If the user already connected their page (fb_page_name is set),
+      // skip straight to the "In Review" state.
+      if (camp.fb_page_name) {
+        setStep('in_review');
+        setDone(true);
       }
     } catch (err) {
-      console.error('Failed to load onboarding state:', err);
-      toast.error('Failed to load onboarding state');
+      console.error('Failed to load campaign:', err);
+      toast.error('Failed to load campaign');
     } finally {
       setLoading(false);
     }
-  }, [id, navigate, searchParams]);
+  }, [id, navigate]);
 
-  useEffect(() => { loadState(); }, [loadState]);
+  useEffect(() => { loadCampaign(); }, [loadCampaign]);
 
-  // ── Step handlers ────────────────────────────────────────────────
-  function handlePageSelected({ page, business }) {
-    setPageInfo(page);
-    setBusinessInfo(business);
-    setStep('verify_access');
-    setStatus('checking');
+  // ── Handle page selected from ConnectFacebookStep ───────────────────
+  async function handlePageSelected({ page_name, page_url }) {
+    try {
+      // Save the page info to the campaign so the admin knows which page to set up
+      await base44.entities.Campaign.update(id, {
+        fb_page_name: page_name,
+        fb_page_url: page_url,
+        onboarding_step: 'partner_access_granted',
+        onboarding_status: 'access_granted',
+      });
+
+      // Also save/update the FacebookPage record for this user
+      try {
+        const existing = await base44.entities.FacebookPage.filter({ page_name });
+        if (existing?.length > 0) {
+          await base44.entities.FacebookPage.update(existing[0].id, {
+            page_name,
+            page_url,
+            connection_status: 'connected',
+          });
+        } else {
+          await base44.entities.FacebookPage.create({
+            page_name,
+            page_url,
+            connection_status: 'connected',
+          });
+        }
+      } catch (e) {
+        // Non-fatal — the campaign record is the important one
+        console.warn('FacebookPage save failed:', e.message);
+      }
+
+      setStep('in_review');
+      setDone(true);
+      toast.success('Page connected! Our team will set up your campaign.');
+    } catch (err) {
+      console.error('Failed to save page info:', err);
+      toast.error('Failed to save — please try again');
+    }
   }
 
-  function handleAccessGranted() {
-    setStep('campaign_creation');
-    setStatus('creating');
-  }
-
-  function handleCampaignComplete() {
-    setStep('live');
-    setStatus('live');
-    setIsLive(true);
-  }
-
-  function handleError(err) {
-    console.error('Onboarding error:', err);
-    setStatus('error');
-  }
-
-  // ── Loading state ─────────────────────────────────────────────────
+  // ── Loading state ───────────────────────────────────────────────────
   if (loading) {
     return (
       <div className="p-4 lg:p-8 max-w-2xl mx-auto">
         <div className="flex items-center justify-center py-20">
-          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+          <div className="w-6 h-6 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
         </div>
       </div>
     );
   }
 
-  // ── Live / Success state ──────────────────────────────────────────
-  if (isLive) {
+  // ── Done / In Review state ──────────────────────────────────────────
+  if (done) {
     return (
       <div className="p-4 lg:p-8 max-w-2xl mx-auto space-y-6">
-        <OnboardingProgress currentStep="live" status="complete" />
+        <OnboardingProgress currentStep="in_review" status="complete" />
 
         <Card>
           <CardContent className="p-8 text-center space-y-4">
-            <PartyPopper className="w-16 h-16 text-green-500 mx-auto" />
-            <h2 className="text-2xl font-bold">Your campaign is live! 🎉</h2>
+            <div className="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mx-auto">
+              <PartyPopper className="w-10 h-10 text-green-500" />
+            </div>
+            <h2 className="text-2xl font-bold">You're all set! 🎉</h2>
             <p className="text-muted-foreground">
-              Your Meta Ads campaign for <strong>{pageInfo?.name}</strong> has been created
-              and is now running on Brandfletch's ad account.
+              Brandfletch's team now has partner access to your Facebook Page
+              <strong> {campaign?.fb_page_name}</strong>. We'll set up your ad campaign
+              and notify you when it goes live.
             </p>
             <div className="flex gap-3 justify-center pt-2">
               <Button onClick={() => navigate(`/campaigns/${id}`)}>
@@ -189,7 +143,7 @@ export default function MetaOnboarding() {
     );
   }
 
-  // ── Main onboarding flow ──────────────────────────────────────────
+  // ── Main onboarding flow ────────────────────────────────────────────
   return (
     <div className="p-4 lg:p-8 max-w-2xl mx-auto space-y-6">
       {/* Back link */}
@@ -203,7 +157,7 @@ export default function MetaOnboarding() {
       {/* Progress tracker */}
       <Card className="shadow-sm">
         <CardContent className="p-6">
-          <OnboardingProgress currentStep={step} status={status} />
+          <OnboardingProgress currentStep={step} status="active" />
         </CardContent>
       </Card>
 
@@ -215,55 +169,12 @@ export default function MetaOnboarding() {
           </CardTitle>
         </CardHeader>
         <CardContent className="pb-6">
-          {/* Step 2: Connect Facebook */}
-          {step === 'connect_facebook' && (
-            <ConnectFacebookStep
-              onboardingId={onboardingId}
-              onPageSelected={handlePageSelected}
-              onError={handleError}
-              initialPages={oauthCallbackDone ? oauthPages : undefined}
-              initialBusinesses={oauthCallbackDone ? oauthBusinesses : undefined}
-              skipConnect={oauthCallbackDone}
-            />
-          )}
-
-          {/* Step 3: Verify Access */}
-          {step === 'verify_access' && pageInfo && (
-            <VerifyAccessStep
-              onboardingId={onboardingId}
-              pageInfo={pageInfo}
-              businessInfo={businessInfo}
-              onAccessGranted={handleAccessGranted}
-              onError={handleError}
-            />
-          )}
-
-          {/* Step 4: Campaign Creation */}
-          {step === 'campaign_creation' && !isLive && (
-            <CampaignCreationStep
-              onboardingId={onboardingId}
-              campaignId={id}
-              pageInfo={pageInfo}
-              businessInfo={businessInfo}
-              campaign={campaign}
-              onComplete={handleCampaignComplete}
-              onError={handleError}
-            />
-          )}
+          <ConnectFacebookStep
+            campaign={campaign}
+            onPageSelected={handlePageSelected}
+          />
         </CardContent>
       </Card>
-
-      {/* Error banner */}
-      {status === 'error' && (
-        <div className="p-4 rounded-xl bg-destructive/10 border border-destructive/20 flex items-start gap-3">
-          <p className="text-sm text-destructive">
-            Something went wrong. You can try again or contact support if the issue persists.
-          </p>
-          <Button variant="outline" size="sm" onClick={loadState}>
-            Retry
-          </Button>
-        </div>
-      )}
     </div>
   );
 }
