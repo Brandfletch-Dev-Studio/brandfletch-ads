@@ -3,56 +3,46 @@ import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { TrendingUp, MessageSquare, Calculator } from 'lucide-react';
+import { CUSTOM_BUDGET, getCurrencyForCountry, calculatePrice } from '@/lib/pricing';
 
 export default function CustomBudget({ data, selectedCountry, dbPricing, onUpdate }) {
-  const [dailySpend, setDailySpend] = useState(10);
+  const [dailySpend, setDailySpend] = useState(6000);
   const [days, setDays] = useState(3);
-  const [dailyRate, setDailyRate] = useState(15);
-  const [currency, setCurrency] = useState('USD');
-  const [symbol, setSymbol] = useState('$');
+  const [currency, setCurrency] = useState('MWK');
+  const [symbol, setSymbol] = useState('MK');
 
   useEffect(() => {
     if (!selectedCountry) return;
 
-    const getDailyRate = () => {
-      const premiumPricing = dbPricing.find(r => 
-        r.country === selectedCountry && 
-        r.package === 'premium'
-      );
+    const { code, symbol: sym } = getCurrencyForCountry(selectedCountry);
+    setCurrency(code);
+    setSymbol(sym);
 
-      if (premiumPricing && premiumPricing.daily) {
-        return { rate: premiumPricing.daily, currency: premiumPricing.currency, symbol: premiumPricing.symbol };
+    // Set minimum based on country
+    const minPrice = CUSTOM_BUDGET.min; // base MWK minimum
+    if (code === 'USD') {
+      setDailySpend(1);
+    } else {
+      const localMin = calculatePrice('starter', 'daily', selectedCountry);
+      if (localMin) {
+        setDailySpend(localMin.amount);
+      } else {
+        setDailySpend(minPrice);
       }
-
-      const localRates = {
-        Malawi: { rate: 55000, currency: 'MWK', symbol: 'MK' },
-        Zambia: { rate: 400, currency: 'ZMW', symbol: 'ZK' },
-        'South Africa': { rate: 280, currency: 'ZAR', symbol: 'R' },
-        Kenya: { rate: 2000, currency: 'KES', symbol: 'KSh' },
-        Tanzania: { rate: 40000, currency: 'TZS', symbol: 'TSh' },
-      };
-
-      const fallback = localRates[selectedCountry] || { rate: 15, currency: 'USD', symbol: '$' };
-      return fallback;
-    };
-
-    const rateInfo = getDailyRate();
-    setDailyRate(rateInfo.rate);
-    setCurrency(rateInfo.currency);
-    setSymbol(rateInfo.symbol);
-
-    if (dailySpend === 10 && rateInfo.rate !== 15) {
-      setDailySpend(Math.round(rateInfo.rate / 1000) * 1000);
     }
-  }, [selectedCountry, dbPricing]);
+  }, [selectedCountry]);
 
   useEffect(() => {
     const totalCost = dailySpend * days;
-    const spendRatio = dailySpend / dailyRate;
-    
+
+    // Use premium daily rate as the reference for estimates
+    const premiumDaily = calculatePrice('premium', 'daily', selectedCountry);
+    const referenceRate = premiumDaily?.amount || dailySpend;
+    const spendRatio = dailySpend / referenceRate;
+
     const premiumDailyImpressions = 20000;
     const premiumDailyReach = 15000;
-    
+
     const estimatedImpressions = Math.round(premiumDailyImpressions * spendRatio * days);
     const estimatedReach = Math.round(premiumDailyReach * spendRatio * days);
 
@@ -68,25 +58,30 @@ export default function CustomBudget({ data, selectedCountry, dbPricing, onUpdat
       custom_daily_spend: dailySpend,
       custom_days: days,
     });
-  }, [dailySpend, days, selectedCountry, currency, dailyRate, onUpdate]);
+  }, [dailySpend, days, selectedCountry, currency, onUpdate]);
 
   const formatCurrency = (amount) => {
     if (currency === 'USD') return `$${amount.toFixed(2)}`;
     return `${symbol}${amount.toLocaleString()}`;
   };
 
-  const getStepSize = () => {
-    if (currency === 'USD') return 1;
-    if (currency === 'MWK' || currency === 'TZS') return 1000;
-    if (currency === 'KES') return 100;
-    if (currency === 'ZAR' || currency === 'ZMW') return 10;
-    return 1;
+  // Minimum is starter daily price, step is the same as minimum
+  const starterDaily = calculatePrice('starter', 'daily', selectedCountry);
+  const minSpend = starterDaily?.amount || CUSTOM_BUDGET.min;
+  const stepSize = minSpend; // intervals of minimum (e.g. MK6,000)
+
+  // Max is 5x premium daily
+  const premiumDaily = calculatePrice('premium', 'daily', selectedCountry);
+  const maxDailySpend = (premiumDaily?.amount || 30000) * 5;
+
+  // Snap value to nearest step
+  const snapToStep = (value) => {
+    const snapped = Math.round(value / stepSize) * stepSize;
+    return Math.max(minSpend, Math.min(snapped, maxDailySpend));
   };
 
-  const stepSize = getStepSize();
-  const maxDailySpend = dailyRate * 3;
   const totalCost = dailySpend * days;
-  const spendRatio = dailySpend / dailyRate;
+  const spendRatio = dailySpend / (premiumDaily?.amount || dailySpend);
   const estimatedImpressions = Math.round(20000 * spendRatio * days);
   const estimatedReach = Math.round(15000 * spendRatio * days);
 
@@ -113,14 +108,15 @@ export default function CustomBudget({ data, selectedCountry, dbPricing, onUpdat
             </div>
             <Slider
               value={[dailySpend]}
-              onValueChange={([value]) => setDailySpend(value)}
-              min={stepSize}
+              onValueChange={([value]) => setDailySpend(snapToStep(value))}
+              min={minSpend}
               max={maxDailySpend}
               step={stepSize}
               className="py-2"
             />
             <div className="flex justify-between text-xs text-muted-foreground">
-              <span>{formatCurrency(stepSize)}</span>
+              <span>{formatCurrency(minSpend)} (min)</span>
+              <span>Steps of {formatCurrency(stepSize)}</span>
               <span>{formatCurrency(maxDailySpend)}</span>
             </div>
           </div>
@@ -180,7 +176,7 @@ export default function CustomBudget({ data, selectedCountry, dbPricing, onUpdat
       </Card>
 
       <p className="text-xs text-muted-foreground text-center">
-        💡 Rates are calculated based on the prevailing daily rate for premium plans in your region.
+        💡 Minimum daily spend is {formatCurrency(minSpend)}, in increments of {formatCurrency(stepSize)}.
       </p>
     </div>
   );

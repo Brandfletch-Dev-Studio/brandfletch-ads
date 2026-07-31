@@ -60,7 +60,7 @@ function PackageCard({ pkg, data, onChange, saving, onSave, onDelete }) {
       <div className="grid grid-cols-2 gap-3">
         {field('daily',      `Daily (${sym})`,   'e.g. 6000')}
         {field('weekly',     `Weekly (${sym})`,  'e.g. 42000')}
-        {field('monthly',    `Monthly (${sym})`, 'e.g. 160000')}
+        {field('monthly',    `Monthly (${sym})`, 'e.g. 180000')}
         {field('reach_low',  'Reach Low/day',    'e.g. 2000')}
         {field('reach_high', 'Reach High/day',   'e.g. 5000')}
         {field('creatives',  'Creatives',        'e.g. 2')}

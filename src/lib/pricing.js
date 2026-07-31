@@ -7,44 +7,45 @@ export const PACKAGES = {
   premium: { label: 'Premium',  daily_usd: 5, description: 'For established businesses expanding fast',     color: 'purple' },
 };
 
-// Base USD prices (includes all fees)
+// Base USD prices (international pricing)
 const USD_PRICES = {
   starter:  { weekly: 7,   monthly: 30 },
-  growth:   { weekly: 21,  monthly: 65 },
-  premium:  { weekly: 35,  monthly: 110 },
+  growth:   { weekly: 21,  monthly: 90 },
+  premium:  { weekly: 35,  monthly: 150 },
 };
 
-// Fixed local-currency prices per country — NEW PRICING
+// Fixed local-currency prices per country
+// Malawi is the base; other countries use official exchange rate equivalents
 export const LOCAL_PRICES = {
   Malawi: {
     currency: 'MWK', symbol: 'MK',
-    starter:  { daily: 6000,  weekly: 42000,  monthly: 160000 },
-    growth:   { daily: 18000, weekly: 105000, monthly: 450000 },
-    premium:  { daily: 25000, weekly: 175000, monthly: 750000 },
+    starter:  { daily: 6000,  weekly: 42000,  monthly: 180000 },
+    growth:   { daily: 18000, weekly: 126000, monthly: 540000 },
+    premium:  { daily: 30000, weekly: 210000, monthly: 900000 },
   },
   Zambia: {
     currency: 'ZMW', symbol: 'ZK',
-    starter:  { weekly: 55,    monthly: 220 },
-    growth:   { weekly: 120,   monthly: 480 },
-    premium:  { weekly: 200,   monthly: 810 },
+    starter:  { weekly: 95,    monthly: 2880 },
+    growth:   { weekly: 290,   monthly: 8640 },
+    premium:  { weekly: 480,   monthly: 14400 },
   },
   'South Africa': {
     currency: 'ZAR', symbol: 'R',
-    starter:  { weekly: 140,   monthly: 560 },
-    growth:   { weekly: 300,   monthly: 1200 },
-    premium:  { weekly: 500,   monthly: 2000 },
+    starter:  { weekly: 65,    monthly: 1905 },
+    growth:   { weekly: 190,   monthly: 5710 },
+    premium:  { weekly: 315,   monthly: 9515 },
   },
   Kenya: {
     currency: 'KES', symbol: 'KSh',
-    starter:  { weekly: 950,   monthly: 3800 },
-    growth:   { weekly: 2050,  monthly: 8200 },
-    premium:  { weekly: 3400,  monthly: 13600 },
+    starter:  { weekly: 450,   monthly: 13250 },
+    growth:   { weekly: 1350,  monthly: 39800 },
+    premium:  { weekly: 2200,  monthly: 66350 },
   },
   Tanzania: {
     currency: 'TZS', symbol: 'TSh',
-    starter:  { weekly: 19000,   monthly: 76000 },
-    growth:   { weekly: 41000,   monthly: 164000 },
-    premium:  { weekly: 69000,  monthly: 276000 },
+    starter:  { weekly: 9000,   monthly: 261000 },
+    growth:   { weekly: 26000,  monthly: 782000 },
+    premium:  { weekly: 43000,  monthly: 1304000 },
   },
 };
 
@@ -155,3 +156,9 @@ export function calculateEstimatedResults(pkg, duration) {
     reach: base.reach_per_day * days,
   };
 }
+
+// Custom budget minimum and step (in MWK)
+export const CUSTOM_BUDGET = {
+  min: 6000,
+  step: 6000,
+};

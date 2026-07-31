@@ -289,7 +289,7 @@ export default function Home() {
             {/* STARTER */}
             <div className="bg-[#13131F] border border-gray-800 rounded-3xl p-7 flex flex-col">
               <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">STARTER</span>
-              <h3 className="text-3xl font-black text-white mt-2 mb-1">MK160K<span className="text-sm text-gray-400 font-normal">/mo</span></h3>
+              <h3 className="text-3xl font-black text-white mt-2 mb-1">MK180K<span className="text-sm text-gray-400 font-normal">/mo</span></h3>
               <p className="text-sm text-[#4CAF50] font-semibold mb-6">For small businesses</p>
               <hr className="border-gray-800 mb-5" />
               <ul className="space-y-3 text-sm text-gray-300 mb-7 flex-1">
@@ -310,7 +310,7 @@ export default function Home() {
                 Popular
               </div>
               <span className="text-xs font-bold text-white/70 uppercase tracking-widest mt-2">GROWTH</span>
-              <h3 className="text-3xl font-black text-white mt-2 mb-1">MK450K<span className="text-sm text-white/70 font-normal">/mo</span></h3>
+              <h3 className="text-3xl font-black text-white mt-2 mb-1">MK540K<span className="text-sm text-white/70 font-normal">/mo</span></h3>
               <p className="text-sm text-yellow-300 font-semibold mb-6">For growing businesses</p>
               <hr className="border-white/10 mb-5" />
               <ul className="space-y-3 text-sm text-white mb-7 flex-1">
@@ -328,7 +328,7 @@ export default function Home() {
             {/* PREMIUM */}
             <div className="bg-[#13131F] border border-gray-800 rounded-3xl p-7 flex flex-col">
               <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">PREMIUM</span>
-              <h3 className="text-3xl font-black text-white mt-2 mb-1">MK750K<span className="text-sm text-gray-400 font-normal">/mo</span></h3>
+              <h3 className="text-3xl font-black text-white mt-2 mb-1">MK900K<span className="text-sm text-gray-400 font-normal">/mo</span></h3>
               <p className="text-sm text-[#4CAF50] font-semibold mb-6">Maximum reach</p>
               <hr className="border-gray-800 mb-5" />
               <ul className="space-y-3 text-sm text-gray-300 mb-7 flex-1">
