@@ -355,15 +355,48 @@ export default function Home() {
       </section>
 
       {/* ── SOCIAL PROOF ─────────────────────────────────────────────────────── */}
-      <section className="py-16 bg-white">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center">
-          <div className="flex justify-center gap-1 mb-4">
-            {[...Array(5)].map((_, i) => <Star key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" />)}
+      <section className="py-20 bg-[#0A0A0F] text-white">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6">
+          <div className="text-center mb-10">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#4CAF50] bg-[#4CAF50]/10 px-3 py-1 rounded-full">
+              Social proof
+            </span>
+            <h2 className="text-3xl sm:text-5xl font-black tracking-tight mt-4 mb-4">
+              Real results. Real businesses.
+            </h2>
+            <p className="text-lg text-gray-400">
+              See what happens when you let Brandfletch run your ads.
+            </p>
           </div>
-          <blockquote className="text-xl sm:text-2xl font-bold text-foreground mb-4 leading-relaxed">
-            "We went from zero online presence to consistent leads within 6 weeks. The ads just worked."
-          </blockquote>
-          <p className="text-sm text-muted-foreground font-medium">— Business owner, Blantyre</p>
+
+          {/* Facebook video embed */}
+          <div className="flex justify-center mb-12">
+            <div className="w-full max-w-2xl rounded-2xl overflow-hidden border border-white/10 shadow-2xl">
+              <div className="relative" style={{ paddingBottom: '56.25%' }}>
+                <iframe
+                  src="https://www.facebook.com/plugins/video.php?href=https%3A%2F%2Fwww.facebook.com%2Fshare%2Fv%2F19bEokkp2N%2F&show_text=false&width=560&autoplay=false"
+                  className="absolute top-0 left-0 w-full h-full"
+                  style={{ border: 'none' }}
+                  scrolling="no"
+                  frameBorder="0"
+                  allowFullScreen
+                  allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+                  title="Brandfletch client success story"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Written testimonial */}
+          <div className="max-w-2xl mx-auto text-center">
+            <div className="flex justify-center gap-1 mb-4">
+              {[...Array(5)].map((_, i) => <Star key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" />)}
+            </div>
+            <blockquote className="text-xl sm:text-2xl font-bold text-white mb-4 leading-relaxed">
+              "We went from zero online presence to consistent leads within 6 weeks. The ads just worked."
+            </blockquote>
+            <p className="text-sm text-gray-400 font-medium">— Business owner, Blantyre</p>
+          </div>
         </div>
       </section>
 
