@@ -70,7 +70,7 @@ export default function StepSummary({ data }) {
 
           {estimated && (
             <p className="text-sm leading-relaxed text-foreground">
-              Based on these settings, you can expect an estimated <span className="font-semibold">{estimated.reach.toLocaleString()} people reached</span> with approximately <span className="font-semibold">{estimated.impressions.toLocaleString()} impressions</span>.
+              Based on these settings, you can expect an estimated <span className="font-semibold">{estimated.reach_low?.toLocaleString()} – {estimated.reach_high?.toLocaleString()} people reached</span> with approximately <span className="font-semibold">{estimated.impressions.toLocaleString()} impressions</span>.
             </p>
           )}
         </div>

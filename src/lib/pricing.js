@@ -65,9 +65,9 @@ export const AD_SPEND = {
 // Estimated monthly reach per package
 export const ESTIMATED_REACH = {
   // Monthly totals (daily reach × 30 days)
-  starter:  '1.8M – 4.5M',
-  growth:   '5.4M – 13.5M',
-  premium:  '9M – 22.5M',
+  starter:  '60K – 150K',
+  growth:   '180K – 450K',
+  premium:  '300K – 750K',
 };
 
 // Package-specific deliverables
@@ -142,9 +142,9 @@ export function getCurrencyForCountry(country) {
 
 // Estimated results per day
 export const ESTIMATED_RESULTS = {
-  starter:  { impressions_per_day: 2000,  reach_per_day: 1500 },
-  growth:   { impressions_per_day: 6000,  reach_per_day: 4500 },
-  premium:  { impressions_per_day: 10000, reach_per_day: 7500 },
+  starter:  { impressions_per_day: 2000,  reach_per_day_low: 2000,  reach_per_day_high: 5000  },
+  growth:   { impressions_per_day: 6000,  reach_per_day_low: 6000,  reach_per_day_high: 15000 },
+  premium:  { impressions_per_day: 10000, reach_per_day_low: 10000, reach_per_day_high: 25000 },
 };
 
 export function calculateEstimatedResults(pkg, duration) {
@@ -153,7 +153,8 @@ export function calculateEstimatedResults(pkg, duration) {
   const days = DURATIONS[duration]?.days || 1;
   return {
     impressions: base.impressions_per_day * days,
-    reach: base.reach_per_day * days,
+    reach_low: base.reach_per_day_low * days,
+    reach_high: base.reach_per_day_high * days,
   };
 }
 

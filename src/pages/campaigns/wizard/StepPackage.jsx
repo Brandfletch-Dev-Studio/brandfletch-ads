@@ -52,7 +52,8 @@ export default function StepPackage({ data, update }) {
       total_cost: price?.amount || 0,
       total_cost_usd: price?.usd || 0,
       estimated_impressions: estimated?.impressions || 0,
-      estimated_reach: estimated?.reach || 0,
+      estimated_reach: estimated?.reach_low || 0,
+      estimated_reach_high: estimated?.reach_high || 0,
     });
   }
 
@@ -67,7 +68,8 @@ export default function StepPackage({ data, update }) {
         total_cost: price?.amount || 0,
         total_cost_usd: price?.usd || 0,
         estimated_impressions: estimated?.impressions || 0,
-        estimated_reach: estimated?.reach || 0,
+        estimated_reach: estimated?.reach_low || 0,
+        estimated_reach_high: estimated?.reach_high || 0,
       });
     } else {
       update({ duration: dur });
@@ -85,7 +87,8 @@ export default function StepPackage({ data, update }) {
         total_cost: price?.amount || 0,
         total_cost_usd: price?.usd || 0,
         estimated_impressions: estimated?.impressions || 0,
-        estimated_reach: estimated?.reach || 0,
+        estimated_reach: estimated?.reach_low || 0,
+        estimated_reach_high: estimated?.reach_high || 0,
       });
     } else {
       update({ country });
@@ -224,7 +227,7 @@ export default function StepPackage({ data, update }) {
                       </div>
                       <div className="text-right">
                         <p className="text-xs text-muted-foreground">Est. Reach</p>
-                        <p className="font-semibold text-xs">{estimated?.reach?.toLocaleString()} people</p>
+                        <p className="font-semibold text-xs">{estimated?.reach_low?.toLocaleString()} – {estimated?.reach_high?.toLocaleString()} people</p>
                       </div>
                     </div>
                   )}
