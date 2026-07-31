@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useSEO } from '@/hooks/useSEO';
+import { LOCAL_PRICES, AD_SPEND, ESTIMATED_REACH, PACKAGES } from '@/lib/pricing';
 
 const REQUIREMENTS = [
   {
@@ -286,62 +287,61 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-4xl mx-auto mb-10">
-            {/* STARTER */}
-            <div className="bg-[#13131F] border border-gray-800 rounded-3xl p-7 flex flex-col">
-              <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">STARTER</span>
-              <h3 className="text-3xl font-black text-white mt-2 mb-1">MK180K<span className="text-sm text-gray-400 font-normal">/mo</span></h3>
-              <p className="text-sm text-[#4CAF50] font-semibold mb-6">For small businesses</p>
-              <hr className="border-gray-800 mb-5" />
-              <ul className="space-y-3 text-sm text-gray-300 mb-7 flex-1">
-                <li className="flex items-start gap-2.5"><Check className="w-4 h-4 text-[#4CAF50] shrink-0 mt-0.5" /><span>$1/day Meta ad spend</span></li>
-                <li className="flex items-start gap-2.5"><Check className="w-4 h-4 text-[#4CAF50] shrink-0 mt-0.5" /><span>Total reach: 1.8M–4.5M/month</span></li>
-                <li className="flex items-start gap-2.5"><Check className="w-4 h-4 text-[#4CAF50] shrink-0 mt-0.5" /><span>Facebook & Instagram ads</span></li>
-                <li className="flex items-start gap-2.5"><Check className="w-4 h-4 text-[#4CAF50] shrink-0 mt-0.5" /><span>Campaign setup & management</span></li>
-                <li className="flex items-start gap-2.5"><Check className="w-4 h-4 text-[#4CAF50] shrink-0 mt-0.5" /><span>Performance dashboard</span></li>
-              </ul>
-              <Link to="/pricing" className="block text-center border border-gray-700 hover:border-white text-white py-3 rounded-xl text-sm font-bold transition-all mt-auto">
-                Get Started
-              </Link>
-            </div>
+            {['starter', 'growth', 'premium'].map((pkg, i) => {
+              const malawi = LOCAL_PRICES.Malawi;
+              const monthly = malawi[pkg].monthly;
+              const symbol = malawi.symbol;
+              const monthlyDisplay = monthly >= 1000 ? `${symbol}${(monthly / 1000).toFixed(0)}K` : `${symbol}${monthly}`;
+              const isGrowth = pkg === 'growth';
+              const isPremium = pkg === 'premium';
+              const pkgInfo = PACKAGES[pkg];
+              const reach = ESTIMATED_REACH[pkg];
+              const usdSpend = AD_SPEND[pkg];
 
-            {/* GROWTH */}
-            <div className="bg-gradient-to-br from-[#3B2FC9] to-[#5B4FE8] rounded-3xl p-7 flex flex-col shadow-2xl lg:scale-105 border-2 border-white/20 relative">
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#4CAF50] text-white px-4 py-1 rounded-full text-xs font-black tracking-widest uppercase">
-                Popular
-              </div>
-              <span className="text-xs font-bold text-white/70 uppercase tracking-widest mt-2">GROWTH</span>
-              <h3 className="text-3xl font-black text-white mt-2 mb-1">MK540K<span className="text-sm text-white/70 font-normal">/mo</span></h3>
-              <p className="text-sm text-yellow-300 font-semibold mb-6">For growing businesses</p>
-              <hr className="border-white/10 mb-5" />
-              <ul className="space-y-3 text-sm text-white mb-7 flex-1">
-                <li className="flex items-start gap-2.5"><Check className="w-4 h-4 text-white shrink-0 mt-0.5 stroke-[3px]" /><span>$3/day Meta ad spend</span></li>
-                <li className="flex items-start gap-2.5"><Check className="w-4 h-4 text-white shrink-0 mt-0.5 stroke-[3px]" /><span>Total reach: 5.4M–13.5M/month</span></li>
-                <li className="flex items-start gap-2.5"><Check className="w-4 h-4 text-white shrink-0 mt-0.5 stroke-[3px]" /><span>Facebook & Instagram ads</span></li>
-                <li className="flex items-start gap-2.5"><Check className="w-4 h-4 text-white shrink-0 mt-0.5 stroke-[3px]" /><span>Campaign setup & management</span></li>
-                <li className="flex items-start gap-2.5"><Check className="w-4 h-4 text-white shrink-0 mt-0.5 stroke-[3px]" /><span>Performance dashboard</span></li>
-              </ul>
-              <Link to="/pricing" className="block text-center bg-white text-[#3B2FC9] py-3 rounded-xl text-sm font-bold transition-all hover:bg-gray-100 mt-auto">
-                Get Started
-              </Link>
-            </div>
-
-            {/* PREMIUM */}
-            <div className="bg-[#13131F] border border-gray-800 rounded-3xl p-7 flex flex-col">
-              <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">PREMIUM</span>
-              <h3 className="text-3xl font-black text-white mt-2 mb-1">MK900K<span className="text-sm text-gray-400 font-normal">/mo</span></h3>
-              <p className="text-sm text-[#4CAF50] font-semibold mb-6">Maximum reach</p>
-              <hr className="border-gray-800 mb-5" />
-              <ul className="space-y-3 text-sm text-gray-300 mb-7 flex-1">
-                <li className="flex items-start gap-2.5"><Check className="w-4 h-4 text-[#4CAF50] shrink-0 mt-0.5" /><span>$5/day Meta ad spend</span></li>
-                <li className="flex items-start gap-2.5"><Check className="w-4 h-4 text-[#4CAF50] shrink-0 mt-0.5" /><span>Total reach: 9M–22.5M/month</span></li>
-                <li className="flex items-start gap-2.5"><Check className="w-4 h-4 text-[#4CAF50] shrink-0 mt-0.5" /><span>Facebook & Instagram ads</span></li>
-                <li className="flex items-start gap-2.5"><Check className="w-4 h-4 text-[#4CAF50] shrink-0 mt-0.5" /><span>Campaign setup & management</span></li>
-                <li className="flex items-start gap-2.5"><Check className="w-4 h-4 text-[#4CAF50] shrink-0 mt-0.5" /><span>Performance dashboard</span></li>
-              </ul>
-              <Link to="/pricing" className="block text-center border border-gray-700 hover:border-white text-white py-3 rounded-xl text-sm font-bold transition-all mt-auto">
-                Talk to Us
-              </Link>
-            </div>
+              return (
+                <div
+                  key={pkg}
+                  className={
+                    isGrowth
+                      ? 'bg-gradient-to-br from-[#3B2FC9] to-[#5B4FE8] rounded-3xl p-7 flex flex-col shadow-2xl lg:scale-105 border-2 border-white/20 relative'
+                      : 'bg-[#13131F] border border-gray-800 rounded-3xl p-7 flex flex-col'
+                  }
+                >
+                  {isGrowth && (
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#4CAF50] text-white px-4 py-1 rounded-full text-xs font-black tracking-widest uppercase">
+                      Popular
+                    </div>
+                  )}
+                  <span className={isGrowth ? 'text-xs font-bold text-white/70 uppercase tracking-widest mt-2' : 'text-xs font-bold text-gray-500 uppercase tracking-widest'}>
+                    {pkg.toUpperCase()}
+                  </span>
+                  <h3 className="text-3xl font-black text-white mt-2 mb-1">
+                    {monthlyDisplay}<span className={isGrowth ? 'text-sm text-white/70 font-normal' : 'text-sm text-gray-400 font-normal'}>/mo</span>
+                  </h3>
+                  <p className={`text-sm font-semibold mb-6 ${isGrowth ? 'text-yellow-300' : 'text-[#4CAF50]'}`}>
+                    {pkgInfo.description}
+                  </p>
+                  <hr className={isGrowth ? 'border-white/10 mb-5' : 'border-gray-800 mb-5'} />
+                  <ul className={`space-y-3 text-sm mb-7 flex-1 ${isGrowth ? 'text-white' : 'text-gray-300'}`}>
+                    <li className="flex items-start gap-2.5"><Check className={`w-4 h-4 shrink-0 mt-0.5 ${isGrowth ? 'text-white stroke-[3px]' : 'text-[#4CAF50]'}`} /><span>${usdSpend}/day Meta ad spend</span></li>
+                    <li className="flex items-start gap-2.5"><Check className={`w-4 h-4 shrink-0 mt-0.5 ${isGrowth ? 'text-white stroke-[3px]' : 'text-[#4CAF50]'}`} /><span>Total reach: {reach}/month</span></li>
+                    <li className="flex items-start gap-2.5"><Check className={`w-4 h-4 shrink-0 mt-0.5 ${isGrowth ? 'text-white stroke-[3px]' : 'text-[#4CAF50]'}`} /><span>Facebook & Instagram ads</span></li>
+                    <li className="flex items-start gap-2.5"><Check className={`w-4 h-4 shrink-0 mt-0.5 ${isGrowth ? 'text-white stroke-[3px]' : 'text-[#4CAF50]'}`} /><span>Campaign setup & management</span></li>
+                    <li className="flex items-start gap-2.5"><Check className={`w-4 h-4 shrink-0 mt-0.5 ${isGrowth ? 'text-white stroke-[3px]' : 'text-[#4CAF50]'}`} /><span>Performance dashboard</span></li>
+                  </ul>
+                  <Link
+                    to="/pricing"
+                    className={
+                      isGrowth
+                        ? 'block text-center bg-white text-[#3B2FC9] py-3 rounded-xl text-sm font-bold transition-all hover:bg-gray-100 mt-auto'
+                        : 'block text-center border border-gray-700 hover:border-white text-white py-3 rounded-xl text-sm font-bold transition-all mt-auto'
+                    }
+                  >
+                    {isPremium ? 'Talk to Us' : 'Get Started'}
+                  </Link>
+                </div>
+              );
+            })}
           </div>
 
           <div className="text-center">
@@ -369,18 +369,17 @@ export default function Home() {
             </p>
           </div>
 
-          {/* Facebook video embed */}
+          {/* YouTube video embed */}
           <div className="flex justify-center mb-12">
             <div className="w-full max-w-2xl rounded-2xl overflow-hidden border border-white/10 shadow-2xl">
               <div className="relative" style={{ paddingBottom: '56.25%' }}>
                 <iframe
-                  src="https://www.facebook.com/plugins/video.php?href=https%3A%2F%2Fwww.facebook.com%2Fshare%2Fv%2F19bEokkp2N%2F&show_text=false&width=560&autoplay=false"
+                  src="https://www.youtube.com/embed/VIDEO_ID"
                   className="absolute top-0 left-0 w-full h-full"
                   style={{ border: 'none' }}
-                  scrolling="no"
                   frameBorder="0"
                   allowFullScreen
-                  allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                   title="Brandfletch client success story"
                 />
               </div>
