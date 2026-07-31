@@ -7,7 +7,7 @@ export default function AuthLayout({ title, subtitle, footer, children, hideBran
       {/* Brand Growth System Header (Always outside and white) */}
       <div className="text-center mb-6">
         <h1 className="text-xl font-bold text-white">Brandfletch Growth System</h1>
-        <p className="text-sm text-gray-400 mt-1">One login for all Brandfletch platforms</p>
+        <p className="text-sm text-gray-400 mt-1">Shooting your brand to success</p>
       </div>
 
       {/* Centered White Form Card */}
