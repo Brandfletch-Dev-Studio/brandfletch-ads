@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/AuthContext';
 import { base44 } from '@/api/base44Client';
-import { Plus, Trash2, Save, DollarSign, CreditCard, Pencil, X, Check, ShieldAlert, Mail, Loader2, Package } from 'lucide-react';
+import { Plus, Trash2, Save, DollarSign, CreditCard, Pencil, X, Check, ShieldAlert, Mail, Loader2, Package, Facebook } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 import EmailTemplatesTab from '@/components/settings/EmailTemplatesTab';
 import PackagePricingTab from '@/components/settings/PackagePricingTab';
 import ConfirmDialog from '@/components/ConfirmDialog';
+import { useAppConfigValue, invalidateAppConfig } from '@/lib/useAppConfig';
 
 const DANGER_ENTITIES = [
   { key: 'Campaign', label: 'Campaigns', entity: 'Campaign' },
@@ -42,6 +43,9 @@ export default function AdminSettings() {
   const [deleting, setDeleting] = useState(false);
 
   const { user: authUser } = useAuth();
+  const { value: metaBusinessId } = useAppConfigValue('meta_business_id');
+  const [metaBusinessIdInput, setMetaBusinessIdInput] = useState('');
+  const [savingMetaBizId, setSavingMetaBizId] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -58,6 +62,28 @@ export default function AdminSettings() {
     if (authUser.admin_notification_email) setAdminEmail(authUser.admin_notification_email);
     else if (authUser.email) setAdminEmail(authUser.email);
   }, [authUser?.id]);
+
+  useEffect(() => {
+    if (metaBusinessId) setMetaBusinessIdInput(metaBusinessId);
+  }, [metaBusinessId]);
+
+  async function saveMetaBusinessId() {
+    try {
+      setSavingMetaBizId(true);
+      const existing = await base44.entities.AppConfig.list({ key: 'meta_business_id' });
+      if (existing.length > 0) {
+        await base44.entities.AppConfig.update(existing[0].id, { value: metaBusinessIdInput.trim() });
+      } else {
+        await base44.entities.AppConfig.create({ key: 'meta_business_id', value: metaBusinessIdInput.trim() });
+      }
+      invalidateAppConfig();
+      toast.success('Meta Business ID saved!', { duration: 1500 });
+    } catch (err) {
+      toast.error(err?.message || 'Failed to save. Please try again.');
+    } finally {
+      setSavingMetaBizId(false);
+    }
+  }
 
   async function saveAdminEmail() {
     try {
@@ -311,6 +337,33 @@ export default function AdminSettings() {
 
       {/* Email Templates */}
       <EmailTemplatesTab />
+
+      {/* Meta Business ID */}
+      <Card className="shadow-sm">
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Facebook className="w-4 h-4 text-blue-600" /> Meta Business ID
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            Brandfletch's Meta Business Portfolio ID shown to clients during Facebook connection.
+            Changing this takes effect immediately — no redeploy needed.
+          </p>
+          <div className="flex items-center gap-2">
+            <Input
+              value={metaBusinessIdInput}
+              onChange={e => setMetaBusinessIdInput(e.target.value)}
+              placeholder="e.g. 1531314561797001"
+              className="h-9 font-mono"
+            />
+            <Button onClick={saveMetaBusinessId} disabled={savingMetaBizId || !metaBusinessIdInput.trim()}>
+              {savingMetaBizId ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
 
       {/* Admin Notification Email */}
       <Card className="shadow-sm">

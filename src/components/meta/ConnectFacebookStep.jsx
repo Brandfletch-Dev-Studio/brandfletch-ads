@@ -1,14 +1,8 @@
 /**
  * Connect Facebook Step — Simplified (Agency-Powered)
  *
- * No OAuth, no token exchange, no API calls.
- * Just shows Brandfletch's Business ID, a link to Meta Business Settings,
- * and simple instructions for the user to grant partner access.
- *
- * After granting, the user enters their Facebook Page name/URL so the
- * agency team knows which page to set up ads for.
- *
- * Props: { onPageSelected, campaign }
+ * Business ID is loaded from AppConfig table at runtime,
+ * editable by admins in Admin Settings — no env var rebuild needed.
  */
 import React, { useState } from 'react';
 import {
@@ -21,23 +15,22 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
+import { useAppConfigValue } from '@/lib/useAppConfig';
 
-// Brandfletch's Meta Business Portfolio ID.
-// Set VITE_META_BUSINESS_ID in your .env to match the server-side META_BUSINESS_ID.
-const BRANDFLETCH_BUSINESS_ID = import.meta.env.VITE_META_BUSINESS_ID || '';
 const META_BUSINESS_SETTINGS_URL = 'https://business.facebook.com/settings/partners';
 
 export default function ConnectFacebookStep({ onPageSelected, campaign }) {
   const [copied, setCopied] = useState(false);
   const [pageName, setPageName] = useState(campaign?.page_name || '');
   const [pageUrl, setPageUrl] = useState(campaign?.page_url || '');
+  const { value: businessId, loading } = useAppConfigValue('meta_business_id');
 
   function copyBusinessId() {
-    if (!BRANDFLETCH_BUSINESS_ID) {
+    if (!businessId) {
       toast.error('Business ID not configured. Contact support.');
       return;
     }
-    navigator.clipboard.writeText(BRANDFLETCH_BUSINESS_ID).then(() => {
+    navigator.clipboard.writeText(businessId).then(() => {
       setCopied(true);
       toast.success('Business ID copied to clipboard!');
     }).catch(() => toast.error('Copy failed — long-press the ID to select it'));
@@ -82,9 +75,9 @@ export default function ConnectFacebookStep({ onPageSelected, campaign }) {
           </p>
           <div className="flex items-center gap-2">
             <code className="flex-1 p-3 rounded-lg bg-muted font-mono text-xs sm:text-sm select-all break-all">
-              {BRANDFLETCH_BUSINESS_ID || 'Not configured — contact support'}
+              {loading ? 'Loading…' : (businessId || 'Not configured — contact support')}
             </code>
-            <Button variant="outline" size="icon" onClick={copyBusinessId} className="shrink-0">
+            <Button variant="outline" size="icon" onClick={copyBusinessId} className="shrink-0" disabled={loading || !businessId}>
               {copied ? <ClipboardCheck className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
             </Button>
           </div>

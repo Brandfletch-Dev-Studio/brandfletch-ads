@@ -8,6 +8,7 @@
  * grants partner access, then enters their Page name/URL here.
  */
 import { useState, useEffect, useCallback } from 'react';
+import { useAppConfigValue } from '@/lib/useAppConfig';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/lib/AuthContext';
 import {
@@ -20,11 +21,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 
-const BRANDFLETCH_BUSINESS_ID = import.meta.env.VITE_META_BUSINESS_ID || '';
 const META_BUSINESS_SETTINGS_URL = 'https://business.facebook.com/settings/partners';
 
 export default function FacebookPages() {
   const { user, isLoadingAuth } = useAuth();
+  const { value: businessId } = useAppConfigValue('meta_business_id');
 
   const [pages, setPages] = useState([]);
   const [loadingPages, setLoadingPages] = useState(true);
@@ -50,11 +51,11 @@ export default function FacebookPages() {
   }, [isLoadingAuth, loadPages]);
 
   function copyBusinessId() {
-    if (!BRANDFLETCH_BUSINESS_ID) {
+    if (!businessId) {
       toast.error('Business ID not configured. Contact support.');
       return;
     }
-    navigator.clipboard.writeText(BRANDFLETCH_BUSINESS_ID).then(() => {
+    navigator.clipboard.writeText(businessId).then(() => {
       setCopied(true);
       toast.success('Business ID copied to clipboard!');
     }).catch(() => toast.error('Copy failed — long-press the ID to select it'));
@@ -142,7 +143,7 @@ export default function FacebookPages() {
               <Label className="text-sm font-semibold mb-2 block">Step 1 — Copy Brandfletch's Business ID</Label>
               <div className="flex items-center gap-2">
                 <code className="flex-1 p-3 rounded-lg bg-muted font-mono text-xs sm:text-sm select-all break-all">
-                  {BRANDFLETCH_BUSINESS_ID || 'Not configured — contact support'}
+                  {businessId || 'Not configured — contact support'}
                 </code>
                 <Button variant="outline" size="icon" onClick={copyBusinessId} className="shrink-0">
                   {copied ? <ClipboardCheck className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
