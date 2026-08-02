@@ -89,7 +89,8 @@ export default function FacebookPages() {
       await loadPages();
     } catch (err) {
       console.error('Failed to save page:', err);
-      toast.error(err.message || 'Failed to save page.');
+      const msg = err?.message || err?.error_description || err?.error || 'Failed to save page.';
+      toast.error(msg);
     } finally {
       setSaving(false);
     }

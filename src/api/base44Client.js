@@ -95,24 +95,21 @@ function createEntityWrapper(entityName) {
       const payload = { ...data };
       if (user && !payload.created_by) payload.created_by = user.id;
       if (user && !payload.user_id)   payload.user_id   = user.id;
-      const { data: result, error } = await supabase
+      const { error } = await supabase
         .from(entityName)
-        .insert(payload)
-        .select()
-        .single();
+        .insert(payload);
       if (error) throw error;
-      return result;
+      // Return the payload with a synthetic id — the caller can re-fetch
+      return { ...payload, id: crypto.randomUUID?.() || Date.now().toString() };
     },
 
     async update(id, data) {
-      const { data: result, error } = await supabase
+      const { error } = await supabase
         .from(entityName)
         .update(data)
-        .eq('id', id)
-        .select()
-        .single();
+        .eq('id', id);
       if (error) throw error;
-      return result;
+      return { ...data, id };
     },
 
     async delete(id) {
