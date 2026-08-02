@@ -138,7 +138,21 @@ export default function FacebookPages() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {/* Business ID + instructions in one compact block */}
+            {/* Page info first */}
+            <div className="space-y-2">
+              <Input
+                value={pageName}
+                onChange={e => setPageName(e.target.value)}
+                placeholder="Page name (e.g. My Business Page)"
+              />
+              <Input
+                value={pageUrl}
+                onChange={e => setPageUrl(e.target.value)}
+                placeholder="Page URL (optional)"
+              />
+            </div>
+
+            {/* Business ID + instructions */}
             <div className="rounded-lg bg-muted/60 border border-border p-3 space-y-3">
               <div>
                 <p className="text-xs font-semibold text-muted-foreground mb-1.5">1. Copy Brandfletch's Business ID</p>
@@ -164,23 +178,6 @@ export default function FacebookPages() {
                 >
                   <ExternalLink className="w-3.5 h-3.5" /> Open Meta Business Settings
                 </Button>
-              </div>
-            </div>
-
-            {/* Page info */}
-            <div>
-              <p className="text-xs font-semibold text-muted-foreground mb-2">3. Enter your Page details</p>
-              <div className="space-y-2">
-                <Input
-                  value={pageName}
-                  onChange={e => setPageName(e.target.value)}
-                  placeholder="Page name (e.g. My Business Page)"
-                />
-                <Input
-                  value={pageUrl}
-                  onChange={e => setPageUrl(e.target.value)}
-                  placeholder="Page URL (optional)"
-                />
               </div>
             </div>
 
