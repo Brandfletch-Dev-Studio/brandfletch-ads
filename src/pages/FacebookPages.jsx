@@ -134,83 +134,61 @@ export default function FacebookPages() {
         <Card>
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
-              <Facebook className="w-4 h-4 text-blue-600" /> Grant Brandfletch Partner Access
+              <Facebook className="w-4 h-4 text-blue-600" /> Connect Your Facebook Page
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-5">
-            {/* Step 1: Copy Business ID */}
-            <div>
-              <Label className="text-sm font-semibold mb-2 block">Step 1 — Copy Brandfletch's Business ID</Label>
-              <div className="flex items-center gap-2">
-                <code className="flex-1 p-3 rounded-lg bg-muted font-mono text-xs sm:text-sm select-all break-all">
-                  {businessId || 'Not configured — contact support'}
-                </code>
-                <Button variant="outline" size="icon" onClick={copyBusinessId} className="shrink-0">
-                  {copied ? <ClipboardCheck className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+          <CardContent className="space-y-4">
+            {/* Business ID + instructions in one compact block */}
+            <div className="rounded-lg bg-muted/60 border border-border p-3 space-y-3">
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground mb-1.5">1. Copy Brandfletch's Business ID</p>
+                <div className="flex items-center gap-2">
+                  <code className="flex-1 p-2 rounded-md bg-background font-mono text-xs select-all break-all border border-border">
+                    {businessId || 'Not configured — contact support'}
+                  </code>
+                  <Button variant="outline" size="icon" onClick={copyBusinessId} className="shrink-0 h-8 w-8">
+                    {copied ? <ClipboardCheck className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
+                  </Button>
+                </div>
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground mb-1.5">2. Grant access in Meta Business Settings</p>
+                <p className="text-xs text-muted-foreground mb-2">
+                  Partners → Add → Give a partner access → paste the ID → select your Page → grant <strong>Advertise</strong> permission → Save.
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => window.open(META_BUSINESS_SETTINGS_URL, '_blank', 'noopener,noreferrer')}
+                  className="gap-1.5 h-8 text-xs w-full"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" /> Open Meta Business Settings
                 </Button>
               </div>
             </div>
 
-            {/* Step 2: Open Meta Business Settings */}
+            {/* Page info */}
             <div>
-              <Label className="text-sm font-semibold mb-2 block">Step 2 — Grant Access in Meta Business Settings</Label>
-              <div className="space-y-2 mb-3">
-                {[
-                  'Go to Partners in the left sidebar',
-                  'Click Add → Give a partner access to your assets',
-                  'Paste the Business ID and click Next',
-                  'Select your Facebook Page and grant Advertise permission',
-                  'Click Save and come back here',
-                ].map((text, i) => (
-                  <div key={i} className="flex items-start gap-2">
-                    <div className="w-5 h-5 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">
-                      {i + 1}
-                    </div>
-                    <p className="text-sm text-muted-foreground">{text}</p>
-                  </div>
-                ))}
-              </div>
-              <Button
-                variant="outline"
-                onClick={() => window.open(META_BUSINESS_SETTINGS_URL, '_blank', 'noopener,noreferrer')}
-                className="w-full gap-2"
-              >
-                <ExternalLink className="w-4 h-4" /> Open Meta Business Settings
-              </Button>
-            </div>
-
-            {/* Step 3: Enter page info */}
-            <div>
-              <Label className="text-sm font-semibold mb-2 block">Step 3 — Tell us your Facebook Page</Label>
-              <div className="space-y-3">
-                <div>
-                  <Label className="text-xs flex items-center gap-1.5 mb-1.5">
-                    <Building2 className="w-3 h-3" /> Page Name
-                  </Label>
-                  <Input
-                    value={pageName}
-                    onChange={e => setPageName(e.target.value)}
-                    placeholder="e.g. My Business Page"
-                  />
-                </div>
-                <div>
-                  <Label className="text-xs flex items-center gap-1.5 mb-1.5">
-                    <LinkIcon className="w-3 h-3" /> Page URL (optional)
-                  </Label>
-                  <Input
-                    value={pageUrl}
-                    onChange={e => setPageUrl(e.target.value)}
-                    placeholder="https://facebook.com/yourpage"
-                  />
-                </div>
+              <p className="text-xs font-semibold text-muted-foreground mb-2">3. Enter your Page details</p>
+              <div className="space-y-2">
+                <Input
+                  value={pageName}
+                  onChange={e => setPageName(e.target.value)}
+                  placeholder="Page name (e.g. My Business Page)"
+                />
+                <Input
+                  value={pageUrl}
+                  onChange={e => setPageUrl(e.target.value)}
+                  placeholder="Page URL (optional)"
+                />
               </div>
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex gap-2 pt-1">
               <Button
                 onClick={handleSave}
                 disabled={!pageName.trim() || saving}
-                className="gap-2 bg-blue-600 hover:bg-blue-700 text-white"
+                className="gap-2 bg-blue-600 hover:bg-blue-700 text-white flex-1"
               >
                 {saving ? 'Saving…' : 'Save Page'}
               </Button>
