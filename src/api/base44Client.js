@@ -90,9 +90,14 @@ function createEntityWrapper(entityName) {
     },
 
     async create(data) {
+      // Auto-inject created_by and user_id from the current session
+      const { data: { user } } = await supabase.auth.getUser();
+      const payload = { ...data };
+      if (user && !payload.created_by) payload.created_by = user.id;
+      if (user && !payload.user_id)   payload.user_id   = user.id;
       const { data: result, error } = await supabase
         .from(entityName)
-        .insert(data)
+        .insert(payload)
         .select()
         .single();
       if (error) throw error;
