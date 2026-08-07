@@ -23,11 +23,7 @@ function PlanCard({ pkg, dbPricing, country, onCta }) {
   const monthlyDisplay = monthlyPrice ? `${symbol}${Number(monthlyPrice).toLocaleString()}` : 'Contact us';
 
   const adSpend = AD_SPEND[pkg];
-  const reach = ESTIMATED_REACH[pkg];
-  const dbRowForPkg = dbPricing.find(r => r.country === country && r.package === pkg);
-  const reachDisplay = (dbRowForPkg?.reach_low && dbRowForPkg?.reach_high)
-    ? `${Number(dbRowForPkg.reach_low).toLocaleString()} – ${Number(dbRowForPkg.reach_high).toLocaleString()}`
-    : reach;
+  const reachDisplay = ESTIMATED_REACH[pkg];
 
   const features = [
     `$${adSpend}/day Meta ad spend`,
@@ -108,13 +104,7 @@ function ComparisonTable({ dbPricing, country }) {
       const price = pkgRow?.monthly ?? local?.[p]?.monthly ?? 0;
       return price ? `${symbol}${Number(price).toLocaleString()}` : '—';
     }, highlight: true },
-    { label: 'Total Monthly Reach', getVal: p => {
-      const pkgRow = dbPricing.find(r => r.country === country && r.package === p);
-      const low = pkgRow?.reach_low;
-      const high = pkgRow?.reach_high;
-      if (low && high) return `${Number(low).toLocaleString()} – ${Number(high).toLocaleString()}`;
-      return ESTIMATED_REACH[p];
-    }},
+    { label: 'Total Monthly Reach', getVal: p => ESTIMATED_REACH[p] },
     { label: 'Facebook & Instagram Ads', getVal: () => '✓' },
     { label: 'Campaign Setup & Management', getVal: () => '✓' },
     { label: 'Performance Dashboard', getVal: () => '✓' },

@@ -105,8 +105,8 @@ export function calculatePriceFromList(pkg, duration, country, dbPricingList = [
       currency: dbRow.currency,
       symbol: dbRow.symbol,
       display: `${dbRow.symbol}${Number(dbRow[duration]).toLocaleString()}`,
-      reach_low: dbRow.reach_low,
-      reach_high: dbRow.reach_high,
+      // Reach numbers are always sourced from the hardcoded ESTIMATED_REACH
+      // constants — never from the database.
       creatives: dbRow.creatives,
       videos: dbRow.videos,
       description: dbRow.description,
